@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="hoodie_night">#FF1B1D33</color>
+    <color name="hoodie_blue">#FF86A9E8</color>
+
+    <style name="Theme.Hoodie" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/hoodie_night</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/hoodie_night</item>
+    </style>
+</resources>

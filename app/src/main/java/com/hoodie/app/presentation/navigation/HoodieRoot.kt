@@ -1,0 +1,149 @@
+package com.hoodie.app.presentation.navigation
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.hoodie.app.core.datastore.SettingsRepository
+import com.hoodie.app.pixel.animation.AnimationId
+import com.hoodie.app.presentation.components.AnimatedHoodie
+import com.hoodie.app.presentation.screens.home.HomeScreen
+import com.hoodie.app.presentation.screens.memories.MemoriesScreen
+import com.hoodie.app.presentation.screens.onboarding.OnboardingScreen
+import com.hoodie.app.presentation.screens.pixellab.PixelLabScreen
+import com.hoodie.app.presentation.screens.places.PlacesScreen
+import com.hoodie.app.presentation.screens.profile.ProfileScreen
+import com.hoodie.app.presentation.screens.routine.RoutineScreen
+import com.hoodie.app.presentation.screens.settings.SettingsScreen
+import com.hoodie.app.presentation.screens.timeline.TimelineScreen
+import com.hoodie.app.presentation.theme.HoodieColors
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
+
+enum class RootState { SPLASH, ONBOARDING, MAIN }
+
+@HiltViewModel
+class RootViewModel @Inject constructor(settings: SettingsRepository) : ViewModel() {
+    private val splashDone = flow { emit(false); delay(1_100); emit(true) }
+    val state = combine(settings.settings, splashDone) { s, done ->
+        when {
+            !done -> RootState.SPLASH
+            !s.onboardingDone -> RootState.ONBOARDING
+            else -> RootState.MAIN
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, RootState.SPLASH)
+}
+
+@Composable
+fun HoodieRoot(vm: RootViewModel = hiltViewModel()) {
+    val state by vm.state.collectAsStateWithLifecycle()
+    Box(Modifier.fillMaxSize().background(HoodieColors.Night)) {
+        when (state) {
+            RootState.SPLASH -> SplashScreen()
+            RootState.ONBOARDING -> OnboardingScreen()
+            RootState.MAIN -> MainScaffold()
+        }
+    }
+}
+
+@Composable
+fun SplashScreen() {
+    Column(
+        Modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("HOODIE", style = MaterialTheme.typography.displaySmall, color = HoodieColors.Hood)
+        Text("Seu companheiro de rotina.", style = MaterialTheme.typography.bodyMedium, color = HoodieColors.Muted, modifier = Modifier.padding(top = 4.dp, bottom = 24.dp))
+        AnimatedHoodie(AnimationId.IDLE, size = 168.dp)
+    }
+}
+
+private data class Tab(val route: String, val emoji: String, val label: String)
+
+private val tabs = listOf(
+    Tab(Routes.HOME, "🐱", "Hoje"),
+    Tab(Routes.TIMELINE, "📅", "Histórico"),
+    Tab(Routes.PLACES, "📍", "Lugares"),
+    Tab(Routes.SETTINGS, "⚙️", "Ajustes"),
+)
+
+object Routes {
+    const val HOME = "home"
+    const val TIMELINE = "timeline"
+    const val PLACES = "places"
+    const val SETTINGS = "settings"
+    const val ROUTINE = "routine"
+    const val MEMORIES = "memories"
+    const val PROFILE = "profile"
+    const val PIXEL_LAB = "pixel_lab"
+}
+
+@Composable
+fun MainScaffold() {
+    val nav = rememberNavController()
+    val backStack by nav.currentBackStackEntryAsState()
+    val current = backStack?.destination
+    Scaffold(
+        containerColor = HoodieColors.Night,
+        bottomBar = {
+            NavigationBar(containerColor = HoodieColors.Panel) {
+                tabs.forEach { tab ->
+                    val selected = current?.hierarchy?.any { it.route == tab.route } == true
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            nav.navigate(tab.route) {
+                                popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Text(tab.emoji, style = MaterialTheme.typography.titleLarge) },
+                        label = { Text(tab.label, style = MaterialTheme.typography.labelSmall) },
+                        colors = NavigationBarItemDefaults.colors(indicatorColor = HoodieColors.PanelLight, selectedTextColor = HoodieColors.Hood, unselectedTextColor = HoodieColors.Muted),
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.padding(padding)) {
+            composable(Routes.HOME) { HomeScreen(onOpen = { nav.navigate(it) }) }
+            composable(Routes.TIMELINE) { TimelineScreen() }
+            composable(Routes.PLACES) { PlacesScreen() }
+            composable(Routes.SETTINGS) { SettingsScreen(onOpen = { nav.navigate(it) }) }
+            composable(Routes.ROUTINE) { RoutineScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.MEMORIES) { MemoriesScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.PROFILE) { ProfileScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(it) }) }
+            composable(Routes.PIXEL_LAB) { PixelLabScreen(onBack = { nav.popBackStack() }) }
+        }
+    }
+}

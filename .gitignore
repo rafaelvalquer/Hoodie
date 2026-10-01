@@ -1,0 +1,40 @@
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+**/build/
+
+# Configuração local (caminho do SDK, segredos)
+local.properties
+*.keystore
+*.jks
+release.properties
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.fleet/
+
+# Android
+/captures
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+output-metadata.json
+
+# Logs e temporários
+*.log
+*.hprof
+*.tmp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Configurações locais do Claude Code
+.claude/
