@@ -1,8 +1,6 @@
 package com.hoodie.app.presentation.screens.settings
 
 import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,15 +29,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.hoodie.app.BuildConfig
-import com.hoodie.app.core.database.HoodieDatabase
 import com.hoodie.app.core.datastore.AppSettings
 import com.hoodie.app.core.datastore.SettingsRepository
-import com.hoodie.app.core.geofence.GeofenceManager
-import com.hoodie.app.core.location.LocationProvider
-import com.hoodie.app.core.location.LocationStatus
+import com.hoodie.app.core.geofence.GeofenceRegistrar
+import com.hoodie.app.core.geofence.GeofenceRegistrationError
+import com.hoodie.app.core.geofence.GeofenceRegistrationResult
+import com.hoodie.app.core.location.LocationPermissionManager
+import com.hoodie.app.core.location.LocationPermissionState
+import com.hoodie.app.core.security.DataWiper
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.presentation.components.ChipRow
 import com.hoodie.app.presentation.components.PixelButton
@@ -47,41 +48,69 @@ import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.navigation.Routes
 import com.hoodie.app.presentation.theme.HoodieColors
-import com.hoodie.app.worker.WorkScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settings: SettingsRepository,
-    private val location: LocationProvider,
-    private val geofences: GeofenceManager,
-    private val db: HoodieDatabase,
-    private val scheduler: WorkScheduler,
+    private val permissions: LocationPermissionManager,
+    private val geofences: GeofenceRegistrar,
+    private val wiper: DataWiper,
 ) : ViewModel() {
     val state = settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
+    val permission: StateFlow<LocationPermissionState> = permissions.state
+    val geofenceResult: StateFlow<GeofenceRegistrationResult?> = geofences.lastResult
     val info = MutableStateFlow<String?>(null)
 
-    fun locationStatus(): LocationStatus = location.status()
     fun setName(n: String) = viewModelScope.launch { settings.setCatName(n) }
     fun setCommute(s: CommuteStyle) = viewModelScope.launch { settings.setCommuteStyle(s) }
     fun setNotifications(on: Boolean) = viewModelScope.launch { settings.setNotifications(on) }
-    fun reregister() = viewModelScope.launch {
-        info.value = if (geofences.registerAll()) "Geofences registrados." else "Não foi possível registrar (verifique a permissão de localização)."
+
+    /** Voltou das configurações do sistema: revalida e reaplica os geofences. */
+    fun onResume() = viewModelScope.launch {
+        val before = permission.value
+        val now = permissions.refresh()
+        if (before != now || geofences.lastResult.value == null) geofences.registerAll()
     }
 
-    /** Apaga tudo: banco, preferências, geofences e tarefas. Volta ao onboarding. */
-    fun deleteEverything() = viewModelScope.launch {
-        geofences.clear()
-        scheduler.cancelAll()
-        withContext(Dispatchers.IO) { db.clearAllTables() }
-        settings.clear()
+    fun reregister() = viewModelScope.launch {
+        val r = geofences.registerAll()
+        info.value = if (r.ok) "Geofences registrados." else "Não foi possível registrar."
+    }
+
+    fun appSettingsIntent(): Intent = permissions.appSettingsIntent()
+    fun locationSettingsIntent(): Intent = permissions.locationSettingsIntent()
+
+    /** Apaga tudo: banco, chave do banco, preferências, geofences, tarefas e notificações. Volta ao onboarding. */
+    fun deleteEverything() = viewModelScope.launch { wiper.deleteEverything() }
+}
+
+/** Texto do card "Localização" a partir da permissão e do último registro de geofences. */
+internal fun locationSummary(permission: LocationPermissionState, result: GeofenceRegistrationResult?): String = when (permission) {
+    LocationPermissionState.NONE -> "❌ Sem permissão — seguindo a rotina provável"
+    LocationPermissionState.LOCATION_DISABLED -> "⚠️ Geofences pausados\nLocalização do aparelho desligada"
+    LocationPermissionState.APPROXIMATE_ONLY -> "⚠️ Geofences pausados\nAtive a localização precisa"
+    LocationPermissionState.FOREGROUND -> "⚠️ Geofences pausados\nLocalização em segundo plano desativada"
+    LocationPermissionState.BACKGROUND -> when {
+        result == null -> "✅ Localização em segundo plano ativa"
+        result.ok && result.requested == 0 -> "✅ Pronto — cadastre lugares para monitorar"
+        result.ok && result.skipped > 0 -> "✅ ${result.registered} locais monitorados · ${result.skipped} fora do limite"
+        result.ok -> "✅ ${result.registered} ${if (result.registered == 1) "local monitorado" else "locais monitorados"}"
+        else -> "⚠️ Geofences pausados\n" + when (result.error) {
+            GeofenceRegistrationError.GEOFENCE_NOT_AVAILABLE -> "Serviço de geofence indisponível no aparelho"
+            GeofenceRegistrationError.GEOFENCE_TOO_MANY_GEOFENCES -> "Limite de locais do sistema atingido"
+            GeofenceRegistrationError.GEOFENCE_TOO_MANY_PENDING_INTENTS -> "Limite de registros do sistema atingido"
+            GeofenceRegistrationError.PERMISSION_DENIED -> "Permissão de localização negada"
+            GeofenceRegistrationError.LOCATION_DISABLED -> "Localização do aparelho desligada"
+            GeofenceRegistrationError.PLAY_SERVICES_ERROR -> "Google Play Services indisponível"
+            else -> "Erro desconhecido — tente Re-registrar"
+        }
     }
 }
 
@@ -89,7 +118,13 @@ class SettingsViewModel @Inject constructor(
 fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
     val info by vm.info.collectAsStateWithLifecycle()
+    val permission by vm.permission.collectAsStateWithLifecycle()
+    val geofenceResult by vm.geofenceResult.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    LifecycleResumeEffect(Unit) {
+        vm.onResume()
+        onPauseOrDispose { }
+    }
     var editingName by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var versionTaps by remember { mutableIntStateOf(0) }
@@ -125,18 +160,13 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
 
         PixelPanel(Modifier.fillMaxWidth()) {
             SectionLabel("Localização")
-            Text(
-                when (vm.locationStatus()) {
-                    LocationStatus.OK -> "✅ Ativa (geofences em segundo plano)"
-                    LocationStatus.NO_BACKGROUND -> "⚠️ Só com o app aberto"
-                    LocationStatus.NO_PERMISSION -> "❌ Sem permissão — seguindo a rotina provável"
-                    LocationStatus.DISABLED -> "❌ Localização do aparelho desligada"
-                },
-            )
+            Text(locationSummary(permission, geofenceResult))
             info?.let { Text(it, color = HoodieColors.Muted) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                 PixelButton("Permissões", {
-                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
+                    context.startActivity(
+                        if (permission == LocationPermissionState.LOCATION_DISABLED) vm.locationSettingsIntent() else vm.appSettingsIntent(),
+                    )
                 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
                 PixelButton("Re-registrar", vm::reregister, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
             }
@@ -145,7 +175,8 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
         PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
             SectionLabel("Privacidade")
             Text(
-                "• Tudo fica neste aparelho: sem conta, sem servidor, sem nuvem — o app nem tem permissão de internet.\n" +
+                "• Tudo fica neste aparelho: sem conta, sem servidor, sem nuvem.\n" +
+                    "• Internet só ao buscar um endereço no mapa: o texto vai ao serviço de mapas do Android e o mapa vem do OpenStreetMap.\n" +
                     "• Guardamos lugares (cifrados), horários, contextos, histórico e o estado do gato.\n" +
                     "• Não guardamos trajeto GPS nem posição contínua.\n" +
                     "• Backup em nuvem desativado.",
@@ -162,7 +193,7 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
         )
         // Ferramenta interna: sempre visível em debug, escondida (5 toques) em release.
         if (BuildConfig.DEBUG || versionTaps >= 5) {
-            PixelButton("🧪 Pixel Lab", { onOpen(Routes.PIXEL_LAB) }, Modifier.fillMaxWidth(), color = HoodieColors.Mint)
+            PixelButton("🧪 Developer Lab", { onOpen(Routes.DEV_LAB) }, Modifier.fillMaxWidth(), color = HoodieColors.Mint)
         }
     }
 

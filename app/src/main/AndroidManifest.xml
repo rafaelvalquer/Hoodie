@@ -3,9 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
-        Sem android.permission.INTERNET: o Hoodie é 100% offline por construção.
-        Localização é usada só via geofences + leituras pontuais.
+        Rotina, gato, geofences e histórico são 100% offline. A internet é usada
+        SOMENTE na tela de escolher um lugar por endereço (geocodificação + tiles
+        do OpenStreetMap). Nenhum dado do histórico sai do aparelho.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />

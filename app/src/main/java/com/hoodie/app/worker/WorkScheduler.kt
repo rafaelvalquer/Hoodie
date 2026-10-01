@@ -7,32 +7,41 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.hoodie.app.core.config.HoodieConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/** Checagens pontuais pedidas pelo Context Engine (fake nos testes). */
+interface CheckScheduler {
+    override fun scheduleLunchCheck(exitAt: Long, placeId: Long)
+    override fun scheduleCommuteCheck(eventId: Long)
+    fun cancelChecks()
+    fun reconcileNow()
+}
 
 /**
  * WorkManager só para reconciliar estado, checagens pontuais e manutenção —
  * nunca para rastrear GPS.
  */
 @Singleton
-class WorkScheduler @Inject constructor(@ApplicationContext private val context: Context) {
+class WorkScheduler @Inject constructor(@ApplicationContext private val context: Context) : CheckScheduler {
     private val wm get() = WorkManager.getInstance(context)
 
     fun schedulePeriodic() {
         wm.enqueueUniquePeriodicWork(
             ReconcileWorker.NAME, ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<ReconcileWorker>(15, TimeUnit.MINUTES).build(),
+            PeriodicWorkRequestBuilder<ReconcileWorker>(HoodieConfig.RECONCILE_INTERVAL_MIN, TimeUnit.MINUTES).build(),
         )
     }
 
-    fun reconcileNow() {
+    override fun reconcileNow() {
         wm.enqueueUniqueWork(ReconcileWorker.NAME + "_now", ExistingWorkPolicy.REPLACE, OneTimeWorkRequestBuilder<ReconcileWorker>().build())
     }
 
     /** Depois de sair do trabalho no horário de almoço, confere se a pessoa "parou" em algum lugar. */
-    fun scheduleLunchCheck(exitAt: Long, placeId: Long) {
+    override fun scheduleLunchCheck(exitAt: Long, placeId: Long) {
         wm.enqueueUniqueWork(
             CheckWorker.LUNCH, ExistingWorkPolicy.REPLACE,
             OneTimeWorkRequestBuilder<CheckWorker>()
@@ -43,7 +52,7 @@ class WorkScheduler @Inject constructor(@ApplicationContext private val context:
     }
 
     /** Deslocamento muito longo sem chegar a lugar conhecido → talvez seja um lugar novo. */
-    fun scheduleCommuteCheck(eventId: Long) {
+    override fun scheduleCommuteCheck(eventId: Long) {
         wm.enqueueUniqueWork(
             CheckWorker.COMMUTE, ExistingWorkPolicy.REPLACE,
             OneTimeWorkRequestBuilder<CheckWorker>()
@@ -53,7 +62,7 @@ class WorkScheduler @Inject constructor(@ApplicationContext private val context:
         )
     }
 
-    fun cancelChecks() {
+    override fun cancelChecks() {
         wm.cancelUniqueWork(CheckWorker.LUNCH)
         wm.cancelUniqueWork(CheckWorker.COMMUTE)
     }
@@ -61,7 +70,7 @@ class WorkScheduler @Inject constructor(@ApplicationContext private val context:
     fun cancelAll() = wm.cancelAllWork()
 
     companion object {
-        const val LUNCH_DELAY_MIN = 15L
-        const val COMMUTE_DELAY_MIN = 40L
+        const val LUNCH_DELAY_MIN = HoodieConfig.LUNCH_CHECK_DELAY_MIN
+        const val COMMUTE_DELAY_MIN = HoodieConfig.COMMUTE_CHECK_DELAY_MIN
     }
 }

@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
+import com.hoodie.app.core.model.TimelineSourceType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -108,6 +109,12 @@ interface ContextEventDao {
 
     @Query("SELECT * FROM context_events WHERE startedAt > :after ORDER BY startedAt LIMIT 1")
     suspend fun firstStartedAfter(after: Long): ContextEventEntity?
+
+    @Query("SELECT * FROM context_events ORDER BY startedAt")
+    suspend fun all(): List<ContextEventEntity>
+
+    @Query("SELECT COUNT(*) FROM context_events")
+    suspend fun count(): Int
 }
 
 @Dao
@@ -156,18 +163,46 @@ interface HoodieActivityDao {
 
     @Query("SELECT * FROM hoodie_activities WHERE startedAt < :to AND endedAt > :from ORDER BY startedAt")
     fun observeOverlapping(from: Long, to: Long): Flow<List<HoodieActivityEntity>>
+
+    /** Atividade concluída exatamente em [at] (a que foi interrompida por um boundary). */
+    @Query("SELECT * FROM hoodie_activities WHERE endedAt = :at ORDER BY startedAt DESC LIMIT 1")
+    suspend fun endedAt(at: Long): HoodieActivityEntity?
+
+    @Query("DELETE FROM hoodie_activities WHERE startedAt >= :from")
+    suspend fun deleteStartedFrom(from: Long): Int
+
+    @Query("DELETE FROM hoodie_activities WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("SELECT COUNT(*) FROM hoodie_activities")
+    suspend fun count(): Int
 }
 
 @Dao
 interface TimelineDao {
     @Insert
-    suspend fun insert(e: TimelineEventEntity)
+    suspend fun insert(e: TimelineEventEntity): Long
 
     @Insert
     suspend fun insertAll(e: List<TimelineEventEntity>)
 
     @Query("SELECT * FROM timeline_events WHERE timestamp >= :from AND timestamp < :to ORDER BY timestamp")
     fun observeRange(from: Long, to: Long): Flow<List<TimelineEventEntity>>
+
+    @Query("SELECT * FROM timeline_events WHERE timestamp >= :from AND timestamp < :to ORDER BY timestamp")
+    suspend fun range(from: Long, to: Long): List<TimelineEventEntity>
+
+    @Query("SELECT * FROM timeline_events WHERE sourceType = :type AND sourceId = :id")
+    suspend fun bySource(type: TimelineSourceType, id: Long): List<TimelineEventEntity>
+
+    @Query("DELETE FROM timeline_events WHERE sourceType = :type AND sourceId = :id")
+    suspend fun deleteBySource(type: TimelineSourceType, id: Long): Int
+
+    @Query("DELETE FROM timeline_events WHERE sourceType = :type AND timestamp >= :from AND timestamp <= :to")
+    suspend fun deleteSourceRange(type: TimelineSourceType, from: Long, to: Long): Int
+
+    @Query("SELECT COUNT(*) FROM timeline_events")
+    suspend fun count(): Int
 }
 
 @Dao

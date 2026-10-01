@@ -5,10 +5,8 @@ import com.hoodie.app.core.database.ContextEventEntity
 import com.hoodie.app.core.database.HoodieActivityDao
 import com.hoodie.app.core.database.MemoryDao
 import com.hoodie.app.core.database.TimelineDao
-import com.hoodie.app.core.database.TimelineEventEntity
 import com.hoodie.app.core.model.ContextEvent
 import com.hoodie.app.core.model.Memory
-import com.hoodie.app.core.model.TimelineActor
 import com.hoodie.app.core.model.TimelineEvent
 import com.hoodie.app.engine.timeline.ActivitySpan
 import com.hoodie.app.engine.timeline.ContextSpan
@@ -28,9 +26,6 @@ class HistoryRepository @Inject constructor(
     fun timeline(from: Long, to: Long): Flow<List<TimelineEvent>> = timelineDao.observeRange(from, to).map { list ->
         list.map { TimelineEvent(it.id, it.timestamp, it.actor, it.emoji, it.text) }
     }
-
-    suspend fun record(actor: TimelineActor, emoji: String, text: String, at: Long) =
-        timelineDao.insert(TimelineEventEntity(timestamp = at, actor = actor, emoji = emoji, text = text))
 
     fun contextSpans(from: Long, to: Long): Flow<List<ContextSpan>> = contextDao.observeOverlapping(from, to).map { list ->
         list.map { ContextSpan(it.type, it.startedAt, it.endedAt) }

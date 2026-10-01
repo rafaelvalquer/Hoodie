@@ -27,9 +27,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.hoodie.app.core.model.PlaceType
+import com.hoodie.app.presentation.screens.places.PlacePickerScreen
 import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.presentation.components.AnimatedHoodie
+import com.hoodie.app.presentation.screens.devlab.DeveloperLabScreen
 import com.hoodie.app.presentation.screens.home.HomeScreen
 import com.hoodie.app.presentation.screens.memories.MemoriesScreen
 import com.hoodie.app.presentation.screens.onboarding.OnboardingScreen
@@ -105,6 +110,11 @@ object Routes {
     const val MEMORIES = "memories"
     const val PROFILE = "profile"
     const val PIXEL_LAB = "pixel_lab"
+    const val DEV_LAB = "dev_lab"
+    const val PLACE_PICKER = "place_picker?type={type}&placeId={placeId}"
+
+    /** Abre o mapa para escolher um lugar (novo, ou [placeId] para mudar o local de um existente). */
+    fun placePicker(type: PlaceType, placeId: Long? = null) = "place_picker?type=${type.name}&placeId=${placeId ?: -1}"
 }
 
 @Composable
@@ -138,12 +148,24 @@ fun MainScaffold() {
         NavHost(nav, startDestination = Routes.HOME, modifier = Modifier.padding(padding)) {
             composable(Routes.HOME) { HomeScreen(onOpen = { nav.navigate(it) }) }
             composable(Routes.TIMELINE) { TimelineScreen() }
-            composable(Routes.PLACES) { PlacesScreen() }
+            composable(Routes.PLACES) { PlacesScreen(onOpen = { nav.navigate(it) }) }
             composable(Routes.SETTINGS) { SettingsScreen(onOpen = { nav.navigate(it) }) }
             composable(Routes.ROUTINE) { RoutineScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.MEMORIES) { MemoriesScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.PROFILE) { ProfileScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(it) }) }
             composable(Routes.PIXEL_LAB) { PixelLabScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.DEV_LAB) { DeveloperLabScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(it) }) }
+            composable(
+                Routes.PLACE_PICKER,
+                arguments = listOf(
+                    navArgument("type") { type = NavType.StringType; defaultValue = PlaceType.HOME.name },
+                    navArgument("placeId") { type = NavType.LongType; defaultValue = -1L },
+                ),
+            ) { entry ->
+                val type = runCatching { PlaceType.valueOf(entry.arguments?.getString("type").orEmpty()) }.getOrDefault(PlaceType.HOME)
+                val placeId = entry.arguments?.getLong("placeId")?.takeIf { it > 0 }
+                PlacePickerScreen(type, placeId, onBack = { nav.popBackStack() })
+            }
         }
     }
 }

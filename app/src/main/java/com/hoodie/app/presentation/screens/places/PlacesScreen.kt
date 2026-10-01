@@ -43,6 +43,7 @@ import com.hoodie.app.presentation.components.ChipRow
 import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
+import com.hoodie.app.presentation.navigation.Routes
 import com.hoodie.app.presentation.theme.HoodieColors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,7 +88,7 @@ class PlacesViewModel @Inject constructor(
 }
 
 @Composable
-fun PlacesScreen(vm: PlacesViewModel = hiltViewModel()) {
+fun PlacesScreen(onOpen: (String) -> Unit, vm: PlacesViewModel = hiltViewModel()) {
     val list by vm.list.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
@@ -119,14 +120,27 @@ fun PlacesScreen(vm: PlacesViewModel = hiltViewModel()) {
         PixelButton(if (busy) "Localizando..." else "Adicionar lugar", { adding = true }, Modifier.fillMaxWidth(), enabled = !busy)
     }
 
-    if (adding) AddPlaceDialog(onDismiss = { adding = false }, onHere = { t, n -> vm.addHere(t, n); adding = false }, onManual = { t, n, c -> vm.addManual(t, n, c); adding = false })
-    editing?.let { p -> EditPlaceDialog(p, onDismiss = { editing = null }, onSave = { vm.update(it); editing = null }, onDelete = { vm.delete(p.id); editing = null }) }
+    if (adding) AddPlaceDialog(
+        onDismiss = { adding = false },
+        onHere = { t, n -> vm.addHere(t, n); adding = false },
+        onManual = { t, n, c -> vm.addManual(t, n, c); adding = false },
+        onMap = { t -> adding = false; onOpen(Routes.placePicker(t)) },
+    )
+    editing?.let { p ->
+        EditPlaceDialog(
+            p,
+            onDismiss = { editing = null },
+            onSave = { vm.update(it); editing = null },
+            onDelete = { vm.delete(p.id); editing = null },
+            onMap = { editing = null; onOpen(Routes.placePicker(p.type, p.id)) },
+        )
+    }
 }
 
 private val placeTypes = PlaceType.entries
 
 @Composable
-private fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -> Unit, onManual: (PlaceType, String, String) -> Unit) {
+private fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -> Unit, onManual: (PlaceType, String, String) -> Unit, onMap: (PlaceType) -> Unit) {
     var type by remember { mutableIntStateOf(0) }
     var name by remember { mutableStateOf("") }
     var coords by remember { mutableStateOf("") }
@@ -137,6 +151,7 @@ private fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) ->
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 ChipRow(placeTypes.map { "${it.emoji} ${it.label}" }, type, { type = it })
+                PixelButton("🗺 Buscar endereço no mapa", { onMap(placeTypes[type]) }, Modifier.fillMaxWidth())
                 OutlinedTextField(name, { name = it }, label = { Text("Nome (opcional)") }, singleLine = true)
                 if (manual) OutlinedTextField(coords, { coords = it }, label = { Text("lat, lng") }, singleLine = true)
                 Text(
@@ -155,7 +170,7 @@ private fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) ->
 }
 
 @Composable
-private fun EditPlaceDialog(place: Place, onDismiss: () -> Unit, onSave: (Place) -> Unit, onDelete: () -> Unit) {
+private fun EditPlaceDialog(place: Place, onDismiss: () -> Unit, onSave: (Place) -> Unit, onDelete: () -> Unit, onMap: () -> Unit) {
     var name by remember { mutableStateOf(place.name) }
     var radius by remember { mutableFloatStateOf(place.radiusMeters) }
     var type by remember { mutableIntStateOf(placeTypes.indexOf(place.type)) }
@@ -169,6 +184,7 @@ private fun EditPlaceDialog(place: Place, onDismiss: () -> Unit, onSave: (Place)
                 ChipRow(placeTypes.map { "${it.emoji} ${it.label}" }, type, { type = it })
                 SectionLabel("Raio: ${radius.toInt()} m")
                 Slider(radius, { radius = it }, valueRange = 75f..400f)
+                PixelButton("🗺 Mudar local no mapa", onMap, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
                 Spacer(Modifier.padding(2.dp))
                 Text(if (confirmDelete) "Toque de novo para apagar" else "Apagar lugar", color = HoodieColors.Coral,
                     modifier = Modifier.clickable { if (confirmDelete) onDelete() else confirmDelete = true }.padding(4.dp))

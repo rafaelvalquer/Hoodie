@@ -3,11 +3,10 @@ package com.hoodie.app.engine.memory
 import com.hoodie.app.core.database.MemoryDao
 import com.hoodie.app.core.database.MemoryEntity
 import com.hoodie.app.core.datastore.SettingsRepository
-import com.hoodie.app.core.model.TimelineActor
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.atZone
-import com.hoodie.app.data.repository.HistoryRepository
+import com.hoodie.app.data.repository.TimelineRepository
 import java.time.DayOfWeek
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -48,13 +47,13 @@ object MilestoneRules {
 class MemoryEngine @Inject constructor(
     private val dao: MemoryDao,
     private val settings: SettingsRepository,
-    private val history: HistoryRepository,
+    private val timeline: TimelineRepository,
     private val clock: ClockProvider,
 ) {
     /** Retorna true se a memória é nova. */
     suspend fun unlock(m: Milestone, at: Long = clock.nowMillis()): Boolean {
         val inserted = dao.insert(MemoryEntity(m.name, m.emoji, m.title, at)) != -1L
-        if (inserted) history.record(TimelineActor.HOODIE, "✨", "Nova memória: ${m.title}", at)
+        if (inserted) timeline.recordMemory("✨", "Nova memória: ${m.title}", at)
         return inserted
     }
 

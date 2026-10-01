@@ -36,7 +36,11 @@ import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.pixel.sprite.Expression
 import com.hoodie.app.pixel.sprite.HoodiePainter
-import com.hoodie.app.pixel.sprite.HoodiePose
+import com.hoodie.app.pixel.sprite.HoodieSprites
+import com.hoodie.app.pixel.sprite.Direction
+import com.hoodie.app.pixel.sprite.Posture
+import com.hoodie.app.pixel.sprite.SpriteRequest
+import com.hoodie.app.pixel.animation.IdleDirector
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalTime
 import kotlin.math.floor
@@ -69,8 +73,8 @@ fun HoodieSceneView(
     val currentPeriod by rememberUpdatedState(periodOverride)
 
     LaunchedEffect(visual) {
-        // O Hoodie às vezes percebe que você abriu o app e acena (15%).
-        visual?.let { machine.setVisual(it, clock.now(currentSpeed), greet = greet && Random.nextInt(100) < 15) }
+        // Ao abrir o app o ReactionDirector decide se ele reage (olha, acena, sorri…).
+        visual?.let { machine.setVisual(it, clock.now(currentSpeed), greet = greet) }
     }
     LaunchedEffect(reactions) { reactions?.collect { machine.react(it, clock.now(currentSpeed)) } }
     LaunchedEffect(Unit) {
@@ -128,7 +132,10 @@ fun PixelImage(image: ImageBitmap, logicalW: Int, logicalH: Int, modifier: Modif
     }
 }
 
-/** Sprite animado isolado (onboarding, perfil, galeria). */
+/**
+ * Sprite animado isolado (onboarding, perfil, galerias), servido pelo mesmo
+ * SpriteProvider da cena. Animações curtas se repetem com uma pausa entre elas.
+ */
 @Composable
 fun AnimatedHoodie(
     anim: AnimationId,
@@ -136,34 +143,44 @@ fun AnimatedHoodie(
     size: Dp = 144.dp,
     expression: Expression? = null,
     speed: Float = 1f,
+    direction: Direction = Direction.FRONT,
+    posture: Posture = Posture.STANDING,
 ) {
-    val bitmap = remember { Bitmap.createBitmap(HoodiePainter.WIDTH, HoodiePainter.HEIGHT, Bitmap.Config.ARGB_8888) }
+    val w = HoodiePainter.WIDTH; val h = HoodiePainter.HEIGHT
+    val bitmap = remember { Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888) }
     val image = remember { bitmap.asImageBitmap() }
     var frames by remember { mutableIntStateOf(0) }
     val currentAnim by rememberUpdatedState(anim)
     val currentExpr by rememberUpdatedState(expression)
     val currentSpeed by rememberUpdatedState(speed)
+    val currentDir by rememberUpdatedState(direction)
+    val currentPosture by rememberUpdatedState(posture)
     LaunchedEffect(Unit) {
         val clock = VirtualClock()
-        var lastPose: HoodiePose? = null
+        val idle = IdleDirector(Random)
+        val canvas = PixelBuffer(w, h)
+        var lastKey: Any? = null
         while (true) {
             withFrameMillis {
-                // Animações curtas (acenar, comemorar) se repetem com uma pausa entre elas.
                 val t = clock.now(currentSpeed)
-                val elapsed = if (currentAnim.loop) t else t % (currentAnim.durationMs + 1_500)
-                var pose = currentAnim.frameAt(elapsed)
-                currentExpr?.eyes?.let { e -> if (pose.eyes == com.hoodie.app.pixel.sprite.Eyes.OPEN) pose = pose.copy(eyes = e) }
-                if (pose != lastPose) {
-                    lastPose = pose
-                    val px = HoodiePainter.sprite(pose).pixels
-                    bitmap.setPixels(px, 0, HoodiePainter.WIDTH, 0, 0, HoodiePainter.WIDTH, HoodiePainter.HEIGHT)
+                val a = currentAnim
+                val elapsed = if (a.loop) t else t % (a.durationMs + 1_500)
+                val req = SpriteRequest(a, currentDir, 0, currentPosture, idle.overlay(t, allowLook = false).copy(expression = currentExpr))
+                val f = HoodieSprites.provider.frameAt(req, elapsed)
+                val key = f.image to f.itemOverlay
+                if (key != lastKey) {
+                    lastKey = key
+                    canvas.clear()
+                    canvas.blit(f.image, HoodiePainter.FEET.x - f.anchors.feet.x, HoodiePainter.FEET.y - f.anchors.feet.y)
+                    f.itemOverlay?.let { HoodiePainter.drawItemAt(canvas, it, f.anchors.rightHand) }
+                    bitmap.setPixels(canvas.pixels, 0, w, 0, 0, w, h)
                     frames++
                 }
             }
         }
     }
-    Box(modifier.size(size * HoodiePainter.WIDTH / HoodiePainter.HEIGHT, size), contentAlignment = Alignment.Center) {
-        PixelImage(image, HoodiePainter.WIDTH, HoodiePainter.HEIGHT) { frames }
+    Box(modifier.size(size * w / h, size), contentAlignment = Alignment.Center) {
+        PixelImage(image, w, h) { frames }
     }
 }
 

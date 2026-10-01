@@ -13,6 +13,7 @@ data class Place(
     val confirmationCount: Int,
     val createdAt: Long,
     val lastVisitedAt: Long?,
+    val isFavorite: Boolean = false,
 )
 
 enum class WorkMode(val label: String) { OFFICE("Fora de casa"), HOME_OFFICE("Home office"), NONE("Não trabalho") }
@@ -77,6 +78,9 @@ data class HoodieState(
 )
 
 enum class TimelineActor { USER, HOODIE }
+
+/** De onde veio uma linha da timeline (para invalidar/substituir quando a origem é corrigida). */
+enum class TimelineSourceType { CONTEXT, HOODIE_ACTIVITY, MEMORY, SYSTEM }
 
 data class TimelineEvent(
     val id: Long = 0,

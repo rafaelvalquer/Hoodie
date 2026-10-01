@@ -4,14 +4,15 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.database.LocationEventDao
+import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.geofence.GeofenceManager
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
-import com.hoodie.app.core.notification.HoodieNotifier
+import com.hoodie.app.core.notification.Notifier
 import com.hoodie.app.core.time.ClockProvider
-import com.hoodie.app.core.time.DAY_MS
 import com.hoodie.app.core.time.atZone
 import com.hoodie.app.engine.context.ContextEngine
 import com.hoodie.app.engine.hoodie.HoodieEngine
@@ -31,24 +32,28 @@ class ReconcileWorker @AssistedInject constructor(
     private val hoodie: HoodieEngine,
     private val memory: MemoryEngine,
     private val settings: SettingsRepository,
-    private val notifier: HoodieNotifier,
+    private val notifier: Notifier,
     private val geofences: GeofenceManager,
     private val locationEvents: LocationEventDao,
     private val clock: ClockProvider,
+    private val log: DebugEventLogger,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         val s = settings.current()
         if (!s.onboardingDone) return Result.success()
+        log.log(DebugEventLogger.Category.WORKER, "reconcile")
         contextEngine.applyRoutineFallbackIfNeeded()
         val snapshot = hoodie.resolve()
         memory.checkCalendar()
         maybeNotifyAutonomy(snapshot.started.map { it.activity to it.userContext })
 
         val now = clock.nowMillis()
-        locationEvents.deleteOlderThan(now - 30 * DAY_MS)
-        // Uma vez por dia, garante que os geofences continuam registrados.
-        if (now.atZone(clock.zone()).hour == 4) geofences.registerAll()
+        locationEvents.deleteOlderThan(now - HoodieConfig.LOCATION_EVENT_RETENTION_MS)
+        // Geofences podem sumir (Play Services reiniciado, localização religada):
+        // re-registra uma vez por dia e sempre que o último registro falhou.
+        val last = geofences.lastResult.value
+        if (now.atZone(clock.zone()).hour == DAILY_REREGISTER_HOUR || last == null || !last.ok) geofences.registerAll()
         return Result.success()
     }
 
@@ -72,7 +77,10 @@ class ReconcileWorker @AssistedInject constructor(
         settings.setAutonomyNotified(today)
     }
 
-    companion object { const val NAME = "hoodie_reconcile" }
+    companion object {
+        const val NAME = "hoodie_reconcile"
+        private const val DAILY_REREGISTER_HOUR = 4
+    }
 }
 
 /** Checagens pontuais agendadas pelo ContextEngine (almoço provável / deslocamento longo). */

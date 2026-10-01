@@ -146,13 +146,40 @@ object SceneArt {
         b.hline(0, SCENE_W_MAX, y + 1, P.OUTLINE)
     }
 
-    fun door(b: PixelBuffer, x0: Int, y0: Int, x1: Int, y1: Int, color: Int = 0xFF8E5B3A.toInt()) {
+    /**
+     * Porta com 4 estados: 0 fechada, 1–2 abrindo, 3 aberta (vemos o vão escuro e a
+     * folha da porta estreitando, girando na dobradiça da esquerda).
+     */
+    fun door(b: PixelBuffer, x0: Int, y0: Int, x1: Int, y1: Int, color: Int = 0xFF8E5B3A.toInt(), frame: Int = 0) {
         b.outlined(x0 - 2, y0 - 2, x1 + 2, y1, P.WHITE, P.OUTLINE)
-        b.outlined(x0, y0, x1, y1, color, P.OUTLINE)
         val dark = PixelBuffer.mix(color, P.OUTLINE, 0.3f)
-        b.box(x0 + 4, y0 + 5, x1 - 4, (y0 + y1) / 2 - 3, dark)
-        b.box(x0 + 4, (y0 + y1) / 2 + 3, x1 - 4, y1 - 6, dark)
-        b.disc(x1 - 5, (y0 + y1) / 2, 1, P.YELLOW)
+        if (frame <= 0) {
+            b.outlined(x0, y0, x1, y1, color, P.OUTLINE)
+            b.box(x0 + 4, y0 + 5, x1 - 4, (y0 + y1) / 2 - 3, dark)
+            b.box(x0 + 4, (y0 + y1) / 2 + 3, x1 - 4, y1 - 6, dark)
+            b.disc(x1 - 5, (y0 + y1) / 2, 1, P.YELLOW)
+            return
+        }
+        // Vão da porta (corredor escuro com um pouco de luz no chão).
+        b.box(x0, y0, x1, y1, 0xFF2A2440.toInt())
+        b.box(x0 + 1, y1 - 6, x1 - 1, y1 - 1, 0xFF3D3560.toInt())
+        // Folha da porta vista de lado, cada vez mais estreita.
+        val leaf = when (frame) { 1 -> (x1 - x0) * 2 / 3; 2 -> (x1 - x0) / 3; else -> 4 }
+        b.outlined(x0, y0, x0 + leaf, y1, color, P.OUTLINE)
+        if (leaf > 8) b.box(x0 + 3, y0 + 5, x0 + leaf - 3, y1 - 6, dark)
+        if (leaf > 6) b.disc(x0 + leaf - 3, (y0 + y1) / 2, 1, P.YELLOW)
+    }
+
+    /** Cadeira de escritório: ocupada mostra só o encosto; vazia mostra assento e base. */
+    fun deskChair(b: PixelBuffer, x0: Int, y0: Int, x1: Int, y1: Int, color: Int, light: Int, occupied: Boolean) {
+        b.outlined(x0, y0, x1, y1, color, P.OUTLINE)
+        b.box(x0 + 3, y0 + 3, x1 - 3, y0 + 6, light)
+        if (!occupied) {
+            // Assento e braços à vista, levemente virada (vazia).
+            b.outlined(x0 - 3, y1 - 6, x1 + 3, y1 + 2, color, P.OUTLINE)
+            b.hline(x0 - 2, x1 + 2, y1 - 5, light)
+            b.box(x0 - 3, y1 - 12, x0 - 1, y1 - 6, P.OUTLINE); b.box(x1 + 1, y1 - 12, x1 + 3, y1 - 6, P.OUTLINE)
+        }
     }
 
     fun plant(b: PixelBuffer, x: Int, baseY: Int, big: Boolean = false) {

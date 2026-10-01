@@ -12,6 +12,7 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
         SpotId.DOOR to Spot(215, 168),
     )
     override val defaultSpot = SpotId.DESK
+    override val hasAnimatedDoor = true
 
     override fun drawBackground(b: PixelBuffer, env: SceneEnv) {
         val wall = 0xFFCBD5E0.toInt()
@@ -33,11 +34,11 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
         b.line(120, 40, 140, 36, 0xFF4F7FC9.toInt()); b.line(120, 48, 150, 46, P.RED)
         b.box(124, 56, 136, 66, 0xFFF2CF5B.toInt()); b.line(142, 66, 156, 54, 0xFF4FA36A.toInt())
         b.box(114, 74, 162, 76, P.METAL_DARK)
-        SceneArt.door(b, 200, 74, 230, 151, 0xFF6F7C96.toInt())
     }
 
     override fun props(): List<Prop> = listOf(
         Prop(0) { b, env, _ -> SceneArt.clock(b, 183, 40, 8, env.clockMinute) },
+        Prop(0) { b, env, _ -> SceneArt.door(b, 200, 74, 230, 151, 0xFF6F7C96.toInt(), env.doorFrame) },
         Prop(152) { b, _, _ ->
             b.outlined(166, 100, 194, 152, P.METAL, P.OUTLINE)
             for (y in intArrayOf(117, 134)) b.hline(167, 193, y, P.OUTLINE)
@@ -52,9 +53,8 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
             b.set(60, 147, if ((t / 700) % 2 == 0L) P.CODE_1 else P.RED)
             SceneArt.mug(b, 61, 158)
         },
-        Prop(232) { b, _, _ ->
-            b.outlined(94, 212, 126, 248, 0xFF3F4A66.toInt(), P.OUTLINE)
-            b.box(97, 215, 123, 218, 0xFF566389.toInt())
+        Prop(232) { b, env, _ ->
+            SceneArt.deskChair(b, 94, 212, 126, 248, 0xFF3F4A66.toInt(), 0xFF566389.toInt(), SceneFlag.CHAIR_OCCUPIED in env.flags)
         },
         Prop(292) { b, env, t ->
             b.outlined(58, 248, 202, 258, 0xFFE2D6C0.toInt(), P.OUTLINE)
@@ -64,7 +64,8 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
             b.outlined(96, 249, 124, 253, 0xFFDCE2EE.toInt(), P.OUTLINE)
             b.outlined(128, 249, 134, 254, 0xFFDCE2EE.toInt(), P.OUTLINE)
             SceneArt.monitor(b, 136, 206, 190, 244, t, env.screenOn, env.variant)
-            SceneArt.mug(b, 70, 240)
+            // A caneca some da mesa quando o Hoodie a pega (evento MUG_PICKUP).
+            if (SceneFlag.MUG_IN_HAND !in env.flags) SceneArt.mug(b, 70, 240)
             b.outlined(178, 232, 198, 248, P.WHITE, P.OUTLINE); b.hline(180, 196, 236, 0xFFB8C4E8.toInt())
             b.hline(180, 192, 240, 0xFFB8C4E8.toInt())
         },

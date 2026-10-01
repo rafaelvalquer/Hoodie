@@ -113,10 +113,20 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
 
             state.suggestSavePlace?.let { type ->
                 PixelPanel(Modifier.fillMaxWidth()) {
-                    Text(if (type == PlaceType.WORK) "🏢 Chegou ao trabalho?" else "🏠 Está em casa agora?", style = MaterialTheme.typography.titleMedium)
-                    Text("Salve este local para o ${state.catName} perceber suas chegadas sozinho.", color = HoodieColors.Muted)
+                    val title = when {
+                        state.canSaveHere && type == PlaceType.WORK -> "🏢 Chegou ao trabalho?"
+                        state.canSaveHere -> "🏠 Está em casa agora?"
+                        type == PlaceType.WORK -> "🏢 Onde fica o seu trabalho?"
+                        else -> "🏠 Onde fica a sua casa?"
+                    }
+                    Text(title, style = MaterialTheme.typography.titleMedium)
+                    Text("Salve o local para o ${state.catName} perceber suas chegadas sozinho.", color = HoodieColors.Muted)
                     Spacer(Modifier.padding(4.dp))
-                    PixelButton(if (busy) "Localizando..." else "Salvar este local como ${type.label}", { vm.savePlaceHere(type) }, Modifier.fillMaxWidth(), enabled = !busy)
+                    if (state.canSaveHere) {
+                        PixelButton(if (busy) "Localizando..." else "Salvar este local como ${type.label}", { vm.savePlaceHere(type) }, Modifier.fillMaxWidth(), enabled = !busy)
+                        Spacer(Modifier.padding(4.dp))
+                    }
+                    PixelButton("🗺 Buscar pelo endereço", { onOpen(Routes.placePicker(type)) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
                 }
             }
 

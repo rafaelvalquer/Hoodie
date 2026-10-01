@@ -17,7 +17,14 @@ interface ClockProvider {
 
 @Singleton
 class SystemClockProvider @Inject constructor() : ClockProvider {
-    override fun nowMillis(): Long = System.currentTimeMillis()
+    /**
+     * Só em debug (Developer Lab → SIMULATOR): adianta o relógio do app para testar
+     * o Hoodie sem esperar horas. Em release é sempre 0.
+     */
+    @Volatile var debugOffsetMs: Long = 0
+        set(value) { field = if (com.hoodie.app.BuildConfig.DEBUG) value.coerceAtLeast(0) else 0 }
+
+    override fun nowMillis(): Long = System.currentTimeMillis() + debugOffsetMs
 
     // Lido a cada chamada: o usuário pode trocar de fuso (viagem) com o app vivo.
     override fun zone(): ZoneId = ZoneId.systemDefault()

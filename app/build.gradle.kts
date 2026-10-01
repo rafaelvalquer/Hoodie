@@ -16,6 +16,12 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0-mvp"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    sourceSets {
+        // Schemas exportados pelo Room: usados pelos testes de migração.
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+        getByName("test").assets.srcDir("$projectDir/schemas")
     }
 
     buildTypes {
@@ -33,6 +39,7 @@ android {
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
         unitTests.all { it.systemProperty("exportIcons", project.findProperty("exportIcons") ?: "false") }
     }
 }
@@ -74,8 +81,20 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.coroutines.play.services)
     implementation(libs.play.services.location)
+    implementation(libs.osmdroid)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.org.json)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.room.testing)
+    testImplementation(libs.work.testing)
+
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.work.testing)
+    androidTestImplementation(libs.coroutines.test)
 }

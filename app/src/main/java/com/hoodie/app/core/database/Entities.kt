@@ -8,6 +8,7 @@ import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.QuestionKind
 import com.hoodie.app.core.model.TimelineActor
+import com.hoodie.app.core.model.TimelineSourceType
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.model.WorkMode
 
@@ -120,13 +121,20 @@ data class HoodieActivityEntity(
     val userContext: UserContextType,
 )
 
-@Entity(tableName = "timeline_events", indices = [Index("timestamp")])
+/**
+ * Linha da timeline ligada ao registro que a originou ([sourceType] + [sourceId]),
+ * para que correções (ex.: oscilação de GPS desfeita) apaguem também o que foi contado.
+ */
+@Entity(tableName = "timeline_events", indices = [Index("timestamp"), Index("sourceType", "sourceId")])
 data class TimelineEventEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long,
     val actor: TimelineActor,
     val emoji: String,
     val text: String,
+    val sourceType: TimelineSourceType? = null,
+    /** CONTEXT → id do context_event; HOODIE_ACTIVITY → startedAt da atividade. */
+    val sourceId: Long? = null,
 )
 
 @Entity(tableName = "memories")

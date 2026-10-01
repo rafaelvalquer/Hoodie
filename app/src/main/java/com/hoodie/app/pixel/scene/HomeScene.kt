@@ -16,6 +16,8 @@ class HomeScene : PixelScene(SceneId.HOME) {
         SpotId.DOOR to Spot(216, 148),
     )
 
+    override val hasAnimatedDoor = true
+
     override fun drawBackground(b: PixelBuffer, env: SceneEnv) {
         SceneArt.wallStripes(b, 0, 131, 0xFFE9D8B4.toInt(), 0xFFDDC8A0.toInt())
         b.box(0, 0, 239, 3, 0xFFC9AE84.toInt())
@@ -23,7 +25,6 @@ class HomeScene : PixelScene(SceneId.HOME) {
         SceneArt.woodFloor(b, 133, 319)
         SceneArt.window(b, 100, 24, 148, 78, env.period, curtains = 0xFFD06A5E.toInt())
         SceneArt.poster(b, 170, 22, 192, 58)
-        SceneArt.door(b, 202, 60, 230, 131)
         SceneArt.rug(b, 62, 198, 176, 236, 0xFF8E5A86.toInt(), 0xFFC08AB4.toInt())
         // Prateleira com livros.
         b.outlined(12, 64, 72, 68, P.FURNITURE_LIGHT, P.OUTLINE)
@@ -35,6 +36,7 @@ class HomeScene : PixelScene(SceneId.HOME) {
 
     override fun props(): List<Prop> = listOf(
         Prop(0) { b, env, _ -> SceneArt.clock(b, 40, 34, 9, env.clockMinute) },
+        Prop(0) { b, env, _ -> SceneArt.door(b, 202, 60, 230, 131, frame = env.doorFrame) },
         Prop(118) { b, _, _ ->
             // Cama: cabeceira, colchão e travesseiro.
             b.outlined(6, 98, 80, 130, P.FURNITURE, P.OUTLINE)
@@ -94,9 +96,8 @@ class HomeScene : PixelScene(SceneId.HOME) {
             for (y in 154..180 step 8) for (x in 14..74 step 10) b.set(x + (y / 8 % 2) * 5, y, 0xFF8EA6E0.toInt())
             b.box(10, 184, 13, 189, P.FURNITURE); b.box(73, 184, 76, 189, P.FURNITURE)
         },
-        Prop(230) { b, _, _ ->
-            b.outlined(150, 212, 182, 248, 0xFF4E5A7A.toInt(), P.OUTLINE)
-            b.box(153, 215, 179, 218, 0xFF67759B.toInt())
+        Prop(230) { b, env, _ ->
+            SceneArt.deskChair(b, 150, 212, 182, 248, 0xFF4E5A7A.toInt(), 0xFF67759B.toInt(), SceneFlag.CHAIR_OCCUPIED in env.flags)
         },
         Prop(292) { b, env, t ->
             // Cozinha: geladeira, bancada, fogão e cafeteira.
@@ -110,7 +111,7 @@ class HomeScene : PixelScene(SceneId.HOME) {
             b.outlined(42, 240, 56, 251, P.METAL_DARK, P.OUTLINE); b.hline(41, 57, 240, P.OUTLINE)
             b.outlined(84, 234, 98, 250, 0xFF3A3F55.toInt(), P.OUTLINE)
             b.set(87, 238, if ((t / 600) % 2 == 0L) P.RED else 0xFF7A2A2A.toInt())
-            SceneArt.mug(b, 88, 243)
+            if (SceneFlag.MUG_IN_HAND !in env.flags) SceneArt.mug(b, 88, 243)
             // Mesa de trabalho/jogos com monitor.
             b.outlined(136, 248, 234, 258, P.WOOD_LIGHT, P.OUTLINE)
             b.outlined(136, 257, 234, 292, P.WOOD, P.OUTLINE)

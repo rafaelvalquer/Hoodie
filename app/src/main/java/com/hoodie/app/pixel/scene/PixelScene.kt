@@ -30,7 +30,18 @@ data class SceneEnv(
     val variant: Int = 0,
     val tvOn: Boolean = false,
     val screenOn: Boolean = true,
-)
+    /** Porta: 0 fechada … [DOOR_OPEN] aberta (DOOR_CLOSED → OPENING → OPEN → CLOSING). */
+    val doorFrame: Int = 0,
+    /** Estado de props sincronizado por eventos das animações. */
+    val flags: Set<SceneFlag> = emptySet(),
+) {
+    companion object {
+        const val DOOR_OPEN = 3
+    }
+}
+
+/** Props que mudam conforme o Hoodie interage (caneca na mão, comida servida, cadeira ocupada…). */
+enum class SceneFlag { MUG_IN_HAND, PHONE_IN_HAND, FOOD_SERVED, FOOD_DONE, CHAIR_OCCUPIED, DUMBBELL_TAKEN, IN_BED }
 
 /** Objeto ordenado por Y: desenhado antes do Hoodie se [baseline] <= pés dele, depois caso contrário. */
 class Prop(val baseline: Int, val draw: (PixelBuffer, SceneEnv, Long) -> Unit)
@@ -52,6 +63,9 @@ abstract class PixelScene(val id: SceneId) {
 
     /** Cenas de deslocamento: o gato anda "no lugar" e o cenário corre (paralaxe). */
     open val walkInPlace: Boolean = false
+
+    /** Desenha a porta como prop animável (senão a porta, se houver, é estática). */
+    open val hasAnimatedDoor: Boolean = false
 
     /** Cenas já escuras/estilizadas podem dispensar o overlay de período. */
     open val usesLighting: Boolean = true

@@ -22,7 +22,7 @@ import androidx.room.RoomDatabase
         TimelineEventEntity::class,
         MemoryEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class HoodieDatabase : RoomDatabase() {

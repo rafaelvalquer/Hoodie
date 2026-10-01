@@ -1,12 +1,12 @@
 package com.hoodie.app.engine.hoodie
 
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.HoodieState
 import com.hoodie.app.core.model.Needs
 import com.hoodie.app.core.model.Routine
 import com.hoodie.app.core.model.SleepSchedule
 import com.hoodie.app.core.model.UserContextType
-import com.hoodie.app.core.time.DAY_MS
 import com.hoodie.app.core.time.MINUTE_MS
 import com.hoodie.app.core.time.atZone
 import java.time.LocalDate
@@ -35,7 +35,27 @@ data class CompletedActivity(
     val userContext: UserContextType,
 )
 
-data class AdvanceResult(val state: HoodieState, val completed: List<CompletedActivity>, val started: List<HoodieState>)
+data class AdvanceResult(
+    val state: HoodieState,
+    val completed: List<CompletedActivity>,
+    val started: List<HoodieState>,
+    val recovery: SimulationRecovery = SimulationRecovery.NORMAL_CATCH_UP,
+)
+
+enum class SimulationRecovery {
+    /** Reconstrói tudo o que aconteceu desde o último estado. */
+    NORMAL_CATCH_UP,
+
+    /** Ausência longa demais: recomeça agora, sem inventar os dias que não dá para reconstruir. */
+    RESET_AFTER_LONG_ABSENCE,
+}
+
+/** Até onde vale reconstruir o passado. */
+object SimulationRecoveryPolicy {
+    fun decide(lastNeedsAt: Long, now: Long): SimulationRecovery =
+        if (now - lastNeedsAt > HoodieConfig.MAX_CATCH_UP_MS) SimulationRecovery.RESET_AFTER_LONG_ABSENCE
+        else SimulationRecovery.NORMAL_CATCH_UP
+}
 
 /**
  * Coração do princípio "o app nunca depende de ficar aberto".
@@ -48,8 +68,6 @@ data class AdvanceResult(val state: HoodieState, val completed: List<CompletedAc
  */
 object HoodieSimulator {
 
-    /** Acima disso não vale simular minuto a minuto: o gato "recomeça" o dia. */
-    private const val MAX_CATCH_UP_MS = 3 * DAY_MS
     private const val MAX_STEPS = 2_000
 
     fun initial(now: Long, timeline: ContextTimeline, env: SimulationEnv): HoodieState {
@@ -59,16 +77,19 @@ object HoodieSimulator {
     }
 
     fun advance(state: HoodieState, now: Long, timeline: ContextTimeline, env: SimulationEnv): AdvanceResult {
-        if (now - state.needsAt > MAX_CATCH_UP_MS) {
+        if (SimulationRecoveryPolicy.decide(state.needsAt, now) == SimulationRecovery.RESET_AFTER_LONG_ABSENCE) {
             val fresh = initial(now, timeline, env)
-            return AdvanceResult(fresh, emptyList(), listOf(fresh))
+            return AdvanceResult(fresh, emptyList(), listOf(fresh), SimulationRecovery.RESET_AFTER_LONG_ABSENCE)
         }
         var s = state
         val completed = mutableListOf<CompletedActivity>()
         val started = mutableListOf<HoodieState>()
         var steps = 0
         while (steps++ < MAX_STEPS) {
-            val change = timeline.nextChangeAfter(s.needsAt)
+            // O contexto mudou "por trás" do estado salvo (evento atrasado ou correção):
+            // reage já, em vez de esperar a atividade atual terminar.
+            val stale = timeline.contextAt(s.needsAt) != s.userContext
+            val change = if (stale) s.needsAt else timeline.nextChangeAfter(s.needsAt)
             val boundary = listOfNotNull(s.expectedEndAt, change).minOrNull() ?: break
             if (boundary > now) break
 

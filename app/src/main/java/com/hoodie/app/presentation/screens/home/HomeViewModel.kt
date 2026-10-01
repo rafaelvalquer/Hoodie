@@ -68,6 +68,7 @@ data class HomeUiState(
     val isWorkDay: Boolean = false,
     val isDayOff: Boolean = false,
     val suggestSavePlace: PlaceType? = null,
+    val canSaveHere: Boolean = false,
 )
 
 private data class Inputs(
@@ -166,17 +167,21 @@ class HomeViewModel @Inject constructor(
 
         val hasHome = i.places.any { it.type == PlaceType.HOME }
         val hasWork = i.places.any { it.type == PlaceType.WORK }
+        // Lugar faltando: sempre dá para buscar pelo endereço; "estou aqui agora" só faz
+        // sentido com localização e (no caso do trabalho) em horário de expediente.
+        val atWorkHours = workDay && RoutineEngine.isWorkHours(minute, i.routine)
         val suggest = when {
-            status == LocationStatus.NO_PERMISSION || status == LocationStatus.DISABLED -> null
-            i.routine.workMode == WorkMode.OFFICE && !hasWork && workDay && RoutineEngine.isWorkHours(minute, i.routine) -> PlaceType.WORK
+            i.routine.workMode == WorkMode.OFFICE && !hasWork && (atWorkHours || hasHome) -> PlaceType.WORK
             !hasHome -> PlaceType.HOME
             else -> null
         }
+        val locationReady = status != LocationStatus.NO_PERMISSION && status != LocationStatus.DISABLED
+        val canSaveHere = locationReady && (suggest == PlaceType.HOME || atWorkHours)
         return HomeUiState(
             loading = false, catName = i.settings.catName, now = now, period = DayPeriod.of(zoned.hour),
             context = ctx, snapshot = snap, visual = visual, next = next, dialogue = dialogueText,
             probableMode = probable, locationStatus = status, isWorkDay = i.routine.hasWork && zoned.dayOfWeek in i.routine.days,
-            isDayOff = i.dayOff, suggestSavePlace = suggest,
+            isDayOff = i.dayOff, suggestSavePlace = suggest, canSaveHere = canSaveHere,
         )
     }
 

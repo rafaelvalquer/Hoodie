@@ -32,7 +32,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.WorkMode
+import com.hoodie.app.presentation.screens.places.PlacePickerContent
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.presentation.components.AnimatedHoodie
 import com.hoodie.app.presentation.components.PixelButton
@@ -58,6 +60,25 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
         if (!vm.hasLocation()) vm.go(OnboardingStep.HOME)
     }
 
+    // Passos de endereço ocupam a tela toda (o mapa não pode ficar dentro de scroll).
+    when (state.step) {
+        OnboardingStep.HOME_ADDRESS -> {
+            PlacePickerContent(
+                PlaceType.HOME, null, onDone = vm::onHomeAddressSaved, onCancel = { vm.go(OnboardingStep.HOME) },
+                modifier = Modifier.safeDrawingPadding(), allowTypeChange = false,
+            )
+            return
+        }
+        OnboardingStep.WORK_ADDRESS -> {
+            PlacePickerContent(
+                PlaceType.WORK, null, onDone = vm::onWorkAddressSaved, onCancel = { vm.go(OnboardingStep.WORK) },
+                modifier = Modifier.safeDrawingPadding(), allowTypeChange = false,
+            )
+            return
+        }
+        else -> Unit
+    }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -78,6 +99,8 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
         AnimatedHoodie(anim, size = 150.dp)
 
         when (state.step) {
+            // Tratados acima, em tela cheia.
+            OnboardingStep.HOME_ADDRESS, OnboardingStep.WORK_ADDRESS -> Unit
             OnboardingStep.WELCOME -> {
                 SpeechBubble("Olá. Eu sou ${state.catName}.\nVamos descobrir como é o seu dia.")
                 Text(
@@ -125,12 +148,14 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
                 } else {
                     Text("Sem localização, o ${state.catName} segue a rotina provável. Dá para ativar depois.", color = HoodieColors.Muted, textAlign = TextAlign.Center)
                 }
-                PixelButton("Não, definir depois", { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                PixelButton("Não, buscar pelo endereço", { vm.go(OnboardingStep.HOME_ADDRESS) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
+                PixelButton("Definir depois", { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
             }
             OnboardingStep.WORK -> {
                 SectionLabel("Passo 4 · Trabalho")
                 SpeechBubble("Você trabalha fora de casa?")
-                PixelButton("Sim", { vm.setWorkMode(WorkMode.OFFICE) }, Modifier.fillMaxWidth())
+                PixelButton("Sim, buscar o endereço", vm::pickWorkAddress, Modifier.fillMaxWidth())
+                PixelButton("Sim, marco quando chegar lá", { vm.setWorkMode(WorkMode.OFFICE) }, Modifier.fillMaxWidth(), color = HoodieColors.Blue)
                 PixelButton("Home office", { vm.setWorkMode(WorkMode.HOME_OFFICE) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
                 PixelButton("Não", { vm.setWorkMode(WorkMode.NONE) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
                 if (state.routine.workMode == WorkMode.OFFICE) {
@@ -160,7 +185,7 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
                 PixelPanel(Modifier.fillMaxWidth()) {
                     Text("Configurado:", style = MaterialTheme.typography.titleMedium)
                     Text("🏠 Casa: " + if (state.homeSaved) "salva" else "definir depois", color = HoodieColors.Muted)
-                    Text("🏢 Trabalho: " + state.routine.workMode.label, color = HoodieColors.Muted)
+                    Text("🏢 Trabalho: " + state.routine.workMode.label + if (state.workSaved) " · local salvo" else "", color = HoodieColors.Muted)
                 }
                 PixelButton("Vamos lá!", vm::finish, Modifier.fillMaxWidth(), color = HoodieColors.Gold)
             }

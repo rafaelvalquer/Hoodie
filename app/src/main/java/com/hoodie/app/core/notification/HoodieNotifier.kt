@@ -19,12 +19,21 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** O que as engines precisam para falar com o usuário (fake nos testes). */
+interface Notifier {
+    suspend fun event(text: String)
+    suspend fun askYesNo(questionId: Long, text: String)
+    suspend fun askInApp(questionId: Long, text: String)
+    fun cancelQuestion(questionId: Long)
+    fun cancelAll()
+}
+
 /** Poucas notificações e boas: chegadas, perguntas de confirmação e (no máximo 1/dia) vida própria. */
 @Singleton
 class HoodieNotifier @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settings: SettingsRepository,
-) {
+) : Notifier {
     fun createChannels() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = context.getSystemService(NotificationManager::class.java)
@@ -51,7 +60,7 @@ class HoodieNotifier @Inject constructor(
     )
 
     @android.annotation.SuppressLint("MissingPermission")
-    suspend fun event(text: String) {
+    override suspend fun event(text: String) {
         if (!allowed()) return
         val n = NotificationCompat.Builder(context, CH_EVENTS)
             .setSmallIcon(R.drawable.ic_stat_hoodie)
@@ -65,7 +74,7 @@ class HoodieNotifier @Inject constructor(
 
     /** Pergunta Sim/Não respondível direto da notificação. */
     @android.annotation.SuppressLint("MissingPermission")
-    suspend fun askYesNo(questionId: Long, text: String) {
+    override suspend fun askYesNo(questionId: Long, text: String) {
         if (!allowed()) return
         fun action(yes: Boolean) = PendingIntent.getBroadcast(
             context, (questionId * 2 + if (yes) 1 else 0).toInt(),
@@ -88,7 +97,7 @@ class HoodieNotifier @Inject constructor(
 
     /** Pergunta que precisa de escolha (lugar novo): abre o app. */
     @android.annotation.SuppressLint("MissingPermission")
-    suspend fun askInApp(questionId: Long, text: String) {
+    override suspend fun askInApp(questionId: Long, text: String) {
         if (!allowed()) return
         val n = NotificationCompat.Builder(context, CH_QUESTIONS)
             .setSmallIcon(R.drawable.ic_stat_hoodie)
@@ -100,7 +109,10 @@ class HoodieNotifier @Inject constructor(
         NotificationManagerCompat.from(context).notify(questionNotificationId(questionId), n)
     }
 
-    fun cancelQuestion(questionId: Long) = NotificationManagerCompat.from(context).cancel(questionNotificationId(questionId))
+    override fun cancelQuestion(questionId: Long) = NotificationManagerCompat.from(context).cancel(questionNotificationId(questionId))
+
+    /** Delete Everything: nenhuma notificação pendente pode sobreviver aos dados. */
+    override fun cancelAll() = NotificationManagerCompat.from(context).cancelAll()
 
     private fun questionNotificationId(questionId: Long) = 10_000 + (questionId % 50_000).toInt()
 

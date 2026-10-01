@@ -6,14 +6,15 @@ import com.hoodie.app.core.database.HoodieActivityEntity
 import com.hoodie.app.core.database.HoodieStateDao
 import com.hoodie.app.core.database.HoodieStateEntity
 import com.hoodie.app.core.datastore.SettingsRepository
+import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.model.HoodieState
 import com.hoodie.app.core.model.Needs
-import com.hoodie.app.core.model.TimelineActor
+import com.hoodie.app.core.model.TimelineSourceType
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.DAY_MS
 import com.hoodie.app.core.time.atZone
-import com.hoodie.app.data.repository.HistoryRepository
 import com.hoodie.app.data.repository.RoutineRepository
+import com.hoodie.app.data.repository.TimelineRepository
 import com.hoodie.app.engine.routine.RoutineEngine
 import com.hoodie.app.engine.timeline.ContextSpan
 import kotlinx.coroutines.sync.Mutex
@@ -40,8 +41,9 @@ class HoodieEngine @Inject constructor(
     private val contextDao: ContextEventDao,
     private val routines: RoutineRepository,
     private val settings: SettingsRepository,
-    private val history: HistoryRepository,
+    private val timeline: TimelineRepository,
     private val clock: ClockProvider,
+    private val log: DebugEventLogger,
 ) {
     private val mutex = Mutex()
 
@@ -57,26 +59,55 @@ class HoodieEngine @Inject constructor(
         val saved = stateDao.get()?.toDomain()
         val from = minOf(saved?.needsAt ?: now, now) - DAY_MS
         val events = contextDao.overlapping(from, now + 1).map { ContextSpan(it.type, it.startedAt, it.endedAt) }
-        val timeline = EventContextTimeline(events) { t ->
+        val contexts = EventContextTimeline(events) { t ->
             val zoned = t.atZone(zone)
             RoutineEngine.probableContext(zoned, routine, zoned.toLocalDate() in daysOff)
         }
 
         val result = if (saved == null) {
-            val initial = HoodieSimulator.initial(now, timeline, env)
+            val initial = HoodieSimulator.initial(now, contexts, env)
             AdvanceResult(initial, emptyList(), listOf(initial))
         } else {
-            HoodieSimulator.advance(saved, now, timeline, env)
+            HoodieSimulator.advance(saved, now, contexts, env)
         }
 
         stateDao.upsert(result.state.toEntity())
         if (result.completed.isNotEmpty()) {
             activityDao.insertAll(result.completed.map { HoodieActivityEntity(activity = it.activity, startedAt = it.startedAt, endedAt = it.endedAt, userContext = it.userContext) })
         }
+        if (result.recovery == SimulationRecovery.RESET_AFTER_LONG_ABSENCE) {
+            timeline.recordSystem("🐱", "${s.catName} retomou a rotina.", now)
+            log.log(DebugEventLogger.Category.HOODIE, "RESET_AFTER_LONG_ABSENCE")
+        }
+        var previous = saved?.activity
         result.started.forEach { st ->
-            history.record(TimelineActor.HOODIE, st.activity.emoji, "${s.catName} ${st.activity.pastTense}", st.startedAt)
+            timeline.recordHoodieActivity(st.activity.emoji, "${s.catName} ${st.activity.pastTense}", st.startedAt)
+            log.log(DebugEventLogger.Category.HOODIE, "${previous ?: "∅"} → ${st.activity} (${st.userContext})")
+            previous = st.activity
         }
         HoodieSnapshot(result.state, HoodieSimulator.liveNeeds(result.state, now), result.started)
+    }
+
+    /**
+     * O contexto a partir de [since] foi desfeito (oscilação de GPS): apaga o que o
+     * Hoodie "viveu" baseado nele e retoma a atividade que foi interrompida.
+     * O próximo [resolve] decide a partir de agora com o contexto corrigido.
+     */
+    suspend fun discardSince(since: Long) = mutex.withLock {
+        val saved = stateDao.get()?.toDomain() ?: return@withLock
+        activityDao.deleteStartedFrom(since)
+        timeline.invalidateRange(TimelineSourceType.HOODIE_ACTIVITY, since, Long.MAX_VALUE)
+        if (saved.startedAt < since) return@withLock
+        val now = clock.nowMillis()
+        val interrupted = activityDao.endedAt(since)
+        val restored = if (interrupted != null) {
+            activityDao.delete(interrupted.id)
+            saved.copy(activity = interrupted.activity, startedAt = interrupted.startedAt, expectedEndAt = now, userContext = interrupted.userContext)
+        } else {
+            saved.copy(expectedEndAt = now)
+        }
+        stateDao.upsert(restored.toEntity())
+        log.log(DebugEventLogger.Category.HOODIE, "DISCARD desde $since → retoma ${restored.activity}")
     }
 
     private fun HoodieStateEntity.toDomain() = HoodieState(

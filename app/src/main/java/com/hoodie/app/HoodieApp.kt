@@ -21,5 +21,17 @@ class HoodieApp : Application(), Configuration.Provider {
         super.onCreate()
         notifier.createChannels()
         scheduler.schedulePeriodic()
+        configureMap()
+        // Sprite sheets do Aseprite (assets/pixel/hoodie) por cima do procedural.
+        com.hoodie.app.pixel.sprite.AndroidSpriteSheets.install(this)
+    }
+
+    /** osmdroid: user-agent exigido pelos servidores do OSM e cache de tiles só no armazenamento interno. */
+    private fun configureMap() {
+        org.osmdroid.config.Configuration.getInstance().apply {
+            userAgentValue = packageName
+            osmdroidBasePath = java.io.File(cacheDir, "osmdroid")
+            osmdroidTileCache = java.io.File(cacheDir, "osmdroid/tiles")
+        }
     }
 }

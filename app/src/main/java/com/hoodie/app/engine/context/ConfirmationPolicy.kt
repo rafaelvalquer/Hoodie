@@ -1,5 +1,6 @@
 package com.hoodie.app.engine.context
 
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.model.QuestionKind
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.MINUTE_MS
@@ -14,8 +15,8 @@ data class AskedQuestion(val kind: QuestionKind, val candidate: UserContextType?
  * contexto em menos de [SAME_CONTEXT_COOLDOWN_MIN] minutos.
  */
 object ConfirmationPolicy {
-    const val MAX_PER_DAY = 4
-    const val SAME_CONTEXT_COOLDOWN_MIN = 60L
+    const val MAX_PER_DAY = HoodieConfig.MAX_QUESTIONS_PER_DAY
+    const val SAME_CONTEXT_COOLDOWN_MIN = HoodieConfig.QUESTION_COOLDOWN_MINUTES.toLong()
 
     fun canAsk(
         now: Long,

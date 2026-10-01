@@ -60,7 +60,9 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
             b.outlined(60, 246, 180, 258, P.WHITE, P.OUTLINE)
             b.outlined(62, 257, 178, 286, P.CREAM, P.OUTLINE)
             for (x in 64..176 step 8) b.box(x, 262, x + 3, 284, 0xFFE7A9A0.toInt())
-            drawFood(b, env.variant)
+            // Prato chega depois do WAIT_FOOD (evento FOOD_SERVED) e some ao terminar.
+            if (SceneFlag.FOOD_SERVED in env.flags && SceneFlag.FOOD_DONE !in env.flags) drawFood(b, env.variant)
+            else if (SceneFlag.FOOD_DONE in env.flags) b.outlined(106, 246, 134, 252, P.WHITE, P.OUTLINE)
             b.outlined(150, 234, 158, 250, 0xFFBFE6F6.toInt(), P.OUTLINE)
             b.box(151, 240, 157, 249, 0xFFF29B4A.toInt())
         },
@@ -242,6 +244,7 @@ class UnknownScene : PixelScene(SceneId.UNKNOWN) {
 /** Coringa para família, loja, evento, lugar temporário. */
 class GenericIndoorScene : PixelScene(SceneId.GENERIC_INDOOR) {
     override val spots = mapOf(SpotId.CENTER to Spot(96, 256), SpotId.SOFA to Spot(160, 214), SpotId.DOOR to Spot(30, 160))
+    override val hasAnimatedDoor = true
 
     override fun drawBackground(b: PixelBuffer, env: SceneEnv) {
         SceneArt.wallStripes(b, 0, 141, 0xFFB7CFA4.toInt(), 0xFFA8C295.toInt(), 10)
@@ -252,12 +255,12 @@ class GenericIndoorScene : PixelScene(SceneId.GENERIC_INDOOR) {
             b.outlined(x, 34, x + 24, 60, P.FURNITURE, P.OUTLINE); b.box(x + 3, 37, x + 21, 57, c)
             b.disc(x + 12, 47, 5, P.CREAM)
         }
-        SceneArt.door(b, 14, 70, 44, 141, 0xFF6B4A33.toInt())
         SceneArt.rug(b, 60, 230, 200, 290, 0xFFC08A5A.toInt(), 0xFFE2B98A.toInt())
     }
 
     override fun props(): List<Prop> = listOf(
         Prop(0) { b, env, _ -> SceneArt.clock(b, 214, 40, 8, env.clockMinute) },
+        Prop(0) { b, env, _ -> SceneArt.door(b, 14, 70, 44, 141, 0xFF6B4A33.toInt(), env.doorFrame) },
         Prop(190) { b, _, _ ->
             b.outlined(122, 160, 200, 190, 0xFF6F7FC4.toInt(), P.OUTLINE)
             b.hline(124, 198, 162, 0xFF8E9DDA.toInt())

@@ -7,7 +7,7 @@
 ```
 
 MVP Android **100% nativo (Kotlin + Jetpack Compose)**, **offline** e com **todo o histórico só no aparelho**.
-O app nem declara a permissão `INTERNET`.
+A internet é usada apenas na tela de buscar um endereço no mapa (veja Privacidade).
 
 ## Como rodar
 
@@ -82,12 +82,14 @@ GPS oscilando na borda (saída + volta em < 5 min) desfaz a saída. Sem localiza
 
 ## Telas do MVP
 
-Splash · Onboarding (nome, permissões, casa, trabalho, horários, dias) · Home/Hoodie · Confirmação de contexto (card + notificação com Sim/Não) ·
+Splash · Onboarding (nome, permissões, casa e trabalho por GPS ou endereço no mapa, horários, dias) · Escolher lugar no mapa (busca de endereço + pino + raio) · Home/Hoodie · Confirmação de contexto (card + notificação com Sim/Não) ·
 Histórico (Hoje / Ontem / 7 dias, com resumo "Seu dia" e "Hoodie") · Lugares · Rotina · Memórias · Perfil do Hoodie · Ajustes · Pixel Lab.
 
 ## Privacidade
 
-* Sem conta, servidor, Firebase, nuvem ou internet; backup em nuvem desativado (`data_extraction_rules`).
+* Sem conta, servidor, Firebase ou nuvem; backup em nuvem desativado (`data_extraction_rules`).
+* Internet só na tela **Buscar endereço no mapa** (onboarding, Lugares e Home): o texto digitado vai para o Geocoder do
+  Android e os tiles vêm do OpenStreetMap (osmdroid, cache no armazenamento interno). Rotina, geofences, gato e histórico seguem offline.
 * Guardado: lugares (coordenadas cifradas), horários, contextos, histórico, memórias e estado do gato.
 * **Não** guardado: trajeto GPS ou posição contínua. Eventos de geofence guardam só `lugar + transição + hora`.
 * "Apagar todos os dados" limpa banco, preferências, geofences e tarefas.

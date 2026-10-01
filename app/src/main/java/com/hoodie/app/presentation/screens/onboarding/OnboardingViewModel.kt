@@ -23,12 +23,13 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import javax.inject.Inject
 
-enum class OnboardingStep { WELCOME, NAME, PERMISSION, HOME, WORK, SCHEDULE, DAYS, DONE }
+enum class OnboardingStep { WELCOME, NAME, PERMISSION, HOME, HOME_ADDRESS, WORK, WORK_ADDRESS, SCHEDULE, DAYS, DONE }
 
 data class OnboardingState(
     val step: OnboardingStep = OnboardingStep.WELCOME,
     val catName: String = "Hoodie",
     val homeSaved: Boolean = false,
+    val workSaved: Boolean = false,
     val busy: Boolean = false,
     val message: String? = null,
     val routine: Routine = Routine(workMode = WorkMode.OFFICE),
@@ -73,6 +74,17 @@ class OnboardingViewModel @Inject constructor(
         _state.update { it.copy(routine = it.routine.copy(workMode = mode)) }
         go(if (mode == WorkMode.NONE) OnboardingStep.DONE else OnboardingStep.SCHEDULE)
     }
+
+    /** Casa escolhida pelo endereço no mapa. */
+    fun onHomeAddressSaved() = _state.update { it.copy(homeSaved = true, step = OnboardingStep.WORK) }
+
+    /** "Sim, trabalho fora" + buscar o endereço do trabalho agora. */
+    fun pickWorkAddress() {
+        _state.update { it.copy(routine = it.routine.copy(workMode = WorkMode.OFFICE)) }
+        go(OnboardingStep.WORK_ADDRESS)
+    }
+
+    fun onWorkAddressSaved() = _state.update { it.copy(workSaved = true, step = OnboardingStep.SCHEDULE) }
 
     fun updateRoutine(transform: (Routine) -> Routine) = _state.update { it.copy(routine = transform(it.routine)) }
 

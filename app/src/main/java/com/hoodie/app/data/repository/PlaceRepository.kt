@@ -56,6 +56,6 @@ class PlaceRepository @Inject constructor(
 
     private fun toDomain(e: PlaceEntity): Place? {
         val (lat, lng) = cipher.decrypt(e.encryptedCoordinates) ?: return null
-        return Place(e.id, e.name, e.type, lat, lng, e.radiusMeters, e.confirmationCount, e.createdAt, e.lastVisitedAt)
+        return Place(e.id, e.name, e.type, lat, lng, e.radiusMeters, e.confirmationCount, e.createdAt, e.lastVisitedAt, e.isFavorite)
     }
 }

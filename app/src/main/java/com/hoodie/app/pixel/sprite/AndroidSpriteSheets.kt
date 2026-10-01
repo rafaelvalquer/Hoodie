@@ -1,0 +1,30 @@
+package com.hoodie.app.pixel.sprite
+
+import android.content.Context
+import android.graphics.BitmapFactory
+import com.hoodie.app.pixel.renderer.PixelBuffer
+import java.io.InputStream
+
+/** Ponte Android: assets do APK + BitmapFactory sem escala nem pré-multiplicação. */
+object AndroidSpriteSheets {
+
+    @Volatile
+    var lastReport: SheetLoadReport = SheetLoadReport(emptyList(), emptyList())
+        private set
+
+    fun install(context: Context) {
+        val assets = object : SpriteAssetSource {
+            override fun list(dir: String): List<String> = context.assets.list(dir)?.toList().orEmpty()
+            override fun open(path: String): InputStream = context.assets.open(path)
+        }
+        val decoder = SpriteImageDecoder { input ->
+            val opts = BitmapFactory.Options().apply { inScaled = false; inPremultiplied = false }
+            BitmapFactory.decodeStream(input, null, opts)?.let { bmp ->
+                PixelBuffer(bmp.width, bmp.height).also { bmp.getPixels(it.pixels, 0, bmp.width, 0, 0, bmp.width, bmp.height); bmp.recycle() }
+            }
+        }
+        val (sheets, report) = SpriteSheetProvider.load(assets, decoder)
+        lastReport = report
+        HoodieSprites.provider = if (sheets.available.isEmpty()) ProceduralSpriteProvider else CompositeSpriteProvider(sheets)
+    }
+}
