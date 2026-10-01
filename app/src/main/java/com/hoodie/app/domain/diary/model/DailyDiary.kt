@@ -19,8 +19,8 @@ data class DailySummary(
     val totalMs: Long get() = homeMs + workMs + commutingMs + lunchMs + gymMs + leisureMs + otherMs
 }
 
-enum class DiaryTimelineType { ARRIVED, LEFT, ACTIVITY, CONTEXT_CHANGE, MEMORY, NOTE }
-enum class DiaryActor { USER, HOODIE, SYSTEM }
+enum class DiaryTimelineType { ARRIVED, LEFT, ACTIVITY, CONTEXT_CHANGE, MEMORY, NOTE, APP_USAGE }
+enum class DiaryActor { USER, HOODIE, SYSTEM, PHONE }
 
 data class DiaryTimelineItem(
     val id: String,
@@ -82,9 +82,19 @@ data class ReplayFrame(
     val highlightedTimelineItemIds: Set<String>,
     val currentContext: UserContextType?,
     val currentHoodieActivity: HoodieActivity?,
+    val markerX: Float = 0f,
+    val markerY: Float = 0f,
 )
 
-data class ReplaySequence(val startAt: Long, val endAt: Long, val visits: List<PlaceVisit>, val timeline: List<DiaryTimelineItem>) {
+data class ReplaySequence(
+    val startAt: Long,
+    val endAt: Long,
+    val visits: List<PlaceVisit>,
+    val timeline: List<DiaryTimelineItem>,
+    val contexts: List<Pair<LongRange, UserContextType>> = emptyList(),
+    val activities: List<Pair<LongRange, HoodieActivity>> = emptyList(),
+    val map: DiaryMapData = DiaryMapData(),
+) {
     fun frameAt(timestamp: Long): ReplayFrame {
         val at = timestamp.coerceIn(startAt, endAt)
         val current = visits.indexOfLast { it.arrivalAt <= at }.takeIf { it >= 0 }
@@ -93,16 +103,27 @@ data class ReplaySequence(val startAt: Long, val endAt: Long, val visits: List<P
         val edgeDuration = if (visit != null && next != null) (next.arrivalAt - (visit.departureAt ?: visit.arrivalAt)).coerceAtLeast(1) else 0
         val edgeStart = visit?.departureAt ?: visit?.arrivalAt ?: at
         val onEdge = visit != null && next != null && at >= edgeStart && at < next.arrivalAt
+        val edgeProgress = if (onEdge && edgeDuration > 0) ((at - edgeStart).toFloat() / edgeDuration).coerceIn(0f, 1f) else 0f
+        val fromNode = current?.let { map.nodes.getOrNull(it) }
+        val toNode = current?.plus(1)?.let { map.nodes.getOrNull(it) }
+        val markerX = if (onEdge && fromNode != null && toNode != null) fromNode.x + (toNode.x - fromNode.x) * edgeProgress else fromNode?.x?.toFloat() ?: 0f
+        val markerY = if (onEdge && fromNode != null && toNode != null) fromNode.y + (toNode.y - fromNode.y) * edgeProgress else fromNode?.y?.toFloat() ?: 0f
         val highlighted = timeline.filter { it.timestamp <= at }.takeLast(1).map { it.id }.toSet()
         return ReplayFrame(
             timestamp = at,
             activeNodeId = if (onEdge) null else current?.let { "visit-$it" },
-            activeEdgeId = if (onEdge && current != null) "edge-$current" else null,
-            progressOnEdge = if (onEdge && edgeDuration > 0) ((at - edgeStart).toFloat() / edgeDuration).coerceIn(0f, 1f) else 0f,
+            activeEdgeId = if (onEdge) current?.let { "edge-$it" } else null,
+            progressOnEdge = edgeProgress,
             highlightedTimelineItemIds = highlighted,
-            currentContext = null,
-            currentHoodieActivity = null,
+            currentContext = contexts.lastOrNull { at in it.first }?.second,
+            currentHoodieActivity = activities.lastOrNull { at in it.first }?.second,
+            markerX = markerX,
+            markerY = markerY,
         )
+    }
+
+    companion object {
+        val EMPTY = ReplaySequence(0, 0, emptyList(), emptyList())
     }
 }
 
@@ -112,4 +133,6 @@ data class DailyDiary(
     val visits: List<PlaceVisit>,
     val map: DiaryMapData,
     val replay: ReplaySequence,
+    /** Camada digital do dia (null = análise do celular desligada, sem permissão ou sem dados). */
+    val phoneInsights: com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights? = null,
 )

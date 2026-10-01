@@ -53,6 +53,7 @@ import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.navigation.Routes
+import com.hoodie.app.presentation.screens.diary.DiaryLabScreen
 import com.hoodie.app.presentation.theme.HoodieColors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -133,7 +134,7 @@ class DeveloperLabViewModel @Inject constructor(
     }
 }
 
-private val tabs = listOf("PIXEL", "CONTEXT", "GEOFENCE", "SIMULATOR", "DATABASE", "LOG")
+private val tabs = listOf("PIXEL", "CONTEXT", "GEOFENCE", "SIMULATOR", "DATABASE", "DIARY", "LOG")
 
 @Composable
 fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: DeveloperLabViewModel = hiltViewModel()) {
@@ -160,6 +161,7 @@ fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: Develop
             "GEOFENCE" -> GeofenceTab(snap, permission, geofence, vm::reregister)
             "SIMULATOR" -> SimulatorTab(snap, zone, vm::advance, vm::resetClock)
             "DATABASE" -> DatabaseTab(snap)
+            "DIARY" -> DiaryLabScreen(Modifier.fillMaxWidth())
             "LOG" -> LogTab(log, zone)
         }
     }

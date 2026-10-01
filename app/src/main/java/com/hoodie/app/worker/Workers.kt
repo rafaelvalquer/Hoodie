@@ -8,12 +8,14 @@ import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.database.LocationEventDao
 import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.datastore.SettingsRepository
+import com.hoodie.app.core.deviceusage.UsageAccessManager
 import com.hoodie.app.core.geofence.GeofenceManager
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.notification.Notifier
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.atZone
+import com.hoodie.app.data.repository.DeviceUsageRepository
 import com.hoodie.app.engine.context.ContextEngine
 import com.hoodie.app.engine.hoodie.HoodieEngine
 import com.hoodie.app.engine.memory.MemoryEngine
@@ -106,5 +108,38 @@ class CheckWorker @AssistedInject constructor(
         const val EVENT = "event"
         const val LUNCH = "hoodie_lunch_check"
         const val COMMUTE = "hoodie_commute_check"
+    }
+}
+
+/**
+ * Diário Digital: recalcula hoje e ontem a cada poucas horas. Ontem garante o
+ * "fim do dia" fechado mesmo que o app não seja aberto depois da meia-noite.
+ * Não monitora nada em tempo real: só agrega os eventos que o Android já guardou.
+ */
+@HiltWorker
+class PhoneInsightsWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val deviceUsage: DeviceUsageRepository,
+    private val access: UsageAccessManager,
+    private val settings: SettingsRepository,
+    private val clock: ClockProvider,
+    private val log: DebugEventLogger,
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result {
+        val digital = settings.current().digital
+        if (!digital.analysisEnabled || !digital.saveHistory || !access.isGranted()) return Result.success()
+        log.log(DebugEventLogger.Category.WORKER, "phone insights")
+        val today = clock.today()
+        runCatching {
+            deviceUsage.refreshDay(today.minusDays(1))
+            deviceUsage.refreshDay(today)
+        }.onFailure { return Result.retry() }
+        return Result.success()
+    }
+
+    companion object {
+        const val NAME = "hoodie_phone_insights"
     }
 }

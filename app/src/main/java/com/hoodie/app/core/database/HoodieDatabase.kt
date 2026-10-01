@@ -21,8 +21,12 @@ import androidx.room.RoomDatabase
         HoodieActivityEntity::class,
         TimelineEventEntity::class,
         MemoryEntity::class,
+        DailyDeviceUsageEntity::class,
+        DailyAppUsageEntity::class,
+        DailyContextAppUsageEntity::class,
+        AppCategoryOverrideEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class HoodieDatabase : RoomDatabase() {
@@ -37,6 +41,7 @@ abstract class HoodieDatabase : RoomDatabase() {
     abstract fun hoodieActivityDao(): HoodieActivityDao
     abstract fun timelineDao(): TimelineDao
     abstract fun memoryDao(): MemoryDao
+    abstract fun deviceUsageDao(): DeviceUsageDao
 
     companion object {
         const val NAME = "hoodie.db"

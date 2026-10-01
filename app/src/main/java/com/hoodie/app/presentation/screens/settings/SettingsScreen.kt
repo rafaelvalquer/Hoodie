@@ -41,6 +41,10 @@ import com.hoodie.app.core.geofence.GeofenceRegistrationResult
 import com.hoodie.app.core.location.LocationPermissionManager
 import com.hoodie.app.core.location.LocationPermissionState
 import com.hoodie.app.core.security.DataWiper
+import com.hoodie.app.core.datastore.DigitalSettings
+import com.hoodie.app.core.deviceusage.UsageAccessManager
+import com.hoodie.app.core.deviceusage.UsagePermissionState
+import com.hoodie.app.domain.phoneinsights.usecase.ClearDigitalHistoryUseCase
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.presentation.components.ChipRow
 import com.hoodie.app.presentation.components.PixelButton
@@ -62,7 +66,10 @@ class SettingsViewModel @Inject constructor(
     private val permissions: LocationPermissionManager,
     private val geofences: GeofenceRegistrar,
     private val wiper: DataWiper,
+    private val usageAccess: UsageAccessManager,
+    private val clearDigital: ClearDigitalHistoryUseCase,
 ) : ViewModel() {
+    val usagePermission: StateFlow<UsagePermissionState> = usageAccess.state
     val state = settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
     val permission: StateFlow<LocationPermissionState> = permissions.state
     val geofenceResult: StateFlow<GeofenceRegistrationResult?> = geofences.lastResult
@@ -74,6 +81,7 @@ class SettingsViewModel @Inject constructor(
 
     /** Voltou das configurações do sistema: revalida e reaplica os geofences. */
     fun onResume() = viewModelScope.launch {
+        usageAccess.refresh()
         val before = permission.value
         val now = permissions.refresh()
         if (before != now || geofences.lastResult.value == null) geofences.registerAll()
@@ -89,6 +97,15 @@ class SettingsViewModel @Inject constructor(
 
     /** Apaga tudo: banco, chave do banco, preferências, geofences, tarefas e notificações. Volta ao onboarding. */
     fun deleteEverything() = viewModelScope.launch { wiper.deleteEverything() }
+
+    fun setDigital(d: DigitalSettings) = viewModelScope.launch { settings.setDigital(d) }
+    fun usageAccessIntent(): Intent = usageAccess.settingsIntent()
+
+    /** Apaga só os agregados do Diário Digital (as categorias escolhidas ficam). */
+    fun clearDigitalHistory() = viewModelScope.launch {
+        clearDigital()
+        info.value = "Histórico digital apagado."
+    }
 }
 
 /** Texto do card "Localização" a partir da permissão e do último registro de geofences. */
@@ -127,6 +144,8 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
     }
     var editingName by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var confirmDigitalDelete by remember { mutableStateOf(false) }
+    val usagePermission by vm.usagePermission.collectAsStateWithLifecycle()
     var versionTaps by remember { mutableIntStateOf(0) }
 
     Column(
@@ -172,6 +191,13 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
             }
         }
 
+        DigitalSettingsPanel(
+            s.digital, usagePermission,
+            onChange = vm::setDigital,
+            onAccess = { runCatching { context.startActivity(vm.usageAccessIntent()) } },
+            onClear = { confirmDigitalDelete = true },
+        )
+
         PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
             SectionLabel("Privacidade")
             Text(
@@ -179,6 +205,7 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
                     "• Internet só ao buscar um endereço no mapa: o texto vai ao serviço de mapas do Android e o mapa vem do OpenStreetMap.\n" +
                     "• Guardamos lugares (cifrados), horários, contextos, histórico e o estado do gato.\n" +
                     "• Não guardamos trajeto GPS nem posição contínua.\n" +
+                    "• Diário digital (opcional): só app + tempo de uso por dia. Nunca mensagens, texto, fotos ou conteúdo da tela.\n" +
                     "• Backup em nuvem desativado.",
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -207,6 +234,15 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
             dismissButton = { TextButton(onClick = { editingName = false }) { Text("Cancelar") } },
         )
     }
+    if (confirmDigitalDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDigitalDelete = false },
+            title = { Text("Apagar histórico digital?") },
+            text = { Text("Tempo de tela, apps e uso por contexto salvos serão apagados deste aparelho. O resto do Diário continua.") },
+            confirmButton = { TextButton(onClick = { vm.clearDigitalHistory(); confirmDigitalDelete = false }) { Text("Apagar", color = HoodieColors.Coral) } },
+            dismissButton = { TextButton(onClick = { confirmDigitalDelete = false }) { Text("Cancelar") } },
+        )
+    }
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
@@ -215,5 +251,45 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
             confirmButton = { TextButton(onClick = { vm.deleteEverything(); confirmDelete = false }) { Text("Apagar", color = HoodieColors.Coral) } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } },
         )
+    }
+}
+
+/** Ajustes do Diário Digital: o que é lido, o que aparece e o que é guardado. */
+@Composable
+private fun DigitalSettingsPanel(
+    d: DigitalSettings,
+    permission: UsagePermissionState,
+    onChange: (DigitalSettings) -> Unit,
+    onAccess: () -> Unit,
+    onClear: () -> Unit,
+) {
+    PixelPanel(Modifier.fillMaxWidth()) {
+        SectionLabel("📱 Diário digital")
+        Text(
+            when (permission) {
+                UsagePermissionState.GRANTED -> "✅ Acesso ao uso liberado"
+                UsagePermissionState.DENIED -> "⚠️ Acesso ao uso desligado"
+                UsagePermissionState.UNAVAILABLE -> "❌ Aparelho sem acesso ao uso"
+            },
+        )
+        DigitalSwitch("Ativar análise do celular", "Lê só qual app ficou na tela e por quanto tempo", d.analysisEnabled) { onChange(d.copy(analysisEnabled = it)) }
+        DigitalSwitch("Mostrar dados digitais no Diário", "Card \"Seu celular\" e apps na linha do tempo", d.showInDiary) { onChange(d.copy(showInDiary = it)) }
+        DigitalSwitch("Salvar histórico digital", "Guarda o resumo de cada dia neste aparelho", d.saveHistory) { onChange(d.copy(saveHistory = it)) }
+        DigitalSwitch("Mostrar top apps por contexto", "Casa, trabalho, transporte...", d.showTopAppsByContext) { onChange(d.copy(showTopAppsByContext = it)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+            PixelButton("Acesso ao uso", onAccess, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+            PixelButton("Apagar histórico", onClear, Modifier.weight(1f), color = HoodieColors.Coral)
+        }
+    }
+}
+
+@Composable
+private fun DigitalSwitch(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium)
+            Text(subtitle, style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+        }
+        Switch(checked, onChange)
     }
 }

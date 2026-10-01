@@ -12,6 +12,7 @@ object DailySummaryCalculator {
         val totals = contexts.groupBy { it.type }.mapValues { (_, spans) -> spans.sumOf(::duration) }
         fun total(vararg types: UserContextType) = types.sumOf { totals[it] ?: 0L }
         val known = setOf(UserContextType.HOME, UserContextType.WORK, UserContextType.COMMUTING, UserContextType.LUNCH, UserContextType.GYM, UserContextType.LEISURE)
+        val other = totals.filterKeys { it !in known }.values.sum()
         return DailySummary(
             date = date,
             homeMs = total(UserContextType.HOME),
@@ -20,7 +21,7 @@ object DailySummaryCalculator {
             lunchMs = total(UserContextType.LUNCH),
             gymMs = total(UserContextType.GYM),
             leisureMs = total(UserContextType.LEISURE),
-            otherMs = totals.filterKeys { it !in known }.values.sum(),
+            otherMs = other,
         )
     }
 }

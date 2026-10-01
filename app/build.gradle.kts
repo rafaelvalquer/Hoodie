@@ -40,7 +40,11 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
         unitTests.isIncludeAndroidResources = true
-        unitTests.all { it.systemProperty("exportIcons", project.findProperty("exportIcons") ?: "false") }
+        unitTests.all {
+            it.systemProperty("exportIcons", project.findProperty("exportIcons") ?: "false")
+            // Robolectric + JDK 17/21: acesso a internals de FileDescriptor (SQLite nativo).
+            it.jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
+        }
     }
 }
 
@@ -70,6 +74,8 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.datastore.preferences)
+    implementation(libs.sqlcipher.android)
+    implementation(libs.androidx.sqlite)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -97,4 +103,9 @@ dependencies {
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.work.testing)
     androidTestImplementation(libs.coroutines.test)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    // Espresso novo: o da BOM do Compose não roda em Android 15+ (InputManager.getInstance).
+    androidTestImplementation(libs.espresso.core)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

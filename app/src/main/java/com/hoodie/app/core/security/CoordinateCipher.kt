@@ -57,10 +57,10 @@ class KeystoreCoordinateCipher @Inject constructor() : CoordinateCipher {
         lat.toDouble() to lng.toDouble()
     }.getOrNull()
 
-    private companion object {
-        const val ANDROID_KEYSTORE = "AndroidKeyStore"
+    companion object {
+        private const val ANDROID_KEYSTORE = "AndroidKeyStore"
         const val ALIAS = "hoodie_places_v1"
-        const val TRANSFORMATION = "AES/GCM/NoPadding"
-        const val IV_SIZE = 12
+        private const val TRANSFORMATION = "AES/GCM/NoPadding"
+        private const val IV_SIZE = 12
     }
 }

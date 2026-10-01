@@ -144,6 +144,7 @@ class HomeViewModel @Inject constructor(
             commute = i.settings.commuteStyle,
             variant = variant,
             energy = snap.liveNeeds.energy,
+            mood = snap.liveNeeds.mood,
         )
         val userType = ctx?.type ?: UserContextType.HOME
         val next = RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)

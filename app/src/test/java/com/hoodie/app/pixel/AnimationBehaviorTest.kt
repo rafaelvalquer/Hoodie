@@ -117,7 +117,8 @@ class AnimationBehaviorTest {
 
     @Test
     fun `cafe e acao completa e a caneca some da mesa via eventos`() {
-        val coffee = MicroAction(AnimationId.DRINK, 1, 2_000, 2_000, enter = listOf(AnimationId.REACH_MUG), exit = listOf(AnimationId.PUT_MUG))
+        val steam = listOf(com.hoodie.app.pixel.scene.EffectSpec(com.hoodie.app.pixel.renderer.EffectKind.STEAM, 2, -8, com.hoodie.app.pixel.sprite.Anchor.RIGHT_HAND))
+        val coffee = MicroAction(AnimationId.DRINK, 1, 2_000, 2_000, effects = steam, enter = listOf(AnimationId.REACH_MUG), exit = listOf(AnimationId.PUT_MUG))
         val v = office().copy(actions = listOf(MicroAction(AnimationId.WORK_READ, 1, 1_000, 1_000), coffee))
         val sm = AnimationStateMachine(Random(9))
         sm.setVisual(v, 1)

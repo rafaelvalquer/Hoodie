@@ -95,6 +95,9 @@ class EndToEndJourneysTest {
         val rows = g.db.timelineDao().bySource(TimelineSourceType.CONTEXT, ctx.id)
         assertEquals(1, rows.size)
         assertEquals("Saiu de: Casa", rows.single().text)
+        // Chegar ao trabalho pela primeira vez desbloqueia uma memória.
+        g.clock.millis = at(MONDAY, 8, 41).ms()
+        g.engine.onGeofence(workId, GeofenceTransition.ENTER)
         val all = g.db.timelineDao().range(0, Long.MAX_VALUE)
         assertTrue(all.any { it.sourceType == TimelineSourceType.HOODIE_ACTIVITY })
         assertTrue(all.any { it.sourceType == TimelineSourceType.MEMORY })

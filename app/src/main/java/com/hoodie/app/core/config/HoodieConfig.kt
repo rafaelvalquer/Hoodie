@@ -40,4 +40,25 @@ object HoodieConfig {
 
     // ── Retenção ──
     const val LOCATION_EVENT_RETENTION_MS = 30 * DAY_MS
+
+    // ── Phone Insights (Diário Digital) ──
+    /** Lê eventos um pouco antes da meia-noite para saber o que já estava aberto às 00:00. */
+    const val USAGE_LOOKBACK_MS = 2 * HOUR_MS
+    /** Pausa/retomada do mesmo app dentro disso é a mesma sessão (troca de tela interna). */
+    const val APP_SESSION_MERGE_GAP_MS = 5_000L
+    /** Abaixo disso o app só "piscou" na tela: soma tempo, mas não conta como sessão. */
+    const val MIN_APP_SESSION_MS = 2_000L
+    /** Sem eventos de tela (API < 28): uso de apps separado por menos que isso é uma sessão de tela. */
+    const val SCREEN_SESSION_FALLBACK_GAP_MS = 30_000L
+    /** Linha do tempo digital: funde usos do mesmo app separados por menos que isso... */
+    const val PHONE_TIMELINE_MERGE_GAP_MS = 2 * MINUTE_MS
+    /** ...e só mostra blocos a partir desta duração. */
+    const val PHONE_TIMELINE_MIN_MS = 3 * MINUTE_MS
+    /** No Diário geral, só blocos maiores entram (para não poluir a história do dia). */
+    const val DIARY_PHONE_ITEM_MIN_MS = 5 * MINUTE_MS
+    const val PHONE_TIMELINE_MAX_ITEMS = 80
+    const val TOP_APPS_STORED = 30
+    const val TOP_APPS_SHOWN = 10
+    const val CONTEXT_TOP_APPS = 5
+    const val PHONE_INSIGHTS_REFRESH_HOURS = 3L
 }

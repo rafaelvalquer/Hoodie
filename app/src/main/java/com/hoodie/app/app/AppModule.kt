@@ -2,10 +2,19 @@ package com.hoodie.app.app
 
 import android.content.Context
 import androidx.room.Room
+import com.hoodie.app.core.database.DatabaseEncryption
 import com.hoodie.app.core.database.HoodieDatabase
+import com.hoodie.app.core.security.DatabaseKeyStore
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import com.hoodie.app.core.database.RoomTransactionRunner
 import com.hoodie.app.core.database.TransactionRunner
 import com.hoodie.app.core.database.migrations.ALL_MIGRATIONS
+import com.hoodie.app.core.deviceusage.AndroidAppMetadataResolver
+import com.hoodie.app.core.deviceusage.AndroidUsageStatsSource
+import com.hoodie.app.core.deviceusage.AppMetadataResolver
+import com.hoodie.app.core.deviceusage.UsageAccessChecker
+import com.hoodie.app.core.deviceusage.UsageAccessManager
+import com.hoodie.app.core.deviceusage.UsageStatsSource
 import com.hoodie.app.core.geofence.GeofenceManager
 import com.hoodie.app.core.geofence.GeofenceRegistrar
 import com.hoodie.app.core.location.AddressSearch
@@ -19,6 +28,8 @@ import com.hoodie.app.core.security.CoordinateCipher
 import com.hoodie.app.core.security.KeystoreCoordinateCipher
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.SystemClockProvider
+import com.hoodie.app.data.repository.DeviceUsageRepository
+import com.hoodie.app.data.repository.DeviceUsageRepositoryImpl
 import com.hoodie.app.engine.dialogue.DialogueEngine
 import com.hoodie.app.worker.CheckScheduler
 import com.hoodie.app.worker.WorkScheduler
@@ -42,16 +53,30 @@ abstract class BindingsModule {
     @Binds abstract fun notifier(impl: HoodieNotifier): Notifier
     @Binds abstract fun checkScheduler(impl: WorkScheduler): CheckScheduler
     @Binds abstract fun transactions(impl: RoomTransactionRunner): TransactionRunner
+    @Binds abstract fun usageStats(impl: AndroidUsageStatsSource): UsageStatsSource
+    @Binds abstract fun appMetadata(impl: AndroidAppMetadataResolver): AppMetadataResolver
+    @Binds abstract fun usageAccess(impl: UsageAccessManager): UsageAccessChecker
+    @Binds abstract fun deviceUsage(impl: DeviceUsageRepositoryImpl): DeviceUsageRepository
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
     @Provides @Singleton
-    fun database(@ApplicationContext context: Context): HoodieDatabase =
-        Room.databaseBuilder(context, HoodieDatabase::class.java, HoodieDatabase.NAME)
+    fun database(@ApplicationContext context: Context, keys: DatabaseKeyStore): HoodieDatabase {
+        // Banco inteiro cifrado (SQLCipher). Quem vem de uma versão em texto puro é migrado antes de abrir.
+        DatabaseEncryption.loadLibrary()
+        val file = context.getDatabasePath(HoodieDatabase.NAME)
+        val passphrase = keys.passphrase()
+        runCatching { DatabaseEncryption.migrateIfNeeded(file, passphrase) }
+            .onFailure { android.util.Log.e("Hoodie", "Falha ao cifrar o banco; tentando de novo na próxima abertura", it) }
+        // Se a migração falhou, o banco continua legível em texto puro (senha vazia) — nunca perde dados.
+        val effective = if (DatabaseEncryption.isPlaintext(file)) ByteArray(0) else passphrase
+        return Room.databaseBuilder(context, HoodieDatabase::class.java, HoodieDatabase.NAME)
+            .openHelperFactory(SupportOpenHelperFactory(effective))
             .addMigrations(*ALL_MIGRATIONS)
             .build()
+    }
 
     @Provides fun placeDao(db: HoodieDatabase) = db.placeDao()
     @Provides fun routineDao(db: HoodieDatabase) = db.routineDao()
@@ -64,6 +89,7 @@ object DatabaseModule {
     @Provides fun hoodieActivityDao(db: HoodieDatabase) = db.hoodieActivityDao()
     @Provides fun timelineDao(db: HoodieDatabase) = db.timelineDao()
     @Provides fun memoryDao(db: HoodieDatabase) = db.memoryDao()
+    @Provides fun deviceUsageDao(db: HoodieDatabase) = db.deviceUsageDao()
 
     @Provides @Singleton
     fun dialogues(@ApplicationContext context: Context): DialogueEngine =

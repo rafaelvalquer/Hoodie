@@ -144,3 +144,52 @@ data class MemoryEntity(
     val title: String,
     val unlockedAt: Long,
 )
+
+// ── Phone Insights: só agregados por dia. Eventos brutos do Android nunca são guardados. ──
+
+/** Resumo do celular num dia ([date] = ISO yyyy-MM-dd local). */
+@Entity(tableName = "daily_device_usage")
+data class DailyDeviceUsageEntity(
+    @PrimaryKey val date: String,
+    val screenTimeMs: Long,
+    val sessionCount: Int,
+    val unlockCount: Int,
+    val firstUseAt: Long?,
+    val lastUseAt: Long?,
+    val longestSessionMs: Long,
+    /** Desbloqueios/sessões inferidos (aparelho sem eventos de tela ou bloqueio). */
+    val isEstimated: Boolean,
+    val appCount: Int,
+    val updatedAt: Long,
+)
+
+@Entity(tableName = "daily_app_usage", primaryKeys = ["date", "packageName"])
+data class DailyAppUsageEntity(
+    val date: String,
+    val packageName: String,
+    val appLabel: String,
+    val appCategory: String,
+    val foregroundMs: Long,
+    val sessionCount: Int,
+    val firstUsedAt: Long?,
+    val lastUsedAt: Long?,
+    val updatedAt: Long,
+)
+
+@Entity(tableName = "daily_context_app_usage", primaryKeys = ["date", "context", "packageName"])
+data class DailyContextAppUsageEntity(
+    val date: String,
+    val context: String,
+    val packageName: String,
+    val appLabel: String,
+    val foregroundMs: Long,
+    val sessionCount: Int,
+)
+
+/** Categoria escolhida pelo usuário para um app (vence o mapeamento interno). */
+@Entity(tableName = "app_category_overrides")
+data class AppCategoryOverrideEntity(
+    @PrimaryKey val packageName: String,
+    val category: String,
+    val updatedAt: Long,
+)

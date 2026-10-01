@@ -38,3 +38,6 @@ desktop.ini
 
 # Configurações locais do Claude Code
 .claude/
+
+# Trava de build entre sessoes
+build-lock.txt

@@ -15,11 +15,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -32,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,15 +44,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.domain.diary.model.DailySummary
 import com.hoodie.app.domain.diary.model.DiaryMapNode
 import com.hoodie.app.domain.diary.model.PlaceVisit
+import com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights
 import com.hoodie.app.presentation.components.PixelButton
+import com.hoodie.app.presentation.screens.phoneinsights.ContextPhoneUsageSection
+import com.hoodie.app.presentation.screens.phoneinsights.DiaryPhoneCard
+import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsScreen
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.theme.HoodieColors
@@ -60,15 +74,23 @@ import java.util.Locale
 @Composable
 fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val today = state.today
+    val context = LocalContext.current
     var selectedVisit by remember { mutableStateOf<PlaceVisit?>(null) }
-    val zone = ZoneId.systemDefault()
+    var selectedItems by remember { mutableStateOf(emptyList<com.hoodie.app.domain.diary.model.DiaryTimelineItem>()) }
+    val zone = vm.zone
+    var tab by rememberSaveable { mutableStateOf(DiaryTab.GENERAL) }
+    var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text("DIÁRIO", style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
-        DateSelector(state.selectedDate, onSelect = vm::selectDate)
-        if (state.isLoading) {
+        DateSelector(state.selectedDate, today, context, zone, onSelect = vm::selectDate)
+        DiaryTabs(tab, onSelect = { tab = it })
+        if (tab == DiaryTab.DIGITAL) {
+            PhoneInsightsScreen(state.selectedDate)
+        } else if (state.isLoading) {
             PixelPanel(Modifier.fillMaxWidth()) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp); Text("Montando seu dia…", color = HoodieColors.Muted) } }
         } else if (state.error != null) {
             PixelPanel(Modifier.fillMaxWidth()) { Text(state.error.orEmpty(), color = HoodieColors.Coral) }
@@ -81,10 +103,14 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
                     Text("O mapa reconstrói lugares conhecidos; não registra uma rota GPS.", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
                 }
             } else {
-                SummarySection(diary.summary)
+                SummarySection(diary.summary, onContext = if (diary.phoneInsights != null) { ctx -> selectedContext = ctx } else null)
+                diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
                 DiaryMapCard(
-                    diary.map.nodes, diary.map.edges, state.replay.activeNodeId, state.replay.activeEdgeId,
-                    onVisit = { index -> selectedVisit = diary.visits.getOrNull(index) },
+                    diary.map.nodes, diary.map.edges, state.replay.activeNodeId, state.replay.activeEdgeId, state.replay.markerX, state.replay.markerY,
+                    onVisit = { index ->
+                        selectedVisit = diary.visits.getOrNull(index)
+                        selectedItems = selectedVisit?.relatedTimelineIds.orEmpty().mapNotNull { id -> diary.timeline.firstOrNull { it.id == id } }
+                    },
                 )
                 ReplayControls(
                     state.replay,
@@ -96,26 +122,28 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
                     Text("▶ ${formatClock(state.replay.currentTimestamp!!, zone)}", style = MaterialTheme.typography.labelLarge, color = HoodieColors.Gold)
                     LinearProgressIndicator(progress = { state.replay.progress }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.Mint, trackColor = HoodieColors.PanelLight)
                 }
-                TimelineSection(diary.timeline.map { item -> item.copy(title = item.title, subtitle = item.subtitle) }, state.replay.currentTimestamp, zone)
+                TimelineSection(diary.timeline, state.replay.currentTimestamp, zone, state.replay.highlightedTimelineItemIds)
             }
         }
     }
-    if (selectedVisit != null) PlaceDetailSheet(selectedVisit!!, zone) { selectedVisit = null }
+    if (selectedVisit != null) PlaceDetailSheet(selectedVisit!!, selectedItems, zone, phone = state.diary?.phoneInsights) { selectedVisit = null; selectedItems = emptyList() }
+    selectedContext?.let { ctx -> ContextPhoneSheet(ctx, state.diary?.phoneInsights) { selectedContext = null } }
 }
 
 @Composable
-private fun DateSelector(date: LocalDate, onSelect: (LocalDate) -> Unit) {
-    val today = androidx.compose.runtime.remember { LocalDate.now(ZoneId.systemDefault()) }
+private fun DateSelector(date: LocalDate, today: LocalDate, context: android.content.Context, zone: ZoneId, onSelect: (LocalDate) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         DateChip("Hoje", date == today) { onSelect(today) }
         DateChip("Ontem", date == today.minusDays(1)) { onSelect(today.minusDays(1)) }
         DateChip(date.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.forLanguageTag("pt-BR"))).uppercase(), date != today && date != today.minusDays(1)) {
             val initial = date
             DatePickerDialog(
-                androidx.compose.ui.platform.LocalContext.current,
+                context,
                 { _, year, month, day -> onSelect(LocalDate.of(year, month + 1, day)) },
                 initial.year, initial.monthValue - 1, initial.dayOfMonth,
-            ).apply { datePicker.maxDate = System.currentTimeMillis() }.show()
+            ).apply {
+                datePicker.maxDate = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
+            }.show()
         }
     }
 }
@@ -127,22 +155,23 @@ private fun DateChip(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-private data class SummaryItem(val label: String, val emoji: String, val duration: Long)
+private data class SummaryItem(val label: String, val emoji: String, val duration: Long, val context: UserContextType? = null)
 
 @Composable
-private fun SummarySection(summary: DailySummary) {
+internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType) -> Unit)? = null) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionLabel("SEU DIA")
         val items = listOf(
-            SummaryItem("Casa", "🏠", summary.homeMs), SummaryItem("Trabalho", "🏢", summary.workMs),
-            SummaryItem("Transporte", "🚶", summary.commutingMs), SummaryItem("Almoço", "🍽️", summary.lunchMs),
-            SummaryItem("Academia", "🏋️", summary.gymMs), SummaryItem("Lazer", "🎉", summary.leisureMs), SummaryItem("Outros", "📍", summary.otherMs),
+            SummaryItem("Casa", "🏠", summary.homeMs, UserContextType.HOME), SummaryItem("Trabalho", "🏢", summary.workMs, UserContextType.WORK),
+            SummaryItem("Transporte", "🚶", summary.commutingMs, UserContextType.COMMUTING), SummaryItem("Almoço", "🍽️", summary.lunchMs, UserContextType.LUNCH),
+        SummaryItem("Academia", "🏋️", summary.gymMs, UserContextType.GYM), SummaryItem("Lazer", "🎉", summary.leisureMs, UserContextType.LEISURE), SummaryItem("Outros", "📍", summary.otherMs),
         ).filter { it.duration > 0 }
         if (items.isEmpty()) PixelPanel(Modifier.fillMaxWidth()) { Text("Sem contextos registrados.", color = HoodieColors.Muted) }
         items.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { item ->
-                    PixelPanel(Modifier.weight(1f), color = HoodieColors.PanelLight) {
+                    val click = if (onContext != null && item.context != null) { { onContext(item.context) } } else null
+                    PixelPanel(Modifier.weight(1f), color = HoodieColors.PanelLight, onClick = click) {
                         Text(item.emoji, style = MaterialTheme.typography.titleLarge)
                         Text(item.label.uppercase(), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
                         Text(formatDuration(item.duration), style = MaterialTheme.typography.titleMedium, color = HoodieColors.Hood)
@@ -155,7 +184,7 @@ private fun SummarySection(summary: DailySummary) {
 }
 
 @Composable
-private fun DiaryMapCard(nodes: List<DiaryMapNode>, edges: List<com.hoodie.app.domain.diary.model.DiaryMapEdge>, activeNodeId: String?, activeEdgeId: String?, onVisit: (Int) -> Unit) {
+internal fun DiaryMapCard(nodes: List<DiaryMapNode>, edges: List<com.hoodie.app.domain.diary.model.DiaryMapEdge>, activeNodeId: String?, activeEdgeId: String?, markerX: Float?, markerY: Float?, onVisit: (Int) -> Unit) {
     PixelPanel(Modifier.fillMaxWidth()) {
         SectionLabel("MAPA SIMBÓLICO · SEM ROTA GPS")
         Spacer(Modifier.height(8.dp))
@@ -164,7 +193,7 @@ private fun DiaryMapCard(nodes: List<DiaryMapNode>, edges: List<com.hoodie.app.d
         } else {
             val maxX = (nodes.maxOf { it.x } + 1).coerceAtLeast(1)
             val maxY = (nodes.maxOf { it.y } + 1).coerceAtLeast(1)
-            Box(Modifier.fillMaxWidth().height((maxY * 86).coerceIn(160, 340).dp).background(Color(0xFF36465A)).border(2.dp, HoodieColors.Outline)) {
+            Box(Modifier.fillMaxWidth().height(((maxY + 1) * 72).coerceIn(160, 340).dp).background(Color(0xFF36465A)).border(2.dp, HoodieColors.Outline)) {
                 Canvas(Modifier.fillMaxSize()) {
                     val cols = (maxX + 1).coerceAtLeast(2)
                     val rows = (maxY + 1).coerceAtLeast(2)
@@ -185,16 +214,15 @@ private fun DiaryMapCard(nodes: List<DiaryMapNode>, edges: List<com.hoodie.app.d
                         val point = positions[node.id] ?: return@forEach
                         val active = node.id == activeNodeId
                         val color = when (node.type.name) { "HOME" -> Color(0xFF86C99A); "WORK" -> Color(0xFF88AFE9); "RESTAURANT" -> Color(0xFFE99C7D); "GYM" -> Color(0xFFE6C86D); else -> Color(0xFFB79AE9) }
-                        drawRect(HoodieColors.Outline, Offset(point.x - 17.dp.toPx(), point.y - 14.dp.toPx()), androidx.compose.ui.geometry.Size(34.dp.toPx(), 28.dp.toPx()))
-                        drawRect(if (active) HoodieColors.Gold else color, Offset(point.x - 13.dp.toPx(), point.y - 10.dp.toPx()), androidx.compose.ui.geometry.Size(26.dp.toPx(), 20.dp.toPx()))
+                        drawRect(HoodieColors.Outline, Offset(point.x - 22.dp.toPx(), point.y - 20.dp.toPx()), androidx.compose.ui.geometry.Size(44.dp.toPx(), 40.dp.toPx()))
+                        drawRect(if (active) HoodieColors.Gold else color, Offset(point.x - 18.dp.toPx(), point.y - 16.dp.toPx()), androidx.compose.ui.geometry.Size(36.dp.toPx(), 32.dp.toPx()))
+                    }
+                    if (markerX != null && markerY != null) {
+                        val marker = Offset(cellW * (markerX + .5f), cellH * (markerY + .5f))
+                        drawRect(HoodieColors.Gold.copy(alpha = .25f), Offset(marker.x - 14.dp.toPx(), marker.y - 14.dp.toPx()), androidx.compose.ui.geometry.Size(28.dp.toPx(), 28.dp.toPx()))
                     }
                 }
-                nodes.forEach { node ->
-                    val cols = (maxX + 1).coerceAtLeast(2); val rows = (maxY + 1).coerceAtLeast(2)
-                    val xFraction = (node.x + .5f) / cols
-                    val yFraction = (node.y + .5f) / rows
-                }
-                MapNodeOverlay(nodes, activeNodeId, onVisit)
+                MapNodeOverlay(nodes, activeNodeId, markerX, markerY, onVisit)
             }
         }
         Text("Lugares na ordem do dia · toque para ver detalhes", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
@@ -202,50 +230,64 @@ private fun DiaryMapCard(nodes: List<DiaryMapNode>, edges: List<com.hoodie.app.d
 }
 
 @Composable
-private fun MapNodeOverlay(nodes: List<DiaryMapNode>, activeNodeId: String?, onVisit: (Int) -> Unit) {
-    val cols = ((nodes.maxOfOrNull { it.x } ?: 0) + 2).coerceAtLeast(2)
+private fun MapNodeOverlay(nodes: List<DiaryMapNode>, activeNodeId: String?, markerX: Float?, markerY: Float?, onVisit: (Int) -> Unit) {
+    val cols = (((nodes.maxOfOrNull { it.x } ?: 0) / 2) + 2).coerceAtLeast(2)
     val rows = ((nodes.maxOfOrNull { it.y } ?: 0) + 2).coerceAtLeast(2)
     // Float positioning in BoxWithConstraints uses the same grid cells as the Canvas.
     BoxWithConstraints(Modifier.fillMaxSize()) {
         nodes.forEach { node ->
-            val left = maxWidth * ((node.x + .5f) / cols)
+            val left = maxWidth * ((node.x / 2f + .5f) / cols)
             val top = maxHeight * ((node.y + .5f) / rows)
             Column(
-                Modifier.padding(start = (left - 41.dp).coerceAtLeast(0.dp), top = (top - 26.dp).coerceAtLeast(0.dp))
-                    .width(82.dp).height(52.dp).clickable { onVisit(node.visitIndex - 1) }.padding(2.dp),
+                Modifier.offset(x = (left - 49.dp).coerceAtLeast(0.dp), y = (top - 34.dp).coerceAtLeast(0.dp))
+                    .width(98.dp).height(68.dp).semantics {
+                        contentDescription = "${node.label}, visita ${node.visitIndex}, ${formatDuration(node.durationMs)}"
+                        role = Role.Button
+                    }.clickable { onVisit(node.visitIndex - 1) }.padding(1.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
                 val emoji = when (node.type.name) { "HOME" -> "🏠"; "WORK" -> "🏢"; "RESTAURANT" -> "🍽️"; "GYM" -> "🏋️"; "SCHOOL" -> "🎓"; "MARKET" -> "🛒"; "FAMILY" -> "👪"; "LEISURE" -> "🎉"; else -> "📍" }
-                Text(if (activeNodeId == node.id) "🐱 $emoji" else "$emoji ${node.visitIndex}", style = MaterialTheme.typography.labelLarge)
-                Text(node.label.take(11), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Ink, maxLines = 1)
+                Text(if (activeNodeId == node.id) "🐱$emoji" else emoji, style = MaterialTheme.typography.labelLarge)
+                Text("${node.visitIndex} · ${node.label.take(8)}", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Ink, maxLines = 1)
             }
+        }
+        if (markerX != null && markerY != null) {
+            val left = maxWidth * ((markerX / 2f + .5f) / cols)
+            val top = maxHeight * ((markerY + .5f) / rows)
+            Text("🐱", Modifier.offset(x = (left - 14.dp).coerceAtLeast(0.dp), y = (top - 18.dp).coerceAtLeast(0.dp)), style = MaterialTheme.typography.titleLarge)
         }
     }
 }
 
 @Composable
-private fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset: () -> Unit, onSpeed: (ReplaySpeed) -> Unit) {
+internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset: () -> Unit, onSpeed: (ReplaySpeed) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         PixelButton(if (replay.state == ReplayState.PLAYING) "Pausar" else if (replay.state == ReplayState.FINISHED) "Rever dia" else "▶ Reproduzir meu dia", onToggle, modifier = Modifier.weight(1f), color = HoodieColors.Mint)
-        TextButton(onClick = onReset) { Text("↺") }
+        TextButton(onClick = onReset) { Text("↺", color = HoodieColors.Hood) }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("VELOCIDADE", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         ReplaySpeed.entries.forEach { speed ->
-            DateChip("${speed.multiplier}×", replay.speed == speed) { onSpeed(speed) }
+            androidx.compose.material3.FilterChip(selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text("${speed.multiplier}×") })
         }
     }
 }
 
 @Composable
-private fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, replayAt: Long?, zone: ZoneId) {
+internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, replayAt: Long?, zone: ZoneId, highlightedIds: Set<String> = emptySet()) {
+    val activeIndex = if (replayAt == null) -1 else items.indexOfFirst { it.id in highlightedIds }
     PixelPanel(Modifier.fillMaxWidth()) {
         SectionLabel("LINHA DO TEMPO")
         if (items.isEmpty()) Text("Sem eventos registrados.", color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
-        items.forEach { item ->
-            val highlighted = replayAt != null && item.timestamp <= replayAt && items.lastOrNull { it.timestamp <= replayAt }?.id == item.id
-            Row(Modifier.fillMaxWidth().padding(vertical = 6.dp).background(if (highlighted) HoodieColors.PanelLight else Color.Transparent).padding(4.dp), verticalAlignment = Alignment.Top) {
+        Column(Modifier.fillMaxWidth()) {
+            items.forEachIndexed { index, item ->
+            val requester = remember(item.id) { BringIntoViewRequester() }
+            androidx.compose.runtime.LaunchedEffect(activeIndex, index) {
+                if (index == activeIndex) requester.bringIntoView()
+            }
+            val highlighted = index == activeIndex
+            Row(Modifier.fillMaxWidth().bringIntoViewRequester(requester).padding(vertical = 6.dp).background(if (highlighted) HoodieColors.PanelLight else Color.Transparent).padding(4.dp), verticalAlignment = Alignment.Top) {
                 Text(formatClock(item.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = if (highlighted) HoodieColors.Gold else HoodieColors.Muted, modifier = Modifier.width(48.dp))
                 Text(if (item.actor.name == "HOODIE") "🐱" else if (item.actor.name == "SYSTEM") "⚙️" else (item.emoji ?: "📍"), modifier = Modifier.width(28.dp))
                 Column(Modifier.weight(1f)) {
@@ -253,13 +295,14 @@ private fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.DiaryT
                     item.subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted) }
                 }
             }
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PlaceDetailSheet(visit: PlaceVisit, zone: ZoneId, onDismiss: () -> Unit) {
+internal fun PlaceDetailSheet(visit: PlaceVisit, events: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, zone: ZoneId, phone: DailyPhoneInsights? = null, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(), containerColor = HoodieColors.Panel) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("${visit.placeType.emoji} ${visit.placeName}", style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
@@ -269,8 +312,16 @@ private fun PlaceDetailSheet(visit: PlaceVisit, zone: ZoneId, onDismiss: () -> U
             DetailRow("Tempo", formatDuration(visit.durationMs))
             DetailRow("Visitas deste lugar hoje", visit.visitsCount.toString())
             visit.dominantHoodieActivity?.let { DetailRow("Hoodie", "${it.emoji} ${it.label}") }
-            if (visit.relatedTimelineIds.isEmpty()) Text("Nenhum evento relacionado neste período.", color = HoodieColors.Muted)
-            else Text("${visit.relatedTimelineIds.size} evento(s) da timeline neste período", color = HoodieColors.Muted)
+            val visitContext = events.firstNotNullOfOrNull { it.relatedContext }
+            if (phone != null && visitContext != null) ContextPhoneUsageSection(phone, visitContext)
+            SectionLabel("EVENTOS RELACIONADOS")
+            if (events.isEmpty()) Text("Nenhum evento relacionado neste período.", color = HoodieColors.Muted)
+            else events.forEach { event ->
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Text(formatClock(event.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Gold, modifier = Modifier.width(48.dp))
+                    Text("${event.emoji ?: "📍"} ${event.title}", style = MaterialTheme.typography.bodySmall)
+                }
+            }
             Text("Este ponto representa um contexto conhecido, não uma localização precisa.", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         }
     }

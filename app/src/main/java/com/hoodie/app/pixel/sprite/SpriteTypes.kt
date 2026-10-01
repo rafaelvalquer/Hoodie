@@ -37,10 +37,14 @@ data class SpriteAnchors(
     /** Ponto de contato com o chão — é ele que é alinhado ao spot da cena. */
     val feet: Point,
 ) {
-    /** Espelhar troca as mãos de lado. */
+    /**
+     * Espelhar troca as mãos de lado. Os pés marcam a linha central do corpo
+     * (entre os pixels 23 e 24 num sprite de 48), então espelham por `width - x`:
+     * virar de lado não desloca o gato 1 px.
+     */
     fun mirror(width: Int) = SpriteAnchors(
         rightHand = leftHand.mirror(width), leftHand = rightHand.mirror(width),
-        head = head.mirror(width), back = back.mirror(width), feet = feet.mirror(width),
+        head = head.mirror(width), back = back.mirror(width), feet = Point(width - feet.x, feet.y),
     )
 
     operator fun get(a: Anchor): Point = when (a) {

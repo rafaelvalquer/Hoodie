@@ -4,10 +4,12 @@ import com.hoodie.app.core.database.ContextEventDao
 import com.hoodie.app.core.database.HoodieActivityDao
 import com.hoodie.app.core.database.PlaceDao
 import com.hoodie.app.core.database.TimelineDao
+import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.startOfDay
 import com.hoodie.app.domain.diary.model.DailyDiary
 import com.hoodie.app.engine.diary.DiaryAssembler
+import com.hoodie.app.engine.diary.DiaryDigitalMerger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -21,6 +23,9 @@ class DiaryRepository @Inject constructor(
     private val activities: HoodieActivityDao,
     private val places: PlaceDao,
     private val clock: ClockProvider,
+    /** Camada digital: opcional para o Diário funcionar (e ser testado) sem ela. */
+    private val deviceUsage: DeviceUsageRepository? = null,
+    private val settings: SettingsRepository? = null,
 ) {
     suspend fun loadDiary(date: LocalDate): DailyDiary = withContext(Dispatchers.IO) {
         val zone = clock.zone()
@@ -31,8 +36,13 @@ class DiaryRepository @Inject constructor(
         val timelineEvents = timeline.range(from, to)
         val hoodieActivities = activities.overlapping(from, to)
         val knownPlaces = places.getAll()
-        withContext(Dispatchers.Default) {
+        val diary = withContext(Dispatchers.Default) {
             DiaryAssembler.build(date, contextEvents, timelineEvents, hoodieActivities, knownPlaces, from, to, now)
         }
+        // Camada digital é opcional: sem permissão, desligada ou com erro, o Diário segue igual.
+        val phone = if (deviceUsage != null && settings?.current()?.digital?.showInDiary == true) {
+            runCatching { deviceUsage.insightsFor(date) }.getOrNull()
+        } else null
+        DiaryDigitalMerger.merge(diary, phone, zone)
     }
 }

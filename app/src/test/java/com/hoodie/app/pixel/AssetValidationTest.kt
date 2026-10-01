@@ -80,7 +80,8 @@ class AssetValidationTest {
 
     @Test
     fun `idle nao treme - largura e chao estaveis`() {
-        listOf(AnimationId.IDLE, AnimationId.IDLE_SIT, AnimationId.SLEEP).forEach { anim ->
+        // (SLEEP fica de fora: deitado, a respiração mexe a cabeça inteira de propósito.)
+        listOf(AnimationId.IDLE, AnimationId.IDLE_SIT, AnimationId.WORK_READ).forEach { anim ->
             val boxes = anim.frames.indices.map { SpriteDebugRenderer.bbox(provider.frame(SpriteRequest(anim, frameIndex = it)))!! }
             assertTrue("$anim largura variando", boxes.map { it[2] - it[0] }.distinct().size <= 2)
             assertEquals("$anim chão variando", 1, boxes.map { it[3] }.distinct().size)

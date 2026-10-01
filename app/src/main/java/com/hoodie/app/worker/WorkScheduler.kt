@@ -34,6 +34,10 @@ class WorkScheduler @Inject constructor(@ApplicationContext private val context:
             ReconcileWorker.NAME, ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<ReconcileWorker>(HoodieConfig.RECONCILE_INTERVAL_MIN, TimeUnit.MINUTES).build(),
         )
+        wm.enqueueUniquePeriodicWork(
+            PhoneInsightsWorker.NAME, ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<PhoneInsightsWorker>(HoodieConfig.PHONE_INSIGHTS_REFRESH_HOURS, TimeUnit.HOURS).build(),
+        )
     }
 
     override fun reconcileNow() {

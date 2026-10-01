@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
 import com.hoodie.app.core.model.TimelineSourceType
@@ -216,4 +217,70 @@ interface MemoryDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM memories WHERE `key` = :key)")
     suspend fun exists(key: String): Boolean
+}
+
+@Dao
+interface DeviceUsageDao {
+    @Query("SELECT * FROM daily_device_usage WHERE date = :date")
+    suspend fun day(date: String): DailyDeviceUsageEntity?
+
+    @Query("SELECT * FROM daily_app_usage WHERE date = :date ORDER BY foregroundMs DESC")
+    suspend fun apps(date: String): List<DailyAppUsageEntity>
+
+    @Query("SELECT * FROM daily_context_app_usage WHERE date = :date ORDER BY foregroundMs DESC")
+    suspend fun contextApps(date: String): List<DailyContextAppUsageEntity>
+
+    @Upsert
+    suspend fun upsertDay(day: DailyDeviceUsageEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertApps(apps: List<DailyAppUsageEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertContextApps(items: List<DailyContextAppUsageEntity>)
+
+    @Query("DELETE FROM daily_app_usage WHERE date = :date")
+    suspend fun deleteApps(date: String)
+
+    @Query("DELETE FROM daily_context_app_usage WHERE date = :date")
+    suspend fun deleteContextApps(date: String)
+
+    /** Troca o dia inteiro de uma vez: o Diário nunca vê metade de um recálculo. */
+    @Transaction
+    suspend fun replaceDay(day: DailyDeviceUsageEntity, apps: List<DailyAppUsageEntity>, contexts: List<DailyContextAppUsageEntity>) {
+        deleteApps(day.date)
+        deleteContextApps(day.date)
+        upsertDay(day)
+        insertApps(apps)
+        insertContextApps(contexts)
+    }
+
+    @Query("SELECT * FROM app_category_overrides")
+    suspend fun overrides(): List<AppCategoryOverrideEntity>
+
+    @Upsert
+    suspend fun upsertOverride(o: AppCategoryOverrideEntity)
+
+    @Query("DELETE FROM app_category_overrides WHERE packageName = :packageName")
+    suspend fun deleteOverride(packageName: String)
+
+    @Query("DELETE FROM daily_device_usage")
+    suspend fun clearDays()
+
+    @Query("DELETE FROM daily_app_usage")
+    suspend fun clearApps()
+
+    @Query("DELETE FROM daily_context_app_usage")
+    suspend fun clearContextApps()
+
+    /** "Apagar histórico digital": some tudo que foi medido; as categorias escolhidas ficam. */
+    @Transaction
+    suspend fun clearHistory() {
+        clearDays()
+        clearApps()
+        clearContextApps()
+    }
+
+    @Query("SELECT COUNT(*) FROM daily_device_usage")
+    suspend fun dayCount(): Int
 }

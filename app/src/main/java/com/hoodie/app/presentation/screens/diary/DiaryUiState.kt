@@ -12,11 +12,15 @@ data class ReplayUiState(
     val speed: ReplaySpeed = ReplaySpeed.X1,
     val activeNodeId: String? = null,
     val activeEdgeId: String? = null,
+    val markerX: Float? = null,
+    val markerY: Float? = null,
+    val highlightedTimelineItemIds: Set<String> = emptySet(),
     val progress: Float = 0f,
 )
 
 data class DiaryUiState(
     val selectedDate: LocalDate,
+    val today: LocalDate = selectedDate,
     val diary: DailyDiary? = null,
     val isLoading: Boolean = false,
     val error: String? = null,

@@ -14,7 +14,6 @@ object PlaceVisitBuilder {
     ): List<PlaceVisit> {
         val placeById = places.associateBy { it.id }
         val visits = contexts.asSequence().filter { it.type != com.hoodie.app.core.model.UserContextType.COMMUTING }
-            .filter { it.placeId != null || it.type in setOf(com.hoodie.app.core.model.UserContextType.HOME, com.hoodie.app.core.model.UserContextType.WORK) }
             .mapNotNull { event ->
                 val start = maxOf(event.startedAt, dayStart)
                 val end = minOf(event.endedAt ?: now, dayEnd, now)
@@ -29,17 +28,21 @@ object PlaceVisitBuilder {
                     com.hoodie.app.core.model.UserContextType.SHOPPING -> PlaceType.MARKET
                     com.hoodie.app.core.model.UserContextType.VISITING -> PlaceType.FAMILY
                     com.hoodie.app.core.model.UserContextType.LEISURE -> PlaceType.LEISURE
+                    com.hoodie.app.core.model.UserContextType.UNKNOWN, com.hoodie.app.core.model.UserContextType.TRAVEL -> PlaceType.OTHER
                     else -> PlaceType.OTHER
                 }
-                val name = place?.name ?: type.label
+                val name = place?.name ?: if (type == PlaceType.OTHER) "Outro lugar" else type.label
                 val related = timeline.filter { it.timestamp in start..end && (it.relatedPlaceId == event.placeId || it.relatedContext == event.type) }
                 val dominant = activities.filter { it.startedAt < end && it.endedAt > start }
                     .groupBy { it.activity }
                     .mapValues { (_, spans) -> spans.sumOf { (minOf(it.endedAt, end) - maxOf(it.startedAt, start)).coerceAtLeast(0) } }
                     .maxByOrNull { it.value }?.key
-                PlaceVisit(event.placeId, name, type, start, event.endedAt?.takeIf { it < dayEnd }?.coerceAtMost(now), end - start, 1, related.map { it.id }, dominant)
+                val departure = event.endedAt?.takeIf { it > start && it < dayEnd && it <= now }
+                PlaceVisit(event.placeId, name, type, start, departure, (minOf(departure ?: now, dayEnd, now) - start).coerceAtLeast(0), 1, related.map { it.id }, dominant)
             }.sortedBy { it.arrivalAt }.toList()
-        val counts = visits.groupingBy { it.placeId ?: -it.placeType.ordinal.toLong() - 1 }.eachCount()
-        return visits.map { it.copy(visitsCount = counts[it.placeId ?: -it.placeType.ordinal.toLong() - 1] ?: 1) }
+        fun key(visit: PlaceVisit): String = visit.placeId?.let { "place:$it" }
+            ?: if (visit.placeType == PlaceType.OTHER) "unknown:${visit.arrivalAt}" else "type:${visit.placeType.name}"
+        val counts = visits.groupingBy(::key).eachCount()
+        return visits.map { it.copy(visitsCount = counts[key(it)] ?: 1) }
     }
 }

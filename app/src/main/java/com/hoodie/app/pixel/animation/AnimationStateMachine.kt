@@ -177,7 +177,10 @@ class AnimationStateMachine(
                 buildPlan(target, now)
             }
         }
+        val before = step
         runStep(now, dt)
+        // Entrou no loop neste tick: já mostra a microação (sem um frame "velho").
+        if (step == Step.Loop && before != Step.Loop) runLoop(now)
         updateDoor(now)
 
         val sc = scene!!

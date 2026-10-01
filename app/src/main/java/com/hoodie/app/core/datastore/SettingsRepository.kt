@@ -29,6 +29,18 @@ data class AppSettings(
     val notificationsEnabled: Boolean = true,
     /** Último dia (epochDay) em que avisamos uma atividade autônoma — no máximo 1/dia. */
     val lastAutonomyNotifyDay: Long = -1,
+    val digital: DigitalSettings = DigitalSettings(),
+)
+
+/**
+ * Ajustes do Diário Digital. A análise só roda com a permissão "Acesso ao uso"
+ * concedida E [analysisEnabled]; os outros controlam o que aparece e o que é salvo.
+ */
+data class DigitalSettings(
+    val analysisEnabled: Boolean = true,
+    val showInDiary: Boolean = true,
+    val saveHistory: Boolean = true,
+    val showTopAppsByContext: Boolean = true,
 )
 
 @Singleton
@@ -43,6 +55,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val COMMUTE = stringPreferencesKey("commute_style")
         val NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
         val AUTONOMY_DAY = longPreferencesKey("last_autonomy_notify_day")
+        val DIGITAL_ENABLED = booleanPreferencesKey("digital_analysis_enabled")
+        val DIGITAL_IN_DIARY = booleanPreferencesKey("digital_show_in_diary")
+        val DIGITAL_SAVE = booleanPreferencesKey("digital_save_history")
+        val DIGITAL_BY_CONTEXT = booleanPreferencesKey("digital_top_apps_by_context")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -54,6 +70,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             commuteStyle = p[Keys.COMMUTE]?.let { runCatching { CommuteStyle.valueOf(it) }.getOrNull() } ?: CommuteStyle.RANDOM,
             notificationsEnabled = p[Keys.NOTIFICATIONS] ?: true,
             lastAutonomyNotifyDay = p[Keys.AUTONOMY_DAY] ?: -1,
+            digital = DigitalSettings(
+                analysisEnabled = p[Keys.DIGITAL_ENABLED] ?: true,
+                showInDiary = p[Keys.DIGITAL_IN_DIARY] ?: true,
+                saveHistory = p[Keys.DIGITAL_SAVE] ?: true,
+                showTopAppsByContext = p[Keys.DIGITAL_BY_CONTEXT] ?: true,
+            ),
         )
     }
 
@@ -74,6 +96,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     suspend fun setNotifications(enabled: Boolean) = context.dataStore.edit { it[Keys.NOTIFICATIONS] = enabled }
 
     suspend fun setAutonomyNotified(epochDay: Long) = context.dataStore.edit { it[Keys.AUTONOMY_DAY] = epochDay }
+
+    suspend fun setDigital(d: DigitalSettings) = context.dataStore.edit {
+        it[Keys.DIGITAL_ENABLED] = d.analysisEnabled
+        it[Keys.DIGITAL_IN_DIARY] = d.showInDiary
+        it[Keys.DIGITAL_SAVE] = d.saveHistory
+        it[Keys.DIGITAL_BY_CONTEXT] = d.showTopAppsByContext
+    }
 
     suspend fun clear() = context.dataStore.edit { it.clear() }
 }
