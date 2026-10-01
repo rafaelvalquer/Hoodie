@@ -28,10 +28,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hoodie.app.core.location.LocationPermissionState
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.WorkMode
 import com.hoodie.app.presentation.screens.places.PlacePickerContent
@@ -51,13 +54,23 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
     var permissionTick by remember { mutableIntStateOf(0) }
 
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val permission by vm.permission.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    // Android 10 mostra o diálogo; 11+ manda para as configurações do app.
     val backgroundLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        permissionTick++; vm.go(OnboardingStep.HOME)
+        permissionTick++; vm.revalidatePermission()
     }
     val foregroundLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         permissionTick++
+        vm.revalidatePermission()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        if (!vm.hasLocation()) vm.go(OnboardingStep.HOME)
+        vm.go(OnboardingStep.HOME)
+    }
+    // Ao voltar das configurações do sistema: revalida a permissão.
+    LifecycleResumeEffect(Unit) {
+        vm.revalidatePermission()
+        permissionTick++
+        onPauseOrDispose { }
     }
 
     // Passos de endereço ocupam a tela toda (o mapa não pode ficar dentro de scroll).
@@ -90,7 +103,7 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
     ) {
         val anim = when (state.step) {
             OnboardingStep.WELCOME, OnboardingStep.DONE -> AnimationId.WAVE
-            OnboardingStep.PERMISSION -> AnimationId.THINK_STAND
+            OnboardingStep.PERMISSION, OnboardingStep.BACKGROUND -> AnimationId.THINK_STAND
             OnboardingStep.HOME -> AnimationId.LOOK_AROUND
             OnboardingStep.WORK, OnboardingStep.SCHEDULE -> AnimationId.WORK_TYPING
             else -> AnimationId.IDLE
@@ -120,16 +133,7 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
                     Text("A localização permite ao ${state.catName} entender quando você está em casa, no trabalho ou em outros lugares importantes.")
                     Text("\n🔒 Seus locais ficam armazenados só no celular, cifrados.\n📡 Sem rastreamento contínuo: usamos regiões (geofences), não o seu trajeto.\n✈️ Funciona sem internet.", color = HoodieColors.Muted)
                 }
-                if (permissionTick >= 0 && vm.needsBackground()) {
-                    PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
-                        Text("Para perceber chegadas e saídas com o app fechado, escolha \"Permitir o tempo todo\" na próxima tela.")
-                    }
-                    PixelButton("Permitir o tempo todo", {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                        else vm.go(OnboardingStep.HOME)
-                    }, Modifier.fillMaxWidth())
-                    PixelButton("Só com o app aberto", { vm.go(OnboardingStep.HOME) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
-                } else if (vm.hasLocation()) {
+                if (permissionTick >= 0 && vm.hasLocation()) {
                     PixelButton("Continuar", { vm.go(OnboardingStep.HOME) }, Modifier.fillMaxWidth())
                 } else {
                     PixelButton("Permitir localização", {
@@ -149,7 +153,27 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
                     Text("Sem localização, o ${state.catName} segue a rotina provável. Dá para ativar depois.", color = HoodieColors.Muted, textAlign = TextAlign.Center)
                 }
                 PixelButton("Não, buscar pelo endereço", { vm.go(OnboardingStep.HOME_ADDRESS) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
-                PixelButton("Definir depois", { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                PixelButton("Definir depois", vm::afterHome, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+            }
+            OnboardingStep.BACKGROUND -> {
+                SectionLabel("Passo 3b · Segundo plano")
+                PixelPanel(Modifier.fillMaxWidth()) {
+                    Text("Para o ${state.catName} perceber quando você chega ou sai mesmo com o aplicativo fechado, ative:")
+                    Text("\nLocalização\n→ Permitir o tempo todo", style = MaterialTheme.typography.titleMedium)
+                }
+                if (permission == LocationPermissionState.BACKGROUND) {
+                    Text("✅ Tudo certo: o ${state.catName} vai perceber suas chegadas.", color = HoodieColors.Mint, textAlign = TextAlign.Center)
+                    PixelButton("Continuar", { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth())
+                } else {
+                    if (permission == LocationPermissionState.APPROXIMATE_ONLY) {
+                        Text("Ative também \"Usar local exato\".", color = HoodieColors.Coral, textAlign = TextAlign.Center)
+                    }
+                    PixelButton("ABRIR CONFIGURAÇÕES", {
+                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                        else context.startActivity(vm.appSettingsIntent())
+                    }, Modifier.fillMaxWidth())
+                    PixelButton("Agora não (só com o app aberto)", { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                }
             }
             OnboardingStep.WORK -> {
                 SectionLabel("Passo 4 · Trabalho")

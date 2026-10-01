@@ -27,6 +27,7 @@ import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.TimelineActor
 import com.hoodie.app.core.model.TimelineEvent
 import com.hoodie.app.core.time.ClockProvider
+import com.hoodie.app.core.time.currentDateFlow
 import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.core.time.startOfDay
@@ -69,9 +70,9 @@ class TimelineViewModel @Inject constructor(
 ) : ViewModel() {
     val range = MutableStateFlow(HistoryRange.TODAY)
 
-    val state = range.flatMapLatest { r ->
+    // Recalcula quando muda a faixa ou quando o relógio vira o dia (meia-noite/fuso).
+    val state = combine(range, currentDateFlow(clock)) { r, d -> r to d }.flatMapLatest { (r, today) ->
         val zone = clock.zone()
-        val today = clock.today()
         val dates = when (r) {
             HistoryRange.TODAY -> listOf(today)
             HistoryRange.YESTERDAY -> listOf(today.minusDays(1))

@@ -28,4 +28,24 @@ class SpritePreviewTest {
         )
         PreviewExport.sheet("hoodie_model_sheet", poses.map { HoodiePainter.sprite(it) }, columns = 6, scale = 5)
     }
+
+    /** Ciclos de caminhada nas três vistas + espelho, para revisar no PNG. */
+    @Test
+    fun exportWalkCycles() {
+        val p = com.hoodie.app.pixel.sprite.ProceduralSpriteProvider
+        val rows = listOf(
+            com.hoodie.app.pixel.sprite.Direction.LEFT, com.hoodie.app.pixel.sprite.Direction.RIGHT,
+            com.hoodie.app.pixel.sprite.Direction.FRONT, com.hoodie.app.pixel.sprite.Direction.BACK,
+        ).flatMap { d -> (0 until 8).map { i -> p.frame(com.hoodie.app.pixel.sprite.SpriteRequest(com.hoodie.app.pixel.animation.AnimationId.WALK_BACKPACK, d, i)).image } }
+        PreviewExport.sheet("hoodie_walk_cycles", rows, columns = 8, scale = 4)
+    }
+
+    /** Orelhas, piscada e expressões. */
+    @Test
+    fun exportPersonality() {
+        val poses = com.hoodie.app.pixel.sprite.Ears.entries.map { HoodiePose(ears = it) } +
+            listOf(Eyes.HALF, Eyes.CLOSED, Eyes.SLEEPY, Eyes.FOCUSED).map { HoodiePose(eyes = it) } +
+            listOf(HoodiePose(rightArm = Arm.HEAD, eyes = Eyes.CLOSED), HoodiePose(lift = 2, eyes = Eyes.HAPPY, mouth = Mouth.OPEN), HoodiePose(headOnly = true, eyes = Eyes.CLOSED, headTilt = 1))
+        PreviewExport.sheet("hoodie_personality", poses.map { HoodiePainter.sprite(it) }, columns = 7, scale = 4)
+    }
 }

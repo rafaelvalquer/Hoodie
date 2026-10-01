@@ -289,7 +289,9 @@ class ContextEngine @Inject constructor(
         val probable = RoutineEngine.probableContext(zoned, routines.get(), routines.isDayOff(zoned.toLocalDate()))
         val shouldSwitch = current == null ||
             (current.source == ContextSource.ROUTINE && current.type != probable) ||
-            (!usable && current.source == ContextSource.MANUAL && now - current.startedAt > HoodieConfig.MANUAL_HOLD_MS && current.type != probable)
+            // Sem geofence nada mais vai mudar o contexto: qualquer evento antigo (manual,
+            // geofence de antes da permissão sumir) cede à rotina depois do tempo de espera.
+            (!usable && current.source != ContextSource.ROUTINE && now - current.startedAt > HoodieConfig.MANUAL_HOLD_MS && current.type != probable)
         if (shouldSwitch) switchTo(probable, now, ROUTINE_CONFIDENCE, null, ContextSource.ROUTINE, TransitionReason.ROUTINE_FALLBACK)
     }
 

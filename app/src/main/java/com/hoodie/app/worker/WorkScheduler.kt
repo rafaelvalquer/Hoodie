@@ -15,8 +15,8 @@ import javax.inject.Singleton
 
 /** Checagens pontuais pedidas pelo Context Engine (fake nos testes). */
 interface CheckScheduler {
-    override fun scheduleLunchCheck(exitAt: Long, placeId: Long)
-    override fun scheduleCommuteCheck(eventId: Long)
+    fun scheduleLunchCheck(exitAt: Long, placeId: Long)
+    fun scheduleCommuteCheck(eventId: Long)
     fun cancelChecks()
     fun reconcileNow()
 }

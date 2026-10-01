@@ -267,7 +267,7 @@ object HoodieClips {
         // ───── Postura (squash discreto ao sentar/levantar) ─────
         val sitDown: Builder.() -> Unit = {
             f(120, S.copy(bob = 1, stringSwing = 1)); f(120, S.copy(bob = 2, eyes = Eyes.LOOK_DOWN))
-            f(140, SIT.copy(bob = -1, stringSwing = 1), SIT); f(150, SIT.copy(bob = 1, stringSwing = -1)); f(120, SIT)
+            f(140, SIT.copy(bob = -1, stringSwing = 1), AnimationEvent.SIT); f(150, SIT.copy(bob = 1, stringSwing = -1)); f(120, SIT)
         }
         val standUp: Builder.() -> Unit = {
             f(120, SIT.copy(bob = 1)); f(120, SIT.copy(bob = -1, eyes = Eyes.LOOK_UP))

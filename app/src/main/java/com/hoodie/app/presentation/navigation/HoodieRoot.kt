@@ -35,6 +35,7 @@ import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.presentation.components.AnimatedHoodie
 import com.hoodie.app.presentation.screens.devlab.DeveloperLabScreen
+import com.hoodie.app.presentation.screens.diary.DiaryScreen
 import com.hoodie.app.presentation.screens.home.HomeScreen
 import com.hoodie.app.presentation.screens.memories.MemoriesScreen
 import com.hoodie.app.presentation.screens.onboarding.OnboardingScreen
@@ -98,6 +99,7 @@ private val tabs = listOf(
     Tab(Routes.HOME, "🐱", "Hoje"),
     Tab(Routes.TIMELINE, "📅", "Histórico"),
     Tab(Routes.PLACES, "📍", "Lugares"),
+    Tab(Routes.DIARY, "🗺️", "Diário"),
     Tab(Routes.SETTINGS, "⚙️", "Ajustes"),
 )
 
@@ -105,6 +107,7 @@ object Routes {
     const val HOME = "home"
     const val TIMELINE = "timeline"
     const val PLACES = "places"
+    const val DIARY = "diary"
     const val SETTINGS = "settings"
     const val ROUTINE = "routine"
     const val MEMORIES = "memories"
@@ -149,6 +152,7 @@ fun MainScaffold() {
             composable(Routes.HOME) { HomeScreen(onOpen = { nav.navigate(it) }) }
             composable(Routes.TIMELINE) { TimelineScreen() }
             composable(Routes.PLACES) { PlacesScreen(onOpen = { nav.navigate(it) }) }
+            composable(Routes.DIARY) { DiaryScreen() }
             composable(Routes.SETTINGS) { SettingsScreen(onOpen = { nav.navigate(it) }) }
             composable(Routes.ROUTINE) { RoutineScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.MEMORIES) { MemoriesScreen(onBack = { nav.popBackStack() }) }

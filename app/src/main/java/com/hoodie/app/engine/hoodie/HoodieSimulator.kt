@@ -110,7 +110,8 @@ object HoodieSimulator {
 
     /** Necessidades "ao vivo" para exibição, sem alterar o estado salvo. */
     fun liveNeeds(state: HoodieState, now: Long): Needs =
-        NeedsEngine.apply(state.needs, state.activity, state.userContext, (now - state.needsAt) / MINUTE_MS)
+        // Relógio voltou (TIME_SET): nunca aplica tempo negativo.
+        NeedsEngine.apply(state.needs, state.activity, state.userContext, ((now - state.needsAt) / MINUTE_MS).coerceAtLeast(0))
 
     private fun input(at: Long, ctx: UserContextType, needs: Needs, previous: HoodieActivity?, env: SimulationEnv): DecisionInput {
         val zoned = at.atZone(env.zone)

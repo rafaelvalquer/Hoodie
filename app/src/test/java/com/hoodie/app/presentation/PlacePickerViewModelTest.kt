@@ -3,6 +3,7 @@ package com.hoodie.app.presentation
 import com.hoodie.app.core.database.PlaceDao
 import com.hoodie.app.core.database.PlaceEntity
 import com.hoodie.app.core.geofence.GeofenceRegistrar
+import com.hoodie.app.core.geofence.GeofenceRegistrationResult
 import com.hoodie.app.core.location.AddressResult
 import com.hoodie.app.core.location.AddressSearch
 import com.hoodie.app.core.location.CurrentPosition
@@ -57,7 +58,12 @@ class PlacePickerViewModelTest {
 
     private class CountingRegistrar : GeofenceRegistrar {
         var calls = 0
-        override suspend fun registerAll(): Boolean { calls++; return true }
+        override val lastResult = MutableStateFlow<GeofenceRegistrationResult?>(null)
+        override suspend fun registerAll(): GeofenceRegistrationResult {
+            calls++
+            return GeofenceRegistrationResult(1, 1, 0, null).also { lastResult.value = it }
+        }
+        override suspend fun clear() = Unit
     }
 
     private val noPosition = object : CurrentPosition { override suspend fun current(): Pair<Double, Double>? = null }

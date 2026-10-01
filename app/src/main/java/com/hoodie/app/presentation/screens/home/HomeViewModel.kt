@@ -17,6 +17,7 @@ import com.hoodie.app.core.model.Routine
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.model.WorkMode
 import com.hoodie.app.core.time.ClockProvider
+import com.hoodie.app.core.time.currentDateFlow
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.core.time.HOUR_MS
 import com.hoodie.app.core.time.MINUTE_MS
@@ -44,6 +45,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -108,7 +110,8 @@ class HomeViewModel @Inject constructor(
         routines.routine,
         contextDao.observeCurrent().map { it?.toDomain() },
         places.places,
-        routines.observeDayOff(clock.today()),
+        // Vira o dia junto com o relógio (meia-noite, fuso, TIME_SET): nunca observa o dia antigo.
+        currentDateFlow(clock).flatMapLatest { routines.observeDayOff(it) },
     ) { s, r, c, p, off -> Inputs(s, r, c, p, off) }
 
     private val pendingQuestion = questionDao.observePending(clock.nowMillis() - 12 * HOUR_MS).map { list ->
