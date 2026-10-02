@@ -24,7 +24,7 @@ class ReplaySequenceBuilderTest {
         val frame = replay.frameAt(150)
         assertNull(frame.activeNodeId)
         assertEquals("edge-0", frame.activeEdgeId)
-        assertTrue(frame.markerX > 0f)
+        assertEquals(0.5f, frame.progressOnEdge, 0.01f)
         assertEquals(setOf("note"), frame.highlightedTimelineItemIds)
         assertEquals(UserContextType.HOME, frame.currentContext)
         assertEquals(200L, replay.frameAt(500).timestamp)

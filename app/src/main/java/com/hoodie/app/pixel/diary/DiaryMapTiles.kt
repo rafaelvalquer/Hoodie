@@ -97,15 +97,26 @@ object DiaryMapTiles {
             Tile.LAMP -> {
                 paint(b, Tile.SIDEWALK, col, row, lightsOn, timeMs)
                 b.vline(x + 4, y + 1, y + 7, P.LAMP); b.hline(x + 3, x + 5, y, P.LAMP)
-                if (lightsOn) { b.set(x + 4, y + 1, P.LAMP_LIGHT); b.set(x + 3, y + 1, P.LAMP_LIGHT and 0x80FFFFFF.toInt()); b.set(x + 5, y + 1, P.LAMP_LIGHT and 0x80FFFFFF.toInt()) }
+                if (lightsOn) paintLampLight(b, col, row)
             }
-            Tile.WATER -> {
-                b.box(x, y, x + 7, y + 7, P.WATER)
-                // Reflexo andando devagar.
-                val phase = ((timeMs / 600) % 8).toInt()
-                b.hline(x + (phase + col) % 6, x + (phase + col) % 6 + 1, y + 2 + row % 3, P.WATER_LIGHT)
-            }
+            Tile.WATER -> { paintWaterBase(b, col, row); paintWaterShine(b, col, row, timeMs) }
         }
+    }
+
+    // Partes animadas (camada dinâmica): a base fica na camada estática.
+
+    fun paintWaterBase(b: PixelBuffer, col: Int, row: Int) = b.box(col * SIZE, row * SIZE, col * SIZE + 7, row * SIZE + 7, P.WATER)
+
+    /** Reflexo andando devagar na água. */
+    fun paintWaterShine(b: PixelBuffer, col: Int, row: Int, timeMs: Long) {
+        val x = col * SIZE; val y = row * SIZE
+        val phase = ((timeMs / 600) % 8).toInt()
+        b.hline(x + (phase + col) % 6, x + (phase + col) % 6 + 1, y + 2 + row % 3, P.WATER_LIGHT)
+    }
+
+    fun paintLampLight(b: PixelBuffer, col: Int, row: Int) {
+        val x = col * SIZE; val y = row * SIZE
+        b.set(x + 4, y + 1, P.LAMP_LIGHT); b.set(x + 3, y + 1, P.LAMP_LIGHT and 0x80FFFFFF.toInt()); b.set(x + 5, y + 1, P.LAMP_LIGHT and 0x80FFFFFF.toInt())
     }
 
     private fun road(b: PixelBuffer, x: Int, y: Int) = b.box(x, y, x + 7, y + 7, P.ROAD)

@@ -75,7 +75,7 @@ class DiaryEngineTest {
         val middle = replay.frameAt(day + 30)
         assertEquals(null, middle.activeNodeId)
         assertEquals("edge-0", middle.activeEdgeId)
-        assertTrue(middle.markerX > 0f)
+        assertTrue(middle.activeEdgeId != null && middle.progressOnEdge > 0f)
         assertEquals(setOf("event"), middle.highlightedTimelineItemIds)
         assertEquals(UserContextType.HOME, middle.currentContext)
         assertEquals(HoodieActivity.READING, middle.currentHoodieActivity)

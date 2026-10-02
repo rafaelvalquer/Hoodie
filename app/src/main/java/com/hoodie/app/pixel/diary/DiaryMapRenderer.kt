@@ -33,21 +33,35 @@ data class DiaryMapScene(
  */
 object DiaryMapRenderer {
 
-    fun render(scene: DiaryMapScene, out: PixelBuffer = PixelBuffer(DiaryMapTiles.WIDTH, DiaryMapTiles.HEIGHT)): PixelBuffer {
+    /**
+     * Quadro completo: copia a camada estática do [cache] e desenha só o que muda
+     * (água, caminhos, prédios com estado, efeitos, luz do horário, postes e o Hoodie).
+     */
+    fun render(
+        scene: DiaryMapScene,
+        cache: DiaryMapRenderCache = DiaryMapRenderCache.create(scene.layout),
+        out: PixelBuffer = PixelBuffer(DiaryMapTiles.WIDTH, DiaryMapTiles.HEIGHT),
+    ): PixelBuffer {
+        val start = System.nanoTime()
         val layout = scene.layout
-        val lightsOn = scene.period == DayPeriod.EVENING || scene.period == DayPeriod.NIGHT
-        val decor = DiaryMapDecoration.tiles(layout)
-        for (row in 0 until DiaryMapTiles.ROWS) for (col in 0 until DiaryMapTiles.COLS) {
-            if (layout.nodes.any { TilePos(col, row) in it.footprint }) { DiaryMapTiles.paint(out, Tile.GRASS, col, row, lightsOn, scene.timeMs); continue }
-            val tile = decor[TilePos(col, row)] ?: DiaryMapTiles.baseTile(col, row)
-            DiaryMapTiles.paint(out, tile, col, row, lightsOn, scene.timeMs)
-        }
+        val c = if (cache.matches(layout)) cache.also { DiaryMapPerf.cacheHits++ } else DiaryMapRenderCache.create(layout)
+        DiaryMapPerf.lastCacheHit = c === cache
+        val lighting = DiaryLightingResolver.forPeriod(scene.period)
+        c.staticLayer.pixels.copyInto(out.pixels)
+        c.animatedTiles.forEach { (t, tile) -> if (tile == Tile.WATER) DiaryMapTiles.paintWaterShine(out, t.col, t.row, scene.timeMs) }
         layout.trips.forEach { trip -> paintTrip(out, trip, tripStyle(scene, trip.index)) }
-        layout.nodes.forEach { node -> DiaryMapBuildings.paint(out, node, buildingState(scene, node), lightsOn, scene.timeMs) }
-        DiaryMapDecoration.effects(out, layout, lightsOn, scene.timeMs)
+        layout.nodes.forEach { node -> DiaryMapBuildings.paint(out, node, buildingState(scene, node), lighting.lightsOn, scene.timeMs) }
+        DiaryMapDecoration.effects(out, layout, lighting.lightsOn, scene.timeMs)
         P.applyTint(out, scene.period)
-        if (lightsOn) decor.forEach { (t, tile) -> if (tile == Tile.LAMP) out.disc(t.col * DiaryMapTiles.SIZE + 4, t.row * DiaryMapTiles.SIZE + 1, 1, P.LAMP_LIGHT and 0x70FFFFFF) }
+        if (lighting.lightsOn) c.animatedTiles.forEach { (t, tile) ->
+            if (tile != Tile.LAMP) return@forEach
+            DiaryMapTiles.paintLampLight(out, t.col, t.row)
+            out.disc(t.col * DiaryMapTiles.SIZE + 4, t.row * DiaryMapTiles.SIZE + 1, 1, P.LAMP_LIGHT and 0x70FFFFFF)
+        }
         marker(scene)?.let { DiaryHoodieMarker.paint(out, it, scene.timeMs) }
+        val now = System.nanoTime()
+        DiaryMapPerf.lastRenderNanos = now - start
+        DiaryMapPerf.frameRendered(now)
         return out
     }
 

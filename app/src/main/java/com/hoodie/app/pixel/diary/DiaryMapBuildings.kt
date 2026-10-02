@@ -24,11 +24,18 @@ object DiaryMapBuildings {
         b.box(x + 3, y + SIZE - 2, x + SIZE - 1, y + SIZE - 1, P.GRASS_DARK)
         b.blit(tmp, x, y)
         when (state) {
-            BuildingState.ACTIVE -> frame(b, x - 1, y - 1, x + SIZE, y + SIZE, P.GOLD)
+            BuildingState.ACTIVE -> {
+                // Pulso discreto: contorno 1 → 2 → 1 px (sem brilho "moderno").
+                frame(b, x - 1, y - 1, x + SIZE, y + SIZE, P.GOLD)
+                if (pulseWidth(timeMs) == 2) frame(b, x - 2, y - 2, x + SIZE + 1, y + SIZE + 1, P.GOLD)
+            }
             BuildingState.VISITED -> frame(b, x - 1, y - 1, x + SIZE, y + SIZE, P.VISITED and 0x99FFFFFF.toInt())
             BuildingState.UPCOMING -> Unit
         }
     }
+
+    /** Espessura do contorno do prédio ativo: ciclo de 3 tempos (1, 2, 1). */
+    fun pulseWidth(timeMs: Long): Int = if ((timeMs / 300) % 3 == 1L) 2 else 1
 
     private fun frame(b: PixelBuffer, x0: Int, y0: Int, x1: Int, y1: Int, c: Int) {
         b.hline(x0 + 1, x1 - 1, y0, c); b.hline(x0 + 1, x1 - 1, y1, c); b.vline(x0, y0 + 1, y1 - 1, c); b.vline(x1, y0 + 1, y1 - 1, c)

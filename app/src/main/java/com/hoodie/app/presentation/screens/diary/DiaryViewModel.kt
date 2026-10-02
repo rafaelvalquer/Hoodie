@@ -54,8 +54,7 @@ class DiaryViewModel @Inject constructor(
         if (diary.replay.endAt <= diary.replay.startAt) return
         val resume = _state.value.replay.state == ReplayState.PAUSED
         val start = if (resume) _state.value.replay.currentTimestamp ?: diary.replay.startAt else diary.replay.startAt
-        val firstFrame = diary.replay.frameAt(start)
-        _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.PLAYING, currentTimestamp = start, activeNodeId = firstFrame.activeNodeId, activeEdgeId = firstFrame.activeEdgeId, markerX = firstFrame.markerX, markerY = firstFrame.markerY, edgeProgress = firstFrame.progressOnEdge, highlightedTimelineItemIds = firstFrame.highlightedTimelineItemIds))
+        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PLAYING), diary, start, zone))
         replayJob?.cancel()
         replayJob = viewModelScope.launch {
             var timestamp = start
@@ -63,15 +62,11 @@ class DiaryViewModel @Inject constructor(
             while (timestamp < diary.replay.endAt) {
                 delay(80)
                 val nowElapsed = android.os.SystemClock.elapsedRealtime()
-                val speed = _state.value.replay.speed.multiplier
-                timestamp = (timestamp + (nowElapsed - last).coerceAtLeast(1) * speed * 60L).coerceAtMost(diary.replay.endAt)
+                timestamp = advanceReplay(timestamp, nowElapsed - last, _state.value.replay.speed, diary.replay.endAt)
                 last = nowElapsed
-                val frame = diary.replay.frameAt(timestamp)
-                val span = (diary.replay.endAt - diary.replay.startAt).coerceAtLeast(1)
-                _state.value = _state.value.copy(replay = _state.value.replay.copy(currentTimestamp = timestamp, activeNodeId = frame.activeNodeId, activeEdgeId = frame.activeEdgeId, markerX = frame.markerX, markerY = frame.markerY, edgeProgress = frame.progressOnEdge, highlightedTimelineItemIds = frame.highlightedTimelineItemIds, progress = ((timestamp - diary.replay.startAt).toFloat() / span).coerceIn(0f, 1f)))
+                _state.value = _state.value.copy(replay = replayAt(_state.value.replay, diary, timestamp, zone))
             }
-            val finalFrame = diary.replay.frameAt(diary.replay.endAt)
-            _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.FINISHED, currentTimestamp = diary.replay.endAt, progress = 1f, activeNodeId = finalFrame.activeNodeId, activeEdgeId = finalFrame.activeEdgeId, markerX = finalFrame.markerX, markerY = finalFrame.markerY, edgeProgress = finalFrame.progressOnEdge, highlightedTimelineItemIds = finalFrame.highlightedTimelineItemIds))
+            _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.FINISHED), diary, diary.replay.endAt, zone))
         }
     }
 
@@ -95,4 +90,19 @@ class DiaryViewModel @Inject constructor(
     }
 
     override fun onCleared() { stopReplay(); super.onCleared() }
+}
+
+/** Avança o relógio do replay: [elapsedMs] reais × minutos por segundo da velocidade. */
+internal fun advanceReplay(timestamp: Long, elapsedMs: Long, speed: ReplaySpeed, endAt: Long): Long =
+    (timestamp + elapsedMs.coerceAtLeast(1) * speed.minutesPerSecond * 60L).coerceAtMost(endAt)
+
+/**
+ * Estado do replay em [timestamp]: mapa (nó/trecho/progresso), contexto, atividade do
+ * Hoodie, app ativo e período do dia, todos de [ReplayHudAssembler].
+ */
+internal fun replayAt(base: ReplayUiState, diary: com.hoodie.app.domain.diary.model.DailyDiary, timestamp: Long, zone: java.time.ZoneId): ReplayUiState {
+    val visual = com.hoodie.app.engine.diary.ReplayHudAssembler.assemble(diary.replay, diary.phoneInsights, timestamp, zone)
+    val span = (diary.replay.endAt - diary.replay.startAt).coerceAtLeast(1)
+    return base.withVisual(visual, diary.replay.frameAt(timestamp).highlightedTimelineItemIds)
+        .copy(progress = ((timestamp - diary.replay.startAt).toFloat() / span).coerceIn(0f, 1f))
 }
