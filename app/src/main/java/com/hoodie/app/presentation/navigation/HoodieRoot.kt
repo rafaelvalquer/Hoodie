@@ -30,7 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.hoodie.app.core.model.PlaceType
-import com.hoodie.app.presentation.screens.places.PlacePickerScreen
+import com.hoodie.app.presentation.screens.places.picker.PlacePickerScreen
 import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.presentation.components.AnimatedHoodie
@@ -168,7 +168,7 @@ fun MainScaffold() {
             ) { entry ->
                 val type = runCatching { PlaceType.valueOf(entry.arguments?.getString("type").orEmpty()) }.getOrDefault(PlaceType.HOME)
                 val placeId = entry.arguments?.getLong("placeId")?.takeIf { it > 0 }
-                PlacePickerScreen(type, placeId, onBack = { nav.popBackStack() })
+                PlacePickerScreen(type, placeId, onBack = { nav.popBackStack() }, scaffoldPadding = padding)
             }
         }
     }

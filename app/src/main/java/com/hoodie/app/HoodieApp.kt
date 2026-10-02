@@ -4,21 +4,35 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.hoodie.app.core.notification.HoodieNotifier
+import com.hoodie.app.core.database.SqlCipherNativeLoader
+import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.worker.WorkScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
 class HoodieApp : Application(), Configuration.Provider {
+    companion object {
+        init {
+            // Robolectric executa no host JVM e não consegue carregar a .so Android;
+            // o preload real continua obrigatório em qualquer runtime do aplicativo.
+            if (android.os.Build.FINGERPRINT != "robolectric") {
+                SqlCipherNativeLoader.ensureLoaded()
+            }
+        }
+    }
+
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var notifier: HoodieNotifier
     @Inject lateinit var scheduler: WorkScheduler
+    @Inject lateinit var debugLog: DebugEventLogger
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     override fun onCreate() {
         super.onCreate()
+        debugLog.log(DebugEventLogger.Category.DATABASE, "SQLCIPHER_NATIVE_LIBRARY_READY")
         notifier.createChannels()
         scheduler.schedulePeriodic()
         configureMap()

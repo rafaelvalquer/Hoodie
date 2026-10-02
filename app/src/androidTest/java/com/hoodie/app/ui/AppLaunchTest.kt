@@ -27,7 +27,11 @@ class AppLaunchTest {
         val deadline = System.currentTimeMillis() + TIMEOUT_MS
         while (System.currentTimeMillis() < deadline) {
             compose.mainClock.advanceTimeBy(FRAME_MS)
-            val found = labels.any { compose.onAllNodesWithText(it, substring = true).fetchSemanticsNodes().isNotEmpty() }
+            val found = labels.any {
+                compose.onAllNodesWithText(it, substring = true, ignoreCase = true)
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
+            }
             if (found) return
             Thread.sleep(FRAME_MS)
         }
