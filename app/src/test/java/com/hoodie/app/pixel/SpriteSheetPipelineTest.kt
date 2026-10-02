@@ -103,14 +103,39 @@ class SpriteSheetPipelineTest {
     }
 
     @Test
-    fun `contagem de frames diferente do clip vira aviso`() {
+    fun `sheet com contagem de frames errada e rejeitado e o procedural assume`() {
         val root = Files.createTempDirectory("hoodie-count").toFile()
-        val baked = SheetBaker.bake(listOf(AnimationId.IDLE to Facing.FRONT))
+        val baked = SheetBaker.bake(listOf(AnimationId.IDLE to Facing.FRONT, AnimationId.WALK to Facing.SIDE))
         val json = org.json.JSONObject(baked.json)
-        json.getJSONObject("meta").getJSONArray("frameTags").getJSONObject(0).put("to", 1) // só 2 de 4 frames
+        json.getJSONObject("meta").getJSONArray("frameTags").getJSONObject(0).put("to", 1) // idle com 2 de 4 frames
         SheetBaker.write(File(root, SpriteSheetProvider.DIR), "short", baked.copy(json = json.toString()))
-        val (_, report) = SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder)
-        assertTrue(report.problems.toString(), report.problems.any { "o clip tem 4" in it })
+        val (sheets, report) = SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder)
+        assertTrue(report.problems.toString(), report.problems.any { "o clip tem 4" in it && "rejeitado" in it })
+        assertFalse(sheets.supports(AnimationId.IDLE, Facing.FRONT))
+        assertTrue("o resto do arquivo continua valendo", sheets.supports(AnimationId.WALK, Facing.SIDE))
+        assertEquals("procedural", CompositeSpriteProvider(sheets).frame(SpriteRequest(AnimationId.IDLE, Direction.FRONT, 0)).source)
+    }
+
+    @Test
+    fun `ancora obrigatoria nao desenhada vira problema mas o clip carrega`() {
+        val root = Files.createTempDirectory("hoodie-anchor").toFile()
+        val baked = SheetBaker.bake(listOf(AnimationId.DRINK to Facing.FRONT))
+        // Sem slices e sem camada anchors: a mão (caneca) cai no ponto padrão.
+        val noSlices = org.json.JSONObject(baked.json).also { it.getJSONObject("meta").remove("slices") }.toString()
+        SheetBaker.write(File(root, SpriteSheetProvider.DIR), "drink", baked.copy(json = noSlices, anchors = null))
+        val (sheets, report) = SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder)
+        assertTrue(sheets.supports(AnimationId.DRINK, Facing.FRONT))
+        assertTrue(report.problems.toString(), report.problems.any { "RIGHT_HAND" in it && "FEET" in it })
+    }
+
+    @Test
+    fun `cobertura visual por grupo`() {
+        val all = AnimationId.entries.flatMap { id -> Facing.entries.map { id to it } }.toSet()
+        assertEquals(100, com.hoodie.app.pixel.sprite.RequiredShippedAnimations.coverage(all).percent)
+        assertEquals(0, com.hoodie.app.pixel.sprite.RequiredShippedAnimations.coverage(emptySet()).percent)
+        val walkOnly = Facing.entries.map { AnimationId.WALK to it }.toSet()
+        val loco = com.hoodie.app.pixel.sprite.RequiredShippedAnimations.coverage(walkOnly, com.hoodie.app.pixel.animation.AnimGroup.LOCOMOTION)
+        assertEquals(1, loco.finalCount)
     }
 
     /** Gera o baseline que vai para assets-source/hoodie/baseline (rodado a cada build de teste). */

@@ -16,7 +16,13 @@ fun interface SpriteImageDecoder {
     fun decode(input: InputStream): PixelBuffer?
 }
 
-data class SheetFrame(val image: PixelBuffer, val anchors: SpriteAnchors, val durationMs: Long)
+/** [explicitAnchors] = âncoras desenhadas pelo artista (marcador ou slice), não o valor padrão. */
+data class SheetFrame(
+    val image: PixelBuffer,
+    val anchors: SpriteAnchors,
+    val durationMs: Long,
+    val explicitAnchors: Set<Anchor> = Anchor.entries.toSet(),
+)
 
 /** Resultado da carga: o que entrou e o que foi rejeitado (aparece no Pixel Lab). */
 data class SheetLoadReport(val loaded: List<String>, val problems: List<String>)
@@ -106,14 +112,20 @@ object AsepriteSheetParser {
             return null
         }
 
-        fun anchorAt(name: String, frame: Int, default: Point): Point =
-            markerAt(name, frame) ?: anchorKeys[name]?.lastOrNull { it.first <= frame }?.second ?: default
+        val explicit = mutableSetOf<String>()
+        fun anchorAt(name: String, frame: Int, default: Point): Point {
+            val p = markerAt(name, frame) ?: anchorKeys[name]?.lastOrNull { it.first <= frame }?.second
+            if (p != null) explicit += name
+            return p ?: default
+        }
+        val anchorByName = mapOf("feet" to Anchor.FEET, "head" to Anchor.HEAD, "right_hand" to Anchor.RIGHT_HAND, "left_hand" to Anchor.LEFT_HAND, "back" to Anchor.BACK)
 
         fun frameAt(i: Int): SheetFrame {
             val r = raw[i]
             val img = PixelBuffer(r.w, r.h)
             for (y in 0 until r.h) for (x in 0 until r.w) img.pixels[y * r.w + x] = sheet[r.x + x, r.y + y]
             val feetDefault = Point(r.w / 2, r.h - 1)
+            explicit.clear()
             val anchors = SpriteAnchors(
                 rightHand = anchorAt("right_hand", i, Point(r.w * 2 / 3, r.h * 3 / 4)),
                 leftHand = anchorAt("left_hand", i, Point(r.w / 3, r.h * 3 / 4)),
@@ -121,7 +133,7 @@ object AsepriteSheetParser {
                 back = anchorAt("back", i, Point(r.w / 2, r.h * 2 / 3)),
                 feet = anchorAt("feet", i, feetDefault),
             )
-            return SheetFrame(img, anchors, r.duration)
+            return SheetFrame(img, anchors, r.duration, explicit.mapNotNull { anchorByName[it] }.toSet())
         }
 
         val tags = meta.optJSONArray("frameTags")
@@ -198,12 +210,25 @@ class SpriteSheetProvider(private val clips: Map<Pair<AnimationId, Facing>, List
                     val anchors = if ("$base.anchors.png" in files) assets.open("$dir/$base.anchors.png").use { decoder.decode(it) } else null
                     val parsed = AsepriteSheetParser.parse(text, image, problems, anchors)
                     parsed.forEach { (key, frames) ->
-                        // Eventos (pegar caneca, passo…) vêm do clip pelo índice: contagem diferente desalinha.
+                        val label = "$base ${key.first}/${key.second}"
+                        // Eventos (pegar caneca, passo…) vêm do clip pelo índice: contagem diferente
+                        // desalinha tudo. Sheet incompatível é REJEITADO → fica o procedural.
                         val expected = key.first.frames.size
-                        if (frames.size != expected) problems += "$base ${key.first}/${key.second}: ${frames.size} frames, o clip tem $expected (eventos podem dessincronizar)"
+                        if (frames.size != expected) {
+                            problems += "$label: ${frames.size} frames, o clip tem $expected — rejeitado (usa o procedural)"
+                            return@forEach
+                        }
                         val bad = frames.firstOrNull { it.image.width != HoodiePainter.WIDTH || it.image.height != HoodiePainter.HEIGHT }
-                        if (bad != null) problems += "$base ${key.first}/${key.second}: frame ${bad.image.width}×${bad.image.height} (esperado 48×72)"
-                        else { clips[key] = frames; loaded += "${key.first.name.lowercase()}_${key.second.name.lowercase()}" }
+                        if (bad != null) {
+                            problems += "$label: frame ${bad.image.width}×${bad.image.height} (esperado 48×72) — rejeitado"
+                            return@forEach
+                        }
+                        // Âncora crítica faltando: o runtime aceita (item cai no padrão), mas o gate de arte falha.
+                        RequiredAnchors.missing(key.first, frames).takeIf { it.isNotEmpty() }?.let {
+                            problems += "$label: âncoras obrigatórias não desenhadas: ${it.joinToString()}"
+                        }
+                        clips[key] = frames
+                        loaded += "${key.first.name.lowercase()}_${key.second.name.lowercase()}"
                     }
                 }.onFailure { problems += "$base: ${it.message}" }
             }
