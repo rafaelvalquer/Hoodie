@@ -95,6 +95,8 @@ data class ContextQuestionEntity(
     val askedAt: Long,
     val answeredAt: Long? = null,
     val answer: String? = null,
+    /** Perguntas de mobilidade: o deslocamento a que se referem. */
+    val mobilitySessionId: Long? = null,
 )
 
 @Entity(tableName = "hoodie_state")

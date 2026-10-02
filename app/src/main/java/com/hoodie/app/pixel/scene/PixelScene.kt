@@ -8,6 +8,7 @@ enum class SceneId(val label: String) {
     OFFICE("Escritório"),
     STREET("Rua"),
     TRANSIT("Ônibus"),
+    CAR("Carro"),
     RESTAURANT("Restaurante"),
     GYM("Academia"),
     UNKNOWN("Desconhecido"),

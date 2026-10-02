@@ -11,6 +11,8 @@ import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.engine.context.ContextEngine
 import com.hoodie.app.engine.context.GeofenceTransition
 import com.hoodie.app.engine.hoodie.HoodieEngine
+import com.hoodie.app.engine.mobility.MobilityEngine
+import com.hoodie.app.engine.mobility.QuestionRouter
 import com.hoodie.app.worker.WorkScheduler
 import com.hoodie.app.core.database.DatabaseGate
 import dagger.Lazy
@@ -39,6 +41,7 @@ private fun BroadcastReceiver.runAsync(block: suspend () -> Unit) {
 @AndroidEntryPoint
 class GeofenceReceiver : BroadcastReceiver() {
     @Inject lateinit var contextEngine: Lazy<ContextEngine>
+    @Inject lateinit var mobilityEngine: Lazy<MobilityEngine>
     @Inject lateinit var gate: DatabaseGate
     @Inject lateinit var clock: ClockProvider
 
@@ -55,7 +58,11 @@ class GeofenceReceiver : BroadcastReceiver() {
         val at = clock.nowMillis()
         runAsync {
             if (!gate.isReady()) return@runAsync
-            ids.forEach { contextEngine.get().onGeofence(it, transition, at) }
+            ids.forEach {
+                // Contexto primeiro (autoridade sobre Casa/Trabalho/…); a mobilidade enriquece depois.
+                contextEngine.get().onGeofence(it, transition, at)
+                mobilityEngine.get().onGeofence(it, transition, at)
+            }
         }
     }
 }
@@ -68,6 +75,7 @@ class GeofenceReceiver : BroadcastReceiver() {
 @AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
     @Inject lateinit var geofences: Lazy<GeofenceManager>
+    @Inject lateinit var mobilityRegistration: com.hoodie.app.core.mobility.MobilityRegistration
     @Inject lateinit var scheduler: WorkScheduler
     @Inject lateinit var hoodie: Lazy<HoodieEngine>
     @Inject lateinit var gate: DatabaseGate
@@ -79,6 +87,8 @@ class BootReceiver : BroadcastReceiver() {
             log.log(DebugEventLogger.Category.SYSTEM, action.substringAfterLast('.'))
             // Agendar não precisa do banco; o resto só com o banco aberto com segurança.
             if (action in REGISTER_ACTIONS) scheduler.schedulePeriodic()
+            // Reboot/atualização também removem o Activity Recognition: registra de novo.
+            if (action in REGISTER_ACTIONS) runCatching { mobilityRegistration.sync() }
             if (action in TIME_ACTIONS) scheduler.reconcileNow()
             if (!gate.isReady()) return@runAsync
             if (action in REGISTER_ACTIONS) geofences.get().registerAll()
@@ -95,7 +105,7 @@ class BootReceiver : BroadcastReceiver() {
 /** Botões Sim/Não das notificações de confirmação. */
 @AndroidEntryPoint
 class QuestionActionReceiver : BroadcastReceiver() {
-    @Inject lateinit var contextEngine: Lazy<ContextEngine>
+    @Inject lateinit var router: Lazy<QuestionRouter>
     @Inject lateinit var gate: DatabaseGate
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -104,7 +114,7 @@ class QuestionActionReceiver : BroadcastReceiver() {
         val yes = intent.getBooleanExtra(EXTRA_YES, false)
         runAsync {
             if (!gate.isReady()) return@runAsync
-            contextEngine.get().answerYesNo(id, yes)
+            router.get().answerYesNo(id, yes)
         }
     }
 

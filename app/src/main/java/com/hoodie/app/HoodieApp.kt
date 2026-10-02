@@ -1,5 +1,6 @@
 package com.hoodie.app
 
+import kotlinx.coroutines.launch
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
@@ -26,6 +27,7 @@ class HoodieApp : Application(), Configuration.Provider {
     @Inject lateinit var notifier: HoodieNotifier
     @Inject lateinit var scheduler: WorkScheduler
     @Inject lateinit var debugLog: DebugEventLogger
+    @Inject lateinit var mobilityRegistration: com.hoodie.app.core.mobility.MobilityRegistration
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -35,6 +37,10 @@ class HoodieApp : Application(), Configuration.Provider {
         debugLog.log(DebugEventLogger.Category.DATABASE, "SQLCIPHER_NATIVE_LIBRARY_READY")
         notifier.createChannels()
         scheduler.schedulePeriodic()
+        // Activity Recognition: registro idempotente (some em reboot/atualização/limpeza do Play Services).
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+            runCatching { mobilityRegistration.sync() }
+        }
         configureMap()
         // Sprite sheets do Aseprite (assets/pixel/hoodie) por cima do procedural.
         com.hoodie.app.pixel.sprite.AndroidSpriteSheets.install(this)

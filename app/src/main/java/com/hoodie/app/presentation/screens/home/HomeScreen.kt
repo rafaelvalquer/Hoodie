@@ -195,13 +195,20 @@ private fun QuestionCard(q: ContextQuestion, vm: HomeViewModel) {
         Text(q.prompt, style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.padding(6.dp))
         when (q.kind) {
-            QuestionKind.CONFIRM_CONTEXT -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuestionKind.CONFIRM_CONTEXT, QuestionKind.CONFIRM_MOVEMENT, QuestionKind.CONFIRM_ARRIVAL, QuestionKind.CONFIRM_TRIP_PATTERN -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 PixelButton("Sim", { vm.answerYesNo(q.id, true) }, Modifier.weight(1f))
                 PixelButton("Não", { vm.answerYesNo(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
             }
             QuestionKind.NEW_PLACE -> {
                 val options = PlaceType.newPlaceOptions
                 ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { vm.answerNewPlace(q.id, options[it]) })
+                Spacer(Modifier.padding(4.dp))
+                Text("Agora não", color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
+            }
+            QuestionKind.SELECT_TRANSPORT_MODE -> {
+                // Escolha só dentro do app (nunca um botão de notificação com o veículo andando).
+                val options = com.hoodie.app.core.mobility.MovementMode.TRANSPORT_CHOICES
+                ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { vm.answerTransportMode(q.id, options[it]) })
                 Spacer(Modifier.padding(4.dp))
                 Text("Agora não", color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
             }

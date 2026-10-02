@@ -12,6 +12,8 @@ internal class ContextQuestionHandler(private val processor: ContextSignalProces
     suspend fun answerYesNo(questionId: Long, yes: Boolean): Unit = with(processor) {
         val q = questionDao.getById(questionId) ?: return@with
         if (q.answeredAt != null) return@with
+        // Perguntas de mobilidade são do MobilityEngine (ver QuestionRouter).
+        if (q.kind.isMobility) return@with
         val now = clock.nowMillis()
         questionDao.update(q.copy(answeredAt = now, answer = if (yes) "YES" else "NO"))
         notifier.cancelQuestion(questionId)

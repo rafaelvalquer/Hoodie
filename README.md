@@ -60,15 +60,16 @@ O plano e a evidência de implementação estão em
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v5 (19 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v6 (21 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
 | Orquestração | `engine.context.ContextEngine`, `ContextTransitionService`, `engine.hoodie.HoodieEngine`, `engine.memory`, `engine.dialogue` | Aplica regras ao banco (só por boundaries), perguntas, notificações |
 | Background | `worker` | Reconciliação a cada 15 min, checagem de almoço (+15 min) e de deslocamento longo (+40 min) |
-| Pixel engine | `pixel.*` | Sprite procedural ou sprite sheet, 84 animações, 9 cenas, iluminação, partículas, transições |
+| Pixel engine | `pixel.*` | Sprite procedural ou sprite sheet, 84 animações, 10 cenas, iluminação, partículas, transições |
 | UI | `presentation.*` | MVVM com Hilt, Navigation Compose, Material 3 |
 | Diário Digital | `core.deviceusage`, `engine.deviceusage`, `domain.phoneinsights`, `pixel.phoneinsights`, `presentation.screens.phoneinsights` | Uso do celular (UsageStatsManager) → sessões → agregados por dia, cruzados com os contextos |
+| Mobilidade | `core.mobility`, `engine.mobility`, `receiver.ActivityTransitionReceiver` | Activity Recognition (transições, sem GPS contínuo) → `MobilityEngine` (estado, score, no máx. ~1 pergunta por trajeto, aprendizado, chegada) → `ContextEngine` e cena (`CarScene`/`TRANSIT`/`STREET`) |
 
 ### O princípio mais importante
 
@@ -178,6 +179,7 @@ Histórico (Hoje / Ontem / 7 dias, com resumo "Seu dia" e "Hoodie") · Lugares �
   Android e os tiles vêm do OpenStreetMap (osmdroid, cache no armazenamento interno). Rotina, geofences, gato e histórico seguem offline.
 * Guardado: lugares (coordenadas cifradas), horários, contextos, histórico, memórias e estado do gato.
 * **Não** guardado: trajeto GPS ou posição contínua. Eventos de geofence guardam só `lugar + transição + hora`.
+* Mobilidade (opcional, Ajustes): guarda só **meio + horários + lugar de origem/destino** de cada trecho. Nunca rota, ruas ou coordenadas; no máximo uma leitura pontual de posição ao parar, para resolver a chegada. "Apagar histórico de deslocamentos" limpa só essa camada.
 * Diário digital (opcional): **app + horários + duração**, contexto e agregados por dia. Nunca mensagens, texto digitado, fotos ou conteúdo da tela.
 * "Apagar todos os dados" limpa banco, preferências, geofences e tarefas; "Apagar histórico digital" limpa só a camada do celular.
 

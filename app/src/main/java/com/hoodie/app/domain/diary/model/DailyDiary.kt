@@ -19,7 +19,7 @@ data class DailySummary(
     val totalMs: Long get() = homeMs + workMs + commutingMs + lunchMs + gymMs + leisureMs + otherMs
 }
 
-enum class DiaryTimelineType { ARRIVED, LEFT, ACTIVITY, CONTEXT_CHANGE, MEMORY, NOTE, APP_USAGE }
+enum class DiaryTimelineType { ARRIVED, LEFT, ACTIVITY, CONTEXT_CHANGE, MEMORY, NOTE, APP_USAGE, MOVEMENT }
 enum class DiaryActor { USER, HOODIE, SYSTEM, PHONE }
 
 data class DiaryTimelineItem(
@@ -127,4 +127,6 @@ data class DailyDiary(
     val replay: ReplaySequence,
     /** Camada digital do dia (null = análise do celular desligada, sem permissão ou sem dados). */
     val phoneInsights: com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights? = null,
+    /** Tempo por meio de deslocamento no dia (🚶 16 min, 🚌 31 min), sem trajeto. */
+    val mobilityTotals: Map<com.hoodie.app.core.mobility.MovementMode, Long> = emptyMap(),
 )

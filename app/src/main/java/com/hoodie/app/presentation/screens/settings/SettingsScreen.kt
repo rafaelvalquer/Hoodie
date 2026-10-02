@@ -69,7 +69,31 @@ class SettingsViewModel @Inject constructor(
     private val wiper: DataWiper,
     private val usageAccess: UsageAccessManager,
     private val clearDigital: ClearDigitalHistoryUseCase,
+    private val activityPermissions: com.hoodie.app.core.mobility.ActivityRecognitionPermissionManager,
+    private val mobilityRegistration: com.hoodie.app.core.mobility.MobilityRegistration,
+    private val mobilityEngine: com.hoodie.app.engine.mobility.MobilityEngine,
 ) : ViewModel() {
+    val activityPermission: StateFlow<com.hoodie.app.core.mobility.ActivityRecognitionPermissionState> = activityPermissions.stateFlow
+    /** Permissão a pedir em runtime (null abaixo do Android 10: já concedida na instalação). */
+    val activityRuntimePermission: String? = activityPermissions.runtimePermission
+
+    fun setMobility(m: com.hoodie.app.core.datastore.MobilitySettings) = viewModelScope.launch {
+        settings.setMobility(m)
+        mobilityRegistration.sync()
+    }
+
+    /** Resultado do pedido de permissão (ou volta dos Ajustes do sistema). */
+    fun onActivityPermissionResult() = viewModelScope.launch {
+        activityPermissions.refresh()
+        mobilityRegistration.sync()
+    }
+
+    fun activityAppSettingsIntent(): Intent = activityPermissions.appSettingsIntent()
+
+    fun clearMobilityHistory() = viewModelScope.launch {
+        mobilityEngine.clearHistory()
+        info.value = "Histórico de deslocamentos apagado."
+    }
     val usagePermission: StateFlow<UsagePermissionState> = usageAccess.state
     val state = settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
     val permission: StateFlow<LocationPermissionState> = permissions.state
@@ -89,6 +113,8 @@ class SettingsViewModel @Inject constructor(
         if (usage == UsagePermissionState.GRANTED && digital.analysisRequested) {
             settings.setDigital(digital.copy(analysisEnabled = true, analysisRequested = false))
         }
+        activityPermissions.refresh()
+        mobilityRegistration.sync()
         val before = permission.value
         val now = permissions.refresh()
         if (before != now || geofences.lastResult.value == null) geofences.registerAll()
@@ -213,6 +239,30 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
             }
         }
 
+        val activityPermission by vm.activityPermission.collectAsStateWithLifecycle()
+        var confirmMobilityDelete by remember { mutableStateOf(false) }
+        val requestActivity = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+        ) { vm.onActivityPermissionResult() }
+        MobilitySettingsPanel(
+            s.mobility, activityPermission,
+            onChange = vm::setMobility,
+            onPermission = {
+                val p = vm.activityRuntimePermission
+                if (p != null) runCatching { requestActivity.launch(p) } else context.startActivity(vm.activityAppSettingsIntent())
+            },
+            onClear = { confirmMobilityDelete = true },
+        )
+        if (confirmMobilityDelete) {
+            AlertDialog(
+                onDismissRequest = { confirmMobilityDelete = false },
+                title = { Text("Apagar histórico de deslocamentos?") },
+                text = { Text("Os deslocamentos salvos (horários e meios de transporte) e o que o ${s.catName} aprendeu dos seus trajetos serão apagados deste aparelho.") },
+                confirmButton = { TextButton(onClick = { vm.clearMobilityHistory(); confirmMobilityDelete = false }) { Text("Apagar", color = HoodieColors.Coral) } },
+                dismissButton = { TextButton(onClick = { confirmMobilityDelete = false }) { Text("Cancelar") } },
+            )
+        }
+
         DigitalSettingsPanel(
             s.digital, usagePermission,
             onChange = vm::setDigital,
@@ -227,6 +277,7 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
                     "• Internet só ao buscar um endereço no mapa: o texto vai ao serviço de mapas do Android e o mapa vem do OpenStreetMap.\n" +
                     "• Guardamos lugares (cifrados), horários, contextos, histórico e o estado do gato.\n" +
                     "• Não guardamos trajeto GPS nem posição contínua.\n" +
+                    "• Deslocamentos (opcional): só de onde, para onde, horários e o meio (a pé, ônibus, carro…). Nunca as ruas percorridas.\n" +
                     "• Diário digital (opcional): só app + tempo de uso por dia. Nunca mensagens, texto, fotos ou conteúdo da tela.\n" +
                     "• Backup em nuvem desativado.",
                 style = MaterialTheme.typography.bodySmall,
@@ -273,6 +324,41 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
             confirmButton = { TextButton(onClick = { vm.deleteEverything(); confirmDelete = false }) { Text("Apagar", color = HoodieColors.Coral) } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } },
         )
+    }
+}
+
+/** Mobilidade Contextual: detecção, aprendizado, transporte preferido e histórico. */
+@Composable
+private fun MobilitySettingsPanel(
+    m: com.hoodie.app.core.datastore.MobilitySettings,
+    permission: com.hoodie.app.core.mobility.ActivityRecognitionPermissionState,
+    onChange: (com.hoodie.app.core.datastore.MobilitySettings) -> Unit,
+    onPermission: () -> Unit,
+    onClear: () -> Unit,
+) {
+    PixelPanel(Modifier.fillMaxWidth()) {
+        SectionLabel("🚶 Detecção de movimento")
+        Text(
+            "Permitir que o Hoodie reconheça quando você está andando ou se deslocando. " +
+                "Usamos essa informação para adaptar o Hoodie à sua rotina. O trajeto não é gravado e os dados permanecem no aparelho.",
+            style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted,
+        )
+        if (!permission.granted) {
+            Text("⚠️ Reconhecimento de atividade não permitido: o Hoodie usa só as geofences.", modifier = Modifier.padding(top = 6.dp))
+            PixelButton("Permitir reconhecimento de atividade", onPermission, Modifier.fillMaxWidth().padding(top = 6.dp))
+        } else {
+            Text("✅ Reconhecimento de atividade permitido", modifier = Modifier.padding(top = 6.dp))
+        }
+        DigitalSwitch("Detectar deslocamentos automaticamente", "Andando, de ônibus, de carro…", m.detectionEnabled) { onChange(m.copy(detectionEnabled = it)) }
+        DigitalSwitch("Aprender meus trajetos frequentes", "Com o tempo o Hoodie pergunta menos", m.learnTrips) { onChange(m.copy(learnTrips = it)) }
+        DigitalSwitch("Confirmar locais novos", "Perguntar o que é um lugar desconhecido onde você parou", m.confirmNewPlaces) { onChange(m.copy(confirmNewPlaces = it)) }
+        SectionLabel("Modo de transporte preferido", Modifier.padding(top = 8.dp))
+        val modes = listOf<com.hoodie.app.core.mobility.MovementMode?>(null) + listOf(
+            com.hoodie.app.core.mobility.MovementMode.CAR, com.hoodie.app.core.mobility.MovementMode.BUS,
+            com.hoodie.app.core.mobility.MovementMode.TRAIN, com.hoodie.app.core.mobility.MovementMode.METRO,
+        )
+        ChipRow(modes.map { it?.let { mode -> "${mode.emoji} ${mode.label}" } ?: "Automático" }, modes.indexOf(m.preferredMode), { onChange(m.copy(preferredMode = modes[it])) })
+        PixelButton("Apagar histórico de deslocamentos", onClear, Modifier.fillMaxWidth().padding(top = 8.dp), color = HoodieColors.Coral)
     }
 }
 
