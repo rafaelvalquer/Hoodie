@@ -94,6 +94,30 @@ internal class GeofenceContextHandler(private val processor: ContextSignalProces
         val current = contextDao.current() ?: return@with
         if (current.id != eventId || current.type != UserContextType.COMMUTING) return@with
         val (lat, lng) = location.current() ?: return@with
+        arriveAtPosition(lat, lng, askNewPlace = true)
+    }
+
+    // ── APIs da mobilidade: o MobilityEngine pede, o ContextEngine decide o contexto ──
+
+    /** Deslocamento confirmado (movimento detectado): COMMUTING, se ainda não estiver. */
+    suspend fun beginCommute(fromPlaceId: Long?, at: Long, confidence: Float): Boolean = with(processor) {
+        val current = contextDao.current()
+        if (current?.type == UserContextType.COMMUTING) return@with false
+        // Evento atrasado de um lugar onde já não estamos: não mexe no presente.
+        if (fromPlaceId != null && current?.placeId != null && current.placeId != fromPlaceId) return@with false
+        val r = switchTo(UserContextType.COMMUTING, at, confidence, null, ContextSource.MOBILITY, TransitionReason.MOBILITY_START)
+        scheduler.scheduleCommuteCheck(r.event.id)
+        r.changed
+    }
+
+    /** Chegada a um lugar conhecido descoberta pela mobilidade (mesmo caminho do ENTER). */
+    suspend fun arriveAt(placeId: Long, at: Long) = onGeofence(placeId, GeofenceTransition.ENTER, at)
+
+    /**
+     * Chegada por uma leitura pontual de posição: lugar conhecido → ENTER; desconhecido →
+     * fluxo atual de lugar novo (UNKNOWN + pergunta, se [askNewPlace]).
+     */
+    suspend fun arriveAtPosition(lat: Double, lng: Double, askNewPlace: Boolean): Unit = with(processor) {
         val known = places.containing(lat, lng)
         if (known != null) {
             onGeofence(known.id, GeofenceTransition.ENTER, clock.nowMillis())
@@ -101,7 +125,16 @@ internal class GeofenceContextHandler(private val processor: ContextSignalProces
         }
         val now = clock.nowMillis()
         val r = switchTo(UserContextType.UNKNOWN, now, NEW_PLACE_CONFIDENCE, null, ContextSource.LOCATION_CHECK, TransitionReason.COMMUTE_CHECK)
-        ask(QuestionKind.NEW_PLACE, null, null, r.event.id, cipher.encrypt(lat, lng))
+        if (askNewPlace) ask(QuestionKind.NEW_PLACE, null, null, r.event.id, cipher.encrypt(lat, lng))
+    }
+
+    /** "Não cheguei aí": volta para deslocamento (a correção vira aprendizado na mobilidade). */
+    suspend fun rejectArrival(placeId: Long, at: Long): Boolean = with(processor) {
+        val current = contextDao.current() ?: return@with false
+        if (current.placeId != placeId) return@with false
+        val r = switchTo(UserContextType.COMMUTING, at, 1f, null, ContextSource.CONFIRMATION, TransitionReason.ARRIVAL_REJECTED, note = "Ainda a caminho")
+        scheduler.scheduleCommuteCheck(r.event.id)
+        true
     }
     companion object {
         private const val LUNCH_PENDING_CONFIDENCE = 0.6f

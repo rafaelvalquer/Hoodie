@@ -42,6 +42,8 @@ class ReconcileWorker @AssistedInject constructor(
     private val geofencesLazy: Lazy<GeofenceManager>,
     private val locationEventsLazy: Lazy<LocationEventDao>,
     private val deviceUsageDaoLazy: Lazy<DeviceUsageDao>,
+    private val mobilityRepoLazy: Lazy<com.hoodie.app.data.repository.MobilityRepository>,
+    private val mobilityLazy: Lazy<com.hoodie.app.engine.mobility.MobilityEngine>,
     private val gate: DatabaseGate,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
@@ -68,6 +70,9 @@ class ReconcileWorker @AssistedInject constructor(
             val local = now.atZone(clock.zone())
             val today = local.toLocalDate().toEpochDay()
             deviceUsageDaoLazy.get().deleteSessionsOlderThan(today - HoodieConfig.PHONE_SESSION_RETENTION_DAYS)
+            // Mobilidade: retenção + sessão esquecida aberta (evento perdido) é encerrada.
+            mobilityRepoLazy.get().cleanup(now)
+            mobilityLazy.get().onCheck()
             if (GeofenceRegistrationPolicy.shouldRegister(local.hour, today, s.lastGeofenceRegisterDay, last?.ok)) {
                 if (geofences.registerAll().ok) settings.setLastGeofenceRegisterDay(today)
             }
@@ -127,6 +132,25 @@ class CheckWorker @AssistedInject constructor(
         const val LUNCH = "hoodie_lunch_check"
         const val COMMUTE = "hoodie_commute_check"
     }
+}
+
+/**
+ * Checagem atrasada da mobilidade (movimento sustentado, chegada por parada).
+ * Não lê sensor nenhum sozinha: só reavalia o que o Activity Recognition já disse.
+ */
+@HiltWorker
+class MobilityCheckWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val mobilityLazy: Lazy<com.hoodie.app.engine.mobility.MobilityEngine>,
+    private val gate: DatabaseGate,
+) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        if (!gate.isReady()) return Result.retry()
+        return runWorkerTask { mobilityLazy.get().onCheck() }
+    }
+
+    companion object { const val NAME = "hoodie_mobility_check" }
 }
 
 /**

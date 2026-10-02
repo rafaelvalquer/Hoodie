@@ -96,9 +96,25 @@ class HomeViewModel @Inject constructor(
     private val dialogues: DialogueEngine,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
+    private val router: com.hoodie.app.engine.mobility.QuestionRouter,
+    private val mobility: com.hoodie.app.engine.mobility.MobilityEngine,
+    mobilityRepo: com.hoodie.app.data.repository.MobilityRepository,
     contextDao: ContextEventDao,
     questionDao: QuestionDao,
 ) : ViewModel() {
+
+    /** Modo real do deslocamento em andamento (null = sem sessão confirmada → preferência). */
+    private val activeMobilityMode = mobilityRepo.activeMode
+
+    init {
+        // App aberto: a escolha do transporte adiada (veículo andando) pode aparecer agora.
+        viewModelScope.launch { runCatching { mobility.onAppOpened() } }
+    }
+
+    override fun onCleared() {
+        mobility.onAppClosed()
+        super.onCleared()
+    }
 
     private val _reactions = MutableSharedFlow<AnimationId>(extraBufferCapacity = 4)
     val reactions: SharedFlow<AnimationId> = _reactions
@@ -125,15 +141,15 @@ class HomeViewModel @Inject constructor(
     private var dialogueText: String? = null
     private var dialogueUntil = 0L
 
-    val state: StateFlow<HomeUiState> = combine(inputs, ticker) { i, now -> i to now }
-        .mapLatest { (i, now) -> build(i, now, hoodie.resolve()) }
+    val state: StateFlow<HomeUiState> = combine(inputs, ticker, activeMobilityMode) { i, now, mode -> Triple(i, now, mode) }
+        .mapLatest { (i, now, mode) -> build(i, now, hoodie.resolve(), mode) }
         .combineWithQuestion()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     private fun kotlinx.coroutines.flow.Flow<HomeUiState>.combineWithQuestion() =
         combine(this, pendingQuestion) { s, q -> s.copy(question = q) }
 
-    private fun build(i: Inputs, now: Long, snap: HoodieSnapshot): HomeUiState {
+    private fun build(i: Inputs, now: Long, snap: HoodieSnapshot, mobilityMode: com.hoodie.app.core.mobility.MovementMode? = null): HomeUiState {
         val zoned = clock.now()
         val minute = zoned.minuteOfDay()
         val ctx = i.context
@@ -146,6 +162,7 @@ class HomeViewModel @Inject constructor(
             context = snap.state.userContext,
             homeOffice = i.routine.workMode == WorkMode.HOME_OFFICE,
             commute = i.settings.commuteStyle,
+            mobilityMode = mobilityMode,
             variant = variant,
             energy = snap.liveNeeds.energy,
             mood = snap.liveNeeds.mood,
@@ -199,8 +216,14 @@ class HomeViewModel @Inject constructor(
     }
 
     fun answerYesNo(id: Long, yes: Boolean) = viewModelScope.launch {
-        contextEngine.answerYesNo(id, yes)
+        // Contexto ou mobilidade: o roteador sabe de quem é a pergunta.
+        router.answerYesNo(id, yes)
         _reactions.tryEmit(if (yes) AnimationId.HAPPY else AnimationId.SHRUG)
+    }
+
+    fun answerTransportMode(id: Long, mode: com.hoodie.app.core.mobility.MovementMode) = viewModelScope.launch {
+        router.answerTransportMode(id, mode)
+        _reactions.tryEmit(AnimationId.HAPPY)
     }
 
     fun answerNewPlace(id: Long, type: PlaceType) = viewModelScope.launch {

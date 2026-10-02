@@ -22,11 +22,20 @@ interface CheckScheduler {
 }
 
 /**
+ * Checagem atrasada da mobilidade: "a caminhada continuou 2 min?", "ficou parado 3 min?".
+ * O Activity Recognition só avisa mudanças; a duração é conferida aqui (fake nos testes).
+ */
+interface MobilityScheduler {
+    fun scheduleMobilityCheck(delayMs: Long)
+    fun cancelMobilityCheck()
+}
+
+/**
  * WorkManager só para reconciliar estado, checagens pontuais e manutenção —
  * nunca para rastrear GPS.
  */
 @Singleton
-class WorkScheduler @Inject constructor(@ApplicationContext private val context: Context) : CheckScheduler {
+class WorkScheduler @Inject constructor(@ApplicationContext private val context: Context) : CheckScheduler, MobilityScheduler {
     private val wm get() = WorkManager.getInstance(context)
 
     fun schedulePeriodic() {
@@ -70,6 +79,15 @@ class WorkScheduler @Inject constructor(@ApplicationContext private val context:
         wm.cancelUniqueWork(CheckWorker.LUNCH)
         wm.cancelUniqueWork(CheckWorker.COMMUTE)
     }
+
+    override fun scheduleMobilityCheck(delayMs: Long) {
+        wm.enqueueUniqueWork(
+            MobilityCheckWorker.NAME, ExistingWorkPolicy.REPLACE,
+            OneTimeWorkRequestBuilder<MobilityCheckWorker>().setInitialDelay(delayMs.coerceAtLeast(0), TimeUnit.MILLISECONDS).build(),
+        )
+    }
+
+    override fun cancelMobilityCheck() = wm.cancelUniqueWork(MobilityCheckWorker.NAME).let { }
 
     fun cancelAll() = wm.cancelAllWork()
 

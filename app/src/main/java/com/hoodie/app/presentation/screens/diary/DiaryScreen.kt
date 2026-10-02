@@ -113,6 +113,13 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
                 }
             } else {
                 SummarySection(diary.summary, onContext = if (diary.phoneInsights != null) { ctx -> selectedContext = ctx } else null)
+                if (diary.mobilityTotals.isNotEmpty()) {
+                    // Deslocamentos do dia, sem trajeto: só quanto tempo em cada meio.
+                    PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
+                        SectionLabel("DESLOCAMENTOS")
+                        Text(com.hoodie.app.engine.diary.DiaryMobilityMerger.summary(diary.mobilityTotals), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
                 val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
                 DiaryMapView(layout, state.replay, onNode = { selectedNodeId = it.id })
