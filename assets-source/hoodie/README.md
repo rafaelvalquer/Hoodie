@@ -14,25 +14,54 @@ AnimationStateMachine → SpriteProvider ─┬─ SpriteSheetProvider  (estes a
 
 ```
 assets-source/hoodie/
-├── hoodie_master.aseprite   ← referência de proporção/paleta (camadas abaixo)
-├── hoodie_idle.aseprite
-├── hoodie_walk.aseprite
-├── hoodie_work.aseprite
-├── hoodie_sleep.aseprite
-├── hoodie_home.aseprite
-├── hoodie_food.aseprite
-├── hoodie_gym.aseprite
-├── baseline/                ← exportado do procedural (ponto de partida, NÃO vai para o app)
+├── baseline/                ← o procedural exportado (ponto de partida — NÃO vai para o app)
+│   ├── hoodie_walk.png/.json/.anchors.png   walk_side, walk_front, walk_back, walk_backpack_side
+│   ├── hoodie_idle.*        idle, idle_sit, idle_look, idle_ear, idle_scratch
+│   ├── hoodie_work.*        sit_down, work_typing, stop_typing, reach_mouse, work_mouse, work_read, stand_up
+│   └── hoodie_sleep.*       bed_sit, bed_lie_down, sleep, sleep_turn, wake_eyes, bed_exit
+├── tools/import_baseline.lua ← cria o .aseprite pronto para desenhar a partir de um baseline
+├── hoodie_*.aseprite        ← os desenhos (criados pelo script; ainda não existem)
 └── export.ps1 / export.sh   ← exporta tudo para app/src/main/assets/pixel/hoodie/
 ```
 
-Os `.aseprite` ainda não existem: precisam ser desenhados por um artista. Comece
-importando um PNG de `baseline/` (Aseprite → *File › Import Sprite Sheet*, células 48×72)
-e redesenhe por cima, mantendo as tags.
+## Fluxo do artista
+
+1. **Criar o arquivo** (uma vez por grupo de animações):
+
+   ```bash
+   aseprite -b --script-param json=assets-source/hoodie/baseline/hoodie_walk.json \
+            --script assets-source/hoodie/tools/import_baseline.lua
+   ```
+
+   (ou pela interface: *File › Scripts › import_baseline* e escolher o `.json`).
+   Sai `assets-source/hoodie/hoodie_walk.aseprite` já com: paleta oficial, as camadas do
+   sprite master vazias, a camada **`baseline (referencia)`** travada a 38% com o desenho
+   atual, a camada **`anchors`**, as **tags** e a **duração de cada frame**.
+
+2. **Desenhar** por cima da referência, nas camadas do master. Mantenha o número de
+   frames de cada tag (os eventos — pegar a caneca, passo, sentar — seguem o índice).
+
+3. **Âncoras**: na camada `anchors`, 1 pixel por âncora em cada frame. Já vêm pintadas do
+   baseline; mova o pixel se a mão/cabeça mudar de lugar no seu desenho.
+
+   | âncora | cor | para quê |
+   |---|---|---|
+   | `feet` | magenta `#FF00FF` | alinhamento no chão — fica em (24, 71) |
+   | `head` | amarelo `#FFFF00` | Zzz, suor, brilho |
+   | `right_hand` | vermelho `#FF0000` | caneca, celular, garrafa… (o jogo desenha o item aqui) |
+   | `left_hand` | azul `#0000FF` | halter na outra mão |
+   | `back` | verde `#00FF00` | mochila |
+
+4. **Exportar**: `.\assets-source\hoodie\export.ps1` (ou `export.sh`). Para cada
+   `.aseprite` saem `<nome>.png` + `<nome>.json` (sem a referência e sem as âncoras) e
+   `<nome>.anchors.png` (só as âncoras), direto em `app/src/main/assets/pixel/hoodie/`.
+
+5. **Validar**: `./gradlew :app:testDebugUnitTest --tests '*ShippedSheetsValidationTest*'`
+   falha se algo fugir do padrão (lista abaixo). No app, **Pixel Lab › Sprites** mostra o que
+   foi carregado e os problemas; **Pixel Lab › Animação** compara frame a frame com
+   onion-skin, âncoras, bounding box e linha dos pés.
 
 ## Sprite master — camadas
-
-Todas as animações partem de `hoodie_master.aseprite`, para o gato nunca virar outro gato:
 
 | camada | conteúdo |
 |---|---|
@@ -40,13 +69,12 @@ Todas as animações partem de `hoodie_master.aseprite`, para o gato nunca virar
 | `fur` / `fur_shadow` | pelo #86A9E8 / sombra #6586CE (luz vem da esquerda) |
 | `hoodie` / `hoodie_shadow` | moletom #B9CBEF / #92A9DB, barra canelada #6E84BE |
 | `face` | olhos 3×4 #0F1124 com brilho branco no canto superior esquerdo, nariz + "w" #283063 |
-| `arms`, `legs` | mangas do moletom, patas de pelo |
+| `arms`, `legs` | mangas (de perfil, a manga da frente é #DAE5FA, mais clara que o tronco), patas de pelo |
 | `ears` | orelhas com interior #4E69B0 |
 | `strings` | cordões #F1F5FF (animados com atraso — follow-through) |
 | `accessory` | mochila #DB7A3E / #AA5329 (oculta quando não usada) |
-| `anchors` | **slices** (ver abaixo), não pixels |
+| `anchors` | marcadores de âncora (não aparecem no jogo) |
 
-Paleta total: as 17 cores de `HoodiePalette` (o teste `paleta limitada` exige ≤ 24).
 Itens na mão (caneca, celular, garrafa…) **não** entram no sprite: o jogo desenha o item
 na âncora `right_hand` do frame.
 
@@ -56,39 +84,32 @@ na âncora `right_hand` do frame.
 - **Tags** = id da animação em minúsculas + vista: `walk_side`, `walk_front`, `walk_back`,
   `idle`, `work_typing`, `sleep`, `bed_lie_down`… (lista completa: `AnimationId`).
   Sem sufixo = frente. **`_side` é desenhado olhando para a ESQUERDA**; a direita é espelhada.
-- **Duração**: a duração de cada frame no Aseprite é usada no jogo (ex.: caminhada
-  100/80/80/100/100/80/80/100 ms).
-- **Número de frames**: mantenha o mesmo número de frames do clip procedural — os
-  eventos (`MUG_PICKUP`, `SIT`, `FOOTSTEP`…) são lidos do clip pelo índice.
-- **Âncoras** = slices com estes nomes (pivot ou centro do retângulo):
-  `feet`, `head`, `right_hand`, `left_hand`, `back`. Use chaves de slice por frame
-  quando a mão se move.
+- **Duração**: a de cada frame no Aseprite vale no jogo (ex.: caminhada 100/80/80/100/100/80/80/100 ms).
+- **Âncoras**: camada `anchors` (preferida). Slices `feet/head/right_hand/left_hand/back`
+  também funcionam, mas a API do Aseprite não anima slices por frame pelo script.
 
-## Exportar
+## Critérios de aceite (verificados em `ShippedSheetsValidationTest`)
 
-```powershell
-.\assets-source\hoodie\export.ps1
-```
+- frame 48×72, duração > 0, tag reconhecida, mesmo número de frames do clip;
+- pés em y = 71 e x entre 22 e 26 (nada de pé deslizando);
+- sem anti-aliasing (pixel opaco ou transparente);
+- paleta: as 17 cores do Hoodie + no máximo 7 extras;
+- chão estável (bounding box) — exceto clips com pulo ou deitado.
 
-ou manualmente:
+O mesmo teste roda sobre `baseline/`, provando que as regras aceitam arte boa.
 
-```bash
-aseprite -b hoodie_walk.aseprite --sheet hoodie_walk.png --data hoodie_walk.json \
-         --format json-array --list-tags --list-slices --sheet-type horizontal
-```
+## O que muda ao trocar um clip por desenho
 
-Coloque o `.png` + `.json` em `app/src/main/assets/pixel/hoodie/`. Na próxima abertura
-do app, **Pixel Lab › Sprites** mostra o que foi carregado e qualquer problema
-(tag desconhecida, frame fora de 48×72), e **Pixel Lab › Animação** mostra a fonte de cada
-clip, com onion-skin, âncoras, bounding box e linha dos pés.
+O procedural aplica por cima de qualquer clip **piscadas, olhares, orelhas e expressões**
+(o cansaço no café, por exemplo). Um sprite sheet é a imagem final: o que não estiver
+desenhado não aparece. Para o idle continuar vivo, desenhe as variações como clips
+próprios (`idle_look`, `idle_ear`, `idle_scratch`) e inclua uma piscada dentro do
+próprio `idle`. Clips sem desenho continuam procedurais, com tudo isso funcionando.
 
-## Ordem sugerida (do plano)
+## Ordem sugerida
 
 1. `walk_side`, `walk_front`, `walk_back` (+ `walk_backpack_*`)
 2. `idle`, `idle_look`, `idle_ear`, `idle_scratch`
 3. `sit_down`, `stand_up`, `bed_sit`, `bed_lie_down`, `sleep`, `wake_eyes`, `bed_exit`
 4. `work_typing`, `work_mouse`, `reach_mug`, `drink`, `put_mug`
 5. o restante, por grupo
-
-Critério de aceite (também verificado em teste): sem mudança de proporção, rosto no
-mesmo lugar, outline consistente, sem anti-aliasing, pés sem deslizar, item preso na mão.

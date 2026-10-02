@@ -38,6 +38,9 @@ class SpritePreviewTest {
             com.hoodie.app.pixel.sprite.Direction.FRONT, com.hoodie.app.pixel.sprite.Direction.BACK,
         ).flatMap { d -> (0 until 8).map { i -> p.frame(com.hoodie.app.pixel.sprite.SpriteRequest(com.hoodie.app.pixel.animation.AnimationId.WALK_BACKPACK, d, i)).image } }
         PreviewExport.sheet("hoodie_walk_cycles", rows, columns = 8, scale = 4)
+        // Perfil sem mochila em escala maior: é onde braço, perna e rabo aparecem melhor.
+        val side = (0 until 8).map { i -> p.frame(com.hoodie.app.pixel.sprite.SpriteRequest(com.hoodie.app.pixel.animation.AnimationId.WALK, com.hoodie.app.pixel.sprite.Direction.LEFT, i)).image }
+        PreviewExport.sheet("hoodie_walk_side", side, columns = 4, scale = 6)
     }
 
     /** Orelhas, piscada e expressões. */

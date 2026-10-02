@@ -24,7 +24,8 @@ import java.util.zip.Inflater
  */
 object SheetBaker {
 
-    data class Baked(val image: PixelBuffer, val json: String)
+    /** [anchors] = camada `anchors` do Aseprite exportada à parte (1 pixel colorido por âncora). */
+    data class Baked(val image: PixelBuffer, val json: String, val anchors: PixelBuffer? = null)
 
     fun bake(clips: List<Pair<AnimationId, Facing>>): Baked {
         val frames = clips.flatMap { (anim, facing) ->
@@ -33,6 +34,7 @@ object SheetBaker {
         }
         val w = HoodiePainter.WIDTH; val h = HoodiePainter.HEIGHT
         val sheet = PixelBuffer(w * frames.size, h)
+        val anchorLayer = PixelBuffer(w * frames.size, h)
         val framesJson = JSONArray()
         val tags = JSONArray()
         val anchorKeys = mapOf("feet" to JSONArray(), "head" to JSONArray(), "right_hand" to JSONArray(), "left_hand" to JSONArray(), "back" to JSONArray())
@@ -51,6 +53,11 @@ object SheetBaker {
                     .put("duration", f.durationMs),
             )
             val a = f.anchors
+            mapOf(
+                com.hoodie.app.pixel.sprite.AnchorMarkers.FEET to a.feet, com.hoodie.app.pixel.sprite.AnchorMarkers.HEAD to a.head,
+                com.hoodie.app.pixel.sprite.AnchorMarkers.RIGHT_HAND to a.rightHand, com.hoodie.app.pixel.sprite.AnchorMarkers.LEFT_HAND to a.leftHand,
+                com.hoodie.app.pixel.sprite.AnchorMarkers.BACK to a.back,
+            ).forEach { (color, p) -> anchorLayer.set(i * w + p.x, p.y, color) }
             mapOf("feet" to a.feet, "head" to a.head, "right_hand" to a.rightHand, "left_hand" to a.leftHand, "back" to a.back).forEach { (name, p) ->
                 anchorKeys.getValue(name).put(
                     JSONObject().put("frame", i)
@@ -65,13 +72,14 @@ object SheetBaker {
             .put("app", "https://www.aseprite.org/").put("format", "RGBA8888")
             .put("size", JSONObject().put("w", sheet.width).put("h", sheet.height))
             .put("frameTags", tags).put("slices", slices)
-        return Baked(sheet, JSONObject().put("frames", framesJson).put("meta", meta).toString(2))
+        return Baked(sheet, JSONObject().put("frames", framesJson).put("meta", meta).toString(2), anchorLayer)
     }
 
     fun write(dir: File, name: String, baked: Baked) {
         dir.mkdirs()
         PreviewExport.write(File(dir, "$name.png"), baked.image, 1, background = null)
         File(dir, "$name.json").writeText(baked.json)
+        baked.anchors?.let { PreviewExport.write(File(dir, "$name.anchors.png"), it, 1, background = null) }
     }
 
     fun assetSource(root: File) = object : SpriteAssetSource {

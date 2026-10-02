@@ -456,10 +456,16 @@ object HoodiePainter {
         val farLift = if (walking) STRIDE_LIFT[(s + 4) % 8] * 2 else if (p.legs == Legs.RUN_A) 4 else 0
         val armSwing = if (walking) ARM_SWING[s] else 0
 
+        // Rabo atrás de tudo: sai do quadril, curva para cima e balança com o passo.
+        if (!sit) {
+            val sway = if (walking) intArrayOf(0, 0, 1, 1, 0, 0, -1, -1)[s] else 0
+            shapeUnion(b, listOf(R(30, 48, 35, 54, 2), R(34 + sway, 41, 38 + sway, 52, 2), R(36 + sway * 2, 36, 40 + sway * 2, 43, 2)).map { it.dy(up) }, HoodiePalette.FUR)
+            recolor(b, 37, 36 + up, 41, 52 + up, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
+        }
         // Mochila nas costas (lado direito), atrás do corpo.
         if (p.backpack) {
-            shape(b, R(30, 36, 40, 56, 3).dy(up + p.backpackDy), HoodiePalette.BACKPACK)
-            b.vline(37, 40 + up + p.backpackDy, 52 + up + p.backpackDy, HoodiePalette.BACKPACK_DARK)
+            shape(b, R(29, 35, 39, 54, 3).dy(up + p.backpackDy), HoodiePalette.BACKPACK)
+            b.vline(36, 39 + up + p.backpackDy, 51 + up + p.backpackDy, HoodiePalette.BACKPACK_DARK)
         }
         // Perna e braço do fundo, mais escuros.
         if (sit) {
@@ -467,30 +473,28 @@ object HoodiePainter {
         } else {
             sideLeg(b, farX, farLift, HoodiePalette.FUR_SHADE)
         }
-        drawArm(b, ArmShape(listOf(R(23 - armSwing, 35, 28 - armSwing, 51)), R(22 - armSwing, 50, 27 - armSwing, 55), 24, 53), up, false, HoodiePalette.HOOD_SHADE, HoodiePalette.FUR_SHADE)
+        sideArm(b, -armSwing, up, HoodiePalette.HOOD_SHADE, HoodiePalette.FUR_SHADE)
         if (!sit) sideLeg(b, nearX, nearLift, HoodiePalette.FUR)
-        // Capuz embolado nas costas + corpo.
+        // Capuz embolado nas costas + corpo com barriguinha na frente.
         shape(b, R(25, 28, 36, 42, 4).dy(up), HoodiePalette.HOOD_SHADE)
-        val body = R(14, 33, 33, 60, 4).dy(up)
-        shape(b, body, HoodiePalette.HOOD)
-        recolor(b, 15, body.y0 + 3, 16, body.y1 - 5, HoodiePalette.HOOD, HoodiePalette.HOOD_LIGHT)
-        recolor(b, 29, body.y0 + 2, 32, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
-        recolor(b, 15, body.y1 - 3, 32, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
-        recolor(b, 15, body.y1 - 3, 32, body.y1 - 1, HoodiePalette.HOOD_LIGHT, HoodiePalette.HOOD_SHADE)
-        for (x in 16..31 step 3) b.set(x, body.y1 - 2, HoodiePalette.HOOD_DARK)
-        shape(b, R(14, 46, 21, 55, 1).dy(up), HoodiePalette.HOOD_SHADE, HoodiePalette.HOOD_DARK)
-        drawStrings(b, intArrayOf(17), up, p.stringSwing)
-        if (p.backpack) b.box(26, 34 + up, 27, 46 + up, HoodiePalette.BACKPACK_DARK)
+        val body = R(15, 33, 32, 55, 4).dy(up)
+        shapeUnion(b, listOf(body, R(13, 41, 19, 53, 3).dy(up)), HoodiePalette.HOOD)
+        recolor(b, 29, body.y0 + 2, 31, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
+        recolor(b, 14, body.y1 - 2, 31, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
+        for (x in 15..30 step 3) b.set(x, body.y1 - 1, HoodiePalette.HOOD_DARK)
+        drawStrings(b, intArrayOf(16), up, p.stringSwing)
+        if (p.backpack) b.box(25, 34 + up, 26, 45 + up, HoodiePalette.BACKPACK_DARK)
         if (sit) foot(b, R(10, 63, 21, 70, 3))
 
-        // Braço da frente.
+        // Braço da frente: ombro → cotovelo → pata na altura do quadril (balança oposto à perna).
         val forward = p.rightArm in setOf(Arm.FORWARD_UP, Arm.FORWARD_DOWN, Arm.HOLD_CHEST) || p.leftArm in setOf(Arm.FORWARD_UP, Arm.FORWARD_DOWN, Arm.HOLD_CHEST)
-        val near = if (forward) {
-            ArmShape(listOf(R(18, 35, 24, 45), R(10, 40, 22, 46)), R(6, 39, 11, 45), 8, 42)
+        val hand = if (forward) {
+            drawArm(b, ArmShape(listOf(R(19, 35, 25, 44), R(10, 40, 22, 46)), R(6, 39, 11, 45), 8, 42), up, false)
+            Point(8, 42 + up)
         } else {
-            ArmShape(listOf(R(18 + armSwing, 35, 24 + armSwing, 52)), R(17 + armSwing, 51, 23 + armSwing, 56), 20 + armSwing, 54)
+            // Mais claro que o tronco: está mais perto da luz e de quem olha.
+            sideArm(b, armSwing, up, HoodiePalette.HOOD_LIGHT, HoodiePalette.FUR)
         }
-        drawArm(b, near, up, false)
 
         // Cabeça de perfil: orelha do fundo, focinho, um olho.
         val hu = up + p.headDy
@@ -509,14 +513,36 @@ object HoodiePainter {
         }
         if (p.blush || p.eyes == Eyes.HAPPY) b.hline(13, 15, 25 + hu, HoodiePalette.BLUSH)
 
-        val hand = Point(near.hx, near.hy + up)
         if (p.item != Item.NONE && p.item != Item.BOOK && p.item != Item.CONTROLLER && p.item != Item.MENU) drawItemAt(b, p.item, hand)
-        return SpriteAnchors(rightHand = hand, leftHand = Point(24 - armSwing, 53 + up), head = Point(20, 8 + hu), back = Point(34, 45 + up), feet = FEET)
+        return SpriteAnchors(rightHand = hand, leftHand = Point(20 - armSwing, 52 + up), head = Point(20, 8 + hu), back = Point(33, 44 + up), feet = FEET)
     }
 
+    /**
+     * Perna de perfil: coxa sai do quadril (metade do deslocamento) e a canela vai até
+     * o pé (deslocamento inteiro) — isso desenha o joelho. [lift] sobe canela e pé.
+     */
     private fun sideLeg(b: PixelBuffer, offset: Int, lift: Int, color: Int) {
-        shape(b, R(21 + offset, 57 - lift, 26 + offset, 67 - lift, 1), color)
+        val hx = 21 + offset / 2
+        shapeUnion(b, listOf(R(hx, 50, hx + 5, 60 - lift / 2, 1), R(21 + offset, 58 - lift, 26 + offset, 67 - lift, 1)), color)
         foot(b, R(17 + offset, 65 - lift, 26 + offset, 70 - lift, 2), color)
+    }
+
+    /**
+     * Braço de perfil em dois segmentos (manga até o cotovelo + antebraço) com a pata
+     * na altura do quadril. [swing] > 0 leva a pata para trás. Retorna a âncora da mão.
+     */
+    private fun sideArm(b: PixelBuffer, swing: Int, up: Int, sleeve: Int, fur: Int): Point {
+        // Balanço amplo: a pata sai da silhueta do corpo para a frente e para trás.
+        val ex = 20 + swing
+        val px = 19 + swing * 2
+        shapeUnion(b, listOf(R(19, 35, 24, 42, 2), R(ex, 40, ex + 4, 46, 1), R(px, 45, px + 4, 49, 1)).map { it.dy(up) }, sleeve)
+        // Borda de trás da manga mais escura: separa o braço do corpo.
+        val back = if (sleeve == HoodiePalette.HOOD_LIGHT) HoodiePalette.HOOD else HoodiePalette.HOOD_DARK
+        recolor(b, 23, 36 + up, 24, 42 + up, sleeve, back)
+        recolor(b, ex + 3, 41 + up, ex + 4, 46 + up, sleeve, back)
+        recolor(b, px, 48 + up, px + 4, 49 + up, sleeve, HoodiePalette.HOOD_SHADE)
+        shape(b, R(px - 1, 49, px + 4, 53, 2).dy(up), fur)
+        return Point(px + 1, 51 + up)
     }
 
     // ───────────────────────── Formas ─────────────────────────

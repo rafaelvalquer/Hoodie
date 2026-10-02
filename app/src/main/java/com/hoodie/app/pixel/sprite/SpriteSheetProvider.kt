@@ -30,10 +30,26 @@ data class SheetLoadReport(val loaded: List<String>, val problems: List<String>)
  * Convenções:
  * - Tag = id da animação + vista: `walk_side`, `walk_front`, `walk_back`, `idle` (sem sufixo = frente).
  *   `walk_side` é desenhado olhando para a ESQUERDA; a direita é espelhada.
- * - Slices viram âncoras: `feet`, `head`, `right_hand`, `left_hand`, `back`
- *   (pivot do slice, ou o centro do retângulo).
+ * - Âncoras por frame vêm da camada `anchors` exportada à parte (`<nome>.anchors.png`):
+ *   1 pixel por âncora com as cores de [AnchorMarkers]. Sem ela, valem slices com os
+ *   nomes `feet`, `head`, `right_hand`, `left_hand`, `back` (pivot ou centro), e depois
+ *   valores padrão.
  * - A duração de cada frame vem do próprio Aseprite.
  */
+/**
+ * Cores da camada `anchors` do Aseprite (1 pixel por âncora, por frame). A API Lua do
+ * Aseprite não cria chaves de slice por frame, então a âncora animada é um pixel pintado.
+ */
+object AnchorMarkers {
+    const val FEET = 0xFFFF00FF.toInt()        // magenta
+    const val HEAD = 0xFFFFFF00.toInt()        // amarelo
+    const val RIGHT_HAND = 0xFFFF0000.toInt()  // vermelho
+    const val LEFT_HAND = 0xFF0000FF.toInt()   // azul
+    const val BACK = 0xFF00FF00.toInt()        // verde
+
+    val BY_NAME = mapOf("feet" to FEET, "head" to HEAD, "right_hand" to RIGHT_HAND, "left_hand" to LEFT_HAND, "back" to BACK)
+}
+
 object AsepriteSheetParser {
 
     private val ANCHOR_SLICES = setOf("feet", "head", "right_hand", "left_hand", "back")
@@ -46,7 +62,12 @@ object AsepriteSheetParser {
         return id to (facing ?: Facing.FRONT)
     }
 
-    fun parse(json: String, sheet: PixelBuffer, problems: MutableList<String> = mutableListOf()): Map<Pair<AnimationId, Facing>, List<SheetFrame>> {
+    fun parse(
+        json: String,
+        sheet: PixelBuffer,
+        problems: MutableList<String> = mutableListOf(),
+        anchorsImage: PixelBuffer? = null,
+    ): Map<Pair<AnimationId, Facing>, List<SheetFrame>> {
         val root = JSONObject(json)
         val framesJson = root.getJSONArray("frames")
         val meta = root.getJSONObject("meta")
@@ -76,8 +97,17 @@ object AsepriteSheetParser {
             }.sortedBy { it.first }
         }
 
+        /** Pixel marcador da camada `anchors` dentro do retângulo do frame. */
+        fun markerAt(name: String, frame: Int): Point? {
+            val img = anchorsImage ?: return null
+            val color = AnchorMarkers.BY_NAME[name] ?: return null
+            val rf = raw[frame]
+            for (y in 0 until rf.h) for (x in 0 until rf.w) if (img[rf.x + x, rf.y + y] == color) return Point(x, y)
+            return null
+        }
+
         fun anchorAt(name: String, frame: Int, default: Point): Point =
-            anchorKeys[name]?.lastOrNull { it.first <= frame }?.second ?: default
+            markerAt(name, frame) ?: anchorKeys[name]?.lastOrNull { it.first <= frame }?.second ?: default
 
         fun frameAt(i: Int): SheetFrame {
             val r = raw[i]
@@ -160,13 +190,17 @@ class SpriteSheetProvider(private val clips: Map<Pair<AnimationId, Facing>, List
             val clips = LinkedHashMap<Pair<AnimationId, Facing>, List<SheetFrame>>()
             val loaded = mutableListOf<String>(); val problems = mutableListOf<String>()
             val files = runCatching { assets.list(dir) }.getOrDefault(emptyList())
-            for (json in files.filter { it.endsWith(".json") }.sorted()) {
+            for (json in files.filter { it.endsWith(".json") && !it.endsWith(".anchors.json") }.sorted()) {
                 val base = json.removeSuffix(".json")
                 runCatching {
                     val text = assets.open("$dir/$json").bufferedReader().use { it.readText() }
                     val image = assets.open("$dir/$base.png").use { decoder.decode(it) } ?: error("PNG inválido")
-                    val parsed = AsepriteSheetParser.parse(text, image, problems)
+                    val anchors = if ("$base.anchors.png" in files) assets.open("$dir/$base.anchors.png").use { decoder.decode(it) } else null
+                    val parsed = AsepriteSheetParser.parse(text, image, problems, anchors)
                     parsed.forEach { (key, frames) ->
+                        // Eventos (pegar caneca, passo…) vêm do clip pelo índice: contagem diferente desalinha.
+                        val expected = key.first.frames.size
+                        if (frames.size != expected) problems += "$base ${key.first}/${key.second}: ${frames.size} frames, o clip tem $expected (eventos podem dessincronizar)"
                         val bad = frames.firstOrNull { it.image.width != HoodiePainter.WIDTH || it.image.height != HoodiePainter.HEIGHT }
                         if (bad != null) problems += "$base ${key.first}/${key.second}: frame ${bad.image.width}×${bad.image.height} (esperado 48×72)"
                         else { clips[key] = frames; loaded += "${key.first.name.lowercase()}_${key.second.name.lowercase()}" }

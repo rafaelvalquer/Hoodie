@@ -87,6 +87,32 @@ class SpriteSheetPipelineTest {
         assertTrue(report.problems.toString(), report.problems.any { "48×72" in it })
     }
 
+    @Test
+    fun `ancoras por frame vem da camada anchors mesmo sem slices`() {
+        val baked = SheetBaker.bake(listOf(AnimationId.DRINK to Facing.FRONT))
+        // Sem slices no JSON: só a camada anchors informa onde está a mão (caneca).
+        val noSlices = org.json.JSONObject(baked.json).also { it.getJSONObject("meta").remove("slices") }.toString()
+        val parsed = AsepriteSheetParser.parse(noSlices, baked.image, mutableListOf(), baked.anchors)
+        val frames = parsed.getValue(AnimationId.DRINK to Facing.FRONT)
+        frames.forEachIndexed { i, f ->
+            val expected = ProceduralSpriteProvider.frame(SpriteRequest(AnimationId.DRINK, Direction.FRONT, i)).anchors
+            assertEquals("frame $i", expected, f.anchors)
+        }
+        // A mão se move entre frames (caneca até a boca): âncora animada de verdade.
+        assertTrue(frames.map { it.anchors.rightHand }.distinct().size > 1)
+    }
+
+    @Test
+    fun `contagem de frames diferente do clip vira aviso`() {
+        val root = Files.createTempDirectory("hoodie-count").toFile()
+        val baked = SheetBaker.bake(listOf(AnimationId.IDLE to Facing.FRONT))
+        val json = org.json.JSONObject(baked.json)
+        json.getJSONObject("meta").getJSONArray("frameTags").getJSONObject(0).put("to", 1) // só 2 de 4 frames
+        SheetBaker.write(File(root, SpriteSheetProvider.DIR), "short", baked.copy(json = json.toString()))
+        val (_, report) = SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder)
+        assertTrue(report.problems.toString(), report.problems.any { "o clip tem 4" in it })
+    }
+
     /** Gera o baseline que vai para assets-source/hoodie/baseline (rodado a cada build de teste). */
     @Test
     fun `exporta baseline para o artista`() {
