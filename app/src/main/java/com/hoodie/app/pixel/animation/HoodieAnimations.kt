@@ -290,8 +290,13 @@ object HoodieClips {
         clip(AnimationId.BED_SIT, loop = false, policy = FINISH_CYCLE) {
             f(500, SIT.copy(eyes = Eyes.SLEEPY, ears = Ears.RELAXED), BED_ENTER); f(500, SIT.copy(eyes = Eyes.SLEEPY, ears = Ears.RELAXED, bob = 1))
         }
+        // Sentado → apoia a pata → inclina o corpo → afunda na cama → só a cabeça no travesseiro.
         clip(AnimationId.BED_LIE_DOWN, loop = false, policy = FINISH_CYCLE) {
-            f(220, SIT.copy(eyes = Eyes.HALF, bob = 3, ears = Ears.RELAXED)); f(220, SIT.copy(eyes = Eyes.CLOSED, bob = 6, ears = Ears.RELAXED))
+            val s = SIT.copy(ears = Ears.RELAXED)
+            f(240, s.copy(eyes = Eyes.SLEEPY, leftArm = Arm.FORWARD_DOWN))
+            f(220, s.copy(eyes = Eyes.HALF, leftArm = Arm.FORWARD_DOWN, rightArm = Arm.FORWARD_DOWN, bob = 1))
+            f(220, s.copy(eyes = Eyes.HALF, leftArm = Arm.FORWARD_DOWN, rightArm = Arm.FORWARD_DOWN, bob = 3, headDy = 1))
+            f(220, s.copy(eyes = Eyes.CLOSED, bob = 6))
             f(250, HoodiePose(headOnly = true, eyes = Eyes.CLOSED, bob = -1, ears = Ears.RELAXED)); f(300, HoodiePose(headOnly = true, eyes = Eyes.CLOSED, ears = Ears.RELAXED))
         }
         clip(AnimationId.SLEEP, policy = PLAY_EXIT) {
@@ -345,7 +350,8 @@ object HoodieClips {
         }
         clip(AnimationId.WORK_TIRED, policy = FINISH_FRAME) {
             val t = SIT.copy(leftArm = Arm.FORWARD_DOWN, rightArm = Arm.FORWARD_DOWN, eyes = Eyes.SLEEPY, ears = Ears.DOWN, mouth = Mouth.FLAT)
-            f(700, t); f(700, t.copy(bob = 1, headDy = 1)); f(500, t.copy(eyes = Eyes.CLOSED, bob = 2, headDy = 1)); f(300, t)
+            // A cabeça cai e volta em degraus de até 2 px (sem "pulo" na volta do loop).
+            f(700, t); f(700, t.copy(bob = 1, headDy = 1)); f(500, t.copy(eyes = Eyes.CLOSED, bob = 2, headDy = 1)); f(300, t.copy(bob = 1))
         }
 
         // ───── Café como ação completa ─────
