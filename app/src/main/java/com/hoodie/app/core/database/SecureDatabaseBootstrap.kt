@@ -8,15 +8,27 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /** O que um banco contém, para comparar origem e cópia cifrada. */
-data class DatabaseFingerprint(val userVersion: Int, val tables: Set<String>)
+data class DatabaseFingerprint(
+    val userVersion: Int,
+    val tables: Set<String>,
+    /** Linhas por tabela (vazio quando não contado, ex.: abertura normal). */
+    val rowCounts: Map<String, Long> = emptyMap(),
+    /** `PRAGMA quick_check` = ok. */
+    val quickCheckOk: Boolean = true,
+    /** `PRAGMA cipher_integrity_check` sem erros; null = não verificado/indisponível. */
+    val cipherIntegrityOk: Boolean? = null,
+)
 
 /** Operações SQLCipher, separadas da orquestração para teste na JVM. */
 interface DatabaseCipherOps {
     /** Copia o banco em texto puro [plain] para [target] cifrado; devolve o que havia na origem. */
     fun exportEncrypted(plain: File, target: File, passphrase: ByteArray): DatabaseFingerprint
 
-    /** Abre [file] cifrado com [passphrase]; null se não abrir (senha errada, arquivo inválido). */
+    /** Abre [file] cifrado com [passphrase]; null se não abrir (senha errada, arquivo inválido). Barato: versão e tabelas. */
     fun inspect(file: File, passphrase: ByteArray): DatabaseFingerprint?
+
+    /** Verificação completa da cópia: linhas por tabela, quick_check e cipher_integrity_check. */
+    fun verify(file: File, passphrase: ByteArray): DatabaseFingerprint? = inspect(file, passphrase)
 }
 
 /** Prepara o banco para o Room abrir — sempre cifrado. */
@@ -26,7 +38,8 @@ interface SecureDatabaseBootstrap {
 
 /**
  *     banco não existe       → cria cifrado (Room cria com a senha)
- *     banco em texto puro    → exporta para .encrypted.tmp → VALIDA → troca atômica → abre cifrado
+ *     banco em texto puro    → exporta para .encrypted.tmp → VALIDA (versão, tabelas, linhas,
+ *                              quick_check, cipher_integrity_check) → troca atômica → abre cifrado
  *     banco cifrado          → abre normalmente (confere a senha antes)
  *     migração falhou        → NÃO abre em texto puro; original intacto; tenta de novo depois
  *     senha irrecuperável    → KeyUnrecoverable (nunca gera senha nova por cima de um banco existente)
@@ -36,6 +49,7 @@ class DefaultSecureDatabaseBootstrap(
     private val keys: DatabaseKeySource,
     private val ops: DatabaseCipherOps,
     private val onState: (DatabaseSecurityState) -> Unit = {},
+    private val validator: DatabaseMigrationValidator = DefaultDatabaseMigrationValidator,
 ) : SecureDatabaseBootstrap {
 
     val tmp: File get() = File(db.parentFile, db.name + TMP_SUFFIX)
@@ -78,11 +92,11 @@ class DefaultSecureDatabaseBootstrap(
         if (!tmp.exists() || tmp.length() == 0L) return abort("cópia cifrada não foi criada")
         // 2. não é SQLite em texto puro
         if (isPlaintext(tmp)) return abort("cópia ficou em texto puro")
-        // 3. SQLCipher consegue abrir
-        val copy = ops.inspect(tmp, passphrase) ?: return abort("SQLCipher não abriu a cópia")
-        // 4. schema válido (mesma versão e mesmas tabelas)
-        if (copy.userVersion != source.userVersion) return abort("user_version ${copy.userVersion} ≠ ${source.userVersion}")
-        if (!copy.tables.containsAll(source.tables)) return abort("tabelas faltando: ${source.tables - copy.tables}")
+        // 3. SQLCipher consegue abrir e verificar a cópia
+        val copy = runCatching { ops.verify(tmp, passphrase) }.getOrNull() ?: return abort("SQLCipher não abriu a cópia")
+        // 4. versão, tabelas, linhas por tabela, quick_check e cipher_integrity_check
+        val result = validator.validate(source, copy)
+        if (result is MigrationValidationResult.Invalid) return abort(result.reasons.joinToString("; "))
         // 5. só então substitui o original
         return try {
             listOf("-wal", "-shm", "-journal").forEach { File(db.path + it).delete() }

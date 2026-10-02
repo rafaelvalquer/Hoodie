@@ -28,6 +28,9 @@ class SecureDatabaseBootstrapTest {
         var exportPlaintext = false
         var dropTable = false
         var wrongVersion = false
+        var loseRows = false
+        var quickCheckFails = false
+        var cipherIntegrityFails = false
 
         override fun exportEncrypted(plain: File, target: File, passphrase: ByteArray): DatabaseFingerprint {
             failExport?.let { target.writeText("parcial"); throw IllegalStateException(it) }
@@ -36,6 +39,7 @@ class SecureDatabaseBootstrapTest {
             var copy = source
             if (dropTable) copy = copy.copy(tables = copy.tables - copy.tables.first())
             if (wrongVersion) copy = copy.copy(userVersion = copy.userVersion + 1)
+            if (loseRows) copy = copy.copy(rowCounts = copy.rowCounts.mapValues { (_, n) -> n - 1 })
             target.writeText((if (exportPlaintext) header else "ENC:${String(passphrase)}:") + format(copy))
             return source
         }
@@ -43,13 +47,25 @@ class SecureDatabaseBootstrapTest {
         override fun inspect(file: File, passphrase: ByteArray): DatabaseFingerprint? {
             val text = file.readText()
             val prefix = "ENC:${String(passphrase)}:"
-            return if (text.startsWith(prefix)) parse(text.removePrefix(prefix)) else null
+            return if (text.startsWith(prefix)) parse(text.removePrefix(prefix)).let { DatabaseFingerprint(it.userVersion, it.tables) } else null
         }
 
-        private fun format(f: DatabaseFingerprint) = "${f.userVersion}|${f.tables.sorted().joinToString(",")}"
+        override fun verify(file: File, passphrase: ByteArray): DatabaseFingerprint? {
+            val text = file.readText()
+            val prefix = "ENC:${String(passphrase)}:"
+            if (!text.startsWith(prefix)) return null
+            return parse(text.removePrefix(prefix)).copy(quickCheckOk = !quickCheckFails, cipherIntegrityOk = !cipherIntegrityFails)
+        }
+
+        /** "versão|tabelas|tabela=linhas,…" (linhas opcionais: 10 por tabela). */
+        private fun format(f: DatabaseFingerprint) =
+            "${f.userVersion}|${f.tables.sorted().joinToString(",")}|${f.rowCounts.entries.sortedBy { it.key }.joinToString(",") { "${it.key}=${it.value}" }}"
         private fun parse(s: String): DatabaseFingerprint {
-            val (v, t) = s.split('|')
-            return DatabaseFingerprint(v.toInt(), t.split(',').filter { it.isNotEmpty() }.toSet())
+            val parts = s.split('|')
+            val tables = parts[1].split(',').filter { it.isNotEmpty() }.toSet()
+            val counts = parts.getOrNull(2)?.split(',')?.filter { it.isNotEmpty() }?.associate { it.substringBefore('=') to it.substringAfter('=').toLong() }
+                ?: tables.associateWith { 10L }
+            return DatabaseFingerprint(parts[0].toInt(), tables, counts)
         }
     }
 
@@ -59,7 +75,7 @@ class SecureDatabaseBootstrapTest {
     private val ops = FakeOps()
     private val states = mutableListOf<DatabaseSecurityState>()
     private fun keys() = DatabaseKeyStore(dir, "db.key", wrapper)
-    private fun bootstrap() = DefaultSecureDatabaseBootstrap(db, keys(), ops) { states += it }
+    private fun bootstrap() = DefaultSecureDatabaseBootstrap(db, keys(), ops, onState = { states += it })
     private fun legacyPlaintext() = db.writeText(header + "3|places,timeline_events,memories")
     private val tmp get() = File(dir, "hoodie.db" + DefaultSecureDatabaseBootstrap.TMP_SUFFIX)
 
@@ -78,6 +94,7 @@ class SecureDatabaseBootstrapTest {
         val r = bootstrap().prepare() as DatabaseBootstrapResult.Ready
         assertFalse("não pode continuar em texto puro", DefaultSecureDatabaseBootstrap.isPlaintext(db))
         assertEquals(DatabaseFingerprint(3, setOf("places", "timeline_events", "memories")), ops.inspect(db, r.passphrase))
+        assertEquals(mapOf("places" to 10L, "timeline_events" to 10L, "memories" to 10L), ops.verify(db, r.passphrase)!!.rowCounts)
         assertFalse("sem sobras do temporário", tmp.exists())
         assertEquals(listOf(DatabaseSecurityState.MigrationRequired, DatabaseSecurityState.Encrypted), states)
     }
@@ -102,13 +119,18 @@ class SecureDatabaseBootstrapTest {
 
     @Test
     fun `copia invalida e rejeitada antes da troca`() {
-        for (break_ in listOf<FakeOps.() -> Unit>({ exportPlaintext = true }, { dropTable = true }, { wrongVersion = true })) {
+        val breaks = listOf<FakeOps.() -> Unit>(
+            { exportPlaintext = true }, { dropTable = true }, { wrongVersion = true },
+            { loseRows = true }, { quickCheckFails = true }, { cipherIntegrityFails = true },
+        )
+        for (break_ in breaks) {
             db.delete(); states.clear()
             legacyPlaintext()
             val original = db.readBytes()
             val o = FakeOps().apply(break_)
-            val r = DefaultSecureDatabaseBootstrap(db, keys(), o) { states += it }.prepare()
+            val r = DefaultSecureDatabaseBootstrap(db, keys(), o, onState = { states += it }).prepare()
             assertTrue(r is DatabaseBootstrapResult.Failed)
+            assertTrue((r as DatabaseBootstrapResult.Failed).state is DatabaseSecurityState.MigrationFailed)
             assertArrayEquals(original, db.readBytes())
             assertFalse(tmp.exists())
         }
