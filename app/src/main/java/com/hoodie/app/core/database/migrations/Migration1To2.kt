@@ -16,4 +16,4 @@ object Migration1To2 : Migration(1, 2) {
     }
 }
 
-val ALL_MIGRATIONS = arrayOf<Migration>(Migration1To2, Migration2To3, Migration3To4)
+val ALL_MIGRATIONS = arrayOf<Migration>(Migration1To2, Migration2To3, Migration3To4, Migration4To5)

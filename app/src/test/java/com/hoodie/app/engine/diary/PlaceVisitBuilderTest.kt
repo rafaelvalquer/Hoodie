@@ -9,6 +9,17 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class PlaceVisitBuilderTest {
+    @Test fun unknownPlaceCreatesOtherVisitAndOpenVisitStopsAtNow() {
+        val event = ContextEventEntity(id = 1, type = UserContextType.UNKNOWN, startedAt = 50,
+            endedAt = null, confidence = 1f, placeId = null, source = ContextSource.MANUAL)
+        val visit = PlaceVisitBuilder.build(listOf(event), emptyList(), 100, 1_000, 400).single()
+        assertEquals("Outro lugar", visit.placeName)
+        assertEquals(PlaceType.OTHER, visit.placeType)
+        assertEquals(100L, visit.arrivalAt)
+        assertEquals(300L, visit.durationMs)
+        assertEquals(null, visit.departureAt)
+    }
+
     @Test fun omitsCommuteAndKeepsRepeatedArrivalsAsSeparateVisits() {
         val place = PlaceEntity(id = 1, name = "Casa", type = PlaceType.HOME, encryptedCoordinates = "", radiusMeters = 80f, confidence = 1f, createdAt = 0)
         val contexts = listOf(UserContextType.HOME, UserContextType.COMMUTING, UserContextType.HOME).mapIndexed { i, type ->

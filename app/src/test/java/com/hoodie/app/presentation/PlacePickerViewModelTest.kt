@@ -13,6 +13,7 @@ import com.hoodie.app.core.security.CoordinateCipher
 import com.hoodie.app.core.time.FixedClock
 import com.hoodie.app.data.repository.PlaceRepository
 import com.hoodie.app.presentation.screens.places.PlacePickerState
+import com.hoodie.app.presentation.screens.places.PlaceLoadState
 import com.hoodie.app.presentation.screens.places.PlacePickerUiEvent
 import com.hoodie.app.presentation.screens.places.PlacePickerViewModel
 import kotlinx.coroutines.Dispatchers
@@ -45,9 +46,13 @@ class PlacePickerViewModelTest {
     private class FakeDao : PlaceDao {
         val rows = MutableStateFlow<List<PlaceEntity>>(emptyList())
         var failWrites = false
+        var failReads = false
         override fun observeAll() = rows
         override suspend fun getAll() = rows.value
-        override suspend fun getById(id: Long) = rows.value.firstOrNull { it.id == id }
+        override suspend fun getById(id: Long): PlaceEntity? {
+            if (failReads) error("falha de leitura")
+            return rows.value.firstOrNull { it.id == id }
+        }
         override suspend fun insert(place: PlaceEntity): Long {
             if (failWrites) error("disco cheio")
             val id = (rows.value.maxOfOrNull { it.id } ?: 0) + 1
@@ -325,6 +330,45 @@ class PlacePickerViewModelTest {
         val vm = vm(); vm.init(PlaceType.HOME, null)
         vm.save()
         assertTrue(dao.rows.value.isEmpty())
+        assertEquals(0, registrar.calls)
+    }
+
+    @Test
+    fun `edicao de lugar inexistente nunca cria novo registro`() = runTest {
+        val vm = vm()
+        vm.init(PlaceType.HOME, 999)
+        vm.onCenterChanged(-23.5, -46.5)
+        vm.save()
+        assertEquals(PlaceLoadState.NotFound, vm.state.value.loadState)
+        assertFalse(vm.state.value.canSave)
+        assertTrue(dao.rows.value.isEmpty())
+        assertEquals(0, registrar.calls)
+    }
+
+    @Test
+    fun `erro de leitura fica explicito e permite tentar novamente`() = runTest {
+        dao.failReads = true
+        val vm = vm()
+        vm.init(PlaceType.HOME, 999)
+        assertTrue(vm.state.value.loadState is PlaceLoadState.Error)
+        assertFalse(vm.state.value.canSave)
+        dao.failReads = false
+        vm.reloadPlace()
+        assertEquals(PlaceLoadState.NotFound, vm.state.value.loadState)
+    }
+
+    @Test
+    fun `lugar removido depois de carregar nao vira insert`() = runTest {
+        val id = dao.insert(PlaceEntity(name = "Casa", type = PlaceType.HOME,
+            encryptedCoordinates = "-23.5,-46.5", radiusMeters = 100f, confidence = 1f, createdAt = 1))
+        val vm = vm()
+        vm.init(PlaceType.HOME, id)
+        assertEquals(PlaceLoadState.Ready, vm.state.value.loadState)
+        dao.delete(id)
+        vm.save()
+        assertEquals(PlaceLoadState.NotFound, vm.state.value.loadState)
+        assertTrue(dao.rows.value.isEmpty())
+        assertFalse(vm.state.value.saving)
         assertEquals(0, registrar.calls)
     }
 }

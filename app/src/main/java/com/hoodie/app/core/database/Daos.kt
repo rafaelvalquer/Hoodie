@@ -221,6 +221,35 @@ interface MemoryDao {
 
 @Dao
 interface DeviceUsageDao {
+    @Query("SELECT * FROM daily_screen_hourly WHERE date = :date ORDER BY hour")
+    suspend fun hourly(date: String): List<DailyScreenHourlyEntity>
+
+    @Query("SELECT * FROM daily_context_usage WHERE date = :date ORDER BY foregroundMs DESC")
+    suspend fun contextTotals(date: String): List<DailyContextUsageEntity>
+
+    @Query("SELECT * FROM daily_phone_timeline WHERE date = :date ORDER BY startedAt, id")
+    suspend fun phoneTimeline(date: String): List<DailyPhoneTimelineEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHourly(items: List<DailyScreenHourlyEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertContextTotals(items: List<DailyContextUsageEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPhoneTimeline(items: List<DailyPhoneTimelineEntity>)
+
+    @Query("DELETE FROM daily_screen_hourly WHERE date = :date")
+    suspend fun deleteHourly(date: String)
+    @Query("DELETE FROM daily_context_usage WHERE date = :date")
+    suspend fun deleteContextTotals(date: String)
+    @Query("DELETE FROM daily_phone_timeline WHERE date = :date")
+    suspend fun deletePhoneTimeline(date: String)
+
+    @Query("DELETE FROM daily_screen_hourly")
+    suspend fun clearHourly()
+    @Query("DELETE FROM daily_context_usage")
+    suspend fun clearContextTotals()
+    @Query("DELETE FROM daily_phone_timeline")
+    suspend fun clearPhoneTimeline()
     @Query("SELECT * FROM daily_device_usage WHERE date = :date")
     suspend fun day(date: String): DailyDeviceUsageEntity?
 
@@ -254,6 +283,9 @@ interface DeviceUsageDao {
     @Query("DELETE FROM phone_app_sessions WHERE epochDay = :epochDay")
     suspend fun deleteSessions(epochDay: Long)
 
+    @Query("DELETE FROM phone_app_sessions WHERE epochDay < :cutoffDay")
+    suspend fun deleteSessionsOlderThan(cutoffDay: Long): Int
+
     @Query("DELETE FROM phone_app_sessions")
     suspend fun clearSessions()
 
@@ -265,19 +297,26 @@ interface DeviceUsageDao {
     suspend fun replaceDay(
         day: DailyDeviceUsageEntity,
         apps: List<DailyAppUsageEntity>,
-        contexts: List<DailyContextAppUsageEntity>,
+        contextTotals: List<DailyContextUsageEntity>,
+        contextApps: List<DailyContextAppUsageEntity>,
+        hourly: List<DailyScreenHourlyEntity>,
+        timeline: List<DailyPhoneTimelineEntity>,
         sessions: List<PhoneAppSessionEntity> = emptyList(),
-        epochDay: Long? = null,
+        epochDay: Long = java.time.LocalDate.parse(day.date).toEpochDay(),
     ) {
         deleteApps(day.date)
         deleteContextApps(day.date)
+        deleteHourly(day.date)
+        deleteContextTotals(day.date)
+        deletePhoneTimeline(day.date)
         upsertDay(day)
         insertApps(apps)
-        insertContextApps(contexts)
-        if (epochDay != null) {
-            deleteSessions(epochDay)
-            insertSessions(sessions)
-        }
+        insertContextApps(contextApps)
+        insertHourly(hourly)
+        insertContextTotals(contextTotals)
+        insertPhoneTimeline(timeline)
+        deleteSessions(epochDay)
+        insertSessions(sessions)
     }
 
     @Query("SELECT * FROM app_category_overrides")
@@ -305,6 +344,9 @@ interface DeviceUsageDao {
         clearApps()
         clearContextApps()
         clearSessions()
+        clearHourly()
+        clearContextTotals()
+        clearPhoneTimeline()
     }
 
     @Query("SELECT COUNT(*) FROM daily_device_usage")

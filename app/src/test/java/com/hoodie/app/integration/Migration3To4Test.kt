@@ -41,11 +41,11 @@ class Migration3To4Test {
             db.execSQL("INSERT INTO daily_app_usage VALUES ('2026-10-05', 'com.spotify.music', 'Spotify', 'MUSIC', 1000, 1, NULL, NULL, 1)")
         }
         val room = Room.databaseBuilder(context, HoodieDatabase::class.java, DB)
-            .addMigrations(com.hoodie.app.core.database.migrations.Migration3To4)
+            .addMigrations(*com.hoodie.app.core.database.migrations.ALL_MIGRATIONS)
             .allowMainThreadQueries()
             .build()
         try {
-            assertEquals(4, room.openHelper.writableDatabase.version)
+            assertEquals(5, room.openHelper.writableDatabase.version)
             val dao = room.deviceUsageDao()
             assertEquals(1000L, dao.day("2026-10-05")!!.screenTimeMs)
             assertEquals(0, dao.sessionCount())

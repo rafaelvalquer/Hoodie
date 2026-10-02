@@ -67,6 +67,7 @@ class DeviceUsageRepositoryTest {
         db = Room.inMemoryDatabaseBuilder(context, HoodieDatabase::class.java).allowMainThreadQueries().build()
         settings = SettingsRepository(context)
         settings.clear()
+        settings.setDigital(settings.current().digital.copy(analysisEnabled = true))
         repo = DeviceUsageRepositoryImpl(source, FakeAppMetadata(), UsageAccessChecker { granted }, db.deviceUsageDao(), db.contextEventDao(), settings, clock)
         db.contextEventDao().insert(ContextEventEntity(type = UserContextType.WORK, startedAt = mon(8, 49), endedAt = mon(12, 16), confidence = 1f, placeId = null, source = ContextSource.GEOFENCE))
         db.contextEventDao().insert(ContextEventEntity(type = UserContextType.LUNCH, startedAt = mon(12, 16), endedAt = mon(13), confidence = 1f, placeId = null, source = ContextSource.GEOFENCE))
@@ -92,9 +93,9 @@ class DeviceUsageRepositoryTest {
         assertEquals(fresh.categoryUsage, stored.categoryUsage)
         assertEquals(YOUTUBE, stored.usageIn(UserContextType.LUNCH)!!.apps.single().packageName)
         assertEquals(4, stored.appCount)
-        // Timeline e distribuição por hora não são persistidas (só agregados)…
-        assertTrue(stored.appTimeline.isEmpty())
-        // …mas as sessões por app sim (pacote + horários), para o replay de dias antigos.
+        assertEquals(fresh.appTimeline, stored.appTimeline)
+        assertEquals(fresh.hourlyScreenMs, stored.hourlyScreenMs)
+        assertEquals(fresh.usageByContext, stored.usageByContext)
         assertTrue(fresh.appSessions.isNotEmpty())
         assertEquals(fresh.appSessions, stored.appSessions)
         // Recalcular o mesmo dia não duplica sessões.

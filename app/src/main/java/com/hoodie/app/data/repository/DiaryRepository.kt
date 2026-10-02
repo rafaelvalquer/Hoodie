@@ -11,6 +11,7 @@ import com.hoodie.app.domain.diary.model.DailyDiary
 import com.hoodie.app.engine.diary.DiaryAssembler
 import com.hoodie.app.engine.diary.DiaryDigitalMerger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
@@ -41,7 +42,13 @@ class DiaryRepository @Inject constructor(
         }
         // Camada digital é opcional: sem permissão, desligada ou com erro, o Diário segue igual.
         val phone = if (deviceUsage != null && settings?.current()?.digital?.showInDiary == true) {
-            runCatching { deviceUsage.insightsFor(date) }.getOrNull()
+            try {
+                deviceUsage.insightsFor(date)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
         } else null
         DiaryDigitalMerger.merge(diary, phone, zone)
     }

@@ -143,7 +143,7 @@ fun DiaryMapView(layout: DiaryMapLayout, replay: ReplayUiState, onNode: (DiaryMa
                 with(density) {
                     Box(
                         Modifier.offset(topLeft.x.toDp(), topLeft.y.toDp())
-                            .size((bottomRight.x - topLeft.x).toDp(), (bottomRight.y - topLeft.y).toDp())
+                            .size((bottomRight.x - topLeft.x).toDp().coerceAtLeast(48.dp), (bottomRight.y - topLeft.y).toDp().coerceAtLeast(48.dp))
                             .semantics {
                                 contentDescription = "${node.label}, ${node.visitIndices.size} visita(s)"
                                 role = Role.Button

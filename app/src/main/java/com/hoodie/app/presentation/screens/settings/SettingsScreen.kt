@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -74,6 +75,8 @@ class SettingsViewModel @Inject constructor(
     val permission: StateFlow<LocationPermissionState> = permissions.state
     val geofenceResult: StateFlow<GeofenceRegistrationResult?> = geofences.lastResult
     val info = MutableStateFlow<String?>(null)
+    private val _events = kotlinx.coroutines.channels.Channel<SettingsUiEvent>(kotlinx.coroutines.channels.Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     fun setName(n: String) = viewModelScope.launch { settings.setCatName(n) }
     fun setCommute(s: CommuteStyle) = viewModelScope.launch { settings.setCommuteStyle(s) }
@@ -81,7 +84,11 @@ class SettingsViewModel @Inject constructor(
 
     /** Voltou das configurações do sistema: revalida e reaplica os geofences. */
     fun onResume() = viewModelScope.launch {
-        usageAccess.refresh()
+        val usage = usageAccess.refresh()
+        val digital = settings.current().digital
+        if (usage == UsagePermissionState.GRANTED && digital.analysisRequested) {
+            settings.setDigital(digital.copy(analysisEnabled = true, analysisRequested = false))
+        }
         val before = permission.value
         val now = permissions.refresh()
         if (before != now || geofences.lastResult.value == null) geofences.registerAll()
@@ -98,7 +105,11 @@ class SettingsViewModel @Inject constructor(
     /** Apaga tudo: banco, chave do banco, preferências, geofences, tarefas e notificações. Volta ao onboarding. */
     fun deleteEverything() = viewModelScope.launch { wiper.deleteEverything() }
 
-    fun setDigital(d: DigitalSettings) = viewModelScope.launch { settings.setDigital(d) }
+    fun setDigital(d: DigitalSettings) = viewModelScope.launch {
+        val request = d.analysisEnabled && !usageAccess.isGranted()
+        settings.setDigital(d.copy(analysisEnabled = d.analysisEnabled && !request, analysisRequested = request))
+        if (request) _events.send(SettingsUiEvent.OpenUsageSettings)
+    }
     fun usageAccessIntent(): Intent = usageAccess.settingsIntent()
 
     /** Apaga só os agregados do Diário Digital (as categorias escolhidas ficam). */
@@ -106,6 +117,10 @@ class SettingsViewModel @Inject constructor(
         clearDigital()
         info.value = "Histórico digital apagado."
     }
+}
+
+sealed interface SettingsUiEvent {
+    data object OpenUsageSettings : SettingsUiEvent
 }
 
 /** Texto do card "Localização" a partir da permissão e do último registro de geofences. */
@@ -138,6 +153,13 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
     val permission by vm.permission.collectAsStateWithLifecycle()
     val geofenceResult by vm.geofenceResult.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(vm) {
+        vm.events.collect { event ->
+            when (event) {
+                SettingsUiEvent.OpenUsageSettings -> context.startActivity(vm.usageAccessIntent())
+            }
+        }
+    }
     LifecycleResumeEffect(Unit) {
         vm.onResume()
         onPauseOrDispose { }

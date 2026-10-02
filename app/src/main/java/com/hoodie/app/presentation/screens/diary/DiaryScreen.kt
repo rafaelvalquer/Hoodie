@@ -15,11 +15,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -32,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -77,7 +83,7 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val today = state.today
     val context = LocalContext.current
-    var selectedNodeId by remember { mutableStateOf<String?>(null) }
+    var selectedNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
     val zone = vm.zone
     var tab by rememberSaveable { mutableStateOf(DiaryTab.GENERAL) }
     var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
@@ -93,7 +99,10 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
         } else if (state.isLoading) {
             PixelPanel(Modifier.fillMaxWidth()) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp); Text("Montando seu dia…", color = HoodieColors.Muted) } }
         } else if (state.error != null) {
-            PixelPanel(Modifier.fillMaxWidth()) { Text(state.error.orEmpty(), color = HoodieColors.Coral) }
+            PixelPanel(Modifier.fillMaxWidth()) {
+                Text(state.error.orEmpty(), color = HoodieColors.Coral)
+                PixelButton("Tentar novamente", vm::retry)
+            }
         } else {
             val diary = state.diary
             if (diary == null || diary.summary.totalMs == 0L && diary.timeline.isEmpty()) {
@@ -132,7 +141,7 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun DateSelector(date: LocalDate, today: LocalDate, context: android.content.Context, zone: ZoneId, onSelect: (LocalDate) -> Unit) {
+internal fun DateSelector(date: LocalDate, today: LocalDate, context: android.content.Context, zone: ZoneId, onSelect: (LocalDate) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         DateChip("Hoje", date == today) { onSelect(today) }
         DateChip("Ontem", date == today.minusDays(1)) { onSelect(today.minusDays(1)) }
@@ -151,7 +160,7 @@ private fun DateSelector(date: LocalDate, today: LocalDate, context: android.con
 
 @Composable
 private fun DateChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(Modifier.background(if (selected) HoodieColors.Blue else HoodieColors.PanelLight).border(2.dp, HoodieColors.Outline).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp)) {
+    Box(Modifier.heightIn(min = 48.dp).background(if (selected) HoodieColors.Blue else HoodieColors.PanelLight).border(2.dp, HoodieColors.Outline).semantics { this.selected = selected }.clickable(role = Role.Button, onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp), contentAlignment = Alignment.Center) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = if (selected) HoodieColors.Outline else HoodieColors.Ink)
     }
 }
@@ -188,7 +197,7 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
 internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset: () -> Unit, onSpeed: (ReplaySpeed) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         PixelButton(if (replay.state == ReplayState.PLAYING) "Pausar" else if (replay.state == ReplayState.FINISHED) "Rever dia" else "▶ Reproduzir meu dia", onToggle, modifier = Modifier.weight(1f), color = HoodieColors.Mint)
-        TextButton(onClick = onReset) { Text("↺", color = HoodieColors.Hood) }
+        TextButton(onClick = onReset, modifier = Modifier.semantics { contentDescription = "Reiniciar replay" }) { Text("↺", color = HoodieColors.Hood) }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("VELOCIDADE", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
@@ -201,17 +210,34 @@ internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset
 @Composable
 internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, replayAt: Long?, zone: ZoneId, highlightedIds: Set<String> = emptySet()) {
     val activeIndex = if (replayAt == null) -1 else items.indexOfFirst { it.id in highlightedIds }
+    val timelineScroll = rememberLazyListState()
+    LaunchedEffect(activeIndex, items) {
+        if (activeIndex >= 0) timelineScroll.animateScrollToItem(activeIndex)
+        else timelineScroll.scrollToItem(0)
+    }
     PixelPanel(Modifier.fillMaxWidth()) {
         SectionLabel("LINHA DO TEMPO")
         if (items.isEmpty()) Text("Sem eventos registrados.", color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
-        Column(Modifier.fillMaxWidth()) {
-            items.forEachIndexed { index, item ->
-            // Sem rolagem automática: durante o replay o mapa e o HUD ficam na tela;
-            // o item atual só é destacado.
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 280.dp), state = timelineScroll) {
+            itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
             val highlighted = index == activeIndex
-            Row(Modifier.fillMaxWidth().padding(vertical = 6.dp).background(if (highlighted) HoodieColors.PanelLight else Color.Transparent).padding(4.dp), verticalAlignment = Alignment.Top) {
+            val actorColor = when (item.actor) {
+                com.hoodie.app.domain.diary.model.DiaryActor.USER -> HoodieColors.Blue
+                com.hoodie.app.domain.diary.model.DiaryActor.HOODIE -> HoodieColors.Mint
+                else -> HoodieColors.Muted
+            }
+            val actorLabel = when (item.actor) {
+                com.hoodie.app.domain.diary.model.DiaryActor.USER -> "Você"
+                com.hoodie.app.domain.diary.model.DiaryActor.HOODIE -> "Hoodie"
+                else -> "Sistema"
+            }
+            Row(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
+                selected = highlighted
+                contentDescription = "$actorLabel, ${formatClock(item.timestamp, zone)}, ${item.title}" +
+                    (item.subtitle?.let { ", $it" } ?: "")
+            }.padding(vertical = 6.dp).background(if (highlighted) HoodieColors.PanelLight else Color.Transparent).padding(4.dp), verticalAlignment = Alignment.Top) {
                 Text(formatClock(item.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = if (highlighted) HoodieColors.Gold else HoodieColors.Muted, modifier = Modifier.width(48.dp))
-                Text(if (item.actor.name == "HOODIE") "🐱" else if (item.actor.name == "SYSTEM") "⚙️" else (item.emoji ?: "📍"), modifier = Modifier.width(28.dp))
+                Text(if (item.actor.name == "HOODIE") "🐱" else if (item.actor.name == "SYSTEM") "⚙️" else (item.emoji ?: "📍"), color = actorColor, modifier = Modifier.width(28.dp))
                 Column(Modifier.weight(1f)) {
                     Text(item.title, style = MaterialTheme.typography.bodyMedium, color = if (highlighted) HoodieColors.Hood else HoodieColors.Ink)
                     item.subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted) }

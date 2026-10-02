@@ -29,15 +29,15 @@ object ContextUsageCorrelator {
 
         sessions.forEach { s ->
             val touched = mutableSetOf<UserContextType>()
-            ordered.forEach { ctx ->
-                val ctxEnd = ctx.endedAt ?: end
-                val overlap = minOf(s.endedAt, ctxEnd) - maxOf(s.startedAt, ctx.startedAt)
-                if (overlap > 0) {
-                    val acc = byContextApp.getOrPut(ctx.type to s.packageName) { Acc() }
+            AppSessionContextSplitter.split(listOf(s), ordered, end).forEach { piece ->
+                val type = piece.context
+                val overlap = piece.endedAt - piece.startedAt
+                if (overlap > 0 && type != null) {
+                    val acc = byContextApp.getOrPut(type to s.packageName) { Acc() }
                     acc.ms += overlap
-                    if (ctx.type !in touched) {
+                    if (type !in touched) {
                         acc.sessions++
-                        touched += ctx.type
+                        touched += type
                     }
                 }
             }

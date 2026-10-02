@@ -1,0 +1,58 @@
+package com.hoodie.app.pixel.animation.definitions
+
+import com.hoodie.app.pixel.animation.*
+import com.hoodie.app.pixel.animation.definitions.ClipDefinitions.Builder
+import com.hoodie.app.pixel.animation.AnimationEvent.*
+import com.hoodie.app.pixel.animation.InterruptPolicy.*
+import com.hoodie.app.pixel.sprite.*
+
+internal fun leisureAnimations(): Map<AnimationId, AnimationClip> = ClipDefinitions().apply {
+        // ───── Videogame ─────
+        val pad = SIT.copy(leftArm = Arm.HOLD_CHEST, rightArm = Arm.HOLD_CHEST, item = Item.CONTROLLER)
+        clip(AnimationId.GAMING, policy = IMMEDIATE) {
+            f(170, pad.copy(eyes = Eyes.LOOK_RIGHT)); f(170, pad.copy(eyes = Eyes.LOOK_RIGHT, bob = 1)); f(200, pad.copy(eyes = Eyes.FOCUSED)); f(170, pad.copy(eyes = Eyes.LOOK_RIGHT, bob = 1))
+        }
+        clip(AnimationId.GAME_PRESS, policy = IMMEDIATE) {
+            f(90, pad.copy(eyes = Eyes.FOCUSED)); f(90, pad.copy(eyes = Eyes.FOCUSED, bob = 1, leftArm = Arm.FORWARD_UP)); f(90, pad.copy(eyes = Eyes.FOCUSED)); f(90, pad.copy(eyes = Eyes.FOCUSED, bob = 1, rightArm = Arm.FORWARD_UP))
+        }
+        clip(AnimationId.GAME_FOCUSED, policy = IMMEDIATE) {
+            f(500, pad.copy(eyes = Eyes.FOCUSED, ears = Ears.ALERT, headDy = 1)); f(400, pad.copy(eyes = Eyes.FOCUSED, ears = Ears.ALERT, headDy = 2, mouth = Mouth.FLAT))
+        }
+        clip(AnimationId.GAME_WIN, loop = false, policy = FINISH_CYCLE) {
+            f(120, pad.copy(bob = 1, eyes = Eyes.WIDE))
+            f(180, SIT.copy(leftArm = Arm.UP, rightArm = Arm.UP, eyes = Eyes.WIDE, mouth = Mouth.OPEN, lift = 2, ears = Ears.ALERT), SPARKLE)
+            f(160, SIT.copy(leftArm = Arm.UP, rightArm = Arm.UP, eyes = Eyes.HAPPY, mouth = Mouth.OPEN, lift = 1))
+            f(180, SIT.copy(leftArm = Arm.UP, rightArm = Arm.UP, eyes = Eyes.HAPPY, mouth = Mouth.OPEN, lift = 2))
+            f(300, pad.copy(eyes = Eyes.HAPPY, blush = true))
+        }
+        clip(AnimationId.GAME_LOSE, loop = false, policy = FINISH_CYCLE) {
+            f(200, pad.copy(eyes = Eyes.WIDE)); f(600, pad.copy(eyes = Eyes.CLOSED, ears = Ears.DOWN, mouth = Mouth.FLAT, bob = 1, headDy = 1))
+            f(500, pad.copy(eyes = Eyes.SLEEPY, ears = Ears.DOWN, mouth = Mouth.FLAT)); f(300, pad)
+        }
+
+
+        // ───── Casa e lugares ─────
+        clip(AnimationId.READING) {
+            val r = SIT.copy(leftArm = Arm.HOLD_CHEST, rightArm = Arm.HOLD_CHEST, item = Item.BOOK, eyes = Eyes.LOOK_DOWN)
+            f(1000, r); f(900, r.copy(bob = 1)); f(160, r.copy(rightArm = Arm.FORWARD_UP)); f(900, r)
+        }
+        clip(AnimationId.WATCH_TV, policy = IMMEDIATE) { f(700, SIT.copy(eyes = Eyes.LOOK_RIGHT)); f(700, SIT.copy(eyes = Eyes.LOOK_RIGHT, bob = 1)) }
+        clip(AnimationId.COOK) {
+            f(250, S.copy(leftArm = Arm.FORWARD_UP, rightArm = Arm.FORWARD_DOWN, item = Item.PAN, eyes = Eyes.FOCUSED))
+            f(250, S.copy(leftArm = Arm.FORWARD_DOWN, rightArm = Arm.FORWARD_UP, item = Item.PAN, eyes = Eyes.FOCUSED, stringSwing = 1))
+            f(250, S.copy(leftArm = Arm.FORWARD_UP, rightArm = Arm.FORWARD_DOWN, item = Item.PAN, eyes = Eyes.HAPPY))
+            f(250, S.copy(leftArm = Arm.FORWARD_DOWN, rightArm = Arm.FORWARD_UP, item = Item.PAN, eyes = Eyes.FOCUSED, stringSwing = -1))
+        }
+        clip(AnimationId.CLEAN) {
+            f(250, S.copy(leftArm = Arm.FORWARD_DOWN, rightArm = Arm.FORWARD_DOWN, item = Item.BROOM, eyes = Eyes.LOOK_DOWN, stringSwing = -1))
+            f(250, S.copy(leftArm = Arm.FORWARD_UP, rightArm = Arm.FORWARD_UP, item = Item.BROOM, eyes = Eyes.LOOK_DOWN, bob = 1, stringSwing = 1))
+        }
+        clip(AnimationId.BUS_SIT, policy = IMMEDIATE) {
+            val b = SIT.copy(backpack = true, eyes = Eyes.LOOK_LEFT)
+            f(500, b); f(500, b.copy(bob = 1, backpackDy = -1)); f(500, b.copy(backpackDy = 1)); f(500, b.copy(eyes = Eyes.OPEN, bob = 1))
+        }
+
+
+}.clips.toMap()
+
+

@@ -14,6 +14,8 @@ import com.hoodie.app.domain.phoneinsights.usecase.SetAppCategoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +36,8 @@ class PhoneInsightsViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(PhoneInsightsUiState(clock.today(), permission = access.state.value))
     val state: StateFlow<PhoneInsightsUiState> = _state.asStateFlow()
+    private val _events = Channel<PhoneInsightsUiEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
     private var loadJob: Job? = null
 
     init {
@@ -58,15 +62,24 @@ class PhoneInsightsViewModel @Inject constructor(
         val before = _state.value.permission
         val now = access.refresh()
         _state.value = _state.value.copy(permission = now)
+        if (now == UsagePermissionState.GRANTED) viewModelScope.launch {
+            val digital = settings.current().digital
+            if (digital.analysisRequested) {
+                settings.setDigital(digital.copy(analysisEnabled = true, analysisRequested = false))
+            }
+        }
         if (before != now || now == UsagePermissionState.GRANTED && _state.value.date == clock.today()) reload()
     }
 
     fun refresh() = reload()
 
     fun permissionIntent(): Intent = access.settingsIntent()
+    fun appDetailsIntent(): Intent = access.appDetailsIntent()
 
     fun enableAnalysis() = viewModelScope.launch {
-        settings.setDigital(settings.current().digital.copy(analysisEnabled = true))
+        val granted = access.isGranted()
+        settings.setDigital(settings.current().digital.copy(analysisEnabled = granted, analysisRequested = !granted))
+        if (!granted) _events.send(PhoneInsightsUiEvent.OpenUsageSettings)
     }
 
     fun openApp(entry: AppUsageEntry) { _state.value = _state.value.copy(selectedApp = entry) }

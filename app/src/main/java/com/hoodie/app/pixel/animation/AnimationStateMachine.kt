@@ -73,8 +73,9 @@ class AnimationStateMachine(
     private var scene: PixelScene? = null
     private var pending: VisualState? = null
     private var pendingAt = 0L
-    private val reactions = ArrayDeque<AnimationId>()
-    private var reactionAt = 0L
+    private val reactions = ReactionResolver()
+    private val transitionPlanner = TransitionPlanner()
+    private val loopSelector = LoopSelector(random)
 
     private val steps = ArrayDeque<Step>()
     private var step: Step = Step.Loop
@@ -88,11 +89,15 @@ class AnimationStateMachine(
     private var doorOpenAt = -1L
     private var doorCloseAt = -1L
 
-    var animation: AnimationId = AnimationId.IDLE
-        private set
-    private var direction = Direction.FRONT
-    private var animStart = 0L
-    private var lastFrameIdx = -1
+    private val player = AnimationPlayer()
+    val animation: AnimationId get() = player.animation
+    private var direction: Direction
+        get() = player.direction
+        set(value) { player.direction = value }
+    private val animStart: Long get() = player.startedAt
+    private var lastFrameIdx: Int
+        get() = player.lastFrameIndex
+        set(value) { player.lastFrameIndex = value }
 
     private var action: MicroAction? = null
     private var actionFresh = false
@@ -145,8 +150,7 @@ class AnimationStateMachine(
     /** Reações entram por cima do loop atual, respeitando a política de interrupção. */
     fun react(anims: List<AnimationId>, now: Long) {
         if (anims.isEmpty()) return
-        reactions.clear(); reactions.addAll(anims)
-        reactionAt = interruptBoundary(now)
+        reactions.request(anims, interruptBoundary(now))
     }
 
     /** Coloca o gato direto no loop do estado (sem transições). */
@@ -159,7 +163,7 @@ class AnimationStateMachine(
         steps.clear(); step = Step.Loop; stepStart = now
         doorOpenAt = -1; doorCloseAt = -1; fade = 1f
         idle.reset(now); idle.setGaze(v.gaze, now)
-        action = pickAction(v, null)
+        action = loopSelector.pick(v, null)
         posture = if (action?.anim?.posture == Legs.SIT) Posture.SITTING else Posture.STANDING
         startAction(now)
     }
@@ -187,8 +191,7 @@ class AnimationStateMachine(
         val v = visual!!
         val provider = sprites()
         val durations = provider.durations(animation, direction)
-        val elapsed = now - animStart
-        val idx = ClipTiming.indexAt(durations, elapsed, animation.loop)
+        val idx = player.frameIndex(now, durations)
         val walking = step is Step.Walk || animation.group == AnimGroup.LOCOMOTION
         var overlay = idle.overlay(now, allowLook = step == Step.Loop && !walking).copy(expression = v.expression)
         if (walking) overlay = overlay.copy(gaze = if (direction.facing == Facing.SIDE) Eyes.LOOK_LEFT else null)
@@ -259,15 +262,13 @@ class AnimationStateMachine(
 
     private fun runLoop(now: Long) {
         val v = visual ?: return
-        if (action == null) { action = pickAction(v, null); actionFresh = true }
+        if (action == null) { action = loopSelector.pick(v, null); actionFresh = true }
         if (actionFresh) startAction(now)
         val a = action!!
 
-        if (reactions.isNotEmpty() && now >= reactionAt) {
-            val list = reactions.toList(); reactions.clear()
+        reactions.takeReady(now)?.let { sequence ->
             steps.clear()
-            list.forEach { steps += Step.Play(it) }
-            steps += Step.Loop
+            steps.addAll(sequence.steps)
             // Depois da reação, retoma a mesma microação pelo tempo que faltava.
             resumeMs = (actionEnd - now).coerceAtLeast(1_500)
             next(now)
@@ -293,38 +294,21 @@ class AnimationStateMachine(
     private fun startAction(now: Long) {
         val a = action ?: return
         actionFresh = false
-        val span = (a.maxMs - a.minMs).coerceAtLeast(0)
-        actionEnd = now + a.minMs + if (span > 0) random.nextLong(span + 1) else 0
+        actionEnd = now + loopSelector.duration(a)
         play(a.anim, a.direction, now, restart = true)
     }
 
     /** Troca de microação com as transições dela (pôr a caneca, pegar o mouse, andar até o peso). */
     private fun switchAction(now: Long) {
         val v = visual ?: return
-        val prev = action
-        val nextAction = pickAction(v, prev)
+        val nextAction = loopSelector.pick(v, action)
         steps.clear()
-        prev?.exit?.forEach { steps += Step.Play(it) }
-        val sc = scene!!
-        val target = nextAction.spot?.takeIf { it in sc.spots }?.let(sc::spot)
-        if (target != null && (abs(target.x - x) >= 1 || abs(target.y - y) >= 1)) {
-            if (posture == Posture.SITTING && prev?.exit?.none { it.posture == Legs.STAND || it == AnimationId.STAND_UP } != false) steps += Step.Play(AnimationId.STAND_UP)
-            addWalk(steps, x, y, target, stop = true)
-        }
-        nextAction.enter.forEach { steps += Step.Play(it) }
-        steps += Step.Loop
+        steps.addAll(transitionPlanner.actionPlan(scene!!, action, nextAction, x, y, posture).steps)
         action = nextAction; actionFresh = true
         next(now)
     }
 
     /** Sorteio ponderado evitando repetir a mesma microação (nada de typing → typing). */
-    private fun pickAction(v: VisualState, previous: MicroAction?): MicroAction {
-        val options = if (v.actions.size > 1 && previous != null) v.actions.filter { it != previous } else v.actions
-        val total = options.sumOf { it.weight }.coerceAtLeast(1)
-        var roll = random.nextInt(total)
-        for (a in options) { if (roll < a.weight) return a; roll -= a.weight }
-        return options.first()
-    }
 
     private fun next(now: Long) {
         step = steps.removeFirstOrNull() ?: Step.Loop
@@ -339,63 +323,18 @@ class AnimationStateMachine(
 
     // ───────────────────────── Roteiro entre estados ─────────────────────────
 
-    private val postureOnly = setOf(AnimationId.SIT_DOWN, AnimationId.STAND_UP, AnimationId.SIT_TABLE, AnimationId.STAND_TABLE)
-
     private fun buildPlan(target: VisualState, now: Long) {
         val sc = scene ?: return
         val current = visual ?: return
+        val sequence = transitionPlanner.plan(sc, current, target, x, y, posture, action?.exit.orEmpty(), step == Step.Loop)
         steps.clear()
+        steps.addAll(sequence.steps)
         resumeMs = -1
-        val sameScene = target.scene == sc.id
-        val targetScene = SceneRegistry[target.scene]
-        val targetSpot = targetScene.spot(target.spot)
-        val atTarget = sameScene && abs(targetSpot.x - x) < 1 && abs(targetSpot.y - y) < 1
-        val sameSpot = atTarget && target.spot == current.spot
-
-        val exits = (if (step == Step.Loop) action?.exit.orEmpty() else emptyList()) +
-            current.exit.filter { !(sameSpot && it in postureOnly) }
-        exits.forEach { steps += Step.Play(it) }
-        var simulatedPosture = posture
-        exits.forEach { a -> a.frames.last().pose.legs.let { if (it == Legs.SIT) simulatedPosture = Posture.SITTING else if (it != Legs.INHERIT) simulatedPosture = Posture.STANDING } }
-        if (!atTarget && simulatedPosture == Posture.SITTING) steps += Step.Play(AnimationId.STAND_UP)
-
-        if (!sameScene) {
-            val door = sc.spots[SpotId.DOOR]
-            if (door != null && !sc.walkInPlace) {
-                addWalk(steps, x, y, door, stop = false)
-                steps += Step.OpenDoor
-            }
-            steps += Step.FadeOut
-            steps += Step.Switch(target)
-            steps += Step.FadeIn
-            target.approach.forEach { steps += Step.Play(it) }
-            if (!targetScene.walkInPlace) {
-                val from = targetScene.spots[SpotId.DOOR] ?: targetSpot
-                addWalk(steps, from.x.toFloat(), from.y.toFloat(), targetSpot, stop = true)
-            }
-        } else {
-            steps += Step.Apply(target)
-            if (!atTarget) {
-                target.approach.forEach { steps += Step.Play(it) }
-                addWalk(steps, x, y, targetSpot, stop = true)
-            }
-        }
-        target.enter.filter { !(sameSpot && it in postureOnly) }.forEach { steps += Step.Play(it) }
-        steps += Step.Loop
         action = null
         next(now)
     }
 
     /** Antecipação (vira para a direção) + caminhada + parada com follow-through. */
-    private fun addWalk(plan: ArrayDeque<Step>, fromX: Float, fromY: Float, to: Spot, stop: Boolean) {
-        val dx = to.x - fromX; val dy = to.y - fromY
-        if (abs(dx) < 1 && abs(dy) < 1) return
-        // Descendo anda primeiro em Y (sai da cama/sofá para a frente); senão primeiro em X.
-        val first = if (dy > 0) Direction.of(0f, dy) else if (abs(dx) >= 1) Direction.of(dx, 0f) else Direction.of(0f, dy)
-        plan += Step.Play(AnimationId.TURN, first)
-        plan += Step.Walk(to)
-        if (stop) plan += Step.Play(AnimationId.WALK_STOP, Direction.FRONT)
-    }
 
     private fun switchScene(target: VisualState, now: Long) {
         val sc = SceneRegistry[target.scene]
@@ -448,10 +387,7 @@ class AnimationStateMachine(
     // ───────────────────────── Clips ─────────────────────────
 
     private fun play(anim: AnimationId, dir: Direction, now: Long, restart: Boolean = false) {
-        if (!restart && anim == animation && dir == direction) return
-        val sameLoop = anim == animation && anim.loop && !restart
-        animation = anim; direction = dir
-        if (!sameLoop) { animStart = now; lastFrameIdx = -1 }
+        if (!player.play(anim, dir, now, restart)) return
         // Clips com postura explícita definem a postura (INHERIT herda).
         val legs = anim.frames.first().pose
         if (!legs.headOnly) when (legs.legs) {
@@ -474,22 +410,14 @@ class AnimationStateMachine(
 
     private fun interruptBoundary(now: Long): Long {
         if (step != Step.Loop) return now
-        val d = sprites().durations(animation, direction)
-        val elapsed = now - animStart
-        return when (animation.clip.interruptPolicy) {
-            InterruptPolicy.IMMEDIATE, InterruptPolicy.PLAY_EXIT -> now
-            InterruptPolicy.FINISH_FRAME -> animStart + ClipTiming.frameEnd(d, elapsed, animation.loop)
-            InterruptPolicy.FINISH_CYCLE -> animStart + ClipTiming.cycleEnd(d, elapsed, animation.loop)
-        }
+        return InterruptResolver.boundary(animation, sprites().durations(animation, direction), animStart, now)
     }
 
     /** Microações em loop só trocam ao fim do ciclo, se o clip pedir isso. */
     private fun loopBoundary(now: Long): Long =
-        if (animation.clip.interruptPolicy == InterruptPolicy.FINISH_CYCLE) {
-            val d = sprites().durations(animation, direction)
-            val elapsed = now - animStart
-            if (elapsed.mod(ClipTiming.total(d)) < FRAME_TOLERANCE) now else animStart + ClipTiming.cycleEnd(d, elapsed, animation.loop)
-        } else now
+        if (animation.clip.interruptPolicy == InterruptPolicy.FINISH_CYCLE)
+            InterruptResolver.loopBoundary(animation, sprites().durations(animation, direction), animStart, now)
+        else now
 
     // ───────────────────────── Eventos ─────────────────────────
 
@@ -517,6 +445,5 @@ class AnimationStateMachine(
     companion object {
         const val FADE_MS = 420L
         const val DOOR_FRAME_MS = 100L
-        private const val FRAME_TOLERANCE = 40L
     }
 }

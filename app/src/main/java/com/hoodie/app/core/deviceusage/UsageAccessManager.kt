@@ -33,6 +33,11 @@ class UsageAccessManager @Inject constructor(@ApplicationContext private val con
 
     override fun isGranted(): Boolean = refresh() == UsagePermissionState.GRANTED
 
+    fun appDetailsIntent(): Intent = Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.parse("package:${context.packageName}"),
+    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
     /** Tela "Acesso ao uso", já apontando para o Hoodie quando o sistema aceita. */
     fun settingsIntent(): Intent {
         val direct = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.fromParts("package", context.packageName, null))

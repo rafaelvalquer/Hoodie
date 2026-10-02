@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,7 +29,10 @@ fun UsagePermissionScreen(
     permission: UsagePermissionState,
     onActivate: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenAppDetails: () -> Unit = {},
 ) {
+    var showHelp by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    if (showHelp) RestrictedSettingsHelpSheet(onDismiss = { showHelp = false }, onOpenAppDetails = onOpenAppDetails)
     HudPanel("Análise do celular", modifier.fillMaxWidth(), accent = RetroUiTheme.Screen) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             AnimatedHoodie(AnimationId.PHONE_SCROLL, size = 84.dp)
@@ -51,6 +56,12 @@ fun UsagePermissionScreen(
         } else {
             PixelButton("Ativar acesso", onActivate, Modifier.fillMaxWidth(), color = RetroUiTheme.Screen)
             Text("Na tela do Android, procure “Hoodie” e ligue “Permitir acesso ao uso”.", style = RetroFontStyles.Small, color = HoodieColors.Muted)
+            val permissionUi = UsagePermissionUiState(permission)
+            Text(androidx.compose.ui.res.stringResource(if (permissionUi.showRestrictedHelp)
+                com.hoodie.app.R.string.usage_restricted_hint else com.hoodie.app.R.string.usage_optional_help),
+                style = RetroFontStyles.Small, color = HoodieColors.Muted)
+            PixelButton(androidx.compose.ui.res.stringResource(com.hoodie.app.R.string.usage_restricted_help),
+                { showHelp = true }, Modifier.fillMaxWidth())
         }
     }
 }

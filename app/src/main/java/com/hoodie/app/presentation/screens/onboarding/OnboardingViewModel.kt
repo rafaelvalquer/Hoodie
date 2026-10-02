@@ -8,7 +8,7 @@ import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.geofence.GeofenceRegistrar
 import com.hoodie.app.core.location.LocationPermissionManager
 import com.hoodie.app.core.location.LocationPermissionState
-import com.hoodie.app.core.location.LocationProvider
+import com.hoodie.app.core.location.CurrentPosition
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.Routine
 import com.hoodie.app.core.model.WorkMode
@@ -50,7 +50,7 @@ class OnboardingViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val routines: RoutineRepository,
     private val contextEngine: ContextEngine,
-    private val location: LocationProvider,
+    private val location: CurrentPosition,
     private val geofences: GeofenceRegistrar,
     private val permissions: LocationPermissionManager,
     private val memory: MemoryEngine,
@@ -68,7 +68,7 @@ class OnboardingViewModel @Inject constructor(
 
     val permission: StateFlow<LocationPermissionState> = permissions.state
 
-    fun hasLocation() = location.hasForeground()
+    fun hasLocation() = permissions.hasForeground()
 
     fun needsBackground() = permissions.current().needsBackgroundStep
 

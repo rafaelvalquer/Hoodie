@@ -57,8 +57,8 @@ object HoodieConfig {
     /** No Diário geral, só blocos maiores entram (para não poluir a história do dia). */
     const val DIARY_PHONE_ITEM_MIN_MS = 5 * MINUTE_MS
     const val PHONE_TIMELINE_MAX_ITEMS = 80
-    const val TOP_APPS_STORED = 30
     const val TOP_APPS_SHOWN = 10
     const val CONTEXT_TOP_APPS = 5
     const val PHONE_INSIGHTS_REFRESH_HOURS = 3L
+    const val PHONE_SESSION_RETENTION_DAYS = 365L
 }

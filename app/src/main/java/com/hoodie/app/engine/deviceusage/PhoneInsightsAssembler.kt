@@ -41,8 +41,8 @@ object PhoneInsightsAssembler {
         val apps = DailyPhoneUsageCalculator.apps(appSessions, labelOf, categoryOf, metadata::isInstalled)
         return DailyPhoneInsights(
             summary = DailyPhoneUsageCalculator.summary(date, screen, appSessions),
-            topApps = apps.take(HoodieConfig.TOP_APPS_STORED),
-            usageByContext = ContextUsageCorrelator.correlate(appSessions, contexts, labelOf, end),
+            topApps = apps,
+            usageByContext = ContextUsageCorrelator.correlate(appSessions, contexts, labelOf, end, topAppsPerContext = Int.MAX_VALUE),
             appTimeline = timeline(appSessions, contexts, labelOf, categoryOf, end),
             categoryUsage = DailyPhoneUsageCalculator.categories(apps),
             hourlyScreenMs = DailyPhoneUsageCalculator.hourly(screen.sessions, zone),
@@ -68,15 +68,14 @@ object PhoneInsightsAssembler {
                 merged += s
             }
         }
-        return merged
+        val relevant = merged
             .filter { it.durationMs >= HoodieConfig.PHONE_TIMELINE_MIN_MS }
             .sortedByDescending { it.durationMs }
             .take(HoodieConfig.PHONE_TIMELINE_MAX_ITEMS)
             .sortedBy { it.startedAt }
+        return AppSessionContextSplitter.split(relevant, contexts, end)
             .map { s ->
-                val mid = s.startedAt + s.durationMs / 2
-                val ctx = contexts.lastOrNull { mid >= it.startedAt && mid < (it.endedAt ?: end) }?.type
-                PhoneTimelineItem(s.packageName, labelOf(s.packageName), categoryOf(s.packageName), s.startedAt, s.endedAt, ctx)
+                PhoneTimelineItem(s.packageName, labelOf(s.packageName), categoryOf(s.packageName), s.startedAt, s.endedAt, s.context)
             }
     }
 }

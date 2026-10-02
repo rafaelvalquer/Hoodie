@@ -8,6 +8,12 @@ import com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights
 import com.hoodie.app.engine.deviceusage.DigitalReaction
 import com.hoodie.app.engine.deviceusage.HoodieDigitalReactions
 import java.time.LocalDate
+import com.hoodie.app.BuildConfig
+
+data class UsagePermissionUiState(
+    val permission: UsagePermissionState,
+    val showRestrictedHelp: Boolean = BuildConfig.DEBUG && permission == UsagePermissionState.DENIED,
+)
 
 enum class PhoneInsightsStatus {
     /** Usuário desligou a análise em Ajustes e não há histórico salvo. */
@@ -21,6 +27,10 @@ enum class PhoneInsightsStatus {
     READY,
 }
 
+sealed interface PhoneInsightsUiEvent {
+    data object OpenUsageSettings : PhoneInsightsUiEvent
+}
+
 data class PhoneInsightsUiState(
     val date: LocalDate,
     val permission: UsagePermissionState = UsagePermissionState.DENIED,
@@ -31,6 +41,7 @@ data class PhoneInsightsUiState(
     val catName: String = "Hoodie",
     val selectedApp: AppUsageEntry? = null,
 ) {
+    val permissionUi: UsagePermissionUiState get() = UsagePermissionUiState(permission)
     val status: PhoneInsightsStatus get() = statusOf(permission, settings, insights, isLoading, error)
 
     val reaction: DigitalReaction get() = HoodieDigitalReactions.react(insights, catName)

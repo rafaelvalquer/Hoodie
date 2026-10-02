@@ -64,11 +64,13 @@ fun MapPicker(
     modifier: Modifier = Modifier,
     onMyLocation: (() -> Unit)? = null,
     loadingLocation: Boolean = false,
+    onMapInteraction: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentOnChange by rememberUpdatedState(onCenterChanged)
     val currentRadius by rememberUpdatedState(radiusMeters)
+    val currentOnInteraction by rememberUpdatedState(onMapInteraction)
 
     val map = remember {
         MapView(context).apply {
@@ -101,12 +103,16 @@ fun MapPicker(
         val notify = Runnable { map.mapCenter.let { currentOnChange(it.latitude, it.longitude) } }
         val listener = object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
+                currentOnInteraction()
                 refreshCircle()
                 // Debounce: só avisa quando o usuário para de arrastar.
                 map.removeCallbacks(notify); map.postDelayed(notify, 350)
                 return false
             }
-            override fun onZoom(event: ZoomEvent?): Boolean = false
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                currentOnInteraction()
+                return false
+            }
         }
         map.addMapListener(listener)
         val observer = LifecycleEventObserver { _, e ->

@@ -26,6 +26,21 @@ O ícone do app é gerado a partir do próprio sprite: `./gradlew :app:testDebug
 
 ## Arquitetura
 
+### Diário Visual
+
+A aba **Diário** reúne Hoje, Ontem e datas escolhidas: resumo dos contextos,
+timeline do usuário e do Hoodie, cidade em pixel art, detalhes das visitas e replay
+com pausa, reinício e velocidades de 1, 5 ou 10 minutos do dia por segundo.
+O mapa reconstrói lugares conhecidos e transições simbólicas; funciona offline e
+não grava uma trilha GPS. Visitas repetidas ao mesmo prédio continuam separadas
+nos detalhes e no replay. O Developer Lab oferece um dia sintético para revisão.
+
+O plano e a evidência de implementação estão em
+[plano do Diário](docs/diary-development-plan.md) e
+[andamento do Diário](docs/diary-development-progress.md).
+
+### Fluxo principal
+
 ```
  Sensores (geofence, hora, rotina, confirmações)
             │
@@ -45,7 +60,7 @@ O ícone do app é gerado a partir do próprio sprite: `./gradlew :app:testDebug
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room (16 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v5 (19 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
@@ -64,6 +79,11 @@ produz **exatamente o mesmo estado** (teste `CT-PERSIST`).
 
 ### Context Engine (sem IA)
 
+`ContextEngine` é a fachada que serializa as operações com um único mutex.
+Handlers internos cuidam de geofence, perguntas, fallback de rotina, contexto manual
+e aprendizado de lugares. `ContextSignalProcessor` compartilha scoring e reações;
+`ContextTransitionService` mantém a escrita das transições em um só lugar.
+
 Confiança determinística: lugar conhecido +40, horário esperado +30, dia esperado +20, histórico +10..30.
 `≥ 85` aplica · `40–84` aplica e pergunta · `< 40` assume `UNKNOWN`.
 Perguntas: no máximo 4 por dia e nunca o mesmo contexto em menos de 60 min. Três almoços confirmados
@@ -71,6 +91,18 @@ num horário parecido → classificação automática, sem perguntar.
 GPS oscilando na borda (saída + volta em < 5 min) desfaz a saída. Sem localização: **rotina provável**.
 
 ### Motor visual
+
+O catálogo procedural está dividido em nove famílias em `pixel.animation.definitions`,
+reunidas por `AnimationRegistry`. O contrato `HoodieClips` continua disponível.
+`AnimationRegistryTest` compara os 84 clips com uma referência capturada antes da
+divisão, incluindo poses, duração de cada frame, eventos e políticas de interrupção.
+
+`TransitionPlanner` calcula scripts; `LoopSelector` escolhe microações e durações;
+`InterruptResolver` respeita os frames do provider; `ReactionResolver` agenda reações;
+`AnimationPlayer` mantém o relógio do clip. A máquina coordena a cena e executa os passos.
+O fallback procedural delega a `pixel.sprite.procedural` as partes do corpo e acessórios.
+`ProceduralPainterRegressionTest` preserva pixels, âncoras e camadas semânticas de 1.017
+frames nas três vistas, comparados ao pintor anterior à divisão.
 
 ```
 HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Direction
@@ -113,17 +145,22 @@ ANDROID USAGE STATS ─► UsageStatsSource (só foreground/background, tela, bl
         ▼
 AppSessionBuilder ─► ScreenSessionBuilder ─► AppCategoryResolver ─► ContextUsageCorrelator ─► DailyPhoneUsageCalculator
         ▼                                                                 (PhoneInsightsAssembler, puro)
-DeviceUsageRepository ─► Room (só agregados por dia) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
+DeviceUsageRepository ─► Room v5 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
 ```
 
 * **Permissão**: `PACKAGE_USAGE_STATS` é ligada pelo usuário em *Acesso ao uso*. Antes, a tela "Análise do celular" explica
   o que é visto (tempo de tela, apps, tempo por app, sessões, desbloqueios) e o que nunca é (mensagens, texto, fotos, conteúdo da tela).
+  A análise começa desligada e só é ativada após consentimento e permissão. A ajuda de Configurações restritas abre as informações do app.
 * **Cálculo**: sessões de tela por `SCREEN_INTERACTIVE → NON_INTERACTIVE`; desbloqueios por `KEYGUARD_HIDDEN`.
   Aparelhos sem esses eventos (API 26–27, alguns fabricantes) caem em estimativa a partir do uso de apps e a UI marca "≈".
   Launchers e a interface do sistema contam como tela ligada, não como app usado.
 * **Categorias**: escolha do usuário → mapa interno (YouTube → Vídeo, Spotify → Música, Teams → Trabalho...) → `ApplicationInfo.category` → Outros.
-* **Persistência**: `daily_device_usage`, `daily_app_usage`, `daily_context_app_usage`, `app_category_overrides` (migração 2→3).
+* **Persistência**: Room v5 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
+  totais em `daily_context_usage`, 24 horas em `daily_screen_hourly`, blocos em `daily_phone_timeline` e `phone_app_sessions`.
+  Migrações 1→2→3→4→5 preservam os registros anteriores. Categorias manuais ficam em `app_category_overrides`.
   Eventos brutos nunca são salvos. O Android só guarda eventos por alguns dias: um recálculo "menor" de um dia antigo não sobrescreve o histórico.
+  Uma sessão que cruza contextos é recortada nos limites, sem atribuição pelo ponto médio. Sessões são retidas por 365 dias;
+  os agregados diários permanecem. Dias v4 não possuem horas/timeline que nunca foram gravadas.
 * **Atualização**: ao abrir o Diário/aba Digital, ao trocar a data, ao voltar das configurações e pelo `PhoneInsightsWorker` (a cada 3 h, hoje + ontem).
 * **UI retrô**: painéis HUD com scanlines, barras de RPG em blocos, histograma por hora em degraus, ícones reais dos apps
   (`PackageManager`) emoldurados em `AppBadge` (ícone genérico em pixel art quando o app sumiu), e o Hoodie reagindo ao dia digital.
@@ -141,7 +178,7 @@ Histórico (Hoje / Ontem / 7 dias, com resumo "Seu dia" e "Hoodie") · Lugares �
   Android e os tiles vêm do OpenStreetMap (osmdroid, cache no armazenamento interno). Rotina, geofences, gato e histórico seguem offline.
 * Guardado: lugares (coordenadas cifradas), horários, contextos, histórico, memórias e estado do gato.
 * **Não** guardado: trajeto GPS ou posição contínua. Eventos de geofence guardam só `lugar + transição + hora`.
-* Diário digital (opcional): só **app + tempo** agregados por dia. Nunca mensagens, texto digitado, fotos ou conteúdo da tela.
+* Diário digital (opcional): **app + horários + duração**, contexto e agregados por dia. Nunca mensagens, texto digitado, fotos ou conteúdo da tela.
 * "Apagar todos os dados" limpa banco, preferências, geofences e tarefas; "Apagar histórico digital" limpa só a camada do celular.
 
 ## Testes (JVM)

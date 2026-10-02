@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="usage_optional_help">Não conseguiu ativar?</string>
     <string name="app_name">Hoodie</string>
+    <string name="place_load_failed">Não consegui carregar este local.</string>
+    <string name="place_retry_load">Tentar novamente</string>
+    <string name="place_back">Voltar</string>
+    <string name="usage_restricted_hint">Não conseguiu ativar? Em alguns aparelhos, apps instalados manualmente precisam liberar Configurações restritas.</string>
+    <string name="usage_restricted_help">Ver como liberar</string>
+    <string name="usage_restricted_title">Configurações restritas</string>
+    <string name="usage_restricted_steps">1. Abra Informações do Hoodie\n2. Toque em ⋮\n3. Permitir configurações restritas\n4. Confirme PIN ou digital\n5. Volte para Acesso aos dados de uso\n6. Autorize o Hoodie</string>
+    <string name="usage_open_app_details">Abrir informações do app</string>
 </resources>

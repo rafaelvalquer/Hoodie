@@ -60,7 +60,7 @@ data class LocationEventEntity(
     val timestamp: Long,
 )
 
-@Entity(tableName = "context_events", indices = [Index("startedAt"), Index("endedAt")])
+@Entity(tableName = "context_events", indices = [Index("startedAt"), Index("endedAt"), Index(value = ["endedAt", "startedAt"])])
 data class ContextEventEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val type: UserContextType,
@@ -184,6 +184,24 @@ data class DailyContextAppUsageEntity(
     val appLabel: String,
     val foregroundMs: Long,
     val sessionCount: Int,
+)
+
+@Entity(tableName = "daily_screen_hourly", primaryKeys = ["date", "hour"])
+data class DailyScreenHourlyEntity(val date: String, val hour: Int, val screenMs: Long)
+
+@Entity(tableName = "daily_context_usage", primaryKeys = ["date", "context"])
+data class DailyContextUsageEntity(val date: String, val context: String, val foregroundMs: Long, val sessionCount: Int)
+
+@Entity(tableName = "daily_phone_timeline", indices = [Index("date"), Index("startedAt")])
+data class DailyPhoneTimelineEntity(
+    @PrimaryKey val id: String,
+    val date: String,
+    val packageName: String,
+    val appLabel: String,
+    val category: String,
+    val startedAt: Long,
+    val endedAt: Long,
+    val context: String?,
 )
 
 /**

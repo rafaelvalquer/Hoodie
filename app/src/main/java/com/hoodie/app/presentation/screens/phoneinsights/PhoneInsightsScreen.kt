@@ -34,15 +34,23 @@ fun PhoneInsightsScreen(date: LocalDate, modifier: Modifier = Modifier, vm: Phon
         onPauseOrDispose { }
     }
     val openPermission = { runCatching { context.startActivity(vm.permissionIntent()) } ; Unit }
+    LaunchedEffect(vm) {
+        vm.events.collect { event ->
+            when (event) {
+                PhoneInsightsUiEvent.OpenUsageSettings -> openPermission()
+            }
+        }
+    }
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         when (state.status) {
-            PhoneInsightsStatus.DISABLED -> DigitalEmptyState(
-                "Análise do celular desligada",
-                "Ligue para o ${state.catName} contar como o celular participou do seu dia.",
-                action = "Ligar análise", onAction = { vm.enableAnalysis() },
+            PhoneInsightsStatus.DISABLED -> UsagePermissionScreen(
+                state.permission,
+                onActivate = { vm.enableAnalysis() },
+                onOpenAppDetails = { context.startActivity(vm.appDetailsIntent()) },
             )
-            PhoneInsightsStatus.NEEDS_PERMISSION -> UsagePermissionScreen(state.permission, onActivate = openPermission)
+            PhoneInsightsStatus.NEEDS_PERMISSION -> UsagePermissionScreen(state.permission, onActivate = openPermission,
+                onOpenAppDetails = { context.startActivity(vm.appDetailsIntent()) })
             PhoneInsightsStatus.LOADING -> DigitalLoading()
             PhoneInsightsStatus.ERROR -> DigitalEmptyState("Ops!", state.error.orEmpty(), action = "Tentar de novo", onAction = vm::refresh)
             PhoneInsightsStatus.EMPTY -> DigitalEmptyState(

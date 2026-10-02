@@ -24,6 +24,7 @@ import com.hoodie.app.engine.diary.DiaryDigitalMerger
 import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsStatus
 import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsUiState
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -91,7 +92,8 @@ class PhoneDiaryIntegrationTest {
 
     @Test
     fun `estados da tela digital`() {
-        val on = DigitalSettings()
+        assertFalse(DigitalSettings().analysisEnabled)
+        val on = DigitalSettings(analysisEnabled = true)
         fun status(p: UsagePermissionState, s: DigitalSettings = on, i: DailyPhoneInsights? = null, loading: Boolean = false, error: String? = null) =
             PhoneInsightsUiState.statusOf(p, s, i, loading, error)
         assertEquals(PhoneInsightsStatus.NEEDS_PERMISSION, status(UsagePermissionState.DENIED))

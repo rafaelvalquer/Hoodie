@@ -84,13 +84,13 @@ fun PlaceSearchBar(
     }
 }
 
-/** Lista curta (máx. 180 dp) por cima do mapa: o mapa não é empurrado. */
+/** Lista curta (máx. 140 dp) por cima do mapa: o mapa não é empurrado. */
 @Composable
 fun PlaceSearchResults(results: List<AddressResult>, onChoose: (AddressResult) -> Unit, modifier: Modifier = Modifier) {
     if (results.isEmpty()) return
     LazyColumn(
         modifier
-            .heightIn(max = 180.dp)
+            .heightIn(max = 140.dp)
             .border(2.dp, HoodieColors.Outline)
             .background(HoodieColors.Panel)
             .testTag(PlacePickerTags.RESULTS),

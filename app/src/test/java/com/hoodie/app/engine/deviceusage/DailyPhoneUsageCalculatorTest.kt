@@ -126,10 +126,10 @@ class DailyPhoneUsageCalculatorTest {
     }
 
     @Test
-    fun `muitos apps - armazena no maximo o top configurado`() {
+    fun `muitos apps - preserva todos os agregados`() {
         val events = (0 until 40).flatMap { use("app.many$it", mon(6) + it * 10 * MINUTE_MS, 2 + it % 5L) }
         val i = PhoneInsightsAssembler.assemble(date, events, emptyList(), FakeAppMetadata(), AppCategoryResolver(), DAY_START, DAY_END, ZONE)
-        assertEquals(com.hoodie.app.core.config.HoodieConfig.TOP_APPS_STORED, i.topApps.size)
+        assertEquals(40, i.topApps.size)
         assertEquals(40, i.appCount)
         assertTrue(i.summary.screenTimeMs < 24 * HOUR_MS)
     }
