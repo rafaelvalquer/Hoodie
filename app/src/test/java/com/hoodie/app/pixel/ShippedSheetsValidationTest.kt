@@ -43,6 +43,20 @@ class ShippedSheetsValidationTest {
         if (release) assertTrue("Arte final obrigatória ausente no APK: $missing", missing.isEmpty())
     }
 
+    /** O APK carrega uma cópia fiel do manifest; a release exige revisão manual de todos os grupos. */
+    @Test
+    fun `art-status - copia no APK e gate de revisao manual`() {
+        val source = File("../assets-source/hoodie/art-status.json").readText()
+        assertEquals("copie assets-source/hoodie/art-status.json para o APK", source.replace(CRLF, LF), File("src/main/assets/${SpriteSheetProvider.DIR}/art-status.json").readText().replace(CRLF, LF))
+        val status = com.hoodie.app.pixel.sprite.ArtReviewStatus.parse(source)
+        assertEquals(com.hoodie.app.pixel.sprite.ArtReviewStatus.GROUPS.keys, status.keys)
+        assertTrue("todos os grupos têm arte final", status.values.all { it.final })
+        val props = java.util.Properties().apply { File("../gradle.properties").inputStream().use(::load) }
+        val release = !props.getProperty("HOODIE_VERSION_NAME").endsWith("-dev")
+        val pending = com.hoodie.app.pixel.sprite.ArtReviewStatus.pendingReview(status)
+        if (release) assertTrue("Release com arte sem revisão manual: $pending (V0.2 não pode sair só com bootstrap automático)", pending.isEmpty())
+    }
+
     @Test
     fun `baseline do artista passa nos mesmos criterios`() {
         val baseline = File("../assets-source/hoodie/baseline")
@@ -51,10 +65,10 @@ class ShippedSheetsValidationTest {
     }
 
     private fun validate(dir: File) {
-        val jsons = dir.listFiles { f -> f.name.endsWith(".json") }.orEmpty()
+        val jsons = dir.listFiles { f -> f.name.endsWith(".json") && f.name != com.hoodie.app.pixel.sprite.ArtReviewStatus.FILE }.orEmpty()
         jsons.forEach { json -> assertTrue("${json.name} sem PNG", File(dir, json.name.removeSuffix(".json") + ".png").exists()) }
         val (provider, report) = SpriteSheetProvider.load(folder(dir), SheetBaker.decoder)
-        assertTrue("Problemas de importação em ${dir.name}: ${report.problems}", report.problems.isEmpty())
+        assertTrue("Erros de importação em ${dir.name}: ${report.errors}", report.errors.isEmpty())
         if (jsons.isNotEmpty()) assertTrue("nenhuma animação reconhecida em ${jsons.map { it.name }}", provider.available.isNotEmpty())
 
         provider.available.forEach { (anim, facing) ->
@@ -83,6 +97,43 @@ class ShippedSheetsValidationTest {
             assertTrue("$anim/$facing usa ${extras.size} cores fora da paleta", extras.size <= 7)
             // Pulo (lift) e deitar (só a cabeça) mudam a silhueta de propósito.
             if (anim.frames.none { it.pose.lift > 0 || it.pose.headOnly }) assertTrue("$anim/$facing chão variando: $bottoms", bottoms.size <= 2)
+
+            val frames = (0 until provider.frameCount(anim, d)).map { provider.frame(SpriteRequest(anim, d, it)) }
+            // Pés: drift <= 1 px.
+            val feetX = frames.map { it.anchors.feet.x }; val feetY = frames.map { it.anchors.feet.y }
+            assertTrue("$anim/$facing pés derivam ${feetX.distinct()}/${feetY.distinct()}", feetX.max() - feetX.min() <= 1 && feetY.max() - feetY.min() <= 1)
+            if (anim.loop) {
+                // Silhueta: entre frames seguidos (e do último para o primeiro) cada borda anda no máximo 2 px.
+                val boxes = frames.map { SpriteDebugRenderer.bbox(it)!! }
+                (boxes + listOf(boxes.first())).zipWithNext().forEachIndexed { k, (a, b) ->
+                    val jitter = jitterEdges(anim).maxOf { kotlin.math.abs(a[it] - b[it]) }
+                    assertTrue("$anim/$facing jitter de silhueta $jitter px no frame $k→${k + 1}", jitter <= 2)
+                }
+                // Cabeça: em loops estáveis não passeia mais de 2 px.
+                if (anim in STABLE_LOOPS) {
+                    val hy = frames.map { it.anchors.head.y }; val hx = frames.map { it.anchors.head.x }
+                    assertTrue("$anim/$facing cabeça deriva ${hy.distinct()}", hy.max() - hy.min() <= 2 && hx.max() - hx.min() <= 2)
+                }
+            }
         }
+    }
+
+    companion object {
+        private const val CRLF = "\r\n"
+        private const val LF = "\n"
+
+        /** Loops em que o personagem está "parado": respiração e detalhes, não deslocamento. */
+        val STABLE_LOOPS = setOf(
+            com.hoodie.app.pixel.animation.AnimationId.IDLE, com.hoodie.app.pixel.animation.AnimationId.IDLE_SIT,
+            com.hoodie.app.pixel.animation.AnimationId.SLEEP, com.hoodie.app.pixel.animation.AnimationId.WORK_TYPING,
+            com.hoodie.app.pixel.animation.AnimationId.WORK_READ, com.hoodie.app.pixel.animation.AnimationId.WORK_MOUSE,
+        )
+
+        /**
+         * Bordas do bbox [x0, y0, x1, y1] conferidas. Na locomoção pernas e braços abrem a
+         * silhueta na horizontal de propósito: lá só o topo e o chão (bob) contam.
+         */
+        fun jitterEdges(anim: com.hoodie.app.pixel.animation.AnimationId) =
+            if (anim.group == com.hoodie.app.pixel.animation.AnimGroup.LOCOMOTION) listOf(1, 3) else listOf(0, 1, 2, 3)
     }
 }

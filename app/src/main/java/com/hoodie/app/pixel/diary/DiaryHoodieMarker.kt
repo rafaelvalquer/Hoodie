@@ -47,13 +47,18 @@ object DiaryHoodieMarker {
 
     fun atNode(node: DiaryMapPlaceNode) = MarkerState(node.entrance, MarkerDirection.FRONT, walking = false)
 
-    private val cache = HashMap<Triple<MarkerPose, Boolean, Int>, PixelBuffer>()
+    private data class Key(val pose: MarkerPose, val back: Boolean, val frame: Int, val blink: Boolean)
+    private val cache = HashMap<Key, PixelBuffer>()
+
+    /** Parado, pisca por ~160 ms a cada 3,2 s. */
+    fun isBlinking(walking: Boolean, timeMs: Long) = !walking && timeMs % 3_200 < 160
 
     fun sprite(direction: MarkerDirection, walking: Boolean, timeMs: Long): PixelBuffer {
         val pose = poseFor(direction, walking)
         val frame = if (walking) ((timeMs / 140) % WALK_FRAMES).toInt() else ((timeMs / 700) % 2).toInt()
+        val blink = isBlinking(walking, timeMs) && direction != MarkerDirection.BACK
         val base = synchronized(cache) {
-            cache.getOrPut(Triple(pose, direction == MarkerDirection.BACK, frame)) { draw(pose, direction, frame) }
+            cache.getOrPut(Key(pose, direction == MarkerDirection.BACK, frame, blink)) { draw(pose, direction, frame, blink) }
         }
         return if (direction == MarkerDirection.RIGHT) mirror(base) else base
     }
@@ -145,7 +150,7 @@ object DiaryHoodieMarker {
         ".....kkkkkkkk...",
     )
 
-    private fun draw(pose: MarkerPose, direction: MarkerDirection, frame: Int): PixelBuffer {
+    private fun draw(pose: MarkerPose, direction: MarkerDirection, frame: Int, blink: Boolean = false): PixelBuffer {
         val b = PixelBuffer(WIDTH, HEIGHT)
         val walking = pose != MarkerPose.IDLE
         // Respiração (parado) ou balanço do passo (andando).
@@ -159,12 +164,21 @@ object DiaryHoodieMarker {
             leg(b, 7 + far, 17, 23, HoodiePalette.FUR_SHADE)
             leg(b, 5 + near, 17, 23 - lift, HoodiePalette.FUR)
             grid(b, SIDE, 0, bob)
+            if (blink) for (y in 5..6) if (b[3, y + bob] == HoodiePalette.EYE) b.set(3, y + bob, if (y == 6) HoodiePalette.OUTLINE else HoodiePalette.FUR)
+            // Rabo acompanha a passada: a ponta sobe e desce.
+            val tip = if (frame % 2 == 1) 12 else 13
+            b.set(14, tip + bob, HoodiePalette.OUTLINE); b.set(13, tip + bob + 1, HoodiePalette.FUR)
         } else {
+            // Rabo aparecendo ao lado da perna, balançando (pernas e corpo ficam por cima).
+            val sway = if (pose == MarkerPose.IDLE) frame else intArrayOf(0, 1, 0, -1)[frame]
+            b.box(13 + sway, 17, 14 + sway, 21, HoodiePalette.OUTLINE)
+            b.vline(13 + sway, 18, 20, HoodiePalette.FUR_SHADE)
             val (l, r) = if (walking) when (frame) { 1 -> 1 to 0; 3 -> 0 to 1; else -> 0 to 0 } else 0 to 0
             leg(b, 3, 17, 23 - l, HoodiePalette.FUR)
             leg(b, 9, 17, 23 - r, HoodiePalette.FUR)
             val half = if (direction == MarkerDirection.BACK) BACK_HALF else FRONT_HALF
             grid(b, half.map { it + it.reversed() }, 0, bob)
+            if (blink) for (x in 0 until WIDTH) for (y in 5..6) if (b[x, y + bob] == HoodiePalette.EYE) b.set(x, y + bob, if (y == 6) HoodiePalette.OUTLINE else HoodiePalette.FUR)
             // Braços balançam opostos às pernas.
             if (walking && l + r > 0) {
                 val armY = 14 + bob

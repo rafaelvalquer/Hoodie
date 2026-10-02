@@ -1,0 +1,9 @@
+# Scripts executados no Linux (CI) precisam de LF.
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Arte e binários nunca passam por conversão de fim de linha.
+*.aseprite binary
+*.png binary
+*.jar binary

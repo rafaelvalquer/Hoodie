@@ -42,7 +42,7 @@ class SpriteSheetPipelineTest {
     @Test
     fun `sheet exportado e lido de volta reproduz frames, duracoes e ancoras`() {
         val (sheets, report) = loadBaked()
-        assertTrue(report.problems.toString(), report.problems.isEmpty())
+        assertTrue(report.errors.toString(), report.errors.isEmpty())
         assertEquals(baselineClips.toSet(), sheets.available)
         for ((anim, facing) in baselineClips) {
             val dir = when (facing) { Facing.FRONT -> Direction.FRONT; Facing.BACK -> Direction.BACK; Facing.SIDE -> Direction.LEFT }
@@ -130,6 +130,11 @@ class SpriteSheetPipelineTest {
         val over = m.provider(com.hoodie.app.pixel.debug.CompareMode.OVERLAY, active).frame(req)
         assertEquals("spritesheet+procedural", over.source)
         assertEquals(active.frame(req).anchors, over.anchors)
+        // Difference: sheet = procedural aqui, então nada muda; um pixel alterado aparece.
+        val diff = m.provider(com.hoodie.app.pixel.debug.CompareMode.DIFFERENCE, active).frame(req)
+        assertTrue(diff.image.pixels.none { it == com.hoodie.app.pixel.debug.SourceCompare.DIFF_COLOR })
+        val changed = active.frame(req).image.let { PixelBuffer(it.width, it.height).also { c -> it.pixels.copyInto(c.pixels); c.pixels[100] = 0xFF00FF00.toInt() } }
+        assertEquals(1, m.difference(changed, active.frame(req).image).pixels.count { it == com.hoodie.app.pixel.debug.SourceCompare.DIFF_COLOR })
     }
 
     @Test
@@ -147,15 +152,31 @@ class SpriteSheetPipelineTest {
     }
 
     @Test
-    fun `ancora obrigatoria nao desenhada vira problema mas o clip carrega`() {
+    fun `ancora critica nao desenhada rejeita o clip e o procedural assume`() {
         val root = Files.createTempDirectory("hoodie-anchor").toFile()
         val baked = SheetBaker.bake(listOf(AnimationId.DRINK to Facing.FRONT))
         // Sem slices e sem camada anchors: a mão (caneca) cai no ponto padrão.
         val noSlices = org.json.JSONObject(baked.json).also { it.getJSONObject("meta").remove("slices") }.toString()
         SheetBaker.write(File(root, SpriteSheetProvider.DIR), "drink", baked.copy(json = noSlices, anchors = null))
         val (sheets, report) = SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder)
-        assertTrue(sheets.supports(AnimationId.DRINK, Facing.FRONT))
-        assertTrue(report.problems.toString(), report.problems.any { "RIGHT_HAND" in it && "FEET" in it })
+        assertFalse(sheets.supports(AnimationId.DRINK, Facing.FRONT))
+        val err = report.errors.single()
+        assertEquals(AnimationId.DRINK, err.clip)
+        assertTrue(err.message, "RIGHT_HAND" in err.message && "FEET" in err.message && "rejeitado" in err.message)
+        assertEquals("procedural", CompositeSpriteProvider(sheets).frame(SpriteRequest(AnimationId.DRINK, Direction.FRONT, 0)).source)
+    }
+
+    @Test
+    fun `cores fora da paleta sao aviso, nao erro`() {
+        val root = Files.createTempDirectory("hoodie-palette").toFile()
+        val baked = SheetBaker.bake(listOf(AnimationId.IDLE to Facing.FRONT))
+        baked.image.pixels.indexOfFirst { it ushr 24 != 0 }.let { baked.image.pixels[it] = 0xFF123456.toInt() }
+        SheetBaker.write(File(root, SpriteSheetProvider.DIR), "idle", baked)
+        val (sheets, report) = SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder)
+        assertTrue(sheets.supports(AnimationId.IDLE, Facing.FRONT))
+        assertTrue(report.errors.isEmpty())
+        assertEquals(com.hoodie.app.pixel.sprite.SheetProblemSeverity.WARNING, report.warnings.single().severity)
+        assertTrue("paleta possui 1 cores extras" in report.warnings.single().message)
     }
 
     @Test

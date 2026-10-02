@@ -106,7 +106,8 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
                 SummarySection(diary.summary, onContext = if (diary.phoneInsights != null) { ctx -> selectedContext = ctx } else null)
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
                 val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
-                DiaryMapView(layout, state.replay, zone, onNode = { selectedNodeId = it.id })
+                DiaryMapView(layout, state.replay, onNode = { selectedNodeId = it.id })
+                DiaryReplayHud(state.replay.visual, zone)
                 ReplayControls(
                     state.replay,
                     onToggle = { if (state.replay.state == ReplayState.PLAYING) vm.pause() else vm.play() },
@@ -114,7 +115,6 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
                     onSpeed = vm::setSpeed,
                 )
                 if (state.replay.currentTimestamp != null) {
-                    Text("▶ ${formatClock(state.replay.currentTimestamp!!, zone)}", style = MaterialTheme.typography.labelLarge, color = HoodieColors.Gold)
                     LinearProgressIndicator(progress = { state.replay.progress }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.Mint, trackColor = HoodieColors.PanelLight)
                 }
                 TimelineSection(diary.timeline, state.replay.currentTimestamp, zone, state.replay.highlightedTimelineItemIds)
@@ -124,7 +124,8 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     state.diary?.let { diary ->
         val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
         layout.node(selectedNodeId)?.let { node ->
-            PlaceDetailBottomSheet(node, diary.visits, diary.timeline, zone, phone = diary.phoneInsights) { selectedNodeId = null }
+            val details = remember(diary) { com.hoodie.app.engine.diary.ReplayHudAssembler.visitDetails(diary, System.currentTimeMillis()) }
+            PlaceDetailBottomSheet(node, details, zone) { selectedNodeId = null }
         }
     }
     selectedContext?.let { ctx -> ContextPhoneSheet(ctx, state.diary?.phoneInsights) { selectedContext = null } }
@@ -192,7 +193,7 @@ internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("VELOCIDADE", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         ReplaySpeed.entries.forEach { speed ->
-            androidx.compose.material3.FilterChip(selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text("${speed.multiplier}×") })
+            androidx.compose.material3.FilterChip(selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text(speed.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelSmall) })
         }
     }
 }
@@ -205,12 +206,10 @@ internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.Diary
         if (items.isEmpty()) Text("Sem eventos registrados.", color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
         Column(Modifier.fillMaxWidth()) {
             items.forEachIndexed { index, item ->
-            val requester = remember(item.id) { BringIntoViewRequester() }
-            androidx.compose.runtime.LaunchedEffect(activeIndex, index) {
-                if (index == activeIndex) requester.bringIntoView()
-            }
+            // Sem rolagem automática: durante o replay o mapa e o HUD ficam na tela;
+            // o item atual só é destacado.
             val highlighted = index == activeIndex
-            Row(Modifier.fillMaxWidth().bringIntoViewRequester(requester).padding(vertical = 6.dp).background(if (highlighted) HoodieColors.PanelLight else Color.Transparent).padding(4.dp), verticalAlignment = Alignment.Top) {
+            Row(Modifier.fillMaxWidth().padding(vertical = 6.dp).background(if (highlighted) HoodieColors.PanelLight else Color.Transparent).padding(4.dp), verticalAlignment = Alignment.Top) {
                 Text(formatClock(item.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = if (highlighted) HoodieColors.Gold else HoodieColors.Muted, modifier = Modifier.width(48.dp))
                 Text(if (item.actor.name == "HOODIE") "🐱" else if (item.actor.name == "SYSTEM") "⚙️" else (item.emoji ?: "📍"), modifier = Modifier.width(28.dp))
                 Column(Modifier.weight(1f)) {

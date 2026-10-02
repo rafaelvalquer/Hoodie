@@ -92,8 +92,14 @@ class DeviceUsageRepositoryTest {
         assertEquals(fresh.categoryUsage, stored.categoryUsage)
         assertEquals(YOUTUBE, stored.usageIn(UserContextType.LUNCH)!!.apps.single().packageName)
         assertEquals(4, stored.appCount)
-        // Timeline e distribuição por hora não são persistidas (só agregados).
+        // Timeline e distribuição por hora não são persistidas (só agregados)…
         assertTrue(stored.appTimeline.isEmpty())
+        // …mas as sessões por app sim (pacote + horários), para o replay de dias antigos.
+        assertTrue(fresh.appSessions.isNotEmpty())
+        assertEquals(fresh.appSessions, stored.appSessions)
+        // Recalcular o mesmo dia não duplica sessões.
+        repo.refreshDay(monday)
+        assertEquals(fresh.appSessions.size, db.deviceUsageDao().sessions(monday.toEpochDay()).size)
     }
 
     @Test
@@ -157,6 +163,7 @@ class DeviceUsageRepositoryTest {
         assertNull(repo.loadDay(monday))
         assertTrue(db.deviceUsageDao().apps(monday.toString()).isEmpty())
         assertTrue(db.deviceUsageDao().contextApps(monday.toString()).isEmpty())
+        assertEquals(0, db.deviceUsageDao().sessionCount())
         assertEquals(1, db.deviceUsageDao().overrides().size)
     }
 

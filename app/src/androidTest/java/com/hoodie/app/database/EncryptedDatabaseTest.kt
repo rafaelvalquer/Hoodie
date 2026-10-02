@@ -88,6 +88,12 @@ class EncryptedDatabaseTest {
         assertFalse(File(dbFile.path + DefaultSecureDatabaseBootstrap.TMP_SUFFIX).exists())
         assertTrue("segunda abertura só confere a senha", bootstrap().prepare() is DatabaseBootstrapResult.Ready)
 
+        // Integridade do banco migrado no SQLCipher real.
+        val check = DatabaseEncryption.verify(dbFile, pass)!!
+        assertTrue("quick_check", check.quickCheckOk)
+        assertTrue("cipher_integrity_check", check.cipherIntegrityOk != false)
+        assertEquals(1L, check.rowCounts["timeline_events"])
+
         val db = open(pass)
         assertEquals(listOf("Casa antiga"), db.timelineDao().range(0, Long.MAX_VALUE).map { it.text })
         db.close()

@@ -31,7 +31,7 @@ object DatabaseEncryption : DatabaseCipherOps {
             // Room deixa o arquivo em WAL; sem WAL o pool usa uma única conexão e o
             // ATTACH continua valendo para os comandos seguintes.
             db.disableWriteAheadLogging()
-            val source = fingerprint(db)
+            val source = fingerprint(db, full = true)
             db.execSQL("ATTACH DATABASE '${target.absolutePath.replace("'", "''")}' AS encrypted KEY '$key'")
             db.rawQuery("SELECT sqlcipher_export('encrypted')", null).use { it.moveToFirst() }
             // A versão do schema (usada pelas migrações do Room) não é copiada pelo export.
@@ -49,11 +49,24 @@ object DatabaseEncryption : DatabaseCipherOps {
         try { fingerprint(db) } finally { db.close() }
     }.getOrNull()
 
-    private fun fingerprint(db: SQLiteDatabase): DatabaseFingerprint {
+    override fun verify(file: File, passphrase: ByteArray): DatabaseFingerprint? = runCatching {
+        loadLibrary()
+        val db = SQLiteDatabase.openDatabase(file.path, passphrase, null, SQLiteDatabase.OPEN_READONLY, null, null)
+        try { fingerprint(db, full = true, cipher = true) } finally { db.close() }
+    }.getOrNull()
+
+    private fun fingerprint(db: SQLiteDatabase, full: Boolean = false, cipher: Boolean = false): DatabaseFingerprint {
         val tables = mutableSetOf<String>()
         db.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'", null).use { c ->
             while (c.moveToNext()) tables += c.getString(0)
         }
-        return DatabaseFingerprint(db.version, tables)
+        if (!full) return DatabaseFingerprint(db.version, tables)
+        val counts = tables.associateWith { t ->
+            db.rawQuery("SELECT COUNT(*) FROM \"${t.replace("\"", "\"\"")}\"", null).use { c -> if (c.moveToFirst()) c.getLong(0) else -1L }
+        }
+        val quick = db.rawQuery("PRAGMA quick_check", null).use { c -> c.moveToFirst() && c.getString(0) == "ok" && !c.moveToNext() }
+        // cipher_integrity_check devolve uma linha por problema; nenhuma linha = íntegro.
+        val integrity = if (!cipher) null else runCatching { db.rawQuery("PRAGMA cipher_integrity_check", null).use { c -> c.count == 0 } }.getOrNull()
+        return DatabaseFingerprint(db.version, tables, counts, quick, integrity)
     }
 }

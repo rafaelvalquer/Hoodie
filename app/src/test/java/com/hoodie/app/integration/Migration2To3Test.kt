@@ -42,12 +42,12 @@ class Migration2To3Test {
         }
 
         val room = Room.databaseBuilder(context, HoodieDatabase::class.java, DB)
-            .addMigrations(Migration2To3)
+            .addMigrations(Migration2To3, com.hoodie.app.core.database.migrations.Migration3To4)
             .allowMainThreadQueries()
             .build()
         try {
-            // Abrir dispara migração + validação do schema v3.
-            assertEquals(3, room.openHelper.writableDatabase.version)
+            // Abrir dispara as migrações (2→3→4) + validação do schema atual.
+            assertEquals(4, room.openHelper.writableDatabase.version)
             assertEquals("Casa", room.timelineDao().range(0, Long.MAX_VALUE).single().text)
 
             val dao = room.deviceUsageDao()

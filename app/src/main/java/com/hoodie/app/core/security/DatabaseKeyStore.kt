@@ -3,7 +3,9 @@ package com.hoodie.app.core.security
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import android.util.Base64
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.security.KeyStore
@@ -95,7 +97,11 @@ class DatabaseKeyStore(
         dir.mkdirs()
         val tmp = File(dir, "$fileName.tmp")
         tmp.writeText(wrapper.wrap(pass))
-        check(tmp.renameTo(file)) { "Falha ao gravar a senha do banco" }
+        try {
+            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } catch (_: AtomicMoveNotSupportedException) {
+            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        }
         cached = pass
         return pass.copyOf()
     }
@@ -126,46 +132,61 @@ class DatabaseKeyStore(
     }
 }
 
-/** Embrulho AES-256-GCM com chave do Android Keystore. */
-class AndroidKeystoreWrapper(private val alias: String) : KeyWrapper {
+/**
+ * Embrulho AES-256-GCM: `Base64(iv[12] + ciphertext + tag[16])`. A chave vem de
+ * fora ([existingKey]/[createKey]) — Android Keystore no app, chave em memória nos
+ * testes JVM, o que permite testar payload truncado, Base64 inválido e tag adulterada.
+ */
+open class AesGcmKeyWrapper(
+    private val existingKey: () -> SecretKey?,
+    private val createKey: () -> SecretKey,
+    private val removeKey: () -> Unit,
+) : KeyWrapper {
 
     override fun wrap(plain: ByteArray): String {
-        val cipher = Cipher.getInstance(TRANSFORMATION).apply { init(Cipher.ENCRYPT_MODE, wrappingKey()) }
-        return Base64.encodeToString(cipher.iv + cipher.doFinal(plain), Base64.NO_WRAP)
+        val cipher = Cipher.getInstance(TRANSFORMATION).apply { init(Cipher.ENCRYPT_MODE, existingKey() ?: createKey()) }
+        return java.util.Base64.getEncoder().encodeToString(cipher.iv + cipher.doFinal(plain))
     }
 
     override fun unwrap(payload: String): ByteArray? = runCatching {
-        val bytes = Base64.decode(payload, Base64.NO_WRAP)
+        val bytes = java.util.Base64.getDecoder().decode(payload)
+        if (bytes.size < IV_BYTES + TAG_BITS / 8) return null
+        // Sem a chave não há o que tentar: NÃO cria uma chave nova aqui.
+        val key = existingKey() ?: return null
         val cipher = Cipher.getInstance(TRANSFORMATION)
-        // Sem a chave no Keystore não há o que tentar: NÃO cria uma chave nova aqui.
-        cipher.init(Cipher.DECRYPT_MODE, existingKey() ?: return null, GCMParameterSpec(TAG_BITS, bytes, 0, IV_BYTES))
+        cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(TAG_BITS, bytes, 0, IV_BYTES))
         cipher.doFinal(bytes, IV_BYTES, bytes.size - IV_BYTES)
     }.getOrNull()
 
-    override fun deleteKey() {
-        keystore().deleteEntry(alias)
-    }
+    override fun deleteKey() = removeKey()
 
-    private fun keystore() = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-
-    private fun existingKey(): SecretKey? = (keystore().getEntry(alias, null) as? KeyStore.SecretKeyEntry)?.secretKey
-
-    private fun wrappingKey(): SecretKey = existingKey() ?: KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE).run {
-        init(
-            KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                .setKeySize(KEY_BITS)
-                .build(),
-        )
-        generateKey()
-    }
-
-    private companion object {
-        const val ANDROID_KEYSTORE = "AndroidKeyStore"
+    companion object {
         const val TRANSFORMATION = "AES/GCM/NoPadding"
-        const val KEY_BITS = 256
         const val IV_BYTES = 12
         const val TAG_BITS = 128
+    }
+}
+
+/** Embrulho AES-256-GCM com chave do Android Keystore. */
+class AndroidKeystoreWrapper(alias: String) : AesGcmKeyWrapper(
+    existingKey = { (keystore().getEntry(alias, null) as? KeyStore.SecretKeyEntry)?.secretKey },
+    createKey = {
+        KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE).run {
+            init(
+                KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setKeySize(KEY_BITS)
+                    .build(),
+            )
+            generateKey()
+        }
+    },
+    removeKey = { keystore().deleteEntry(alias) },
+) {
+    private companion object {
+        const val ANDROID_KEYSTORE = "AndroidKeyStore"
+        const val KEY_BITS = 256
+        fun keystore(): KeyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
     }
 }

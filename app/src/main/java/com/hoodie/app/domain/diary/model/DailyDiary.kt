@@ -82,8 +82,6 @@ data class ReplayFrame(
     val highlightedTimelineItemIds: Set<String>,
     val currentContext: UserContextType?,
     val currentHoodieActivity: HoodieActivity?,
-    val markerX: Float = 0f,
-    val markerY: Float = 0f,
 )
 
 data class ReplaySequence(
@@ -104,10 +102,6 @@ data class ReplaySequence(
         val edgeStart = visit?.departureAt ?: visit?.arrivalAt ?: at
         val onEdge = visit != null && next != null && at >= edgeStart && at < next.arrivalAt
         val edgeProgress = if (onEdge && edgeDuration > 0) ((at - edgeStart).toFloat() / edgeDuration).coerceIn(0f, 1f) else 0f
-        val fromNode = current?.let { map.nodes.getOrNull(it) }
-        val toNode = current?.plus(1)?.let { map.nodes.getOrNull(it) }
-        val markerX = if (onEdge && fromNode != null && toNode != null) fromNode.x + (toNode.x - fromNode.x) * edgeProgress else fromNode?.x?.toFloat() ?: 0f
-        val markerY = if (onEdge && fromNode != null && toNode != null) fromNode.y + (toNode.y - fromNode.y) * edgeProgress else fromNode?.y?.toFloat() ?: 0f
         val highlighted = timeline.filter { it.timestamp <= at }.takeLast(1).map { it.id }.toSet()
         return ReplayFrame(
             timestamp = at,
@@ -117,8 +111,6 @@ data class ReplaySequence(
             highlightedTimelineItemIds = highlighted,
             currentContext = contexts.lastOrNull { at in it.first }?.second,
             currentHoodieActivity = activities.lastOrNull { at in it.first }?.second,
-            markerX = markerX,
-            markerY = markerY,
         )
     }
 

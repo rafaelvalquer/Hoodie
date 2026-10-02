@@ -45,6 +45,9 @@ interface DeviceUsageRepository {
     suspend fun setCategoryOverride(packageName: String, category: HoodieAppCategory?)
 
     suspend fun clearHistory()
+
+    /** Sessões guardadas (Developer Lab). */
+    suspend fun storedSessionCount(): Int
 }
 
 @Singleton
@@ -83,6 +86,8 @@ class DeviceUsageRepositoryImpl @Inject constructor(
 
     override suspend fun clearHistory() = withContext(Dispatchers.IO) { mutex.withLock { dao.clearHistory() } }
 
+    override suspend fun storedSessionCount(): Int = withContext(Dispatchers.IO) { dao.sessionCount() }
+
     private suspend fun refreshLocked(date: LocalDate, digital: DigitalSettings): DailyPhoneInsights {
         val zone = clock.zone()
         val now = clock.nowMillis()
@@ -108,6 +113,8 @@ class DeviceUsageRepositoryImpl @Inject constructor(
                 computed.toDayEntity(now),
                 computed.topApps.map { it.toEntity(date, now) },
                 computed.usageByContext.flatMap { ctx -> ctx.apps.map { it.toEntity(date) } },
+                DeviceUsageMappers.sessionEntities(computed.appSessions, date.toEpochDay()),
+                epochDay = date.toEpochDay(),
             )
         }
         return computed
@@ -120,6 +127,7 @@ class DeviceUsageRepositoryImpl @Inject constructor(
             day, dao.apps(day.date), dao.contextApps(day.date),
             categoryOf = { pkg, stored -> overrides[pkg] ?: stored },
             installed = metadata::isInstalled,
+            sessions = dao.sessions(date.toEpochDay()),
         )
     }
 

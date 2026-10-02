@@ -24,31 +24,53 @@ assets-source/hoodie/
 └── export.ps1 / export.sh   ← exporta tudo para app/src/main/assets/pixel/hoodie/
 ```
 
-## Arte final v1
+## Fonte da verdade: os `.aseprite`
 
-Os quatro `hoodie_*.aseprite` são a arte final v1, gerada pixel a pixel pelo estúdio de
-teste `app/src/test/.../pixel/art/FinalArtStudio.kt` sobre as poses do procedural, com
-acabamento de *selective outline* (contorno interno no tom escuro do material), *rim light*
-(luz de cima/esquerda na borda da silhueta) e sombra de contato da cabeça na gola. Camadas
-(de baixo para cima): `baseline (referencia)` (travada, escondida, nunca exportada), `legs`,
-`fur`, `fur_shadow`, `hoodie`, `hoodie_shadow`, `arms`, `ears` (reservadas para o
-redesenho — na v1 braços e orelhas estão em `fur`/`hoodie`), `strings`, `face`,
-`accessory`, `outline`, `anchors`.
+Desde a V0.2 RC os quatro `hoodie_*.aseprite` são a fonte oficial da arte. O APK é
+**compilado** deles pelo `AsepriteSourceCompiler` (mesmo formato do `aseprite -b`):
 
-Regerar tudo (fontes + PNG/JSON do APK + baseline):
+```
+hoodie_walk.aseprite ──▶ hoodie_walk.png + hoodie_walk.json + hoodie_walk.anchors.png
+```
 
 ```bash
+# depois de editar um .aseprite (no Aseprite ou por script):
 ./gradlew :app:testDebugUnitTest -PexportArt=true --tests "*FinalArtExportTest*"
 ```
 
-Sem a flag, `FinalArtExportTest` reprova se o que está commitado não bater com o estúdio.
-Quando um artista redesenhar um arquivo no Aseprite, exporte com `export.ps1/.sh` e
-remova o grupo de `FinalArtStudio.GROUPS` (o arquivo passa a ser a fonte da verdade).
+Sem a flag, `FinalArtExportTest` e `AsepriteRuntimeParityTest` reprovam se o APK não for
+exatamente a compilação dos `.aseprite` (frames, tags, durações, âncoras, paleta, PNG, JSON).
+Com o Aseprite instalado, `export.ps1/.sh` produz o mesmo resultado.
 
-Piscar, olhar, expressão e orelhas continuam funcionando sobre a arte final: o
-`CompositeSpriteProvider` aplica só os pixels que o overlay muda no procedural. Clips que
-herdam a postura (idle_look, idle_ear, idle_scratch) foram desenhados em pé; sentado, o
-procedural assume.
+**Bootstrap** (`ArtBootstrapStudio`, só testes): cria um `.aseprite` a partir das poses do
+procedural + retoque + passes de `ArtPasses`. Nunca sobrescreve um arquivo existente,
+exceto quando o grupo é nomeado: `-PartBootstrap=hoodie_walk[,hoodie_idle…]` (ou `all`
+para criar só os que faltam).
+
+Camadas semânticas (de baixo para cima): `baseline (referencia)` (referência, escondida e
+travada — nunca vai para o APK), `tail`, `leg_left`, `leg_right`, `backpack`, `torso`,
+`hoodie`, `hoodie_shadow`, `strings`, `arm_left`, `arm_right`, `hand_left`, `hand_right`,
+`head`, `ears`, `face`, `accessory`, `outline`, `anchors`. Esquerda/direita = lado da
+imagem. Contorno e rosto são separados pela cor; o resto, pela parte do corpo que o pintor
+procedural desenhou.
+
+### Revisão artística — `art-status.json`
+
+```json
+{ "walk": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null } }
+```
+
+`manualReview` só vira `true` quando uma pessoa revisar o grupo no Aseprite (preencha
+`reviewedBy`). Copie o arquivo também para `app/src/main/assets/pixel/hoodie/` (um teste
+confere). **A release (versão sem `-dev`) é bloqueada enquanto houver grupo sem revisão
+manual** — a V0.2 não sai só com bootstrap automático. O Pixel Lab mostra "Final asset" e
+"Manual reviewed" por grupo, e o modo **Difference** pinta os pixels que mudaram em
+relação ao procedural.
+
+Critérios objetivos (ShippedSheetsValidationTest): 48×72, alpha 0/255, pés fixos (drift
+≤ 1 px), âncoras críticas presentes (senão o clip é rejeitado), contagem de frames do clip,
+paleta limitada (cores extras = aviso), silhueta com jitter ≤ 2 px e cabeça com drift ≤ 2 px
+nos loops estáveis.
 
 ## Fluxo do artista
 

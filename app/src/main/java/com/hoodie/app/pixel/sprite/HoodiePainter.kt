@@ -41,6 +41,46 @@ object HoodiePainter {
 
     private val cache = HashMap<HoodiePose, PaintedSprite>()
 
+    /** Partes do corpo, para separar camadas semânticas no .aseprite (arm_left, tail…). */
+    enum class Part(val layer: String) {
+        HEAD("head"), EARS("ears"), TORSO("torso"), ARM_LEFT("arm_left"), ARM_RIGHT("arm_right"),
+        HAND_LEFT("hand_left"), HAND_RIGHT("hand_right"), LEG_LEFT("leg_left"), LEG_RIGHT("leg_right"),
+        TAIL("tail"), STRINGS("strings"), BACKPACK("backpack"), ACCESSORY("accessory"),
+    }
+
+    private val recorder = ThreadLocal<IntArray?>()
+
+    /**
+     * Pinta [pose] registrando qual parte pintou cada pixel (ordinal de [Part], -1 = vazio).
+     * "esquerda/direita" são do lado da IMAGEM. Não usa o cache.
+     */
+    fun paintWithParts(pose: HoodiePose): Pair<PaintedSprite, IntArray> {
+        val rec = IntArray(WIDTH * HEIGHT) { -1 }
+        recorder.set(rec)
+        try {
+            val painted = paint(pose)
+            if (pose.lift <= 0) return painted to rec
+            val shifted = IntArray(rec.size) { -1 }
+            for (y in 0 until HEIGHT) for (x in 0 until WIDTH) {
+                val sy = y + pose.lift
+                if (sy < HEIGHT) shifted[y * WIDTH + x] = rec[sy * WIDTH + x]
+            }
+            return painted to shifted
+        } finally {
+            recorder.set(null)
+        }
+    }
+
+    /** Atribui a [p] os pixels que [block] mudou e que nenhuma parte interna reivindicou. */
+    private inline fun <T> part(b: PixelBuffer, p: Part, block: () -> T): T {
+        val rec = recorder.get() ?: return block()
+        val before = b.pixels.copyOf()
+        val recBefore = rec.copyOf()
+        val result = block()
+        for (i in before.indices) if (b.pixels[i] != before[i] && rec[i] == recBefore[i]) rec[i] = p.ordinal
+        return result
+    }
+
     fun sprite(pose: HoodiePose): PixelBuffer = painted(pose).image
 
     fun painted(pose: HoodiePose): PaintedSprite = synchronized(cache) { cache.getOrPut(pose) { paint(pose) } }
@@ -111,10 +151,12 @@ object HoodiePainter {
 
     private fun paintFront(b: PixelBuffer, p: HoodiePose, up: Int): SpriteAnchors {
         val sit = p.legs == Legs.SIT
-        if (p.backpack) shape(b, R(8, 37, 39, 56, 3).dy(up + p.backpackDy), HoodiePalette.BACKPACK)
+        if (p.backpack) part(b, Part.BACKPACK) { shape(b, R(8, 37, 39, 56, 3).dy(up + p.backpackDy), HoodiePalette.BACKPACK) }
         if (!sit) drawLegsFront(b, p)
-        shape(b, R(9, 28, 38, 39, 5).dy(up), HoodiePalette.HOOD_SHADE)
-        drawBodyFront(b, up, p)
+        part(b, Part.TORSO) {
+            shape(b, R(9, 28, 38, 39, 5).dy(up), HoodiePalette.HOOD_SHADE)
+            drawBodyFront(b, up, p)
+        }
         if (sit) drawLegsFront(b, p)
 
         val left = armShape(p.leftArm)
@@ -124,8 +166,8 @@ object HoodiePainter {
 
         drawHeadFront(b, p, up + p.headDy)
         // Pata na cabeça (coçar) fica por cima da cabeça.
-        if (p.leftArm == Arm.HEAD) shape(b, left.paw.dy(up), HoodiePalette.FUR)
-        if (p.rightArm == Arm.HEAD) shape(b, right.paw.dy(up).mirror(), HoodiePalette.FUR)
+        if (p.leftArm == Arm.HEAD) part(b, Part.HAND_LEFT) { shape(b, left.paw.dy(up), HoodiePalette.FUR) }
+        if (p.rightArm == Arm.HEAD) part(b, Part.HAND_RIGHT) { shape(b, right.paw.dy(up).mirror(), HoodiePalette.FUR) }
 
         val anchors = SpriteAnchors(
             rightHand = Point(WIDTH - 1 - right.hx, right.hy + up),
@@ -134,7 +176,7 @@ object HoodiePainter {
             back = Point(24, 46 + up),
             feet = FEET,
         )
-        drawItemFront(b, p, left, right, up, anchors)
+        part(b, Part.ACCESSORY) { drawItemFront(b, p, left, right, up, anchors) }
         return anchors
     }
 
@@ -150,8 +192,8 @@ object HoodiePainter {
         // Bolso canguru.
         shape(b, R(16, 46, 31, 55, 2).dy(up), HoodiePalette.HOOD_SHADE, HoodiePalette.HOOD_DARK)
         b.hline(18, 29, 48 + up, HoodiePalette.HOOD_DARK)
-        drawStrings(b, intArrayOf(20, 27), up, p.stringSwing)
-        if (p.backpack) {
+        part(b, Part.STRINGS) { drawStrings(b, intArrayOf(20, 27), up, p.stringSwing) }
+        if (p.backpack) part(b, Part.BACKPACK) {
             for (x in intArrayOf(14, 32)) {
                 b.box(x, 34 + up, x + 1, 47 + up, HoodiePalette.BACKPACK_DARK)
                 b.set(x, 47 + up, HoodiePalette.OUTLINE); b.set(x + 1, 47 + up, HoodiePalette.OUTLINE)
@@ -173,8 +215,8 @@ object HoodiePainter {
 
     private fun drawLegsFront(b: PixelBuffer, p: HoodiePose) {
         if (p.legs == Legs.SIT) {
-            foot(b, R(12, 63, 21, 70, 3))
-            foot(b, R(12, 63, 21, 70, 3).mirror())
+            part(b, Part.LEG_LEFT) { foot(b, R(12, 63, 21, 70, 3)) }
+            part(b, Part.LEG_RIGHT) { foot(b, R(12, 63, 21, 70, 3).mirror()) }
             return
         }
         fun leg(lift: Int, forward: Int = 0) = R(15 + forward, 57 - lift, 21 + forward, 68 - lift, 1) to R(13 + forward, 65 - lift, 21 + forward, 70 - lift, 2)
@@ -189,8 +231,8 @@ object HoodiePainter {
             }
             else -> leg(0) to leg(0)
         }
-        shape(b, l.first, HoodiePalette.FUR); foot(b, l.second)
-        shape(b, r.first.mirror(), HoodiePalette.FUR); foot(b, r.second.mirror())
+        part(b, Part.LEG_LEFT) { shape(b, l.first, HoodiePalette.FUR); foot(b, l.second) }
+        part(b, Part.LEG_RIGHT) { shape(b, r.first.mirror(), HoodiePalette.FUR); foot(b, r.second.mirror()) }
     }
 
     private fun foot(b: PixelBuffer, f: R, color: Int = HoodiePalette.FUR) {
@@ -201,19 +243,22 @@ object HoodiePainter {
     }
 
     private fun drawArm(b: PixelBuffer, arm: ArmShape, up: Int, mirror: Boolean, sleeve: Int = HoodiePalette.HOOD, fur: Int = HoodiePalette.FUR) {
-        arm.parts.forEach { part ->
-            val r = part.dy(up).let { if (mirror) it.mirror() else it }
-            shape(b, r, sleeve)
-            recolor(b, r.x0, r.y1 - 1, r.x1, r.y1 - 1, sleeve, HoodiePalette.HOOD_SHADE)
+        part(b, if (mirror) Part.ARM_RIGHT else Part.ARM_LEFT) {
+            arm.parts.forEach { seg ->
+                val r = seg.dy(up).let { if (mirror) it.mirror() else it }
+                shape(b, r, sleeve)
+                recolor(b, r.x0, r.y1 - 1, r.x1, r.y1 - 1, sleeve, HoodiePalette.HOOD_SHADE)
+            }
         }
         val paw = arm.paw.dy(up).let { if (mirror) it.mirror() else it }
-        shape(b, paw, fur)
+        part(b, if (mirror) Part.HAND_RIGHT else Part.HAND_LEFT) { shape(b, paw, fur) }
     }
 
     private fun drawHeadFront(b: PixelBuffer, p: HoodiePose, up: Int) {
         val tx = if (p.headOnly) p.headTilt * 2 else 0
-        drawEars(b, p.ears, up, tx)
+        part(b, Part.EARS) { drawEars(b, p.ears, up, tx) }
         val head = R(7 + tx, 9, 40 + tx, 33, 8, round = true).dy(up)
+        part(b, Part.HEAD) {
         shape(b, head, HoodiePalette.FUR)
         recolor(b, head.x0 + 1, head.y1 - 2, head.x1 - 1, head.y1 - 1, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
         recolor(b, 35 + tx, head.y0 + 4, 39 + tx, head.y1 - 3, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
@@ -225,6 +270,7 @@ object HoodiePainter {
         drawMouth(b, p.mouth, 23 + tx, up)
         if (p.blush || p.eyes == Eyes.HAPPY) {
             b.hline(11 + tx, 13 + tx, 24 + up, HoodiePalette.BLUSH); b.hline(34 + tx, 36 + tx, 24 + up, HoodiePalette.BLUSH)
+        }
         }
     }
 
@@ -400,8 +446,8 @@ object HoodiePainter {
     }
 
     private fun redrawPaws(b: PixelBuffer, left: ArmShape, right: ArmShape, up: Int) {
-        shape(b, left.paw.dy(up), HoodiePalette.FUR)
-        shape(b, right.paw.dy(up).mirror(), HoodiePalette.FUR)
+        part(b, Part.HAND_LEFT) { shape(b, left.paw.dy(up), HoodiePalette.FUR) }
+        part(b, Part.HAND_RIGHT) { shape(b, right.paw.dy(up).mirror(), HoodiePalette.FUR) }
     }
 
     // ───────────────────────── COSTAS ─────────────────────────
@@ -409,9 +455,14 @@ object HoodiePainter {
     private fun paintBack(b: PixelBuffer, p: HoodiePose, up: Int): SpriteAnchors {
         drawLegsFront(b, p)
         // Rabo saindo por baixo do moletom.
-        shape(b, R(31, 54, 35, 63, 2).dy(up), HoodiePalette.FUR)
-        shape(b, R(33, 60, 39, 64, 2).dy(up), HoodiePalette.FUR)
+        // De costas o rabo também acompanha a passada (a leitura vem do capuz, costas e rabo).
+        val tailSway = if (p.legs == Legs.WALK) intArrayOf(0, 0, 1, 1, 0, 0, -1, -1)[p.stride.mod(8)] else 0
+        part(b, Part.TAIL) {
+            shape(b, R(31, 54, 35, 63, 2).dy(up), HoodiePalette.FUR)
+            shape(b, R(33 + tailSway, 60 - kotlin.math.abs(tailSway), 39 + tailSway, 64 - kotlin.math.abs(tailSway), 2).dy(up), HoodiePalette.FUR)
+        }
         val body = R(11, 33, 36, 60, 4).dy(up)
+        part(b, Part.TORSO) {
         shape(b, body, HoodiePalette.HOOD)
         recolor(b, 12, body.y0 + 2, 15, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
         recolor(b, 12, body.y1 - 3, 35, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
@@ -419,7 +470,8 @@ object HoodiePainter {
         // Capuz caído nas costas.
         shape(b, R(14, 30, 33, 45, 6, round = true).dy(up), HoodiePalette.HOOD_SHADE, HoodiePalette.HOOD_DARK)
         b.hline(18, 29, 32 + up, HoodiePalette.HOOD_DARK)
-        if (p.backpack) {
+        }
+        if (p.backpack) part(b, Part.BACKPACK) {
             shape(b, R(13, 35, 34, 57, 3).dy(up + p.backpackDy), HoodiePalette.BACKPACK)
             b.hline(15, 32, 43 + up + p.backpackDy, HoodiePalette.BACKPACK_DARK)
             b.box(21, 47 + up + p.backpackDy, 26, 52 + up + p.backpackDy, HoodiePalette.BACKPACK_DARK)
@@ -431,13 +483,17 @@ object HoodiePainter {
         // Cabeça de costas: orelhas sem a parte interna, sem rosto.
         val hu = up + p.headDy
         val (ldy, rdy) = when (p.ears) { Ears.ALERT -> -1 to -1; Ears.DOWN -> 3 to 3; Ears.RELAXED -> 1 to 1; Ears.TWITCH_LEFT -> 1 to 0; Ears.TWITCH_RIGHT -> 0 to 1; else -> 0 to 0 }
-        ear(b, mirror = false, dx = 0, dy = hu + ldy, inner = HoodiePalette.FUR_SHADE)
-        ear(b, mirror = true, dx = 0, dy = hu + rdy, inner = HoodiePalette.FUR_SHADE)
+        part(b, Part.EARS) {
+            ear(b, mirror = false, dx = 0, dy = hu + ldy, inner = HoodiePalette.FUR_SHADE)
+            ear(b, mirror = true, dx = 0, dy = hu + rdy, inner = HoodiePalette.FUR_SHADE)
+        }
         val head = R(7, 9, 40, 33, 8, round = true).dy(hu)
-        shape(b, head, HoodiePalette.FUR)
-        recolor(b, 8, head.y0 + 3, 12, head.y1 - 3, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
-        recolor(b, head.x0 + 1, head.y1 - 3, head.x1 - 1, head.y1 - 1, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
-        b.hline(22, 26, head.y0 + 3, HoodiePalette.FUR_LIGHT)
+        part(b, Part.HEAD) {
+            shape(b, head, HoodiePalette.FUR)
+            recolor(b, 8, head.y0 + 3, 12, head.y1 - 3, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
+            recolor(b, head.x0 + 1, head.y1 - 3, head.x1 - 1, head.y1 - 1, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
+            b.hline(22, 26, head.y0 + 3, HoodiePalette.FUR_LIGHT)
+        }
         return SpriteAnchors(
             rightHand = Point(WIDTH - 1 - right.hx, right.hy + up), leftHand = Point(left.hx, left.hy + up),
             head = Point(24, 8 + hu), back = Point(24, 46 + up), feet = FEET,
@@ -457,34 +513,35 @@ object HoodiePainter {
         val armSwing = if (walking) ARM_SWING[s] else 0
 
         // Rabo atrás de tudo: sai do quadril, curva para cima e balança com o passo.
-        if (!sit) {
+        if (!sit) part(b, Part.TAIL) {
             val sway = if (walking) intArrayOf(0, 0, 1, 1, 0, 0, -1, -1)[s] else 0
             shapeUnion(b, listOf(R(30, 48, 35, 54, 2), R(34 + sway, 41, 38 + sway, 52, 2), R(36 + sway * 2, 36, 40 + sway * 2, 43, 2)).map { it.dy(up) }, HoodiePalette.FUR)
             recolor(b, 37, 36 + up, 41, 52 + up, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
         }
         // Mochila nas costas (lado direito), atrás do corpo.
-        if (p.backpack) {
+        if (p.backpack) part(b, Part.BACKPACK) {
             shape(b, R(29, 35, 39, 54, 3).dy(up + p.backpackDy), HoodiePalette.BACKPACK)
             b.vline(36, 39 + up + p.backpackDy, 51 + up + p.backpackDy, HoodiePalette.BACKPACK_DARK)
         }
         // Perna e braço do fundo, mais escuros.
-        if (sit) {
-            foot(b, R(13, 63, 24, 70, 3), HoodiePalette.FUR_SHADE)
-        } else {
-            sideLeg(b, farX, farLift, HoodiePalette.FUR_SHADE)
+        part(b, Part.LEG_RIGHT) {
+            if (sit) foot(b, R(13, 63, 24, 70, 3), HoodiePalette.FUR_SHADE)
+            else sideLeg(b, farX, farLift, HoodiePalette.FUR_SHADE)
         }
-        sideArm(b, -armSwing, up, HoodiePalette.HOOD_SHADE, HoodiePalette.FUR_SHADE)
-        if (!sit) sideLeg(b, nearX, nearLift, HoodiePalette.FUR)
+        sideArm(b, -armSwing, up, HoodiePalette.HOOD_SHADE, HoodiePalette.FUR_SHADE, far = true)
+        if (!sit) part(b, Part.LEG_LEFT) { sideLeg(b, nearX, nearLift, HoodiePalette.FUR) }
         // Capuz embolado nas costas + corpo com barriguinha na frente.
-        shape(b, R(25, 28, 36, 42, 4).dy(up), HoodiePalette.HOOD_SHADE)
         val body = R(15, 33, 32, 55, 4).dy(up)
+        part(b, Part.TORSO) {
+        shape(b, R(25, 28, 36, 42, 4).dy(up), HoodiePalette.HOOD_SHADE)
         shapeUnion(b, listOf(body, R(13, 41, 19, 53, 3).dy(up)), HoodiePalette.HOOD)
         recolor(b, 29, body.y0 + 2, 31, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
         recolor(b, 14, body.y1 - 2, 31, body.y1 - 1, HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE)
         for (x in 15..30 step 3) b.set(x, body.y1 - 1, HoodiePalette.HOOD_DARK)
-        drawStrings(b, intArrayOf(16), up, p.stringSwing)
-        if (p.backpack) b.box(25, 34 + up, 26, 45 + up, HoodiePalette.BACKPACK_DARK)
-        if (sit) foot(b, R(10, 63, 21, 70, 3))
+        }
+        part(b, Part.STRINGS) { drawStrings(b, intArrayOf(16), up, p.stringSwing) }
+        if (p.backpack) part(b, Part.BACKPACK) { b.box(25, 34 + up, 26, 45 + up, HoodiePalette.BACKPACK_DARK) }
+        if (sit) part(b, Part.LEG_LEFT) { foot(b, R(10, 63, 21, 70, 3)) }
 
         // Braço da frente: ombro → cotovelo → pata na altura do quadril (balança oposto à perna).
         val forward = p.rightArm in setOf(Arm.FORWARD_UP, Arm.FORWARD_DOWN, Arm.HOLD_CHEST) || p.leftArm in setOf(Arm.FORWARD_UP, Arm.FORWARD_DOWN, Arm.HOLD_CHEST)
@@ -493,14 +550,17 @@ object HoodiePainter {
             Point(8, 42 + up)
         } else {
             // Mais claro que o tronco: está mais perto da luz e de quem olha.
-            sideArm(b, armSwing, up, HoodiePalette.HOOD_LIGHT, HoodiePalette.FUR)
+            sideArm(b, armSwing, up, HoodiePalette.HOOD_LIGHT, HoodiePalette.FUR, far = false)
         }
 
         // Cabeça de perfil: orelha do fundo, focinho, um olho.
         val hu = up + p.headDy
         val (edx, edy) = when (p.ears) { Ears.ALERT -> 0 to -1; Ears.DOWN -> 2 to 3; Ears.RELAXED -> 1 to 1; Ears.TWITCH_LEFT, Ears.TWITCH_RIGHT -> 1 to 1; else -> 0 to 0 }
-        ear(b, mirror = false, dx = 19 + edx, dy = hu + 1 + edy, fill = HoodiePalette.FUR_SHADE, inner = null)
-        ear(b, mirror = false, dx = 3 - edx, dy = hu + edy)
+        part(b, Part.EARS) {
+            ear(b, mirror = false, dx = 19 + edx, dy = hu + 1 + edy, fill = HoodiePalette.FUR_SHADE, inner = null)
+            ear(b, mirror = false, dx = 3 - edx, dy = hu + edy)
+        }
+        part(b, Part.HEAD) {
         shapeUnion(b, listOf(R(8, 9, 37, 33, 8, round = true).dy(hu), R(4, 19, 12, 30, 3).dy(hu)), HoodiePalette.FUR)
         recolor(b, 9, 31 + hu, 36, 32 + hu, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
         recolor(b, 31, 13 + hu, 36, 30 + hu, HoodiePalette.FUR, HoodiePalette.FUR_SHADE)
@@ -512,8 +572,9 @@ object HoodiePainter {
             else -> { b.set(6, 25 + hu, HoodiePalette.NOSE); b.set(7, 26 + hu, HoodiePalette.NOSE); b.set(8, 25 + hu, HoodiePalette.NOSE) }
         }
         if (p.blush || p.eyes == Eyes.HAPPY) b.hline(13, 15, 25 + hu, HoodiePalette.BLUSH)
+        }
 
-        if (p.item != Item.NONE && p.item != Item.BOOK && p.item != Item.CONTROLLER && p.item != Item.MENU) drawItemAt(b, p.item, hand)
+        if (p.item != Item.NONE && p.item != Item.BOOK && p.item != Item.CONTROLLER && p.item != Item.MENU) part(b, Part.ACCESSORY) { drawItemAt(b, p.item, hand) }
         return SpriteAnchors(rightHand = hand, leftHand = Point(20 - armSwing, 52 + up), head = Point(20, 8 + hu), back = Point(33, 44 + up), feet = FEET)
     }
 
@@ -531,7 +592,7 @@ object HoodiePainter {
      * Braço de perfil em dois segmentos (manga até o cotovelo + antebraço) com a pata
      * na altura do quadril. [swing] > 0 leva a pata para trás. Retorna a âncora da mão.
      */
-    private fun sideArm(b: PixelBuffer, swing: Int, up: Int, sleeve: Int, fur: Int): Point {
+    private fun sideArm(b: PixelBuffer, swing: Int, up: Int, sleeve: Int, fur: Int, far: Boolean): Point = part(b, if (far) Part.ARM_RIGHT else Part.ARM_LEFT) {
         // Balanço amplo: a pata sai da silhueta do corpo para a frente e para trás.
         val ex = 20 + swing
         val px = 19 + swing * 2
@@ -541,8 +602,8 @@ object HoodiePainter {
         recolor(b, 23, 36 + up, 24, 42 + up, sleeve, back)
         recolor(b, ex + 3, 41 + up, ex + 4, 46 + up, sleeve, back)
         recolor(b, px, 48 + up, px + 4, 49 + up, sleeve, HoodiePalette.HOOD_SHADE)
-        shape(b, R(px - 1, 49, px + 4, 53, 2).dy(up), fur)
-        return Point(px + 1, 51 + up)
+        part(b, if (far) Part.HAND_RIGHT else Part.HAND_LEFT) { shape(b, R(px - 1, 49, px + 4, 53, 2).dy(up), fur) }
+        Point(px + 1, 51 + up)
     }
 
     // ───────────────────────── Formas ─────────────────────────

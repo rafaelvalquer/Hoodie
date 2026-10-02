@@ -66,6 +66,17 @@ data class AppSession(
     val durationMs: Long get() = endedAt - startedAt
 }
 
+/** Nome do plano V0.2 para a sessão de um app: pacote + horários (nada de conteúdo). */
+typealias PhoneAppSession = AppSession
+
+/** Uso de um app dentro de uma visita. */
+data class VisitAppUsage(val packageName: String, val appLabel: String, val category: HoodieAppCategory, val foregroundMs: Long)
+
+/** Uso do celular durante uma visita (interseção das sessões com a visita). */
+data class VisitPhoneUsage(val foregroundMs: Long, val apps: List<VisitAppUsage>) {
+    val isEmpty: Boolean get() = foregroundMs <= 0
+}
+
 data class ScreenSession(
     val startedAt: Long,
     val endedAt: Long,
@@ -117,9 +128,27 @@ data class DailyPhoneInsights(
     val hourlyScreenMs: List<Long> = emptyList(),
     /** Total de apps diferentes usados (topApps pode estar cortado). */
     val appCount: Int = topApps.size,
+    /** Sessões por app do dia (pacote + horários), para o replay e o uso por visita. */
+    val appSessions: List<AppSession> = emptyList(),
 ) {
+    private val labels by lazy { (topApps.map { it.packageName to it.appLabel } + appTimeline.map { it.packageName to it.appLabel }).toMap() }
+    private val categories by lazy { (topApps.map { it.packageName to it.appCategory } + appTimeline.map { it.packageName to it.category }).toMap() }
+
+    /** Nome do app; sem registro, um nome derivado do pacote (com.spotify.music → Spotify). */
+    fun labelOf(packageName: String): String = labels[packageName] ?: fallbackLabel(packageName)
+    fun categoryOf(packageName: String): HoodieAppCategory = categories[packageName] ?: HoodieAppCategory.OTHER
+
     val isEmpty: Boolean get() = summary.screenTimeMs == 0L && topApps.isEmpty()
 
     /** Detalhe de um contexto (ex.: "Uso do celular no trabalho"). */
     fun usageIn(context: UserContextType): ContextUsageSummary? = usageByContext.firstOrNull { it.context == context }
+
+    companion object {
+        private val GENERIC = setOf("com", "br", "org", "net", "android", "app", "apps", "mobile", "client", "lite", "google")
+
+        fun fallbackLabel(packageName: String): String {
+            val part = packageName.split('.').filter { it.isNotEmpty() && it.lowercase() !in GENERIC }.let { it.getOrNull(0) ?: packageName.substringAfterLast('.') }
+            return part.replaceFirstChar { it.uppercase() }
+        }
+    }
 }

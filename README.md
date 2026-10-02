@@ -45,7 +45,7 @@ O ícone do app é gerado a partir do próprio sprite: `./gradlew :app:testDebug
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room (15 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room (16 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |

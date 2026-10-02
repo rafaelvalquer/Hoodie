@@ -186,6 +186,22 @@ data class DailyContextAppUsageEntity(
     val sessionCount: Int,
 )
 
+/**
+ * Sessão de uso de um app (só pacote e horários — nunca conteúdo). Permite o
+ * replay digital e o uso por visita em dias antigos. [epochDay] = dia local.
+ */
+@Entity(
+    tableName = "phone_app_sessions",
+    indices = [Index("epochDay"), Index("packageName"), Index("startedAt")],
+)
+data class PhoneAppSessionEntity(
+    @PrimaryKey val id: String,
+    val epochDay: Long,
+    val packageName: String,
+    val startedAt: Long,
+    val endedAt: Long,
+)
+
 /** Categoria escolhida pelo usuário para um app (vence o mapeamento interno). */
 @Entity(tableName = "app_category_overrides")
 data class AppCategoryOverrideEntity(
