@@ -19,6 +19,8 @@ import com.hoodie.app.data.repository.DeviceUsageRepository
 import com.hoodie.app.engine.context.ContextEngine
 import com.hoodie.app.engine.hoodie.HoodieEngine
 import com.hoodie.app.engine.memory.MemoryEngine
+import com.hoodie.app.core.database.DatabaseGate
+import dagger.Lazy
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -30,13 +32,15 @@ import dagger.assisted.AssistedInject
 class ReconcileWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val contextEngine: ContextEngine,
-    private val hoodie: HoodieEngine,
-    private val memory: MemoryEngine,
+    // Lazy: com o banco indisponível o worker não instancia nada que dependa dele.
+    private val contextEngineLazy: Lazy<ContextEngine>,
+    private val hoodieLazy: Lazy<HoodieEngine>,
+    private val memoryLazy: Lazy<MemoryEngine>,
     private val settings: SettingsRepository,
     private val notifier: Notifier,
-    private val geofences: GeofenceManager,
-    private val locationEvents: LocationEventDao,
+    private val geofencesLazy: Lazy<GeofenceManager>,
+    private val locationEventsLazy: Lazy<LocationEventDao>,
+    private val gate: DatabaseGate,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
 ) : CoroutineWorker(context, params) {
@@ -44,10 +48,13 @@ class ReconcileWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val s = settings.current()
         if (!s.onboardingDone) return Result.success()
+        if (!gate.isReady()) return Result.retry()
+        val geofences = geofencesLazy.get()
+        val locationEvents = locationEventsLazy.get()
         log.log(DebugEventLogger.Category.WORKER, "reconcile")
-        contextEngine.applyRoutineFallbackIfNeeded()
-        val snapshot = hoodie.resolve()
-        memory.checkCalendar()
+        contextEngineLazy.get().applyRoutineFallbackIfNeeded()
+        val snapshot = hoodieLazy.get().resolve()
+        memoryLazy.get().checkCalendar()
         maybeNotifyAutonomy(snapshot.started.map { it.activity to it.userContext })
 
         val now = clock.nowMillis()
@@ -90,10 +97,13 @@ class ReconcileWorker @AssistedInject constructor(
 class CheckWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val contextEngine: ContextEngine,
+    private val contextEngineLazy: Lazy<ContextEngine>,
+    private val gate: DatabaseGate,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        if (!gate.isReady()) return Result.retry()
+        val contextEngine = contextEngineLazy.get()
         when (inputData.getString(KIND)) {
             LUNCH -> contextEngine.onLunchCheck(inputData.getLong(AT, 0), inputData.getLong(PLACE, 0))
             COMMUTE -> contextEngine.onCommuteCheck(inputData.getLong(EVENT, 0))
@@ -120,8 +130,9 @@ class CheckWorker @AssistedInject constructor(
 class PhoneInsightsWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val deviceUsage: DeviceUsageRepository,
+    private val deviceUsageLazy: Lazy<DeviceUsageRepository>,
     private val access: UsageAccessManager,
+    private val gate: DatabaseGate,
     private val settings: SettingsRepository,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
@@ -130,6 +141,8 @@ class PhoneInsightsWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val digital = settings.current().digital
         if (!digital.analysisEnabled || !digital.saveHistory || !access.isGranted()) return Result.success()
+        if (!gate.isReady()) return Result.retry()
+        val deviceUsage = deviceUsageLazy.get()
         log.log(DebugEventLogger.Category.WORKER, "phone insights")
         val today = clock.today()
         runCatching {

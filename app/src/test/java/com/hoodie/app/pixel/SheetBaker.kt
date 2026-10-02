@@ -7,6 +7,7 @@ import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.HoodiePainter
 import com.hoodie.app.pixel.sprite.ProceduralSpriteProvider
 import com.hoodie.app.pixel.sprite.SpriteAssetSource
+import com.hoodie.app.pixel.sprite.SpriteFrame
 import com.hoodie.app.pixel.sprite.SpriteImageDecoder
 import com.hoodie.app.pixel.sprite.SpriteRequest
 import org.json.JSONArray
@@ -27,11 +28,14 @@ object SheetBaker {
     /** [anchors] = camada `anchors` do Aseprite exportada à parte (1 pixel colorido por âncora). */
     data class Baked(val image: PixelBuffer, val json: String, val anchors: PixelBuffer? = null)
 
-    fun bake(clips: List<Pair<AnimationId, Facing>>): Baked {
-        val frames = clips.flatMap { (anim, facing) ->
-            val dir = when (facing) { Facing.FRONT -> Direction.FRONT; Facing.BACK -> Direction.BACK; Facing.SIDE -> Direction.LEFT }
-            anim.frames.indices.map { i -> Triple(anim, facing, ProceduralSpriteProvider.frame(SpriteRequest(anim, dir, i))) }
-        }
+    /** Vista guardada no sheet: o lado é desenhado virado para a esquerda (RIGHT = espelho). */
+    fun directionOf(facing: Facing) = when (facing) { Facing.FRONT -> Direction.FRONT; Facing.BACK -> Direction.BACK; Facing.SIDE -> Direction.LEFT }
+
+    fun bake(
+        clips: List<Pair<AnimationId, Facing>>,
+        source: (AnimationId, Facing, Int) -> SpriteFrame = { anim, facing, i -> ProceduralSpriteProvider.frame(SpriteRequest(anim, directionOf(facing), i)) },
+    ): Baked {
+        val frames = clips.flatMap { (anim, facing) -> anim.frames.indices.map { i -> Triple(anim, facing, source(anim, facing, i)) } }
         val w = HoodiePainter.WIDTH; val h = HoodiePainter.HEIGHT
         val sheet = PixelBuffer(w * frames.size, h)
         val anchorLayer = PixelBuffer(w * frames.size, h)

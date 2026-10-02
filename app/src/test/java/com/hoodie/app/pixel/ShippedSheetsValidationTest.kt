@@ -5,6 +5,7 @@ import com.hoodie.app.pixel.sprite.Direction
 import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.HoodiePainter
 import com.hoodie.app.pixel.sprite.HoodiePalette
+import com.hoodie.app.pixel.sprite.RequiredShippedAnimations
 import com.hoodie.app.pixel.sprite.SpriteAssetSource
 import com.hoodie.app.pixel.sprite.SpriteRequest
 import com.hoodie.app.pixel.sprite.SpriteSheetProvider
@@ -30,6 +31,16 @@ class ShippedSheetsValidationTest {
     @Test
     fun `sprite sheets entregues no app respeitam o padrao visual`() {
         validate(File("src/main/assets/${SpriteSheetProvider.DIR}"))
+    }
+
+    /** Release (versionName sem "-dev") precisa da arte final dos clips obrigatórios. */
+    @Test
+    fun `clips obrigatorios existem como arte final na release`() {
+        val props = java.util.Properties().apply { File("../gradle.properties").inputStream().use(::load) }
+        val release = !props.getProperty("HOODIE_VERSION_NAME").endsWith("-dev")
+        val (provider, _) = SpriteSheetProvider.load(folder(File("src/main/assets/${SpriteSheetProvider.DIR}")), SheetBaker.decoder)
+        val missing = RequiredShippedAnimations.missing(provider.available)
+        if (release) assertTrue("Arte final obrigatória ausente no APK: $missing", missing.isEmpty())
     }
 
     @Test

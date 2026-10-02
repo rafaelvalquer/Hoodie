@@ -42,7 +42,8 @@ fun DiaryLabScreen(modifier: Modifier = Modifier) {
     val zone = ZoneId.systemDefault()
     val fixture = remember { DiaryLabFixture.create(LocalDate.now(zone), zone) }
     var replay by remember { mutableStateOf(ReplayUiState()) }
-    var selectedVisit by remember { mutableStateOf<PlaceVisit?>(null) }
+    var selectedNodeId by remember { mutableStateOf<String?>(null) }
+    val layout = remember { com.hoodie.app.pixel.diary.DiaryMapLayoutEngine.layout(fixture.visits) }
 
     LaunchedEffect(replay.state, replay.speed) {
         if (replay.state == ReplayState.PLAYING) {
@@ -61,11 +62,12 @@ fun DiaryLabScreen(modifier: Modifier = Modifier) {
                     activeEdgeId = currentFrame.activeEdgeId,
                     markerX = currentFrame.markerX,
                     markerY = currentFrame.markerY,
+                    edgeProgress = currentFrame.progressOnEdge,
                     progress = ((timestamp - fixture.replay.startAt).toFloat() / span).coerceIn(0f, 1f),
                 )
             }
             val lastNode = fixture.map.nodes.lastOrNull()
-            replay = replay.copy(state = ReplayState.FINISHED, currentTimestamp = fixture.replay.endAt, activeNodeId = lastNode?.id, markerX = lastNode?.x?.toFloat(), markerY = lastNode?.y?.toFloat(), progress = 1f)
+            replay = replay.copy(state = ReplayState.FINISHED, currentTimestamp = fixture.replay.endAt, activeNodeId = lastNode?.id, activeEdgeId = null, markerX = lastNode?.x?.toFloat(), markerY = lastNode?.y?.toFloat(), progress = 1f)
         }
     }
 
@@ -79,9 +81,7 @@ fun DiaryLabScreen(modifier: Modifier = Modifier) {
             Text("Casa → Trabalho → Restaurante → Trabalho → Academia → Casa", color = HoodieColors.Muted)
         }
         SummarySection(fixture.summary)
-        DiaryMapCard(fixture.map.nodes, fixture.map.edges, replay.activeNodeId, replay.activeEdgeId, replay.markerX, replay.markerY) { index ->
-            selectedVisit = fixture.visits.getOrNull(index)
-        }
+        DiaryMapView(layout, replay, zone, onNode = { selectedNodeId = it.id })
         ReplayControls(
             replay,
             onToggle = {
@@ -104,10 +104,8 @@ fun DiaryLabScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    selectedVisit?.let { visit ->
-        PlaceDetailSheet(visit, fixture.timeline.filter { it.id in visit.relatedTimelineIds }, zone) {
-            selectedVisit = null
-        }
+    layout.node(selectedNodeId)?.let { node ->
+        PlaceDetailBottomSheet(node, fixture.visits, fixture.timeline, zone) { selectedNodeId = null }
     }
 }
 
@@ -135,7 +133,7 @@ private data class DiaryLabFixture(
             val visits = stops.mapIndexed { index, stop ->
                 val activity = if (index == 1) HoodieActivity.WORKING else if (index == 4) HoodieActivity.TRAINING else null
                 PlaceVisit(
-                    placeId = index.toLong() + 1,
+                    placeId = stops.indexOfFirst { it.name == stop.name }.toLong() + 1,
                     placeName = stop.name,
                     placeType = stop.type,
                     arrivalAt = stop.start,
@@ -153,14 +151,14 @@ private data class DiaryLabFixture(
                 DiaryTimelineItem("lab-5", at(12, 10), DiaryTimelineType.ARRIVED, DiaryActor.USER, "Saiu para almoçar", emoji = "🍽️", relatedPlaceId = 3, relatedContext = UserContextType.LUNCH),
                 DiaryTimelineItem("lab-6", at(13, 0), DiaryTimelineType.ARRIVED, DiaryActor.USER, "Voltou ao trabalho", emoji = "🏢", relatedPlaceId = 2, relatedContext = UserContextType.WORK),
                 DiaryTimelineItem("lab-7", at(18, 0), DiaryTimelineType.ARRIVED, DiaryActor.USER, "Chegou à academia", emoji = "🏋️", relatedPlaceId = 5, relatedContext = UserContextType.GYM),
-                DiaryTimelineItem("lab-8", at(19, 45), DiaryTimelineType.ARRIVED, DiaryActor.USER, "Chegou em casa", emoji = "🏠", relatedPlaceId = 6, relatedContext = UserContextType.HOME),
-                DiaryTimelineItem("lab-9", at(20, 10), DiaryTimelineType.ACTIVITY, DiaryActor.HOODIE, "Hoodie foi jogar videogame", emoji = "🎮", relatedPlaceId = 6, relatedContext = UserContextType.HOME),
+                DiaryTimelineItem("lab-8", at(19, 45), DiaryTimelineType.ARRIVED, DiaryActor.USER, "Chegou em casa", emoji = "🏠", relatedPlaceId = 1, relatedContext = UserContextType.HOME),
+                DiaryTimelineItem("lab-9", at(20, 10), DiaryTimelineType.ACTIVITY, DiaryActor.HOODIE, "Hoodie foi jogar videogame", emoji = "🎮", relatedPlaceId = 1, relatedContext = UserContextType.HOME),
             )
             val relatedVisits = visits.map { visit ->
                 visit.copy(relatedTimelineIds = timeline.filter { it.timestamp in visit.arrivalAt..(visit.departureAt ?: at(23)) }.map { it.id })
             }
             val contexts = stops.mapIndexed { index, stop ->
-                ContextEventEntity(id = index.toLong() + 1, type = stop.type.toContext(), startedAt = stop.start, endedAt = stop.end, confidence = 1f, placeId = index.toLong() + 1, source = ContextSource.GEOFENCE)
+                ContextEventEntity(id = index.toLong() + 1, type = stop.type.toContext(), startedAt = stop.start, endedAt = stop.end, confidence = 1f, placeId = stops.indexOfFirst { it.name == stop.name }.toLong() + 1, source = ContextSource.GEOFENCE)
             }
             val activities = listOf(
                 HoodieActivityEntity(id = 1, activity = HoodieActivity.WORKING, startedAt = at(8, 55), endedAt = at(11, 50), userContext = UserContextType.WORK),

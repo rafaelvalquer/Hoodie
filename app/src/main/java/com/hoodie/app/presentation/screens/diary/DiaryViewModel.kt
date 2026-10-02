@@ -55,7 +55,7 @@ class DiaryViewModel @Inject constructor(
         val resume = _state.value.replay.state == ReplayState.PAUSED
         val start = if (resume) _state.value.replay.currentTimestamp ?: diary.replay.startAt else diary.replay.startAt
         val firstFrame = diary.replay.frameAt(start)
-        _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.PLAYING, currentTimestamp = start, activeNodeId = firstFrame.activeNodeId, activeEdgeId = firstFrame.activeEdgeId, markerX = firstFrame.markerX, markerY = firstFrame.markerY, highlightedTimelineItemIds = firstFrame.highlightedTimelineItemIds))
+        _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.PLAYING, currentTimestamp = start, activeNodeId = firstFrame.activeNodeId, activeEdgeId = firstFrame.activeEdgeId, markerX = firstFrame.markerX, markerY = firstFrame.markerY, edgeProgress = firstFrame.progressOnEdge, highlightedTimelineItemIds = firstFrame.highlightedTimelineItemIds))
         replayJob?.cancel()
         replayJob = viewModelScope.launch {
             var timestamp = start
@@ -68,10 +68,10 @@ class DiaryViewModel @Inject constructor(
                 last = nowElapsed
                 val frame = diary.replay.frameAt(timestamp)
                 val span = (diary.replay.endAt - diary.replay.startAt).coerceAtLeast(1)
-                _state.value = _state.value.copy(replay = _state.value.replay.copy(currentTimestamp = timestamp, activeNodeId = frame.activeNodeId, activeEdgeId = frame.activeEdgeId, markerX = frame.markerX, markerY = frame.markerY, highlightedTimelineItemIds = frame.highlightedTimelineItemIds, progress = ((timestamp - diary.replay.startAt).toFloat() / span).coerceIn(0f, 1f)))
+                _state.value = _state.value.copy(replay = _state.value.replay.copy(currentTimestamp = timestamp, activeNodeId = frame.activeNodeId, activeEdgeId = frame.activeEdgeId, markerX = frame.markerX, markerY = frame.markerY, edgeProgress = frame.progressOnEdge, highlightedTimelineItemIds = frame.highlightedTimelineItemIds, progress = ((timestamp - diary.replay.startAt).toFloat() / span).coerceIn(0f, 1f)))
             }
             val finalFrame = diary.replay.frameAt(diary.replay.endAt)
-            _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.FINISHED, currentTimestamp = diary.replay.endAt, progress = 1f, activeNodeId = finalFrame.activeNodeId, activeEdgeId = finalFrame.activeEdgeId, markerX = finalFrame.markerX, markerY = finalFrame.markerY, highlightedTimelineItemIds = finalFrame.highlightedTimelineItemIds))
+            _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.FINISHED, currentTimestamp = diary.replay.endAt, progress = 1f, activeNodeId = finalFrame.activeNodeId, activeEdgeId = finalFrame.activeEdgeId, markerX = finalFrame.markerX, markerY = finalFrame.markerY, edgeProgress = finalFrame.progressOnEdge, highlightedTimelineItemIds = finalFrame.highlightedTimelineItemIds))
         }
     }
 

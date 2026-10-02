@@ -14,6 +14,8 @@ data class ReplayUiState(
     val activeEdgeId: String? = null,
     val markerX: Float? = null,
     val markerY: Float? = null,
+    /** Quanto do deslocamento atual já foi andado (0..1). */
+    val edgeProgress: Float = 0f,
     val highlightedTimelineItemIds: Set<String> = emptySet(),
     val progress: Float = 0f,
 )

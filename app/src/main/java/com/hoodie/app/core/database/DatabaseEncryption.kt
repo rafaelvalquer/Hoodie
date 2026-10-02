@@ -4,13 +4,11 @@ import net.zetetic.database.sqlcipher.SQLiteDatabase
 import java.io.File
 
 /**
- * Upgrade de quem já tinha o banco Room em texto puro: copia tudo para um
- * arquivo cifrado com `sqlcipher_export` e troca os arquivos — sem perder dados.
- * Roda antes do Room abrir o banco.
+ * Implementação SQLCipher das operações usadas pelo [DefaultSecureDatabaseBootstrap].
+ * Upgrade de quem tinha o banco Room em texto puro: `sqlcipher_export` para um
+ * arquivo temporário cifrado; a troca de arquivos só acontece depois da validação.
  */
-object DatabaseEncryption {
-
-    private val SQLITE_HEADER = "SQLite format 3\u0000".toByteArray(Charsets.US_ASCII)
+object DatabaseEncryption : DatabaseCipherOps {
 
     @Volatile private var loaded = false
 
@@ -20,39 +18,42 @@ object DatabaseEncryption {
         loaded = true
     }
 
-    /** true quando o arquivo existe e ainda é um SQLite comum (cabeçalho legível). */
-    fun isPlaintext(db: File): Boolean {
-        if (!db.exists() || db.length() < SQLITE_HEADER.size) return false
-        val header = ByteArray(SQLITE_HEADER.size)
-        db.inputStream().use { if (it.read(header) != header.size) return false }
-        return header.contentEquals(SQLITE_HEADER)
+    fun isPlaintext(db: File): Boolean = DefaultSecureDatabaseBootstrap.isPlaintext(db)
+
+    override fun exportEncrypted(plain: File, target: File, passphrase: ByteArray): DatabaseFingerprint {
+        loadLibrary()
+        target.delete()
+        val key = String(passphrase, Charsets.UTF_8).replace("'", "''")
+        // CREATE é obrigatório: o ATTACH herda as flags da conexão principal e,
+        // sem CREATE, falha silenciosamente ao criar o arquivo de destino.
+        val db = SQLiteDatabase.openOrCreateDatabase(plain, "", null, null)
+        try {
+            // Room deixa o arquivo em WAL; sem WAL o pool usa uma única conexão e o
+            // ATTACH continua valendo para os comandos seguintes.
+            db.disableWriteAheadLogging()
+            val source = fingerprint(db)
+            db.execSQL("ATTACH DATABASE '${target.absolutePath.replace("'", "''")}' AS encrypted KEY '$key'")
+            db.rawQuery("SELECT sqlcipher_export('encrypted')", null).use { it.moveToFirst() }
+            // A versão do schema (usada pelas migrações do Room) não é copiada pelo export.
+            db.execSQL("PRAGMA encrypted.user_version = ${source.userVersion}")
+            db.execSQL("DETACH DATABASE encrypted")
+            return source
+        } finally {
+            db.close()
+        }
     }
 
-    /** Converte [db] para SQLCipher com [passphrase]. Não faz nada se já estiver cifrado ou não existir. */
-    fun migrateIfNeeded(db: File, passphrase: ByteArray): Boolean {
-        if (!isPlaintext(db)) return false
+    override fun inspect(file: File, passphrase: ByteArray): DatabaseFingerprint? = runCatching {
         loadLibrary()
-        val tmp = File(db.parentFile, db.name + ".encrypting")
-        tmp.delete()
-        val key = String(passphrase, Charsets.UTF_8).replace("'", "''")
-        val plain = SQLiteDatabase.openOrCreateDatabase(db, "", null, null)
-        try {
-            // Room deixa o arquivo em WAL; sem WAL o pool usa uma única conexão,
-            // e o ATTACH continua valendo para os comandos seguintes.
-            plain.disableWriteAheadLogging()
-            val version = plain.version
-            // execSQL é o caminho suportado para ATTACH/DETACH; o export é um SELECT.
-            plain.execSQL("ATTACH DATABASE '${tmp.absolutePath.replace("'", "''")}' AS encrypted KEY '$key'")
-            plain.rawQuery("SELECT sqlcipher_export('encrypted')", null).use { it.moveToFirst() }
-            // A versão do schema (usada pelas migrações do Room) não é copiada pelo export.
-            plain.execSQL("PRAGMA encrypted.user_version = $version")
-            plain.execSQL("DETACH DATABASE encrypted")
-        } finally {
-            plain.close()
+        val db = SQLiteDatabase.openDatabase(file.path, passphrase, null, SQLiteDatabase.OPEN_READONLY, null, null)
+        try { fingerprint(db) } finally { db.close() }
+    }.getOrNull()
+
+    private fun fingerprint(db: SQLiteDatabase): DatabaseFingerprint {
+        val tables = mutableSetOf<String>()
+        db.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'", null).use { c ->
+            while (c.moveToNext()) tables += c.getString(0)
         }
-        check(tmp.exists() && !isPlaintext(tmp)) { "sqlcipher_export não gerou o banco cifrado" }
-        listOf("", "-wal", "-shm", "-journal").forEach { File(db.path + it).delete() }
-        check(tmp.renameTo(db)) { "Falha ao substituir o banco pelo cifrado" }
-        return true
+        return DatabaseFingerprint(db.version, tables)
     }
 }

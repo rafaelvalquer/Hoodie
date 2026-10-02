@@ -56,6 +56,7 @@ import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.domain.diary.model.DailySummary
+import com.hoodie.app.pixel.diary.DiaryMapLayoutEngine
 import com.hoodie.app.domain.diary.model.DiaryMapNode
 import com.hoodie.app.domain.diary.model.PlaceVisit
 import com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights
@@ -76,8 +77,7 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val today = state.today
     val context = LocalContext.current
-    var selectedVisit by remember { mutableStateOf<PlaceVisit?>(null) }
-    var selectedItems by remember { mutableStateOf(emptyList<com.hoodie.app.domain.diary.model.DiaryTimelineItem>()) }
+    var selectedNodeId by remember { mutableStateOf<String?>(null) }
     val zone = vm.zone
     var tab by rememberSaveable { mutableStateOf(DiaryTab.GENERAL) }
     var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
@@ -105,13 +105,8 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             } else {
                 SummarySection(diary.summary, onContext = if (diary.phoneInsights != null) { ctx -> selectedContext = ctx } else null)
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
-                DiaryMapCard(
-                    diary.map.nodes, diary.map.edges, state.replay.activeNodeId, state.replay.activeEdgeId, state.replay.markerX, state.replay.markerY,
-                    onVisit = { index ->
-                        selectedVisit = diary.visits.getOrNull(index)
-                        selectedItems = selectedVisit?.relatedTimelineIds.orEmpty().mapNotNull { id -> diary.timeline.firstOrNull { it.id == id } }
-                    },
-                )
+                val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
+                DiaryMapView(layout, state.replay, zone, onNode = { selectedNodeId = it.id })
                 ReplayControls(
                     state.replay,
                     onToggle = { if (state.replay.state == ReplayState.PLAYING) vm.pause() else vm.play() },
@@ -126,7 +121,12 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             }
         }
     }
-    if (selectedVisit != null) PlaceDetailSheet(selectedVisit!!, selectedItems, zone, phone = state.diary?.phoneInsights) { selectedVisit = null; selectedItems = emptyList() }
+    state.diary?.let { diary ->
+        val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
+        layout.node(selectedNodeId)?.let { node ->
+            PlaceDetailBottomSheet(node, diary.visits, diary.timeline, zone, phone = diary.phoneInsights) { selectedNodeId = null }
+        }
+    }
     selectedContext?.let { ctx -> ContextPhoneSheet(ctx, state.diary?.phoneInsights) { selectedContext = null } }
 }
 
@@ -184,83 +184,6 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
 }
 
 @Composable
-internal fun DiaryMapCard(nodes: List<DiaryMapNode>, edges: List<com.hoodie.app.domain.diary.model.DiaryMapEdge>, activeNodeId: String?, activeEdgeId: String?, markerX: Float?, markerY: Float?, onVisit: (Int) -> Unit) {
-    PixelPanel(Modifier.fillMaxWidth()) {
-        SectionLabel("MAPA SIMBÓLICO · SEM ROTA GPS")
-        Spacer(Modifier.height(8.dp))
-        if (nodes.isEmpty()) {
-            Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) { Text("Nenhum lugar reconhecido neste dia", color = HoodieColors.Muted, textAlign = TextAlign.Center) }
-        } else {
-            val maxX = (nodes.maxOf { it.x } + 1).coerceAtLeast(1)
-            val maxY = (nodes.maxOf { it.y } + 1).coerceAtLeast(1)
-            Box(Modifier.fillMaxWidth().height(((maxY + 1) * 72).coerceIn(160, 340).dp).background(Color(0xFF36465A)).border(2.dp, HoodieColors.Outline)) {
-                Canvas(Modifier.fillMaxSize()) {
-                    val cols = (maxX + 1).coerceAtLeast(2)
-                    val rows = (maxY + 1).coerceAtLeast(2)
-                    val cellW = size.width / cols
-                    val cellH = size.height / rows
-                    val positions = nodes.associate { it.id to Offset(cellW * (it.x + .5f), cellH * (it.y + .5f)) }
-                    // Pixel blocks suggest city lots; dashed paths encode only visit sequence.
-                    for (r in 0 until rows) for (c in 0 until cols) {
-                        if ((r + c) % 2 == 0) drawRect(Color(0xFF3F594D), Offset(c * cellW + 3.dp.toPx(), r * cellH + 3.dp.toPx()), androidx.compose.ui.geometry.Size(cellW - 6.dp.toPx(), cellH - 6.dp.toPx()))
-                    }
-                    edges.forEach { edge ->
-                        val from = positions[edge.fromNodeId] ?: return@forEach
-                        val to = positions[edge.toNodeId] ?: return@forEach
-                        val active = edge.id == activeEdgeId
-                        drawLine(if (active) HoodieColors.Gold else Color(0xFFE7D99A), from, to, strokeWidth = if (active) 5.dp.toPx() else 3.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx())) , cap = StrokeCap.Square)
-                    }
-                    nodes.forEach { node ->
-                        val point = positions[node.id] ?: return@forEach
-                        val active = node.id == activeNodeId
-                        val color = when (node.type.name) { "HOME" -> Color(0xFF86C99A); "WORK" -> Color(0xFF88AFE9); "RESTAURANT" -> Color(0xFFE99C7D); "GYM" -> Color(0xFFE6C86D); else -> Color(0xFFB79AE9) }
-                        drawRect(HoodieColors.Outline, Offset(point.x - 22.dp.toPx(), point.y - 20.dp.toPx()), androidx.compose.ui.geometry.Size(44.dp.toPx(), 40.dp.toPx()))
-                        drawRect(if (active) HoodieColors.Gold else color, Offset(point.x - 18.dp.toPx(), point.y - 16.dp.toPx()), androidx.compose.ui.geometry.Size(36.dp.toPx(), 32.dp.toPx()))
-                    }
-                    if (markerX != null && markerY != null) {
-                        val marker = Offset(cellW * (markerX + .5f), cellH * (markerY + .5f))
-                        drawRect(HoodieColors.Gold.copy(alpha = .25f), Offset(marker.x - 14.dp.toPx(), marker.y - 14.dp.toPx()), androidx.compose.ui.geometry.Size(28.dp.toPx(), 28.dp.toPx()))
-                    }
-                }
-                MapNodeOverlay(nodes, activeNodeId, markerX, markerY, onVisit)
-            }
-        }
-        Text("Lugares na ordem do dia · toque para ver detalhes", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
-    }
-}
-
-@Composable
-private fun MapNodeOverlay(nodes: List<DiaryMapNode>, activeNodeId: String?, markerX: Float?, markerY: Float?, onVisit: (Int) -> Unit) {
-    val cols = (((nodes.maxOfOrNull { it.x } ?: 0) / 2) + 2).coerceAtLeast(2)
-    val rows = ((nodes.maxOfOrNull { it.y } ?: 0) + 2).coerceAtLeast(2)
-    // Float positioning in BoxWithConstraints uses the same grid cells as the Canvas.
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        nodes.forEach { node ->
-            val left = maxWidth * ((node.x / 2f + .5f) / cols)
-            val top = maxHeight * ((node.y + .5f) / rows)
-            Column(
-                Modifier.offset(x = (left - 49.dp).coerceAtLeast(0.dp), y = (top - 34.dp).coerceAtLeast(0.dp))
-                    .width(98.dp).height(68.dp).semantics {
-                        contentDescription = "${node.label}, visita ${node.visitIndex}, ${formatDuration(node.durationMs)}"
-                        role = Role.Button
-                    }.clickable { onVisit(node.visitIndex - 1) }.padding(1.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                val emoji = when (node.type.name) { "HOME" -> "🏠"; "WORK" -> "🏢"; "RESTAURANT" -> "🍽️"; "GYM" -> "🏋️"; "SCHOOL" -> "🎓"; "MARKET" -> "🛒"; "FAMILY" -> "👪"; "LEISURE" -> "🎉"; else -> "📍" }
-                Text(if (activeNodeId == node.id) "🐱$emoji" else emoji, style = MaterialTheme.typography.labelLarge)
-                Text("${node.visitIndex} · ${node.label.take(8)}", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Ink, maxLines = 1)
-            }
-        }
-        if (markerX != null && markerY != null) {
-            val left = maxWidth * ((markerX / 2f + .5f) / cols)
-            val top = maxHeight * ((markerY + .5f) / rows)
-            Text("🐱", Modifier.offset(x = (left - 14.dp).coerceAtLeast(0.dp), y = (top - 18.dp).coerceAtLeast(0.dp)), style = MaterialTheme.typography.titleLarge)
-        }
-    }
-}
-
-@Composable
 internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset: () -> Unit, onSpeed: (ReplaySpeed) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         PixelButton(if (replay.state == ReplayState.PLAYING) "Pausar" else if (replay.state == ReplayState.FINISHED) "Rever dia" else "▶ Reproduzir meu dia", onToggle, modifier = Modifier.weight(1f), color = HoodieColors.Mint)
@@ -300,37 +223,3 @@ internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.Diary
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun PlaceDetailSheet(visit: PlaceVisit, events: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, zone: ZoneId, phone: DailyPhoneInsights? = null, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(), containerColor = HoodieColors.Panel) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("${visit.placeType.emoji} ${visit.placeName}", style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
-            Text(visit.placeType.label, color = HoodieColors.Muted)
-            DetailRow("Chegada", formatClock(visit.arrivalAt, zone))
-            DetailRow("Saída", visit.departureAt?.let { formatClock(it, zone) } ?: "Em andamento")
-            DetailRow("Tempo", formatDuration(visit.durationMs))
-            DetailRow("Visitas deste lugar hoje", visit.visitsCount.toString())
-            visit.dominantHoodieActivity?.let { DetailRow("Hoodie", "${it.emoji} ${it.label}") }
-            val visitContext = events.firstNotNullOfOrNull { it.relatedContext }
-            if (phone != null && visitContext != null) ContextPhoneUsageSection(phone, visitContext)
-            SectionLabel("EVENTOS RELACIONADOS")
-            if (events.isEmpty()) Text("Nenhum evento relacionado neste período.", color = HoodieColors.Muted)
-            else events.forEach { event ->
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                    Text(formatClock(event.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Gold, modifier = Modifier.width(48.dp))
-                    Text("${event.emoji ?: "📍"} ${event.title}", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            Text("Este ponto representa um contexto conhecido, não uma localização precisa.", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = HoodieColors.Muted)
-        Text(value, color = HoodieColors.Ink)
-    }
-}

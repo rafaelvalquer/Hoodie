@@ -226,15 +226,23 @@ object HoodieClips {
         }
 
         // ───── Idle ─────
-        clip(AnimationId.IDLE, policy = IMMEDIATE) { f(600, S); f(400, S); f(600, S.copy(bob = 1)); f(450, S.copy(bob = 1, headDy = -1)) }
-        clip(AnimationId.IDLE_SIT, policy = IMMEDIATE) { f(600, SIT); f(400, SIT); f(600, SIT.copy(bob = 1)); f(450, SIT.copy(bob = 1, headDy = -1)) }
+        // Respiração lenta em 8 tempos (inspira, segura, expira) com cordões e cabeça
+        // atrasados. A arte final usa os mesmos 8 tempos; a piscada vem do overlay.
+        val breathe: Builder.(HoodiePose) -> Unit = { base ->
+            f(650, base); f(450, base.copy(stringSwing = 1)); f(600, base.copy(bob = 1)); f(450, base.copy(bob = 1, headDy = -1))
+            f(600, base.copy(bob = 1)); f(450, base.copy(stringSwing = -1)); f(500, base); f(400, base)
+        }
+        clip(AnimationId.IDLE, policy = IMMEDIATE) { breathe(S) }
+        clip(AnimationId.IDLE_SIT, policy = IMMEDIATE) { breathe(SIT) }
         clip(AnimationId.IDLE_LOOK, loop = false, policy = IMMEDIATE) {
             f(900, I.copy(eyes = Eyes.LOOK_LEFT)); f(250, I); f(900, I.copy(eyes = Eyes.LOOK_RIGHT)); f(300, I)
         }
         clip(AnimationId.IDLE_EAR, loop = false, policy = IMMEDIATE) {
             f(200, I.copy(ears = Ears.TWITCH_LEFT)); f(250, I); f(200, I.copy(ears = Ears.TWITCH_RIGHT)); f(250, I); f(600, I.copy(ears = Ears.ALERT))
         }
+        // Pata → cabeça, coça três vezes, pata desce (8 frames).
         clip(AnimationId.IDLE_SCRATCH, loop = false) {
+            f(180, I.copy(rightArm = Arm.CHIN, eyes = Eyes.LOOK_UP))
             for (k in 0 until 3) {
                 f(160, I.copy(rightArm = Arm.HEAD, eyes = Eyes.CLOSED, ears = Ears.TWITCH_RIGHT))
                 f(160, I.copy(rightArm = Arm.HEAD, eyes = Eyes.HAPPY, headDy = 1))
@@ -287,8 +295,9 @@ object HoodieClips {
             f(250, HoodiePose(headOnly = true, eyes = Eyes.CLOSED, bob = -1, ears = Ears.RELAXED)); f(300, HoodiePose(headOnly = true, eyes = Eyes.CLOSED, ears = Ears.RELAXED))
         }
         clip(AnimationId.SLEEP, policy = PLAY_EXIT) {
+            // Nunca totalmente parado: respiração + uma orelha que mexe no meio do sono.
             val z = HoodiePose(headOnly = true, eyes = Eyes.CLOSED, ears = Ears.RELAXED)
-            f(900, z); f(900, z); f(900, z.copy(bob = 1)); f(900, z.copy(bob = 1))
+            f(900, z); f(800, z); f(900, z.copy(bob = 1)); f(250, z.copy(bob = 1, ears = Ears.TWITCH_LEFT)); f(650, z.copy(bob = 1)); f(900, z)
         }
         clip(AnimationId.SLEEP_TURN, loop = false, policy = PLAY_EXIT) {
             val z = HoodiePose(headOnly = true, eyes = Eyes.CLOSED, ears = Ears.RELAXED)
