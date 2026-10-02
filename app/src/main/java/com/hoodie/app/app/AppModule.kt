@@ -6,6 +6,7 @@ import com.hoodie.app.core.database.DatabaseBootstrapResult
 import com.hoodie.app.core.database.DatabaseGate
 import com.hoodie.app.core.database.DatabaseUnavailableException
 import com.hoodie.app.core.database.HoodieDatabase
+import com.hoodie.app.core.database.SqlCipherNativeLoader
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import com.hoodie.app.core.database.RoomTransactionRunner
 import com.hoodie.app.core.database.TransactionRunner
@@ -65,6 +66,7 @@ abstract class BindingsModule {
 object DatabaseModule {
     @Provides @Singleton
     fun database(@ApplicationContext context: Context, gate: DatabaseGate): HoodieDatabase {
+        SqlCipherNativeLoader.ensureLoaded()
         // Sempre cifrado (SQLCipher). Não existe caminho que abra o banco em texto puro:
         // se a migração ou a senha falharem, o gate devolve Failed e quem chegou até
         // aqui recebe DatabaseUnavailableException (a UI mostra a tela de recuperação antes).

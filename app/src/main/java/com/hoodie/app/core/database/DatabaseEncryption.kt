@@ -10,13 +10,7 @@ import java.io.File
  */
 object DatabaseEncryption : DatabaseCipherOps {
 
-    @Volatile private var loaded = false
-
-    fun loadLibrary() {
-        if (loaded) return
-        System.loadLibrary("sqlcipher")
-        loaded = true
-    }
+    fun loadLibrary() = SqlCipherNativeLoader.ensureLoaded()
 
     fun isPlaintext(db: File): Boolean = DefaultSecureDatabaseBootstrap.isPlaintext(db)
 

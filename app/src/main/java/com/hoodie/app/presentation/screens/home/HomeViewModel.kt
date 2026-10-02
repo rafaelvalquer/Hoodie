@@ -2,10 +2,12 @@ package com.hoodie.app.presentation.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.hoodie.app.core.database.ContextEventDao
 import com.hoodie.app.core.database.QuestionDao
 import com.hoodie.app.core.datastore.AppSettings
 import com.hoodie.app.core.datastore.SettingsRepository
+import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.location.LocationProvider
 import com.hoodie.app.core.location.LocationStatus
 import com.hoodie.app.core.model.ContextEvent
@@ -37,6 +39,7 @@ import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.scene.VisualState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,6 +95,7 @@ class HomeViewModel @Inject constructor(
     private val location: LocationProvider,
     private val dialogues: DialogueEngine,
     private val clock: ClockProvider,
+    private val log: DebugEventLogger,
     contextDao: ContextEventDao,
     questionDao: QuestionDao,
 ) : ViewModel() {
@@ -220,12 +224,27 @@ class HomeViewModel @Inject constructor(
     /** "Chegou ao trabalho? Salvar este local." */
     fun savePlaceHere(type: PlaceType) = viewModelScope.launch {
         _busy.value = true
-        location.current()?.let { (lat, lng) -> contextEngine.savePlaceHere(type, type.label, lat, lng) }
-        _busy.value = false
-        _reactions.tryEmit(AnimationId.HAPPY)
+        try {
+            log.log(DebugEventLogger.Category.PLACE, "SAVE_STARTED type=$type")
+            val pos = location.current() ?: run {
+                log.log(DebugEventLogger.Category.PLACE, "SAVE_FAILED type=$type location_unavailable")
+                return@launch
+            }
+            contextEngine.savePlaceHere(type, type.label, pos.first, pos.second)
+            log.log(DebugEventLogger.Category.PLACE, "SAVE_SUCCESS type=$type")
+            _reactions.tryEmit(AnimationId.HAPPY)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            Log.e(TAG, "Falha ao salvar lugar $type", e)
+            log.log(DebugEventLogger.Category.PLACE, "SAVE_FAILED type=$type ${e.javaClass.simpleName}")
+        } finally {
+            _busy.value = false
+        }
     }
 
     companion object {
         const val TICK_MS = 20_000L
+        private const val TAG = "HomeViewModel"
     }
 }

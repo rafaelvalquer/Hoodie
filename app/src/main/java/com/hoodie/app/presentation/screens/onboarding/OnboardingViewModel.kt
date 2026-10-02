@@ -2,6 +2,8 @@ package com.hoodie.app.presentation.screens.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
+import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.geofence.GeofenceRegistrar
 import com.hoodie.app.core.location.LocationPermissionManager
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import javax.inject.Inject
@@ -54,6 +57,7 @@ class OnboardingViewModel @Inject constructor(
     private val hoodie: HoodieEngine,
     private val scheduler: WorkScheduler,
     private val clock: ClockProvider,
+    private val log: DebugEventLogger,
 ) : ViewModel() {
     private val _state = MutableStateFlow(OnboardingState())
     val state = _state.asStateFlow()
@@ -79,14 +83,27 @@ class OnboardingViewModel @Inject constructor(
     /** "📍 Você está em casa agora? [SIM]" — uma leitura pontual e o lugar vira um geofence. */
     fun markHomeHere() = viewModelScope.launch {
         _state.update { it.copy(busy = true, message = null) }
-        val pos = location.current()
-        if (pos == null) {
-            _state.update { it.copy(busy = false, message = "Não consegui sua localização agora. Você pode definir a Casa depois em Lugares.") }
-            return@launch
+        try {
+            log.log(DebugEventLogger.Category.ONBOARDING, "HOME_SAVE_STARTED")
+            val pos = location.current()
+            if (pos == null) {
+                _state.update { it.copy(message = "Não consegui sua localização agora. Você pode definir a Casa depois em Lugares.") }
+                log.log(DebugEventLogger.Category.PLACE, "HOME_SAVE_FAILED location_unavailable")
+                return@launch
+            }
+            contextEngine.savePlaceHere(PlaceType.HOME, "Casa", pos.first, pos.second)
+            _state.update { it.copy(homeSaved = true, message = null) }
+            log.log(DebugEventLogger.Category.PLACE, "HOME_SAVE_SUCCESS")
+            afterHome()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (e: Exception) {
+            Log.e(TAG, "Falha ao salvar Casa no onboarding", e)
+            log.log(DebugEventLogger.Category.ONBOARDING, "HOME_SAVE_FAILED ${e.javaClass.simpleName}")
+            _state.update { it.copy(message = "Não consegui salvar sua Casa. Tente novamente.") }
+        } finally {
+            _state.update { it.copy(busy = false) }
         }
-        contextEngine.savePlaceHere(PlaceType.HOME, "Casa", pos.first, pos.second)
-        _state.update { it.copy(busy = false, homeSaved = true) }
-        afterHome()
     }
 
     fun setWorkMode(mode: WorkMode) {
@@ -122,5 +139,9 @@ class OnboardingViewModel @Inject constructor(
         contextEngine.applyRoutineFallbackIfNeeded()
         hoodie.resolve()
         scheduler.schedulePeriodic()
+    }
+
+    private companion object {
+        const val TAG = "OnboardingViewModel"
     }
 }
