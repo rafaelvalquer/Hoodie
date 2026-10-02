@@ -15,14 +15,40 @@ AnimationStateMachine → SpriteProvider ─┬─ SpriteSheetProvider  (estes a
 ```
 assets-source/hoodie/
 ├── baseline/                ← o procedural exportado (ponto de partida — NÃO vai para o app)
-│   ├── hoodie_walk.png/.json/.anchors.png   walk_side, walk_front, walk_back, walk_backpack_side
-│   ├── hoodie_idle.*        idle, idle_sit, idle_look, idle_ear, idle_scratch
-│   ├── hoodie_work.*        sit_down, work_typing, stop_typing, reach_mouse, work_mouse, work_read, stand_up
-│   └── hoodie_sleep.*       bed_sit, bed_lie_down, sleep, sleep_turn, wake_eyes, bed_exit
-├── tools/import_baseline.lua ← cria o .aseprite pronto para desenhar a partir de um baseline
-├── hoodie_*.aseprite        ← os desenhos (criados pelo script; ainda não existem)
+│   ├── hoodie_walk.png/.json/.anchors.png   walk_{side,front,back}, walk_backpack_{side,front,back}
+│   ├── hoodie_idle.*        idle (8), idle_sit (8), idle_look, idle_ear, idle_scratch (8)
+│   ├── hoodie_work.*        sit_down, work_typing, stop_typing, reach_mouse, work_mouse, work_read, stand_up, work_notes, work_tired
+│   └── hoodie_sleep.*       bed_sit, bed_lie_down, sleep (6), sleep_turn, wake_eyes, bed_exit
+├── tools/import_baseline.lua ← cria um .aseprite vazio a partir de um baseline (para redesenhar do zero)
+├── hoodie_*.aseprite        ← ARTE FINAL v1 (vai para o APK via export)
 └── export.ps1 / export.sh   ← exporta tudo para app/src/main/assets/pixel/hoodie/
 ```
+
+## Arte final v1
+
+Os quatro `hoodie_*.aseprite` são a arte final v1, gerada pixel a pixel pelo estúdio de
+teste `app/src/test/.../pixel/art/FinalArtStudio.kt` sobre as poses do procedural, com
+acabamento de *selective outline* (contorno interno no tom escuro do material), *rim light*
+(luz de cima/esquerda na borda da silhueta) e sombra de contato da cabeça na gola. Camadas
+(de baixo para cima): `baseline (referencia)` (travada, escondida, nunca exportada), `legs`,
+`fur`, `fur_shadow`, `hoodie`, `hoodie_shadow`, `arms`, `ears` (reservadas para o
+redesenho — na v1 braços e orelhas estão em `fur`/`hoodie`), `strings`, `face`,
+`accessory`, `outline`, `anchors`.
+
+Regerar tudo (fontes + PNG/JSON do APK + baseline):
+
+```bash
+./gradlew :app:testDebugUnitTest -PexportArt=true --tests "*FinalArtExportTest*"
+```
+
+Sem a flag, `FinalArtExportTest` reprova se o que está commitado não bater com o estúdio.
+Quando um artista redesenhar um arquivo no Aseprite, exporte com `export.ps1/.sh` e
+remova o grupo de `FinalArtStudio.GROUPS` (o arquivo passa a ser a fonte da verdade).
+
+Piscar, olhar, expressão e orelhas continuam funcionando sobre a arte final: o
+`CompositeSpriteProvider` aplica só os pixels que o overlay muda no procedural. Clips que
+herdam a postura (idle_look, idle_ear, idle_scratch) foram desenhados em pé; sentado, o
+procedural assume.
 
 ## Fluxo do artista
 

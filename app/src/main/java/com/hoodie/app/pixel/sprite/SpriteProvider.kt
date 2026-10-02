@@ -81,6 +81,11 @@ object ProceduralSpriteProvider : SpriteProvider {
 /**
  * Sprite sheet onde existir, procedural onde não existir. A escolha é feita por
  * clip e vista: dá para ter só `walk_side` desenhado à mão e o resto procedural.
+ *
+ * Duas regras mantêm a arte final viva como o procedural:
+ * - Clip que herda a postura (Legs.INHERIT) só foi desenhado em pé; sentado, usa o procedural.
+ * - Overlays (piscar, olhar, expressão, orelhas) viram um "remendo": os pixels que o
+ *   overlay muda no procedural são aplicados por cima do frame final.
  */
 class CompositeSpriteProvider(
     private val primary: SpriteProvider,
@@ -88,14 +93,48 @@ class CompositeSpriteProvider(
 ) : SpriteProvider {
     override val name = "${primary.name}+${fallback.name}"
 
+    private val patched = object : LinkedHashMap<SpriteRequest, PixelBuffer>(64, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<SpriteRequest, PixelBuffer>?) = size > 96
+    }
+
     fun providerFor(animation: AnimationId, direction: Direction): SpriteProvider {
         val view = viewFor(animation, direction)
         return if (primary.supports(animation, view.facing)) primary else fallback
+    }
+
+    fun providerFor(request: SpriteRequest): SpriteProvider {
+        val p = providerFor(request.animation, request.direction)
+        val inheritsPosture = request.animation.clip.frames.any { it.pose.legs == Legs.INHERIT }
+        return if (p === primary && inheritsPosture && request.posture == Posture.SITTING) fallback else p
     }
 
     override fun supports(animation: AnimationId, facing: Facing) = true
 
     override fun durations(animation: AnimationId, direction: Direction) = providerFor(animation, direction).durations(animation, direction)
 
-    override fun frame(request: SpriteRequest) = providerFor(request.animation, request.direction).frame(request)
+    override fun frame(request: SpriteRequest): SpriteFrame {
+        val p = providerFor(request)
+        val f = p.frame(request)
+        if (p === fallback || request.overlay == PoseOverlay.NONE) return f
+        val idx = request.frameIndex.mod(request.animation.clip.frames.size)
+        val key = request.copy(frameIndex = idx)
+        val image = synchronized(patched) {
+            patched.getOrPut(key) { overlayPatch(f.image, fallback.frame(key.copy(overlay = PoseOverlay.NONE)).image, fallback.frame(key).image) }
+        }
+        return if (image === f.image) f else f.copy(image = image)
+    }
+
+    companion object {
+        /** Aplica em [art] só os pixels em que [withOverlay] difere de [plain]. */
+        fun overlayPatch(art: PixelBuffer, plain: PixelBuffer, withOverlay: PixelBuffer): PixelBuffer {
+            if (plain === withOverlay || plain.width != art.width || plain.height != art.height) return art
+            var out: PixelBuffer? = null
+            for (i in plain.pixels.indices) {
+                if (plain.pixels[i] == withOverlay.pixels[i]) continue
+                val o = out ?: PixelBuffer(art.width, art.height).also { art.pixels.copyInto(it.pixels); out = it }
+                o.pixels[i] = withOverlay.pixels[i]
+            }
+            return out ?: art
+        }
+    }
 }

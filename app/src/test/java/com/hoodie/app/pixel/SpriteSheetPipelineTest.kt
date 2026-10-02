@@ -103,14 +103,31 @@ class SpriteSheetPipelineTest {
     }
 
     @Test
+    fun `overlay vira remendo sobre a arte final e clip herdado sentado usa o procedural`() {
+        val root = Files.createTempDirectory("hoodie-overlay").toFile()
+        SheetBaker.write(File(root, SpriteSheetProvider.DIR), "idle", SheetBaker.bake(listOf(AnimationId.IDLE to Facing.FRONT, AnimationId.IDLE_LOOK to Facing.FRONT)))
+        val composite = CompositeSpriteProvider(SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder).first)
+        val plain = SpriteRequest(AnimationId.IDLE, Direction.FRONT, 0)
+        val blink = plain.copy(overlay = com.hoodie.app.pixel.sprite.PoseOverlay(blink = com.hoodie.app.pixel.sprite.Eyes.CLOSED))
+        val f = composite.frame(blink)
+        assertEquals("spritesheet", f.source)
+        // Mesmos pixels do procedural com os olhos fechados (o sheet aqui é o próprio procedural).
+        assertTrue(f.image.pixels.contentEquals(ProceduralSpriteProvider.frame(blink).image.pixels))
+        assertFalse(f.image.pixels.contentEquals(composite.frame(plain).image.pixels))
+        // IDLE_LOOK herda a postura: desenhado em pé, sentado cai no procedural.
+        assertEquals("spritesheet", composite.frame(SpriteRequest(AnimationId.IDLE_LOOK)).source)
+        assertEquals("procedural", composite.frame(SpriteRequest(AnimationId.IDLE_LOOK, posture = com.hoodie.app.pixel.sprite.Posture.SITTING)).source)
+    }
+
+    @Test
     fun `sheet com contagem de frames errada e rejeitado e o procedural assume`() {
         val root = Files.createTempDirectory("hoodie-count").toFile()
         val baked = SheetBaker.bake(listOf(AnimationId.IDLE to Facing.FRONT, AnimationId.WALK to Facing.SIDE))
         val json = org.json.JSONObject(baked.json)
-        json.getJSONObject("meta").getJSONArray("frameTags").getJSONObject(0).put("to", 1) // idle com 2 de 4 frames
+        json.getJSONObject("meta").getJSONArray("frameTags").getJSONObject(0).put("to", 1) // idle com 2 de 8 frames
         SheetBaker.write(File(root, SpriteSheetProvider.DIR), "short", baked.copy(json = json.toString()))
         val (sheets, report) = SpriteSheetProvider.load(SheetBaker.assetSource(root), SheetBaker.decoder)
-        assertTrue(report.problems.toString(), report.problems.any { "o clip tem 4" in it && "rejeitado" in it })
+        assertTrue(report.problems.toString(), report.problems.any { "o clip tem 8" in it && "rejeitado" in it })
         assertFalse(sheets.supports(AnimationId.IDLE, Facing.FRONT))
         assertTrue("o resto do arquivo continua valendo", sheets.supports(AnimationId.WALK, Facing.SIDE))
         assertEquals("procedural", CompositeSpriteProvider(sheets).frame(SpriteRequest(AnimationId.IDLE, Direction.FRONT, 0)).source)

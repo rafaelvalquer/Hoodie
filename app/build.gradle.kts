@@ -43,6 +43,7 @@ android {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {
             it.systemProperty("exportIcons", project.findProperty("exportIcons") ?: "false")
+            it.systemProperty("exportArt", project.findProperty("exportArt") ?: "false")
             // Robolectric + JDK 17/21: acesso a internals de FileDescriptor (SQLite nativo).
             it.jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
         }
