@@ -6,7 +6,9 @@
       > ^ <    O Hoodie vive uma rotina paralela.
 ```
 
-MVP Android **100% nativo (Kotlin + Jetpack Compose)**, **offline** e com **todo o histórico só no aparelho**.
+**Versão: 0.2.0-dev** (Hoodie V0.2 — Visual & Diary Foundation; versão definida em `gradle.properties`).
+
+App Android **100% nativo (Kotlin + Jetpack Compose)**, **offline** e com **todo o histórico só no aparelho**.
 A internet é usada apenas na tela de buscar um endereço no mapa (veja Privacidade).
 
 ## Como rodar

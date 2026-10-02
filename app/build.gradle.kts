@@ -14,8 +14,9 @@ android {
         applicationId = "com.hoodie.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-mvp"
+        // Fonte única de verdade: gradle.properties (HOODIE_VERSION_CODE / HOODIE_VERSION_NAME).
+        versionCode = providers.gradleProperty("HOODIE_VERSION_CODE").get().toInt()
+        versionName = providers.gradleProperty("HOODIE_VERSION_NAME").get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
