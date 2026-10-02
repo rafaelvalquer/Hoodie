@@ -12,6 +12,8 @@ import com.hoodie.app.engine.context.ContextEngine
 import com.hoodie.app.engine.context.GeofenceTransition
 import com.hoodie.app.engine.hoodie.HoodieEngine
 import com.hoodie.app.worker.WorkScheduler
+import com.hoodie.app.core.database.DatabaseGate
+import dagger.Lazy
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +23,11 @@ import javax.inject.Inject
 
 private val receiverScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-/** Executa trabalho suspenso dentro do tempo de vida estendido do receiver. */
+/**
+ * Executa trabalho suspenso dentro do tempo de vida estendido do receiver.
+ * Dependências que tocam o banco são `Lazy`: com o banco indisponível
+ * (migração falhou / senha irrecuperável) o receiver sai cedo em vez de derrubar o app.
+ */
 private fun BroadcastReceiver.runAsync(block: suspend () -> Unit) {
     val pending = goAsync()
     receiverScope.launch {
@@ -32,7 +38,8 @@ private fun BroadcastReceiver.runAsync(block: suspend () -> Unit) {
 /** ENTER / EXIT / DWELL vindos do sistema. Só o id do lugar entra no app. */
 @AndroidEntryPoint
 class GeofenceReceiver : BroadcastReceiver() {
-    @Inject lateinit var contextEngine: ContextEngine
+    @Inject lateinit var contextEngine: Lazy<ContextEngine>
+    @Inject lateinit var gate: DatabaseGate
     @Inject lateinit var clock: ClockProvider
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -46,7 +53,10 @@ class GeofenceReceiver : BroadcastReceiver() {
         }
         val ids = event.triggeringGeofences.orEmpty().mapNotNull { it.requestId.toLongOrNull() }
         val at = clock.nowMillis()
-        runAsync { ids.forEach { contextEngine.onGeofence(it, transition, at) } }
+        runAsync {
+            if (!gate.isReady()) return@runAsync
+            ids.forEach { contextEngine.get().onGeofence(it, transition, at) }
+        }
     }
 }
 
@@ -57,21 +67,22 @@ class GeofenceReceiver : BroadcastReceiver() {
  */
 @AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
-    @Inject lateinit var geofences: GeofenceManager
+    @Inject lateinit var geofences: Lazy<GeofenceManager>
     @Inject lateinit var scheduler: WorkScheduler
-    @Inject lateinit var hoodie: HoodieEngine
+    @Inject lateinit var hoodie: Lazy<HoodieEngine>
+    @Inject lateinit var gate: DatabaseGate
     @Inject lateinit var log: DebugEventLogger
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
         runAsync {
             log.log(DebugEventLogger.Category.SYSTEM, action.substringAfterLast('.'))
-            if (action in REGISTER_ACTIONS) {
-                geofences.registerAll()
-                scheduler.schedulePeriodic()
-            }
+            // Agendar não precisa do banco; o resto só com o banco aberto com segurança.
+            if (action in REGISTER_ACTIONS) scheduler.schedulePeriodic()
             if (action in TIME_ACTIONS) scheduler.reconcileNow()
-            hoodie.resolve()
+            if (!gate.isReady()) return@runAsync
+            if (action in REGISTER_ACTIONS) geofences.get().registerAll()
+            hoodie.get().resolve()
         }
     }
 
@@ -84,13 +95,17 @@ class BootReceiver : BroadcastReceiver() {
 /** Botões Sim/Não das notificações de confirmação. */
 @AndroidEntryPoint
 class QuestionActionReceiver : BroadcastReceiver() {
-    @Inject lateinit var contextEngine: ContextEngine
+    @Inject lateinit var contextEngine: Lazy<ContextEngine>
+    @Inject lateinit var gate: DatabaseGate
 
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getLongExtra(EXTRA_QUESTION, -1)
         if (id < 0) return
         val yes = intent.getBooleanExtra(EXTRA_YES, false)
-        runAsync { contextEngine.answerYesNo(id, yes) }
+        runAsync {
+            if (!gate.isReady()) return@runAsync
+            contextEngine.get().answerYesNo(id, yes)
+        }
     }
 
     companion object {

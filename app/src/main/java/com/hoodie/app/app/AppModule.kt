@@ -2,9 +2,10 @@ package com.hoodie.app.app
 
 import android.content.Context
 import androidx.room.Room
-import com.hoodie.app.core.database.DatabaseEncryption
+import com.hoodie.app.core.database.DatabaseBootstrapResult
+import com.hoodie.app.core.database.DatabaseGate
+import com.hoodie.app.core.database.DatabaseUnavailableException
 import com.hoodie.app.core.database.HoodieDatabase
-import com.hoodie.app.core.security.DatabaseKeyStore
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import com.hoodie.app.core.database.RoomTransactionRunner
 import com.hoodie.app.core.database.TransactionRunner
@@ -63,17 +64,16 @@ abstract class BindingsModule {
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
     @Provides @Singleton
-    fun database(@ApplicationContext context: Context, keys: DatabaseKeyStore): HoodieDatabase {
-        // Banco inteiro cifrado (SQLCipher). Quem vem de uma versão em texto puro é migrado antes de abrir.
-        DatabaseEncryption.loadLibrary()
-        val file = context.getDatabasePath(HoodieDatabase.NAME)
-        val passphrase = keys.passphrase()
-        runCatching { DatabaseEncryption.migrateIfNeeded(file, passphrase) }
-            .onFailure { android.util.Log.e("Hoodie", "Falha ao cifrar o banco; tentando de novo na próxima abertura", it) }
-        // Se a migração falhou, o banco continua legível em texto puro (senha vazia) — nunca perde dados.
-        val effective = if (DatabaseEncryption.isPlaintext(file)) ByteArray(0) else passphrase
+    fun database(@ApplicationContext context: Context, gate: DatabaseGate): HoodieDatabase {
+        // Sempre cifrado (SQLCipher). Não existe caminho que abra o banco em texto puro:
+        // se a migração ou a senha falharem, o gate devolve Failed e quem chegou até
+        // aqui recebe DatabaseUnavailableException (a UI mostra a tela de recuperação antes).
+        val passphrase = when (val r = gate.ensure()) {
+            is DatabaseBootstrapResult.Ready -> r.passphrase
+            is DatabaseBootstrapResult.Failed -> throw DatabaseUnavailableException(r.state)
+        }
         return Room.databaseBuilder(context, HoodieDatabase::class.java, HoodieDatabase.NAME)
-            .openHelperFactory(SupportOpenHelperFactory(effective))
+            .openHelperFactory(SupportOpenHelperFactory(passphrase))
             .addMigrations(*ALL_MIGRATIONS)
             .build()
     }
