@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -47,7 +49,7 @@ fun CategoryUsageCard(categories: List<CategoryUsageSummary>, modifier: Modifier
     val total = categories.sumOf { it.foregroundMs }.coerceAtLeast(1)
     HudPanel("Uso por categoria", modifier.fillMaxWidth(), accent = HoodieColors.Coral) {
         if (categories.isEmpty()) {
-            Text("Sem apps categorizados.", style = RetroFontStyles.Body, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_phone_insights_components_1), style = RetroFontStyles.Body, color = HoodieColors.Muted)
             return@HudPanel
         }
         StackedPixelBar(categories.map { it.foregroundMs.toFloat() to RetroUiTheme.category(it.category) })
@@ -68,7 +70,7 @@ fun DigitalTimelineCard(items: List<PhoneTimelineItem>, apps: List<AppUsageEntry
     HudPanel("Linha do tempo digital", modifier.fillMaxWidth(), accent = HoodieColors.Hood, trailing = "${items.size} blocos") {
         if (items.isEmpty()) {
             Text(
-                "Os blocos de uso aparecem no dia em que são registrados. Dias antigos guardam só o resumo.",
+                stringResource(R.string.ui_phone_insights_components_2),
                 style = RetroFontStyles.Small, color = HoodieColors.Muted,
             )
         }
@@ -119,7 +121,7 @@ fun DigitalLoading(modifier: Modifier = Modifier) {
     PixelPanel(modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = RetroUiTheme.Screen)
-            Text("Lendo o uso do celular…", style = RetroFontStyles.Body, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_phone_insights_components_3), style = RetroFontStyles.Body, color = HoodieColors.Muted)
         }
     }
 }
@@ -148,20 +150,20 @@ fun DiaryPhoneCard(insights: DailyPhoneInsights, onOpen: () -> Unit, modifier: M
     HudPanel("Seu celular", modifier.fillMaxWidth(), accent = RetroUiTheme.Screen, trailing = "ver digital ▶", onClick = onOpen) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) {
-                Text("📱 TELA", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
+                Text(stringResource(R.string.ui_phone_insights_components_4), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
                 Text(formatDuration(s.screenTimeMs), style = RetroFontStyles.HudNumber, color = HoodieColors.Ink)
             }
             Column(Modifier.weight(1f)) {
-                Text("🔓 DESBLOQ.", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
+                Text(stringResource(R.string.ui_phone_insights_components_5), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
                 Text("${if (s.isEstimated) "≈" else ""}${s.unlockCount}", style = RetroFontStyles.HudNumber, color = HoodieColors.Ink)
             }
             Column(Modifier.weight(1f)) {
-                Text("📦 APPS", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
+                Text(stringResource(R.string.ui_phone_insights_components_6), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
                 Text("${insights.appCount}", style = RetroFontStyles.HudNumber, color = HoodieColors.Ink)
             }
         }
         if (insights.topApps.isNotEmpty()) {
-            Text("TOP APPS DO DIA", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_phone_insights_components_7), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 insights.topApps.take(3).forEach { app ->
                     Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -184,7 +186,7 @@ fun ContextPhoneUsageSection(insights: DailyPhoneInsights?, context: com.hoodie.
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("📱 USO DO CELULAR · ${context.label.uppercase()}", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
         if (usage == null || usage.apps.isEmpty()) {
-            Text("Sem uso do celular registrado neste contexto.", style = RetroFontStyles.Small, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_phone_insights_components_8), style = RetroFontStyles.Small, color = HoodieColors.Muted)
         } else {
             ContextUsageBlock(usage, 1f, insights?.topApps.orEmpty(), showApps = true, appsShown = 5)
             PixelTag(sessionsLabel(usage.sessionCount), RetroUiTheme.context(context))

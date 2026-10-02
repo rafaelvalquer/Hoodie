@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.home
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +22,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
+import com.hoodie.app.pixel.animation.AnimationId
+import com.hoodie.app.presentation.common.appErrorText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +74,22 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val busy by vm.busy.collectAsStateWithLifecycle()
     var manualOpen by remember { mutableStateOf(false) }
     val zone = ZoneId.systemDefault()
+    val snackbar = remember { SnackbarHostState() }
+    val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
+    val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(vm, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            vm.events.collect { event ->
+                when (event) {
+                    is HomeUiEvent.React -> reactions.emit(event.animation)
+                    is HomeUiEvent.ShowError -> launch { snackbar.showSnackbar(context.appErrorText(event.error)) }
+                }
+            }
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
 
     Column(
         Modifier
@@ -79,7 +109,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
 
         // Cena viva.
         Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f).padding(horizontal = 8.dp), contentAlignment = Alignment.TopCenter) {
-            HoodieSceneView(state.visual, Modifier.fillMaxSize(), reactions = vm.reactions)
+            HoodieSceneView(state.visual, Modifier.fillMaxSize(), reactions = reactions)
             state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp)) }
         }
 
@@ -126,25 +156,25 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
                         PixelButton(if (busy) "Localizando..." else "Salvar este local como ${type.label}", { vm.savePlaceHere(type) }, Modifier.fillMaxWidth(), enabled = !busy)
                         Spacer(Modifier.padding(4.dp))
                     }
-                    PixelButton("🗺 Buscar pelo endereço", { onOpen(Routes.placePicker(type)) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
+                    PixelButton(stringResource(R.string.ui_home_screen_1), { onOpen(Routes.placePicker(type)) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
                 }
             }
 
             // Você.
             PixelPanel(Modifier.fillMaxWidth()) {
-                SectionLabel("Você")
+                SectionLabel(stringResource(R.string.ui_home_screen_2))
                 val ctx = state.context
                 val type = ctx?.type ?: UserContextType.UNKNOWN
                 Text("${type.emoji} ${type.label}" + if (state.probableMode && ctx != null) " (provável)" else "", style = MaterialTheme.typography.titleMedium)
                 ctx?.let { Text("desde ${formatClock(it.startedAt, zone)}", color = HoodieColors.Muted) }
                 state.next?.let {
                     Spacer(Modifier.padding(4.dp))
-                    SectionLabel("Próximo evento")
+                    SectionLabel(stringResource(R.string.ui_home_screen_3))
                     Text(it.display)
                 }
             }
 
-            PixelButton("O que estou fazendo?", { manualOpen = true }, Modifier.fillMaxWidth(), color = HoodieColors.Gold)
+            PixelButton(stringResource(R.string.ui_home_screen_4), { manualOpen = true }, Modifier.fillMaxWidth(), color = HoodieColors.Gold)
             if (state.isWorkDay) {
                 PixelButton(
                     if (state.isDayOff) "Hoje é dia normal de trabalho" else "Hoje não vou trabalhar",
@@ -154,10 +184,13 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         }
     }
 
+    SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+    }
+
     if (manualOpen) {
         ModalBottomSheet(onDismissRequest = { manualOpen = false }, containerColor = HoodieColors.Panel) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("O QUE ESTOU FAZENDO?", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.ui_home_screen_5), style = MaterialTheme.typography.titleMedium)
                 Text("Isso também ensina o ${state.catName} sobre a sua rotina.", color = HoodieColors.Muted)
                 UserContextType.manualOptions.forEach { t ->
                     PixelButton("${t.emoji} ${if (t == UserContextType.UNKNOWN) "Outro" else t.label}", {
@@ -196,25 +229,25 @@ private fun QuestionCard(q: ContextQuestion, vm: HomeViewModel) {
         Spacer(Modifier.padding(6.dp))
         when (q.kind) {
             QuestionKind.CONFIRM_CONTEXT, QuestionKind.CONFIRM_MOVEMENT, QuestionKind.CONFIRM_ARRIVAL, QuestionKind.CONFIRM_TRIP_PATTERN -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                PixelButton("Sim", { vm.answerYesNo(q.id, true) }, Modifier.weight(1f))
-                PixelButton("Não", { vm.answerYesNo(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
+                PixelButton(stringResource(R.string.ui_home_screen_6), { vm.answerYesNo(q.id, true) }, Modifier.weight(1f))
+                PixelButton(stringResource(R.string.ui_home_screen_7), { vm.answerYesNo(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
             }
             QuestionKind.NEW_PLACE -> {
                 val options = PlaceType.newPlaceOptions
                 ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { vm.answerNewPlace(q.id, options[it]) })
                 Spacer(Modifier.padding(4.dp))
-                Text("Agora não", color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
+                Text(stringResource(R.string.ui_home_screen_8), color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
             }
             QuestionKind.SELECT_TRANSPORT_MODE -> {
                 // Escolha só dentro do app (nunca um botão de notificação com o veículo andando).
                 val options = com.hoodie.app.core.mobility.MovementMode.TRANSPORT_CHOICES
                 ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { vm.answerTransportMode(q.id, options[it]) })
                 Spacer(Modifier.padding(4.dp))
-                Text("Agora não", color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
+                Text(stringResource(R.string.ui_home_screen_9), color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
             }
             QuestionKind.SAVE_PLACE -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                PixelButton("Sim", { vm.answerSavePlace(q.id, true) }, Modifier.weight(1f))
-                PixelButton("Só hoje", { vm.answerSavePlace(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
+                PixelButton(stringResource(R.string.ui_home_screen_10), { vm.answerSavePlace(q.id, true) }, Modifier.weight(1f))
+                PixelButton(stringResource(R.string.ui_home_screen_11), { vm.answerSavePlace(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
             }
         }
     }

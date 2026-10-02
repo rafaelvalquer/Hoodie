@@ -3,6 +3,9 @@ package com.hoodie.app.presentation.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,7 +53,7 @@ fun PixelPanel(
             }
             .background(color)
             .border(2.dp, HoodieColors.Outline)
-            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
+            .let { if (onClick != null) it.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(role = Role.Button, onClick = onClick) else it }
             .padding(14.dp),
         content = content,
     )
@@ -75,7 +78,8 @@ fun PixelButton(
             }
             .background(bg)
             .border(2.dp, HoodieColors.Outline)
-            .clickable(enabled = enabled, onClick = onClick)
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -153,7 +157,8 @@ fun ChipRow(options: List<String>, selected: Int?, onSelect: (Int) -> Unit, modi
                 Modifier
                     .background(if (on) HoodieColors.Blue else HoodieColors.PanelLight)
                     .border(2.dp, HoodieColors.Outline)
-                    .clickable { onSelect(i) }
+                    .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    .selectable(selected = on, role = Role.RadioButton, onClick = { onSelect(i) })
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) HoodieColors.Outline else HoodieColors.Ink)

@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -34,7 +36,7 @@ import com.hoodie.app.presentation.theme.HoodieColors
 fun PlaceTypeBottomSheet(selected: PlaceType, onSelect: (PlaceType) -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = HoodieColors.Panel) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp).testTag(PlacePickerTags.TYPE_SHEET)) {
-            SectionLabel("Tipo do lugar", Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            SectionLabel(stringResource(R.string.ui_place_type_bottom_sheet_1), Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
             PlaceType.entries.forEach { t ->
                 val isSelected = t == selected
                 Row(
@@ -50,7 +52,7 @@ fun PlaceTypeBottomSheet(selected: PlaceType, onSelect: (PlaceType) -> Unit, onD
                 ) {
                     Text(t.emoji, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(36.dp))
                     Text(t.label, style = MaterialTheme.typography.bodyLarge, color = if (isSelected) HoodieColors.Hood else HoodieColors.Ink, modifier = Modifier.weight(1f))
-                    if (isSelected) Text("✓", color = HoodieColors.Gold)
+                    if (isSelected) Text(stringResource(R.string.ui_place_type_bottom_sheet_2), color = HoodieColors.Gold)
                 }
             }
         }

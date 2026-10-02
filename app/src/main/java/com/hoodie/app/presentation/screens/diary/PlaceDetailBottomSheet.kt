@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,15 +52,15 @@ fun PlaceDetailBottomSheet(node: DiaryMapPlaceNode, details: List<DiaryVisitDeta
             if (phoneTotal > 0) DetailLine("📱 celular aqui", formatDuration(phoneTotal))
             mine.forEachIndexed { i, d -> VisitDetailSection(i + 1, d, zone) }
             val events = mine.flatMap { it.events }.distinctBy { it.id }.sortedBy { it.timestamp }
-            SectionLabel("EVENTOS RELACIONADOS")
-            if (events.isEmpty()) Text("Nenhum evento relacionado neste período.", color = HoodieColors.Muted)
+            SectionLabel(stringResource(R.string.ui_place_detail_bottom_sheet_1))
+            if (events.isEmpty()) Text(stringResource(R.string.ui_place_detail_bottom_sheet_2), color = HoodieColors.Muted)
             else events.forEach { event ->
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     Text(formatClock(event.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Gold, modifier = Modifier.width(48.dp))
                     Text("${event.emoji ?: "📍"} ${event.title}", style = MaterialTheme.typography.bodySmall)
                 }
             }
-            Text("Este prédio representa um lugar conhecido, não uma localização precisa.", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_place_detail_bottom_sheet_3), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         }
     }
 }

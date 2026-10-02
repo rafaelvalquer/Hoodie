@@ -1,5 +1,10 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
+import com.hoodie.app.presentation.common.CollectUiEvents
+import com.hoodie.app.presentation.common.appErrorText
+import androidx.compose.runtime.rememberUpdatedState
 import android.app.DatePickerDialog
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -84,6 +89,12 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     val today = state.today
     val context = LocalContext.current
     var selectedNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
+    val selectedDate by rememberUpdatedState(state.selectedDate)
+    CollectUiEvents(vm.events) { event ->
+        when (event) {
+            is DiaryUiEvent.ShowPlaceDetails -> if (event.date == selectedDate) selectedNodeId = event.nodeId
+        }
+    }
     val zone = vm.zone
     var tab by rememberSaveable { mutableStateOf(DiaryTab.GENERAL) }
     var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
@@ -91,38 +102,38 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("DIÁRIO", style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
+        Text(stringResource(R.string.ui_diary_screen_1), style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
         DateSelector(state.selectedDate, today, context, zone, onSelect = vm::selectDate)
         DiaryTabs(tab, onSelect = { tab = it })
         if (tab == DiaryTab.DIGITAL) {
             PhoneInsightsScreen(state.selectedDate)
         } else if (state.isLoading) {
-            PixelPanel(Modifier.fillMaxWidth()) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp); Text("Montando seu dia…", color = HoodieColors.Muted) } }
+            PixelPanel(Modifier.fillMaxWidth()) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp); Text(stringResource(R.string.ui_diary_screen_2), color = HoodieColors.Muted) } }
         } else if (state.error != null) {
             PixelPanel(Modifier.fillMaxWidth()) {
-                Text(state.error.orEmpty(), color = HoodieColors.Coral)
-                PixelButton("Tentar novamente", vm::retry)
+                Text(context.appErrorText(requireNotNull(state.error)), color = HoodieColors.Coral)
+                PixelButton(stringResource(R.string.ui_diary_screen_3), vm::retry)
             }
         } else {
             val diary = state.diary
             if (diary == null || diary.summary.totalMs == 0L && diary.timeline.isEmpty()) {
                 PixelPanel(Modifier.fillMaxWidth()) {
-                    Text("🌙  Ainda não há dados suficientes", style = MaterialTheme.typography.titleMedium, color = HoodieColors.Hood)
-                    Text("Os contextos e momentos do Hoodie registrados nesta data aparecerão aqui.", color = HoodieColors.Muted, modifier = Modifier.padding(top = 6.dp))
-                    Text("O mapa reconstrói lugares conhecidos; não registra uma rota GPS.", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
+                    Text(stringResource(R.string.ui_diary_screen_4), style = MaterialTheme.typography.titleMedium, color = HoodieColors.Hood)
+                    Text(stringResource(R.string.ui_diary_screen_5), color = HoodieColors.Muted, modifier = Modifier.padding(top = 6.dp))
+                    Text(stringResource(R.string.ui_diary_screen_6), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
                 }
             } else {
                 SummarySection(diary.summary, onContext = if (diary.phoneInsights != null) { ctx -> selectedContext = ctx } else null)
                 if (diary.mobilityTotals.isNotEmpty()) {
                     // Deslocamentos do dia, sem trajeto: só quanto tempo em cada meio.
                     PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
-                        SectionLabel("DESLOCAMENTOS")
+                        SectionLabel(stringResource(R.string.ui_diary_screen_7))
                         Text(com.hoodie.app.engine.diary.DiaryMobilityMerger.summary(diary.mobilityTotals), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
                 val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
-                DiaryMapView(layout, state.replay, onNode = { selectedNodeId = it.id })
+                DiaryMapView(layout, state.replay, onNode = { vm.openPlace(it.id) })
                 DiaryReplayHud(state.replay.visual, zone)
                 ReplayControls(
                     state.replay,
@@ -177,13 +188,13 @@ private data class SummaryItem(val label: String, val emoji: String, val duratio
 @Composable
 internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType) -> Unit)? = null) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionLabel("SEU DIA")
+        SectionLabel(stringResource(R.string.ui_diary_screen_8))
         val items = listOf(
             SummaryItem("Casa", "🏠", summary.homeMs, UserContextType.HOME), SummaryItem("Trabalho", "🏢", summary.workMs, UserContextType.WORK),
             SummaryItem("Transporte", "🚶", summary.commutingMs, UserContextType.COMMUTING), SummaryItem("Almoço", "🍽️", summary.lunchMs, UserContextType.LUNCH),
         SummaryItem("Academia", "🏋️", summary.gymMs, UserContextType.GYM), SummaryItem("Lazer", "🎉", summary.leisureMs, UserContextType.LEISURE), SummaryItem("Outros", "📍", summary.otherMs),
         ).filter { it.duration > 0 }
-        if (items.isEmpty()) PixelPanel(Modifier.fillMaxWidth()) { Text("Sem contextos registrados.", color = HoodieColors.Muted) }
+        if (items.isEmpty()) PixelPanel(Modifier.fillMaxWidth()) { Text(stringResource(R.string.ui_diary_screen_9), color = HoodieColors.Muted) }
         items.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { item ->
@@ -204,10 +215,10 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
 internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset: () -> Unit, onSpeed: (ReplaySpeed) -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         PixelButton(if (replay.state == ReplayState.PLAYING) "Pausar" else if (replay.state == ReplayState.FINISHED) "Rever dia" else "▶ Reproduzir meu dia", onToggle, modifier = Modifier.weight(1f), color = HoodieColors.Mint)
-        TextButton(onClick = onReset, modifier = Modifier.semantics { contentDescription = "Reiniciar replay" }) { Text("↺", color = HoodieColors.Hood) }
+        TextButton(onClick = onReset, modifier = Modifier.semantics { contentDescription = "Reiniciar replay" }) { Text(stringResource(R.string.ui_diary_screen_10), color = HoodieColors.Hood) }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("VELOCIDADE", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+        Text(stringResource(R.string.ui_diary_screen_11), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         ReplaySpeed.entries.forEach { speed ->
             androidx.compose.material3.FilterChip(selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text(speed.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelSmall) })
         }
@@ -223,8 +234,8 @@ internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.Diary
         else timelineScroll.scrollToItem(0)
     }
     PixelPanel(Modifier.fillMaxWidth()) {
-        SectionLabel("LINHA DO TEMPO")
-        if (items.isEmpty()) Text("Sem eventos registrados.", color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
+        SectionLabel(stringResource(R.string.ui_diary_screen_12))
+        if (items.isEmpty()) Text(stringResource(R.string.ui_diary_screen_13), color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
         LazyColumn(Modifier.fillMaxWidth().heightIn(max = 280.dp), state = timelineScroll) {
             itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
             val highlighted = index == activeIndex

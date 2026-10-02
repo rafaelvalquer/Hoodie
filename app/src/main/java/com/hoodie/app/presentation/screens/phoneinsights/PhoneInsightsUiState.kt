@@ -9,6 +9,7 @@ import com.hoodie.app.engine.deviceusage.DigitalReaction
 import com.hoodie.app.engine.deviceusage.HoodieDigitalReactions
 import java.time.LocalDate
 import com.hoodie.app.BuildConfig
+import com.hoodie.app.core.error.AppError
 
 data class UsagePermissionUiState(
     val permission: UsagePermissionState,
@@ -29,6 +30,7 @@ enum class PhoneInsightsStatus {
 
 sealed interface PhoneInsightsUiEvent {
     data object OpenUsageSettings : PhoneInsightsUiEvent
+    data class ShowError(val error: AppError) : PhoneInsightsUiEvent
 }
 
 data class PhoneInsightsUiState(
@@ -37,7 +39,7 @@ data class PhoneInsightsUiState(
     val settings: DigitalSettings = DigitalSettings(),
     val insights: DailyPhoneInsights? = null,
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: AppError? = null,
     val catName: String = "Hoodie",
     val selectedApp: AppUsageEntry? = null,
 ) {
@@ -62,7 +64,7 @@ data class PhoneInsightsUiState(
             settings: DigitalSettings,
             insights: DailyPhoneInsights?,
             isLoading: Boolean,
-            error: String?,
+            error: AppError?,
         ): PhoneInsightsStatus = when {
             insights != null && !insights.isEmpty -> PhoneInsightsStatus.READY
             isLoading -> PhoneInsightsStatus.LOADING
