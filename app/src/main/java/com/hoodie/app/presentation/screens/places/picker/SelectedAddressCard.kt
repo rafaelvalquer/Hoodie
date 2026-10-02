@@ -18,7 +18,7 @@ import java.util.Locale
 fun selectedAddressText(address: String?, latitude: Double, longitude: Double, hasPoint: Boolean): String = when {
     !address.isNullOrBlank() -> address
     hasPoint -> String.format(Locale.US, "%.5f, %.5f", latitude, longitude)
-    else -> "Busque o endereço ou arraste o mapa até o pino ficar no lugar certo."
+    else -> "Busque um endereço, use sua localização ou ajuste o pino no mapa."
 }
 
 /**

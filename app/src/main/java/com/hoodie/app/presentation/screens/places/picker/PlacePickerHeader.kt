@@ -47,6 +47,8 @@ fun PlacePickerHeader(editing: Boolean, type: PlaceType, onClose: () -> Unit, ho
         Text(
             "✕",
             style = MaterialTheme.typography.titleLarge,
+            // Cor explícita: sem Surface por cima, o padrão do Material sai escuro sobre o fundo escuro.
+            color = HoodieColors.Ink,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .size(48.dp)

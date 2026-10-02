@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -82,6 +83,11 @@ fun MapPicker(
             maxZoomLevel = 19.5
             controller.setZoom(17.0)
             controller.setCenter(GeoPoint(latitude, longitude))
+            // Também no lado View: tiles e overlays presos aos limites do próprio MapView.
+            clipChildren = true
+            clipToPadding = true
+            outlineProvider = android.view.ViewOutlineProvider.BOUNDS
+            clipToOutline = true
         }
     }
     val circle = remember {
@@ -139,8 +145,10 @@ fun MapPicker(
     }
     LaunchedEffect(radiusMeters) { refreshCircle() }
 
-    Box(modifier.border(2.dp, HoodieColors.Outline)) {
-        AndroidView(factory = { map }, modifier = Modifier.matchParentSize())
+    // clipToBounds: o MapView (View nativa) nunca desenha fora da área reservada ao mapa,
+    // e os controles do mapa ficam presos aos bounds dele.
+    Box(modifier.clipToBounds().border(2.dp, HoodieColors.Outline).testTag(MAP_VIEW_TAG)) {
+        AndroidView(factory = { map }, modifier = Modifier.matchParentSize().clipToBounds())
         // A ponta do pino (base do desenho) fica exatamente no centro do mapa.
         PixelPin(Modifier.align(Alignment.Center).padding(bottom = 36.dp))
         if (onMyLocation != null) {
@@ -162,6 +170,7 @@ fun MapPicker(
 }
 
 const val MAP_MY_LOCATION_TAG = "map_my_location"
+const val MAP_VIEW_TAG = "map_view"
 
 /** Botão compacto sobre o mapa (borda pixel de 2 dp, fundo do painel). */
 @Composable

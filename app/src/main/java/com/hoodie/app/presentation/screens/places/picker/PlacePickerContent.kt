@@ -1,40 +1,41 @@
 package com.hoodie.app.presentation.screens.places.picker
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.res.stringResource
-import com.hoodie.app.R
-import com.hoodie.app.presentation.components.PixelButton
-import com.hoodie.app.presentation.screens.places.PlaceLoadState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hoodie.app.R
 import com.hoodie.app.core.location.AddressResult
 import com.hoodie.app.core.model.PlaceType
-import com.hoodie.app.presentation.components.MapPicker
+import com.hoodie.app.presentation.components.PixelButton
+import com.hoodie.app.presentation.screens.places.PlaceLoadState
 import com.hoodie.app.presentation.screens.places.PlacePickerState
 import com.hoodie.app.presentation.screens.places.PlacePickerUiEvent
 import com.hoodie.app.presentation.screens.places.PlacePickerViewModel
@@ -45,7 +46,9 @@ object PlacePickerTags {
     const val ROOT = "picker_root"
     const val HEADER = "picker_header"
     const val CLOSE = "picker_close"
+    const val SEARCH_SECTION = "picker_search_section"
     const val SEARCH = "picker_search"
+    const val SEARCH_ACTION = "picker_search_action"
     const val SEARCH_LOADING = "picker_search_loading"
     const val SEARCH_ERROR = "picker_search_error"
     const val RESULTS = "picker_results"
@@ -59,6 +62,7 @@ object PlacePickerTags {
     const val TYPE_GRID = "picker_type_grid"
     const val TYPE_SHEET = "picker_type_sheet"
     const val NAME = "picker_name"
+    const val RADIUS = "picker_radius"
     const val RADIUS_VALUE = "picker_radius_value"
     const val RADIUS_SLIDER = "picker_radius_slider"
     const val PRIVACY = "picker_privacy"
@@ -71,36 +75,58 @@ object PlacePickerTags {
     fun quickRadius(m: Int) = "picker_radius_$m"
 }
 
+/** Qual campo de texto está em edição (estado só visual: não vai para o ViewModel). */
+enum class PlacePickerFocus { NONE, SEARCH, NAME }
+
+/** Novo foco quando o campo [field] ganha/perde o foco. Perder o foco de outro campo não apaga o atual. */
+fun focusAfter(current: PlacePickerFocus, field: PlacePickerFocus, focused: Boolean): PlacePickerFocus = when {
+    focused -> field
+    current == field -> PlacePickerFocus.NONE
+    else -> current
+}
+
 /** Medidas que dependem da altura disponível (não da tela física: funciona dentro do Scaffold). */
 data class PlacePickerDimensions(val mapHeight: Dp, val horizontalPadding: Dp, val sectionSpacing: Dp) {
     companion object {
-        val MAP_MIN_HEIGHT = 200.dp
-        val MAP_MAX_HEIGHT = 300.dp
+        /** O formulário é mais importante que o mapa: ele é uma ferramenta, não o fundo da tela. */
+        val MAP_MIN_HEIGHT = 180.dp
+        val MAP_MAX_HEIGHT = 260.dp
+        /** Altura máxima do mapa enquanto se digita (busca ou nome) / com teclado aberto. */
+        val MAP_TYPING_MAX = 160.dp
 
         /** Abaixo disso a tela está "encolhida" (teclado aberto num aparelho pequeno). */
         val SHORT_HEIGHT = 560.dp
+        /** Abaixo disso, digitando, o mapa some para o campo e o Salvar caberem. */
+        val TYPING_HIDE_BELOW = 700.dp
         /** Header + busca + barra de salvar + o mínimo de detalhes que precisa caber. */
-        private val FIXED_WITHOUT_MAP = 300.dp
+        private val FIXED_WITHOUT_MAP = 320.dp
         private val MAP_HIDE_BELOW = 96.dp
 
         /**
-         * < 700 dp → mapa 210 · 700–850 dp → 250 · > 850 dp → 280. Com fonte grande o
-         * mapa cede um pouco para os detalhes; nunca abaixo de [MAP_MIN_HEIGHT].
+         *     < 650 dp → 190 · 650–800 → 220 · 800–900 → 240 · > 900 → 260
          *
-         * Com o teclado aberto (altura < [SHORT_HEIGHT]) quem cede é o mapa: ele encolhe
-         * para o que sobrar e some enquanto se digita se não couber — o Salvar nunca sai da tela.
+         * Com fonte grande o mapa cede 20 dp para os detalhes (nunca abaixo de [MAP_MIN_HEIGHT]).
+         * Teclado aberto (altura < [SHORT_HEIGHT]): o mapa encolhe para o que sobrar, até
+         * [MAP_TYPING_MAX], e some se não couber. Digitando ([focus] ≠ NONE): no máximo
+         * [MAP_TYPING_MAX]; em telas pequenas, 0 — o Salvar nunca sai da tela.
          */
-        fun forHeight(availableHeight: Dp, fontScale: Float = 1f): PlacePickerDimensions {
+        fun forHeight(availableHeight: Dp, fontScale: Float = 1f, focus: PlacePickerFocus = PlacePickerFocus.NONE): PlacePickerDimensions {
             if (availableHeight < SHORT_HEIGHT) {
-                val room = (availableHeight - FIXED_WITHOUT_MAP).coerceIn(0.dp, 210.dp)
+                val room = (availableHeight - FIXED_WITHOUT_MAP).coerceIn(0.dp, MAP_TYPING_MAX)
                 return PlacePickerDimensions(if (room < MAP_HIDE_BELOW) 0.dp else room, horizontalPadding = 16.dp, sectionSpacing = 8.dp)
             }
             val base = when {
-                availableHeight < 700.dp -> 210.dp
-                availableHeight <= 850.dp -> 250.dp
-                else -> 280.dp
+                availableHeight < 650.dp -> 190.dp
+                availableHeight < 800.dp -> 220.dp
+                availableHeight <= 900.dp -> 240.dp
+                else -> 260.dp
             }
-            val map = (if (fontScale >= 1.3f) base - 20.dp else base).coerceIn(MAP_MIN_HEIGHT, MAP_MAX_HEIGHT)
+            val normal = (if (fontScale >= 1.3f) base - 20.dp else base).coerceIn(MAP_MIN_HEIGHT, MAP_MAX_HEIGHT)
+            val map = when {
+                focus == PlacePickerFocus.NONE -> normal
+                availableHeight < TYPING_HIDE_BELOW -> 0.dp
+                else -> minOf(normal, MAP_TYPING_MAX)
+            }
             val compact = availableHeight < 700.dp
             return PlacePickerDimensions(map, horizontalPadding = 16.dp, sectionSpacing = if (compact) 10.dp else 14.dp)
         }
@@ -124,13 +150,14 @@ data class PlacePickerActions(
 )
 
 /**
- *     HEADER    (52 dp)
- *     SEARCH    (campo; resultados por cima do mapa)
- *     MAP       (altura própria — nunca espremido)
- *     DETAILS   (LazyColumn com weight(1f): rola sozinha)
- *     SAVE BAR  (fixa)
+ *     HEADER    NOVO LOCAL / ✕
+ *     SEARCH    🔎 BUSCAR ENDEREÇO + campo + resultados (opacos, empurram o mapa)
+ *     MAP       altura própria e clipToBounds — nunca é fundo de nada
+ *     DETAILS   LazyColumn com weight(1f), fundo sólido: local, tipo, nome, raio, privacidade
+ *     SAVE BAR  fixa
  *
- * O weight fica nos detalhes, não no mapa. [map] é substituível nos testes de UI.
+ * Nada de DETAILS é filho da Box do mapa. O weight fica nos detalhes, não no mapa.
+ * [map] substitui o MapView real nos testes de distribuição de espaço; null = MapView real.
  */
 @Composable
 fun PlacePickerLayout(
@@ -138,13 +165,11 @@ fun PlacePickerLayout(
     actions: PlacePickerActions,
     modifier: Modifier = Modifier,
     allowTypeChange: Boolean = true,
-    map: @Composable (Modifier) -> Unit = { m ->
-        MapPicker(state.latitude, state.longitude, state.radius, state.recenterKey, actions.onCenterChanged, m,
-            onMyLocation = actions.onMyLocation, loadingLocation = state.locating, onMapInteraction = actions.onMapInteraction)
-    },
+    map: (@Composable (Modifier) -> Unit)? = null,
 ) {
-    BoxWithConstraints(modifier.fillMaxSize().testTag(PlacePickerTags.ROOT)) {
-        val dims = PlacePickerDimensions.forHeight(maxHeight, LocalDensity.current.fontScale)
+    var focus by remember { mutableStateOf(PlacePickerFocus.NONE) }
+    BoxWithConstraints(modifier.fillMaxSize().background(HoodieColors.Night).testTag(PlacePickerTags.ROOT)) {
+        val dims = PlacePickerDimensions.forHeight(maxHeight, LocalDensity.current.fontScale, focus)
         val pad = dims.horizontalPadding
         Column(Modifier.fillMaxSize()) {
             PlacePickerHeader(state.editing, state.type, actions.onClose, pad)
@@ -164,28 +189,36 @@ fun PlacePickerLayout(
                 }
                 return@Column
             }
-            PlaceSearchBar(
-                state.query, state.searching, actions.onQueryChange, actions.onSearch, state.searchError,
-                Modifier.padding(horizontal = pad).padding(bottom = 8.dp),
+            PlaceSearchSection(
+                state.query, state.searching, state.results,
+                actions.onQueryChange, actions.onSearch, actions.onChooseResult, state.searchError,
+                Modifier.fillMaxWidth().background(HoodieColors.Night).padding(horizontal = pad).padding(bottom = 8.dp),
+                onFocusChange = { focused -> focus = focusAfter(focus, PlacePickerFocus.SEARCH, focused) },
             )
-            Box(Modifier.fillMaxWidth().height(dims.mapHeight).testTag(PlacePickerTags.MAP)) {
-                map(Modifier.fillMaxSize())
-                PlaceSearchResults(state.results, actions.onChooseResult, Modifier.padding(horizontal = pad).fillMaxWidth().align(Alignment.TopCenter))
+            if (map == null) {
+                PlaceMapSection(state, dims.mapHeight, actions.onCenterChanged, actions.onMyLocation, actions.onMapInteraction)
+            } else {
+                PlaceMapSection(state, dims.mapHeight, actions.onCenterChanged, actions.onMyLocation, actions.onMapInteraction, map = map)
             }
             state.locationError?.let {
-                Text("⚠ $it", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Coral, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = pad, vertical = 4.dp).testTag(PlacePickerTags.LOCATION_ERROR))
+                Text(
+                    "⚠ $it", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Coral, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth().background(HoodieColors.Night).padding(horizontal = pad, vertical = 4.dp).testTag(PlacePickerTags.LOCATION_ERROR),
+                )
             }
             LazyColumn(
-                modifier = Modifier.weight(1f).fillMaxWidth().testTag(PlacePickerTags.DETAILS),
+                // Fundo sólido: mesmo com algum comportamento estranho de composição, nada do mapa aparece por trás.
+                modifier = Modifier.weight(1f).fillMaxWidth().background(HoodieColors.Night).testTag(PlacePickerTags.DETAILS),
                 contentPadding = PaddingValues(start = pad, end = pad, top = 12.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(dims.sectionSpacing),
             ) {
                 item("address") { SelectedAddressCard(state.address, state.latitude, state.longitude, state.hasPoint) }
                 val mode = placeTypeSelectorMode(allowTypeChange, state.editing)
                 if (mode != PlaceTypeSelectorMode.HIDDEN) item("type") { PlaceTypeSelector(state.type, mode, actions.onTypeChange) }
-                item("name") { PlaceNameField(state.name, actions.onNameChange) }
-                item("radius") { PlaceRadiusControl(state.radius, actions.onRadiusChange) }
+                item("name") {
+                    PlaceNameField(state.name, actions.onNameChange, onFocusChange = { focused -> focus = focusAfter(focus, PlacePickerFocus.NAME, focused) })
+                }
+                item("radius") { PlaceRadiusControl(state.radius, actions.onRadiusChange, Modifier.testTag(PlacePickerTags.RADIUS)) }
                 item("privacy") { PlacePrivacyInfo() }
             }
             PlaceSaveBar(state.type, state.canSave, state.saving, actions.onSave, state.saveError, pad)

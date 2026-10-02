@@ -118,6 +118,38 @@ class PlacePickerViewModelTest {
     private suspend fun insertWork() =
         dao.insert(PlaceEntity(name = "Escritório", type = PlaceType.WORK, encryptedCoordinates = "-23.0,-46.0", radiusMeters = 180f, confidence = 1f, createdAt = 0))
 
+    // ── Fluxo completo da tela Novo Local ──
+
+    @Test
+    fun `fluxo de busca abre resultados escolhe recentraliza e habilita salvar`() = runTest {
+        search.results = listOf(paulista, augusta)
+        val vm = vm(); vm.init(PlaceType.WORK, null)
+        assertFalse("sem ponto escolhido não salva", vm.state.value.canSave)
+
+        vm.setQuery("Avenida Paulista 1000")
+        vm.search()
+        assertEquals(2, vm.state.value.results.size)
+        assertFalse("resultado ainda não escolhido", vm.state.value.hasPoint)
+        val key = vm.state.value.recenterKey
+
+        vm.choose(paulista)
+        val s = vm.state.value
+        assertTrue("lista fecha ao escolher", s.results.isEmpty())
+        assertEquals("mapa recebe recenterKey novo", key + 1, s.recenterKey)
+        assertEquals(paulista.latitude, s.latitude, 1e-9)
+        assertEquals(paulista.longitude, s.longitude, 1e-9)
+        assertTrue(s.hasPoint)
+        assertEquals("endereço selecionado aparece", paulista.label, s.address)
+        assertTrue("Salvar habilita", s.canSave)
+    }
+
+    @Test
+    fun `digitar o nome atualiza o estado`() = runTest {
+        val vm = vm(); vm.init(PlaceType.WORK, null)
+        vm.setName("Escritório Centro")
+        assertEquals("Escritório Centro", vm.state.value.name)
+    }
+
     // ── init ──
 
     @Test

@@ -15,10 +15,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -29,6 +29,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.location.AddressResult
+import com.hoodie.app.presentation.components.PixelTextField
+import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.theme.HoodieColors
 
 /** Resultado em duas linhas: "Rua X, 123" / "São Paulo - SP" (o resto do endereço). */
@@ -41,11 +43,33 @@ fun addressLines(label: String): Pair<String, String?> {
 }
 
 /**
- *     [ 🔎 Rua, número, cidade        ◌ ]
+ *     🔎 BUSCAR ENDEREÇO
+ *     [ 🔎 Rua, número, cidade          BUSCAR ]
  *     ⚠ Endereço não encontrado
+ *     ┌ resultados (opacos, abaixo do campo) ┐
  *
- * A busca roda pelo IME Search ou pelo toque em 🔎. Loading e erro ficam no próprio campo.
+ * Sempre visível no topo da tela. A busca roda pelo IME Search ou pelo BUSCAR,
+ * fecha o teclado e o mapa volta ao tamanho normal.
  */
+@Composable
+fun PlaceSearchSection(
+    query: String,
+    searching: Boolean,
+    results: List<AddressResult>,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onChoose: (AddressResult) -> Unit,
+    error: String? = null,
+    modifier: Modifier = Modifier,
+    onFocusChange: (Boolean) -> Unit = {},
+) {
+    Column(modifier.testTag(PlacePickerTags.SEARCH_SECTION)) {
+        SectionLabel("🔎 Buscar endereço", Modifier.padding(bottom = 4.dp))
+        PlaceSearchBar(query, searching, onQueryChange, onSearch, error, onFocusChange = onFocusChange)
+        PlaceSearchResults(results, onChoose, Modifier.fillMaxWidth().padding(top = 6.dp))
+    }
+}
+
 @Composable
 fun PlaceSearchBar(
     query: String,
@@ -54,24 +78,33 @@ fun PlaceSearchBar(
     onSearch: () -> Unit,
     error: String? = null,
     modifier: Modifier = Modifier,
+    onFocusChange: (Boolean) -> Unit = {},
 ) {
     val focus = LocalFocusManager.current
-    val search = { if (query.isNotBlank() && !searching) { focus.clearFocus(); onSearch() } }
+    val canSearch = query.isNotBlank() && !searching
+    val search = { if (canSearch) { focus.clearFocus(); onSearch() } }
     Column(modifier) {
-        OutlinedTextField(
+        PixelTextField(
             query, onQueryChange,
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().testTag(PlacePickerTags.SEARCH),
-            placeholder = { Text("Rua, número, cidade", maxLines = 1) },
+            modifier = Modifier.onFocusChanged { onFocusChange(it.isFocused) }.testTag(PlacePickerTags.SEARCH),
+            placeholder = "Rua, número, cidade",
             leadingIcon = { Text("🔎") },
             trailingIcon = {
-                if (searching) CircularProgressIndicator(Modifier.size(18.dp).testTag(PlacePickerTags.SEARCH_LOADING), strokeWidth = 2.dp)
-                else if (query.isNotBlank()) Text(
-                    "BUSCAR",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = HoodieColors.Blue,
-                    modifier = Modifier.clickable(onClick = search).semantics { role = Role.Button; contentDescription = "Buscar endereço" }.padding(10.dp),
-                )
+                if (searching) {
+                    CircularProgressIndicator(Modifier.size(18.dp).testTag(PlacePickerTags.SEARCH_LOADING), strokeWidth = 2.dp, color = HoodieColors.Gold)
+                } else {
+                    // Sempre à vista: deixa claro que é aqui que se busca.
+                    Text(
+                        "BUSCAR",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (canSearch) HoodieColors.Gold else HoodieColors.Muted,
+                        modifier = Modifier
+                            .clickable(enabled = canSearch, onClick = search)
+                            .semantics { role = Role.Button; contentDescription = "Buscar endereço" }
+                            .padding(horizontal = 10.dp, vertical = 12.dp)
+                            .testTag(PlacePickerTags.SEARCH_ACTION),
+                    )
+                }
             },
             isError = error != null,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -84,20 +117,27 @@ fun PlaceSearchBar(
     }
 }
 
-/** Lista curta (máx. 140 dp) por cima do mapa: o mapa não é empurrado. */
+/**
+ * Lista curta (máx. 168 dp), 100% opaca, logo abaixo do campo de busca — fora
+ * da área do mapa. Escolher um resultado fecha a lista e recentraliza o mapa.
+ */
 @Composable
 fun PlaceSearchResults(results: List<AddressResult>, onChoose: (AddressResult) -> Unit, modifier: Modifier = Modifier) {
     if (results.isEmpty()) return
     LazyColumn(
         modifier
-            .heightIn(max = 140.dp)
+            .heightIn(max = 168.dp)
             .border(2.dp, HoodieColors.Outline)
             .background(HoodieColors.Panel)
             .testTag(PlacePickerTags.RESULTS),
     ) {
         items(results) { r ->
             val (line1, line2) = addressLines(r.label)
-            Column(Modifier.fillMaxWidth().clickable { onChoose(r) }.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Column(
+                Modifier.fillMaxWidth().background(HoodieColors.Panel).clickable { onChoose(r) }
+                    .semantics { role = Role.Button }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+            ) {
                 Text("📍 $line1", style = MaterialTheme.typography.bodyMedium, color = HoodieColors.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 line2?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 22.dp)) }
             }
