@@ -34,7 +34,9 @@ import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.animation.AnimGroup
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.animation.ClipTiming
+import com.hoodie.app.pixel.debug.CompareMode
 import com.hoodie.app.pixel.debug.DebugOptions
+import com.hoodie.app.pixel.debug.SourceCompare
 import com.hoodie.app.pixel.debug.SpriteDebugRenderer
 import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.SceneId
@@ -48,7 +50,9 @@ import com.hoodie.app.pixel.sprite.Expression
 import com.hoodie.app.pixel.sprite.HoodieSprites
 import com.hoodie.app.pixel.sprite.PoseOverlay
 import com.hoodie.app.pixel.sprite.Posture
+import com.hoodie.app.pixel.sprite.RequiredShippedAnimations
 import com.hoodie.app.pixel.sprite.SpriteRequest
+import com.hoodie.app.pixel.sprite.viewFor
 import com.hoodie.app.presentation.components.AnimatedHoodie
 import com.hoodie.app.presentation.components.ChipRow
 import com.hoodie.app.presentation.components.HoodieSceneView
@@ -97,8 +101,10 @@ private fun AnimationTool() {
     var manualFrame by remember { mutableIntStateOf(0) }
     var elapsed by remember { mutableLongStateOf(0L) }
     var options by remember { mutableStateOf(DebugOptions(feet = true)) }
+    var compare by remember { mutableStateOf(CompareMode.FINAL) }
 
-    val provider = HoodieSprites.provider
+    val active = HoodieSprites.provider
+    val provider = remember(compare, active) { SourceCompare.provider(compare, active) }
     val durations = provider.durations(anim, direction)
     val count = durations.size.coerceAtLeast(1)
     val frameIndex = if (playing) ClipTiming.indexAt(durations, elapsed, loop = true) else manualFrame.mod(count)
@@ -112,19 +118,28 @@ private fun AnimationTool() {
     }
 
     val request = SpriteRequest(anim, direction, frameIndex, posture, PoseOverlay(expression = expression.takeIf { it != Expression.NORMAL }))
-    val image = remember(request, options) {
+    val image = remember(request, options, provider) {
         val buf = SpriteDebugRenderer.render(provider, request, options)
         Bitmap.createBitmap(buf.width, buf.height, Bitmap.Config.ARGB_8888).also { it.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height) }.asImageBitmap()
     }
-    val frame = remember(request) { provider.frame(request) }
-    val source = (provider as? CompositeSpriteProvider)?.providerFor(anim, direction)?.name ?: provider.name
+    val frame = remember(request, provider) { provider.frame(request) }
+    val source = when (compare) {
+        CompareMode.PROCEDURAL -> "procedural"
+        CompareMode.OVERLAY -> "final + procedural (50%)"
+        CompareMode.FINAL -> (active as? CompositeSpriteProvider)?.providerFor(request)?.name ?: active.name
+    }
 
+    ChipRow(listOf("Procedural", "Final", "Overlay"), compare.ordinal, { compare = CompareMode.entries[it] })
     PixelPanel(Modifier.fillMaxWidth()) {
+        Text(
+            "SOURCE ${source.uppercase()} · ANIMATION ${anim.name} · DIRECTION ${viewFor(anim, direction).name} · FRAME ${frameIndex + 1}/$count",
+            style = MaterialTheme.typography.labelSmall, color = HoodieColors.Gold,
+        )
         Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
             PixelImage(image, SpriteDebugRenderer.WIDTH, SpriteDebugRenderer.HEIGHT, Modifier.fillMaxSize())
         }
         Text("Frame ${frameIndex + 1} / $count · ${frame.durationMs} ms · ${if (anim.loop) "loop" else "uma vez"} · ${anim.clip.interruptPolicy}", style = MaterialTheme.typography.labelLarge)
-        Text("fonte: $source" + if (frame.events.isNotEmpty()) " · eventos: ${frame.events.joinToString()}" else "", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+        Text("fonte: ${frame.source}" + if (frame.events.isNotEmpty()) " · eventos: ${frame.events.joinToString()}" else "", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
             PixelButton("<<", { playing = false; manualFrame = (frameIndex - 1).mod(count) }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
             PixelButton(if (playing) "Pause" else "Play", { if (playing) manualFrame = frameIndex; playing = !playing }, Modifier.weight(1f))
@@ -239,6 +254,24 @@ private fun SceneGallery() {
 @Composable
 private fun SpriteSources() {
     val report = AndroidSpriteSheets.lastReport
+    val available = AndroidSpriteSheets.available
+    PixelPanel(Modifier.fillMaxWidth()) {
+        SectionLabel("SPRITE COVERAGE")
+        val total = RequiredShippedAnimations.coverage(available)
+        Text("Arte final: ${total.percent}% (${total.finalCount}/${total.total} clips)", style = MaterialTheme.typography.titleMedium, color = HoodieColors.Gold)
+        AnimGroup.entries.forEach { g ->
+            val c = RequiredShippedAnimations.coverage(available, g)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(g.name.lowercase(), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                Text("${c.finalCount}/${c.total} · ${c.percent}%", style = MaterialTheme.typography.bodySmall, color = if (c.percent == 100) HoodieColors.Gold else HoodieColors.Muted)
+            }
+        }
+        val missing = RequiredShippedAnimations.missing(available)
+        Text(
+            if (missing.isEmpty()) "Obrigatórios da release: completos" else "Faltam na release: " + missing.joinToString { "${it.first.name}/${it.second.name}" },
+            style = MaterialTheme.typography.labelSmall, color = if (missing.isEmpty()) HoodieColors.Muted else HoodieColors.Coral,
+        )
+    }
     PixelPanel(Modifier.fillMaxWidth()) {
         SectionLabel("Provider ativo")
         Text(HoodieSprites.provider.name)

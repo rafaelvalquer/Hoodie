@@ -120,6 +120,19 @@ class SpriteSheetPipelineTest {
     }
 
     @Test
+    fun `pixel lab compara procedural, final e overlay`() {
+        val (sheets, _) = loadBaked()
+        val active = CompositeSpriteProvider(sheets)
+        val req = SpriteRequest(AnimationId.WALK, Direction.LEFT, 2)
+        val m = com.hoodie.app.pixel.debug.SourceCompare
+        assertEquals("procedural", m.provider(com.hoodie.app.pixel.debug.CompareMode.PROCEDURAL, active).frame(req).source)
+        assertEquals("spritesheet", m.provider(com.hoodie.app.pixel.debug.CompareMode.FINAL, active).frame(req).source)
+        val over = m.provider(com.hoodie.app.pixel.debug.CompareMode.OVERLAY, active).frame(req)
+        assertEquals("spritesheet+procedural", over.source)
+        assertEquals(active.frame(req).anchors, over.anchors)
+    }
+
+    @Test
     fun `sheet com contagem de frames errada e rejeitado e o procedural assume`() {
         val root = Files.createTempDirectory("hoodie-count").toFile()
         val baked = SheetBaker.bake(listOf(AnimationId.IDLE to Facing.FRONT, AnimationId.WALK to Facing.SIDE))

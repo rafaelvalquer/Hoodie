@@ -92,7 +92,7 @@ class FinalArtExportTest {
             val png = File(assetsDir, "$group.png")
             assertTrue("$png ausente — rode com -PexportArt=true", png.exists())
             assertArrayEquals("$group.png desatualizado — rode com -PexportArt=true", baked.image.pixels, SheetBaker.decodePng(png.inputStream())!!.pixels)
-            assertEquals("$group.json desatualizado", baked.json, File(assetsDir, "$group.json").readText())
+            assertEquals("$group.json desatualizado", baked.json, File(assetsDir, "$group.json").readText().replace("\r\n", "\n"))
             assertArrayEquals(baked.anchors!!.pixels, SheetBaker.decodePng(File(assetsDir, "$group.anchors.png").inputStream())!!.pixels)
 
             val src = AsepriteFile.read(File(sourceDir, "$group.aseprite"))

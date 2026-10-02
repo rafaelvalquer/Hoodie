@@ -12,6 +12,11 @@ object AndroidSpriteSheets {
     var lastReport: SheetLoadReport = SheetLoadReport(emptyList(), emptyList())
         private set
 
+    /** Clips/vistas servidos por arte final (para a cobertura no Pixel Lab). */
+    @Volatile
+    var available: Set<Pair<com.hoodie.app.pixel.animation.AnimationId, Facing>> = emptySet()
+        private set
+
     fun install(context: Context) {
         val assets = object : SpriteAssetSource {
             override fun list(dir: String): List<String> = context.assets.list(dir)?.toList().orEmpty()
@@ -25,6 +30,7 @@ object AndroidSpriteSheets {
         }
         val (sheets, report) = SpriteSheetProvider.load(assets, decoder)
         lastReport = report
+        available = sheets.available
         HoodieSprites.provider = if (sheets.available.isEmpty()) ProceduralSpriteProvider else CompositeSpriteProvider(sheets)
     }
 }
