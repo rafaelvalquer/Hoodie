@@ -2,7 +2,7 @@
   "frames": [
     {
       "duration": 100,
-      "filename": "walk 0.aseprite",
+      "filename": "frame 0.aseprite",
       "frame": {
         "w": 48,
         "x": 0,
@@ -12,7 +12,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 1.aseprite",
+      "filename": "frame 1.aseprite",
       "frame": {
         "w": 48,
         "x": 48,
@@ -22,7 +22,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 2.aseprite",
+      "filename": "frame 2.aseprite",
       "frame": {
         "w": 48,
         "x": 96,
@@ -32,7 +32,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 3.aseprite",
+      "filename": "frame 3.aseprite",
       "frame": {
         "w": 48,
         "x": 144,
@@ -42,7 +42,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 4.aseprite",
+      "filename": "frame 4.aseprite",
       "frame": {
         "w": 48,
         "x": 192,
@@ -52,7 +52,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 5.aseprite",
+      "filename": "frame 5.aseprite",
       "frame": {
         "w": 48,
         "x": 240,
@@ -62,7 +62,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 6.aseprite",
+      "filename": "frame 6.aseprite",
       "frame": {
         "w": 48,
         "x": 288,
@@ -72,7 +72,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 7.aseprite",
+      "filename": "frame 7.aseprite",
       "frame": {
         "w": 48,
         "x": 336,
@@ -82,7 +82,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 8.aseprite",
+      "filename": "frame 8.aseprite",
       "frame": {
         "w": 48,
         "x": 384,
@@ -92,7 +92,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 9.aseprite",
+      "filename": "frame 9.aseprite",
       "frame": {
         "w": 48,
         "x": 432,
@@ -102,7 +102,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 10.aseprite",
+      "filename": "frame 10.aseprite",
       "frame": {
         "w": 48,
         "x": 480,
@@ -112,7 +112,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 11.aseprite",
+      "filename": "frame 11.aseprite",
       "frame": {
         "w": 48,
         "x": 528,
@@ -122,7 +122,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 12.aseprite",
+      "filename": "frame 12.aseprite",
       "frame": {
         "w": 48,
         "x": 576,
@@ -132,7 +132,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 13.aseprite",
+      "filename": "frame 13.aseprite",
       "frame": {
         "w": 48,
         "x": 624,
@@ -142,7 +142,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 14.aseprite",
+      "filename": "frame 14.aseprite",
       "frame": {
         "w": 48,
         "x": 672,
@@ -152,7 +152,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 15.aseprite",
+      "filename": "frame 15.aseprite",
       "frame": {
         "w": 48,
         "x": 720,
@@ -162,7 +162,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 16.aseprite",
+      "filename": "frame 16.aseprite",
       "frame": {
         "w": 48,
         "x": 768,
@@ -172,7 +172,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 17.aseprite",
+      "filename": "frame 17.aseprite",
       "frame": {
         "w": 48,
         "x": 816,
@@ -182,7 +182,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 18.aseprite",
+      "filename": "frame 18.aseprite",
       "frame": {
         "w": 48,
         "x": 864,
@@ -192,7 +192,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 19.aseprite",
+      "filename": "frame 19.aseprite",
       "frame": {
         "w": 48,
         "x": 912,
@@ -202,7 +202,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 20.aseprite",
+      "filename": "frame 20.aseprite",
       "frame": {
         "w": 48,
         "x": 960,
@@ -212,7 +212,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 21.aseprite",
+      "filename": "frame 21.aseprite",
       "frame": {
         "w": 48,
         "x": 1008,
@@ -222,7 +222,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk 22.aseprite",
+      "filename": "frame 22.aseprite",
       "frame": {
         "w": 48,
         "x": 1056,
@@ -232,7 +232,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk 23.aseprite",
+      "filename": "frame 23.aseprite",
       "frame": {
         "w": 48,
         "x": 1104,
@@ -242,7 +242,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 24.aseprite",
+      "filename": "frame 24.aseprite",
       "frame": {
         "w": 48,
         "x": 1152,
@@ -252,7 +252,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 25.aseprite",
+      "filename": "frame 25.aseprite",
       "frame": {
         "w": 48,
         "x": 1200,
@@ -262,7 +262,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 26.aseprite",
+      "filename": "frame 26.aseprite",
       "frame": {
         "w": 48,
         "x": 1248,
@@ -272,7 +272,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 27.aseprite",
+      "filename": "frame 27.aseprite",
       "frame": {
         "w": 48,
         "x": 1296,
@@ -282,7 +282,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 28.aseprite",
+      "filename": "frame 28.aseprite",
       "frame": {
         "w": 48,
         "x": 1344,
@@ -292,7 +292,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 29.aseprite",
+      "filename": "frame 29.aseprite",
       "frame": {
         "w": 48,
         "x": 1392,
@@ -302,7 +302,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 30.aseprite",
+      "filename": "frame 30.aseprite",
       "frame": {
         "w": 48,
         "x": 1440,
@@ -312,7 +312,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 31.aseprite",
+      "filename": "frame 31.aseprite",
       "frame": {
         "w": 48,
         "x": 1488,
@@ -322,7 +322,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 32.aseprite",
+      "filename": "frame 32.aseprite",
       "frame": {
         "w": 48,
         "x": 1536,
@@ -332,7 +332,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 33.aseprite",
+      "filename": "frame 33.aseprite",
       "frame": {
         "w": 48,
         "x": 1584,
@@ -342,7 +342,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 34.aseprite",
+      "filename": "frame 34.aseprite",
       "frame": {
         "w": 48,
         "x": 1632,
@@ -352,7 +352,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 35.aseprite",
+      "filename": "frame 35.aseprite",
       "frame": {
         "w": 48,
         "x": 1680,
@@ -362,7 +362,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 36.aseprite",
+      "filename": "frame 36.aseprite",
       "frame": {
         "w": 48,
         "x": 1728,
@@ -372,7 +372,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 37.aseprite",
+      "filename": "frame 37.aseprite",
       "frame": {
         "w": 48,
         "x": 1776,
@@ -382,7 +382,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 38.aseprite",
+      "filename": "frame 38.aseprite",
       "frame": {
         "w": 48,
         "x": 1824,
@@ -392,7 +392,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 39.aseprite",
+      "filename": "frame 39.aseprite",
       "frame": {
         "w": 48,
         "x": 1872,
@@ -402,7 +402,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 40.aseprite",
+      "filename": "frame 40.aseprite",
       "frame": {
         "w": 48,
         "x": 1920,
@@ -412,7 +412,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 41.aseprite",
+      "filename": "frame 41.aseprite",
       "frame": {
         "w": 48,
         "x": 1968,
@@ -422,7 +422,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 42.aseprite",
+      "filename": "frame 42.aseprite",
       "frame": {
         "w": 48,
         "x": 2016,
@@ -432,7 +432,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 43.aseprite",
+      "filename": "frame 43.aseprite",
       "frame": {
         "w": 48,
         "x": 2064,
@@ -442,7 +442,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 44.aseprite",
+      "filename": "frame 44.aseprite",
       "frame": {
         "w": 48,
         "x": 2112,
@@ -452,7 +452,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 45.aseprite",
+      "filename": "frame 45.aseprite",
       "frame": {
         "w": 48,
         "x": 2160,
@@ -462,7 +462,7 @@
     },
     {
       "duration": 80,
-      "filename": "walk_backpack 46.aseprite",
+      "filename": "frame 46.aseprite",
       "frame": {
         "w": 48,
         "x": 2208,
@@ -472,7 +472,7 @@
     },
     {
       "duration": 100,
-      "filename": "walk_backpack 47.aseprite",
+      "filename": "frame 47.aseprite",
       "frame": {
         "w": 48,
         "x": 2256,
