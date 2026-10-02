@@ -28,6 +28,9 @@ interface MobilitySessionDao {
     @Query("SELECT * FROM mobility_sessions WHERE endedAt IS NOT NULL AND confirmed = 1 AND startedAt >= :since ORDER BY startedAt DESC")
     suspend fun finishedSince(since: Long): List<MobilitySessionEntity>
 
+    @Query("SELECT * FROM mobility_sessions WHERE endedAt IS NOT NULL ORDER BY endedAt DESC LIMIT 1")
+    suspend fun lastFinished(): MobilitySessionEntity?
+
     @Query("SELECT * FROM mobility_sessions WHERE confirmed = 1 AND startedAt < :to AND (endedAt IS NULL OR endedAt > :from) ORDER BY startedAt")
     suspend fun overlapping(from: Long, to: Long): List<MobilitySessionEntity>
 

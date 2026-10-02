@@ -132,7 +132,7 @@ class MobilityRulesTest {
 
     @Test
     fun `historico e destino provavel exigem repeticao no mesmo horario e tipo de dia`() {
-        val trips = listOf(trip(MONDAY - 7, 8), trip(MONDAY - 6, 8))
+        val trips = listOf(trip(MONDAY + 1, 8), trip(MONDAY + 2, 8))
         assertTrue(MobilityLearningEngine.hasHistory(trips, 1, at(MONDAY, 8, 20).ms(), ZONE))
         assertEquals(2L, MobilityLearningEngine.predictedDestination(trips, 1, at(MONDAY, 8).ms(), ZONE))
         assertFalse("outro horário", MobilityLearningEngine.hasHistory(trips, 1, at(MONDAY, 18).ms(), ZONE))
@@ -143,23 +143,23 @@ class MobilityRulesTest {
 
     @Test
     fun `modo de veiculo aprendido so com escolhas consistentes`() {
-        val bus3 = (1..3).map { trip(MONDAY - it, 8) }
+        val bus3 = (1..3).map { trip(MONDAY + it, 8) }
         assertEquals(MovementMode.BUS, MobilityLearningEngine.learnedVehicleMode(bus3, 1, at(MONDAY, 8).ms(), ZONE))
         assertNull("2 vezes ainda não", MobilityLearningEngine.learnedVehicleMode(bus3.take(2), 1, at(MONDAY, 8).ms(), ZONE))
         // O usuário corrigiu para carro duas vezes: nenhuma maioria de 2/3.
-        val mixed = bus3 + listOf(trip(MONDAY - 4, 8, vehicle = listOf(MovementMode.CAR)), trip(MONDAY - 5, 8, vehicle = listOf(MovementMode.CAR)))
+        val mixed = bus3 + listOf(trip(MONDAY + 4, 8, vehicle = listOf(MovementMode.CAR)), trip(MONDAY + 7, 8, vehicle = listOf(MovementMode.CAR)))
         assertNull(MobilityLearningEngine.learnedVehicleMode(mixed, 1, at(MONDAY, 8).ms(), ZONE))
     }
 
     @Test
     fun `chegada vira automatica com 3 confirmacoes seguidas e um nao derruba`() {
-        val three = (1..3).map { trip(MONDAY - it, 8) }
+        val three = (1..3).map { trip(MONDAY + it, 8) }
         assertFalse(MobilityLearningEngine.arrivalAutoConfirm(three.take(2), 2))
         assertTrue(MobilityLearningEngine.arrivalAutoConfirm(three, 2))
-        val corrected = three + trip(MONDAY, 7, arrival = false)
+        val corrected = three + trip(MONDAY + 4, 7, arrival = false)
         assertFalse("um 'não estou no trabalho' recente reduz a confiança", MobilityLearningEngine.arrivalAutoConfirm(corrected, 2))
         // Chegadas não decididas (sem pergunta) não contam nem contra nem a favor.
-        assertTrue(MobilityLearningEngine.arrivalAutoConfirm(three + trip(MONDAY, 7, arrival = null), 2))
+        assertTrue(MobilityLearningEngine.arrivalAutoConfirm(three + trip(MONDAY + 4, 7, arrival = null), 2))
     }
 
     // ── Chegada ──

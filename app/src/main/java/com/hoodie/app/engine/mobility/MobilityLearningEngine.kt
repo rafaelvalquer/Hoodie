@@ -81,6 +81,11 @@ object MobilityLearningEngine {
         return decided.size == HoodieConfig.ARRIVAL_AUTO_CONFIRM_COUNT && decided.all { it.arrivalConfirmed == true }
     }
 
+    /** A última chegada decidida nesse lugar foi negada ou corrigida pelo usuário. */
+    fun lastArrivalCorrected(trips: List<TripRecord>, destinationPlaceId: Long): Boolean =
+        trips.filter { it.destinationPlaceId == destinationPlaceId && it.arrivalConfirmed != null }
+            .maxByOrNull { it.startedAt }?.arrivalConfirmed == false
+
     /** "Primeiras vezes": deslocamentos já confirmados saindo desse lugar. */
     fun confirmedFrom(trips: List<TripRecord>, originPlaceId: Long?): Int = trips.count { it.originPlaceId == originPlaceId && originPlaceId != null }
 

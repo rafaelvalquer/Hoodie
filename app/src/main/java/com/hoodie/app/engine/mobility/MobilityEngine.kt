@@ -220,6 +220,20 @@ class MobilityEngine @Inject constructor(
         log.log(DebugEventLogger.Category.CONTEXT, "Transporte escolhido: $mode")
     }
 
+    /**
+     * O usuário trocou o contexto à mão logo depois de uma chegada confirmada sozinha
+     * ("não estou no trabalho"): a chegada vira correção e o padrão perde a confiança.
+     */
+    suspend fun onManualContext(type: UserContextType, at: Long): Unit = mutex.withLock {
+        val last = repo.lastFinished() ?: return@withLock
+        val ended = last.endedAt ?: return@withLock
+        if (!last.arrivalAutoConfirmed || at - ended > HoodieConfig.ARRIVAL_CORRECTION_WINDOW_MS) return@withLock
+        val destType = last.destinationPlaceId?.let { places.byId(it) }?.type?.toContext() ?: return@withLock
+        if (destType == type) return@withLock
+        repo.update(last.copy(arrivalConfirmed = false, arrivalAutoConfirmed = false))
+        log.log(DebugEventLogger.Category.CONTEXT, "Chegada automática corrigida pelo usuário ($destType → $type)")
+    }
+
     /** Settings › "Apagar histórico de deslocamentos". */
     suspend fun clearHistory(): Unit = mutex.withLock {
         repo.clearHistory()
@@ -379,7 +393,9 @@ class MobilityEngine @Inject constructor(
         val m = settings.current().mobility
         val trips = if (m.learnTrips) repo.trips(at) else emptyList()
         val approved = MobilityLearningEngine.patternKey(session.originPlaceId, place.id) in m.approvedPatterns
-        val auto = m.learnTrips && (MobilityLearningEngine.arrivalAutoConfirm(trips, place.id) || approved)
+        // Uma correção recente ("não cheguei") vale mais que o padrão aprovado: volta a perguntar.
+        val auto = m.learnTrips && !MobilityLearningEngine.lastArrivalCorrected(trips, place.id) &&
+            (MobilityLearningEngine.arrivalAutoConfirm(trips, place.id) || approved)
         finish(
             session.copy(arrivalConfirmed = if (auto) true else null, arrivalAutoConfirmed = auto),
             destination = place.id, at = at, reason = if (auto) "chegada automática" else "chegada",
@@ -524,7 +540,13 @@ class MobilityEngine @Inject constructor(
         )
         val id = questions.insert(entity)
         val countsForMovement = kind == QuestionKind.CONFIRM_MOVEMENT || kind == QuestionKind.SELECT_TRANSPORT_MODE
-        repo.update(latest.copy(questionsAsked = latest.questionsAsked + if (countsForMovement) 1 else 0, pendingModeQuestion = false))
+        repo.update(
+            latest.copy(
+                questionsAsked = latest.questionsAsked + if (countsForMovement) 1 else 0,
+                // Só a própria pergunta do transporte resolve a pendência dele.
+                pendingModeQuestion = latest.pendingModeQuestion && kind != QuestionKind.SELECT_TRANSPORT_MODE,
+            ),
+        )
         val prompt = ContextQuestion(id, kind, candidate, placeId, null, entity.contextEventId, now, null, null).prompt
         if (kind.isYesNo) notifier.askYesNo(id, prompt) else notifier.askInApp(id, prompt)
         log.log(DebugEventLogger.Category.CONTEXT, "Pergunta de mobilidade: $kind")

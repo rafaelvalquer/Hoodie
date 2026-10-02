@@ -58,6 +58,8 @@ object HoodieConfig {
     const val MOBILITY_SCORE_HISTORY = 15
     /** Confirmações seguidas de chegada num lugar para passar a confirmar sozinho. */
     const val ARRIVAL_AUTO_CONFIRM_COUNT = 3
+    /** Troca manual de contexto até este tempo depois de uma chegada automática = correção. */
+    const val ARRIVAL_CORRECTION_WINDOW_MS = 30 * MINUTE_MS
     /** Mesmo modo escolhido para o mesmo trajeto este número de vezes = vira padrão aprendido. */
     const val TRANSPORT_LEARN_COUNT = 3
     /** Trajeto repetido este número de vezes = "histórico semelhante" no score. */

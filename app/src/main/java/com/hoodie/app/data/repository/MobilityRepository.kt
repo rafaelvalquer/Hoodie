@@ -61,6 +61,9 @@ class MobilityRepository @Inject constructor(
         }
     }
 
+    /** Último deslocamento encerrado (correção de chegada). */
+    suspend fun lastFinished(): MobilitySessionEntity? = sessions.lastFinished()
+
     /** Deslocamentos confirmados que tocam o intervalo (Diário). */
     suspend fun tripsBetween(from: Long, to: Long): List<MobilityTrip> {
         val list = sessions.overlapping(from, to)

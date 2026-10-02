@@ -212,6 +212,8 @@ class HomeViewModel @Inject constructor(
 
     fun setManual(type: UserContextType) = viewModelScope.launch {
         contextEngine.setManual(type)
+        // "Não estou no trabalho" logo após uma chegada automática: a mobilidade aprende a correção.
+        runCatching { mobility.onManualContext(type, clock.nowMillis()) }
         _reactions.tryEmit(AnimationId.HAPPY)
     }
 

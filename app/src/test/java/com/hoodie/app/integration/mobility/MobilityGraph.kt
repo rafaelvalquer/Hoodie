@@ -68,7 +68,7 @@ class MobilityGraph(startDay: Int = SUNDAY - 7) {
 
     init {
         g.setRoutine(officeRoutine)
-        g.clock.millis = com.hoodie.app.engine.at(MONDAY - 1, 20).ms()
+        g.clock.millis = com.hoodie.app.engine.at(startDay, 21).ms()
         home = runBlocking { g.engine.savePlaceHere(PlaceType.HOME, "Casa", -23.55, -46.63) }
         work = g.addPlace(PlaceType.WORK, -23.60)
         restaurant = g.addPlace(PlaceType.RESTAURANT, -23.62)
