@@ -4,6 +4,7 @@ import android.graphics.Color as AColor
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +23,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
@@ -43,6 +48,11 @@ import org.osmdroid.views.overlay.Polygon
  *
  * [recenterKey] muda quando o ponto vem de fora (busca, "minha localização");
  * aí o mapa é movido para [latitude]/[longitude].
+ *
+ * Dentro do mapa: "◎ Minha localização" no canto inferior esquerdo (vira
+ * "◌ Localizando..." com [loadingLocation]) e a atribuição do OpenStreetMap no
+ * inferior direito — cantos opostos, nunca sobrepostos. O mapa não define a
+ * própria altura: quem chama passa uma altura fixa (nada de weight).
  */
 @Composable
 fun MapPicker(
@@ -52,6 +62,8 @@ fun MapPicker(
     recenterKey: Int,
     onCenterChanged: (Double, Double) -> Unit,
     modifier: Modifier = Modifier,
+    onMyLocation: (() -> Unit)? = null,
+    loadingLocation: Boolean = false,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -125,13 +137,41 @@ fun MapPicker(
         AndroidView(factory = { map }, modifier = Modifier.matchParentSize())
         // A ponta do pino (base do desenho) fica exatamente no centro do mapa.
         PixelPin(Modifier.align(Alignment.Center).padding(bottom = 36.dp))
+        if (onMyLocation != null) {
+            MapOverlayButton(
+                if (loadingLocation) "◌ Localizando..." else "◎ Minha localização",
+                enabled = !loadingLocation,
+                onClick = onMyLocation,
+                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp).testTag(MAP_MY_LOCATION_TAG),
+            )
+        }
         Text(
             "© OpenStreetMap",
             style = MaterialTheme.typography.labelSmall,
             color = HoodieColors.Outline,
+            maxLines = 1,
             modifier = Modifier.align(Alignment.BottomEnd).background(Color(0xCCFFFFFF)).padding(horizontal = 4.dp),
         )
     }
+}
+
+const val MAP_MY_LOCATION_TAG = "map_my_location"
+
+/** Botão compacto sobre o mapa (borda pixel de 2 dp, fundo do painel). */
+@Composable
+fun MapOverlayButton(text: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (enabled) HoodieColors.Ink else HoodieColors.Muted,
+        maxLines = 1,
+        modifier = modifier
+            .border(2.dp, HoodieColors.Outline)
+            .background(HoodieColors.Panel)
+            .clickable(enabled = enabled, onClick = onClick)
+            .semantics { role = Role.Button }
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+    )
 }
 
 /** Pino em pixel art; a ponta fica exatamente no centro do mapa. */

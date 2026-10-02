@@ -1,33 +1,6 @@
 package com.hoodie.app.presentation.screens.places
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.hoodie.app.core.geofence.GeofenceManager
 import com.hoodie.app.core.geofence.GeofenceRegistrar
@@ -37,17 +10,15 @@ import com.hoodie.app.core.location.CurrentPosition
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.data.repository.PlaceRepository
-import com.hoodie.app.presentation.components.ChipRow
-import com.hoodie.app.presentation.components.MapPicker
-import com.hoodie.app.presentation.components.PixelButton
-import com.hoodie.app.presentation.components.PixelPanel
-import com.hoodie.app.presentation.components.SectionLabel
-import com.hoodie.app.presentation.theme.HoodieColors
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -59,6 +30,8 @@ data class PlacePickerState(
     val query: String = "",
     val results: List<AddressResult> = emptyList(),
     val searching: Boolean = false,
+    /** "Minha localização" em andamento (separado da busca: o loading aparece no botão do mapa). */
+    val locating: Boolean = false,
     val latitude: Double = DEFAULT_LAT,
     val longitude: Double = DEFAULT_LNG,
     /** Incrementa quando o ponto vem de fora do mapa (busca/GPS) para o mapa recentralizar. */
@@ -66,15 +39,33 @@ data class PlacePickerState(
     val hasPoint: Boolean = false,
     val address: String? = null,
     val radius: Float = GeofenceManager.DEFAULT_RADIUS,
-    val message: String? = null,
+    /** Erros perto de onde nasceram: busca, mapa/localização e salvar. */
+    val searchError: String? = null,
+    val locationError: String? = null,
+    val saveError: String? = null,
     val saving: Boolean = false,
-    val done: Boolean = false,
 ) {
+    val editing: Boolean get() = editingId != null
+    val canSave: Boolean get() = hasPoint && !saving
+
     companion object {
         // Centro inicial neutro (São Paulo) até haver busca, GPS ou um lugar em edição.
         const val DEFAULT_LAT = -23.5505
         const val DEFAULT_LNG = -46.6333
+        const val MIN_RADIUS = 75f
+        const val MAX_RADIUS = 400f
+        val QUICK_RADII = listOf(100f, 150f, 200f, 300f)
+        const val SEARCH_NOT_FOUND = "Endereço não encontrado. Confira a internet ou tente com rua, número e cidade."
+        const val LOCATION_FAILED = "Não consegui acessar sua localização agora."
+        const val SAVE_FAILED = "Não foi possível salvar. Tente de novo."
+        const val GEOFENCE_FAILED = "Local salvo. O aviso de chegada não pôde ser ativado agora — ele será reativado automaticamente."
     }
+}
+
+/** Ações pontuais (não ficam no estado): fechar a tela, avisar algo que sobrevive à navegação. */
+sealed interface PlacePickerUiEvent {
+    data object Saved : PlacePickerUiEvent
+    data class ShowMessage(val text: String) : PlacePickerUiEvent
 }
 
 /**
@@ -92,6 +83,8 @@ class PlacePickerViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(PlacePickerState())
     val state: StateFlow<PlacePickerState> = _state.asStateFlow()
+    private val _events = Channel<PlacePickerUiEvent>(Channel.BUFFERED)
+    val events: Flow<PlacePickerUiEvent> = _events.receiveAsFlow()
     private var initialized = false
     private var reverseJob: Job? = null
 
@@ -100,7 +93,7 @@ class PlacePickerViewModel @Inject constructor(
         initialized = true
         _state.update { it.copy(type = type, editingId = placeId, name = type.label) }
         viewModelScope.launch {
-            val existing = placeId?.let { places.byId(it) }
+            val existing = placeId?.let { runCatching { places.byId(it) }.getOrNull() }
             if (existing != null) {
                 _state.update {
                     it.copy(type = existing.type, name = existing.name, radius = existing.radiusMeters,
@@ -111,9 +104,9 @@ class PlacePickerViewModel @Inject constructor(
         }
     }
 
-    fun setQuery(q: String) = _state.update { it.copy(query = q, message = null) }
-    fun setName(n: String) = _state.update { it.copy(name = n.take(30)) }
-    fun setRadius(r: Float) = _state.update { it.copy(radius = r) }
+    fun setQuery(q: String) = _state.update { it.copy(query = q, searchError = null) }
+    fun setName(n: String) = _state.update { it.copy(name = n.take(30), saveError = null) }
+    fun setRadius(r: Float) = _state.update { it.copy(radius = r.coerceIn(PlacePickerState.MIN_RADIUS, PlacePickerState.MAX_RADIUS)) }
     fun setType(t: PlaceType) = _state.update { s ->
         // Se o nome ainda era o padrão do tipo antigo, acompanha o novo tipo.
         s.copy(type = t, name = if (s.name.isBlank() || s.name == s.type.label) t.label else s.name)
@@ -121,139 +114,76 @@ class PlacePickerViewModel @Inject constructor(
 
     fun search() = viewModelScope.launch {
         val q = _state.value.query
-        if (q.isBlank()) return@launch
-        _state.update { it.copy(searching = true, results = emptyList(), message = null) }
-        val results = search.search(q)
+        if (q.isBlank() || _state.value.searching) return@launch
+        _state.update { it.copy(searching = true, results = emptyList(), searchError = null) }
+        val results = try { search.search(q) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
         _state.update {
-            it.copy(
-                searching = false, results = results,
-                message = if (results.isEmpty()) "Não encontrei esse endereço. Confira a internet ou tente com rua, número e cidade." else null,
-            )
+            it.copy(searching = false, results = results, searchError = if (results.isEmpty()) PlacePickerState.SEARCH_NOT_FOUND else null)
         }
         if (results.size == 1) choose(results.first())
     }
 
     fun choose(r: AddressResult) = _state.update {
-        it.copy(latitude = r.latitude, longitude = r.longitude, address = r.label, results = emptyList(), hasPoint = true, recenterKey = it.recenterKey + 1)
+        it.copy(latitude = r.latitude, longitude = r.longitude, address = r.label, results = emptyList(), hasPoint = true,
+            recenterKey = it.recenterKey + 1, searchError = null, locationError = null)
     }
+
+    fun dismissResults() = _state.update { it.copy(results = emptyList()) }
 
     /** O usuário arrastou o mapa: o centro é o novo ponto. */
     fun onCenterChanged(lat: Double, lng: Double) {
         val s = _state.value
         if (Math.abs(lat - s.latitude) < 1e-6 && Math.abs(lng - s.longitude) < 1e-6) return
-        _state.update { it.copy(latitude = lat, longitude = lng, hasPoint = true) }
+        _state.update { it.copy(latitude = lat, longitude = lng, hasPoint = true, locationError = null) }
         lookupAddress(lat, lng)
     }
 
     fun useMyLocation() = viewModelScope.launch {
-        _state.update { it.copy(searching = true, message = null) }
-        val pos = position.current()
+        if (_state.value.locating) return@launch
+        _state.update { it.copy(locating = true, locationError = null) }
+        val pos = try { position.current() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (pos == null) {
-            _state.update { it.copy(searching = false, message = "Não consegui sua localização agora.") }
+            _state.update { it.copy(locating = false, locationError = PlacePickerState.LOCATION_FAILED) }
             return@launch
         }
-        _state.update { it.copy(searching = false, latitude = pos.first, longitude = pos.second, hasPoint = true, recenterKey = it.recenterKey + 1) }
+        _state.update { it.copy(locating = false, latitude = pos.first, longitude = pos.second, hasPoint = true, recenterKey = it.recenterKey + 1) }
         lookupAddress(pos.first, pos.second)
     }
 
     private fun lookupAddress(lat: Double, lng: Double) {
         reverseJob?.cancel()
         reverseJob = viewModelScope.launch {
-            val label = search.reverse(lat, lng)
+            val label = try { search.reverse(lat, lng) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             _state.update { it.copy(address = label) }
         }
     }
 
+    /**
+     * Salvar o lugar e registrar o geofence são passos separados: se o banco falhar, a tela
+     * fica aberta com o erro; se só o geofence falhar, o lugar continua salvo e vira um aviso.
+     */
     fun save() = viewModelScope.launch {
         val s = _state.value
-        if (!s.hasPoint || s.saving) return@launch
-        _state.update { it.copy(saving = true) }
-        val name = s.name.ifBlank { s.type.label }
-        val existing = s.editingId?.let { places.byId(it) }
-        if (existing != null) {
-            places.update(existing.copy(name = name, type = s.type, latitude = s.latitude, longitude = s.longitude, radiusMeters = s.radius))
-        } else {
-            places.add(name, s.type, s.latitude, s.longitude, s.radius, clock.nowMillis())
-        }
-        geofences.registerAll()
-        _state.update { it.copy(saving = false, done = true) }
-    }
-}
-
-/**
- * Conteúdo reutilizável (onboarding, tela Lugares, Home). Ocupa a tela toda:
- * o mapa não fica dentro de scroll para não brigar com o gesto de arrastar.
- */
-@Composable
-fun PlacePickerContent(
-    type: PlaceType,
-    placeId: Long?,
-    onDone: () -> Unit,
-    onCancel: () -> Unit,
-    modifier: Modifier = Modifier,
-    allowTypeChange: Boolean = true,
-    vm: PlacePickerViewModel = hiltViewModel(key = "picker_${type.name}_${placeId ?: "new"}"),
-) {
-    LaunchedEffect(type, placeId) { vm.init(type, placeId) }
-    val s by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(s.done) { if (s.done) onDone() }
-
-    Column(modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                if (s.editingId != null) "📍 Mudar local" else "${s.type.emoji} Onde fica: ${s.type.label}?",
-                style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f),
-            )
-            Text("✕", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(4.dp).clickable(onClick = onCancel))
-        }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                s.query, vm::setQuery, singleLine = true, modifier = Modifier.weight(1f),
-                placeholder = { Text("Rua, número, cidade") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { vm.search() }),
-            )
-            PixelButton("Buscar", { vm.search() }, enabled = !s.searching && s.query.isNotBlank())
-        }
-        if (s.searching) CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
-        s.message?.let { Text(it, color = HoodieColors.Coral, style = MaterialTheme.typography.bodySmall) }
-        if (s.results.isNotEmpty()) {
-            LazyColumn(Modifier.heightIn(max = 220.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(s.results) { r ->
-                    PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, onClick = { vm.choose(r) }) {
-                        Text("📍 ${r.label}", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
+        if (!s.canSave) return@launch
+        _state.update { it.copy(saving = true, saveError = null) }
+        try {
+            val name = s.name.trim().ifBlank { s.type.label }
+            val existing = s.editingId?.let { places.byId(it) }
+            if (existing != null) {
+                places.update(existing.copy(name = name, type = s.type, latitude = s.latitude, longitude = s.longitude, radiusMeters = s.radius))
+            } else {
+                places.add(name, s.type, s.latitude, s.longitude, s.radius, clock.nowMillis())
             }
+        } catch (e: CancellationException) {
+            _state.update { it.copy(saving = false) }
+            throw e
+        } catch (_: Exception) {
+            _state.update { it.copy(saving = false, saveError = PlacePickerState.SAVE_FAILED) }
+            return@launch
         }
-
-        MapPicker(s.latitude, s.longitude, s.radius, s.recenterKey, vm::onCenterChanged, Modifier.fillMaxWidth().weight(1f))
-        Text(
-            s.address?.let { "📍 $it" } ?: if (s.hasPoint) "📍 %.5f, %.5f".format(s.latitude, s.longitude) else "Busque o endereço ou arraste o mapa até o pino ficar no lugar certo.",
-            style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted,
-        )
-        Text("Usar minha localização", color = HoodieColors.Blue, modifier = Modifier.clickable { vm.useMyLocation() }.padding(vertical = 2.dp))
-
-        if (allowTypeChange) {
-            val types = PlaceType.entries
-            ChipRow(types.map { "${it.emoji} ${it.label}" }, types.indexOf(s.type), { vm.setType(types[it]) })
-        }
-        OutlinedTextField(s.name, vm::setName, singleLine = true, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth())
-        SectionLabel("Raio: ${s.radius.toInt()} m")
-        Slider(s.radius, vm::setRadius, valueRange = 75f..400f)
-        Text(
-            "🔒 O endereço é enviado ao serviço de mapas do Android só para esta busca; o mapa vem do OpenStreetMap. O local é salvo cifrado, só neste aparelho.",
-            style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted,
-        )
-        PixelButton(
-            if (s.saving) "Salvando..." else "Salvar como ${s.type.label}",
-            { vm.save() }, Modifier.fillMaxWidth(), color = HoodieColors.Gold, enabled = s.hasPoint && !s.saving,
-        )
+        val geofenceOk = try { geofences.registerAll().ok } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+        _state.update { it.copy(saving = false) }
+        if (!geofenceOk) _events.send(PlacePickerUiEvent.ShowMessage(PlacePickerState.GEOFENCE_FAILED))
+        _events.send(PlacePickerUiEvent.Saved)
     }
-}
-
-/** Tela de navegação (rota place_picker). */
-@Composable
-fun PlacePickerScreen(type: PlaceType, placeId: Long?, onBack: () -> Unit) {
-    PlacePickerContent(type, placeId, onDone = onBack, onCancel = onBack, modifier = Modifier.statusBarsPadding())
 }

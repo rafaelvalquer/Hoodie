@@ -37,7 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hoodie.app.core.location.LocationPermissionState
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.WorkMode
-import com.hoodie.app.presentation.screens.places.PlacePickerContent
+import com.hoodie.app.presentation.screens.places.picker.PlacePickerContent
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.presentation.components.AnimatedHoodie
 import com.hoodie.app.presentation.components.PixelButton
