@@ -277,9 +277,13 @@ private fun SpriteSources() {
         Text(HoodieSprites.provider.name)
         SectionLabel("Sprite sheets carregados (assets/pixel/hoodie)")
         Text(if (report.loaded.isEmpty()) "Nenhum — tudo procedural." else report.loaded.joinToString())
-        if (report.problems.isNotEmpty()) {
-            SectionLabel("Problemas")
-            report.problems.forEach { Text("• $it", color = HoodieColors.Coral, style = MaterialTheme.typography.bodySmall) }
+        if (report.errors.isNotEmpty()) {
+            SectionLabel("Erros · clip rejeitado, usa o procedural")
+            report.errors.forEach { Text("• ${it.message}", color = HoodieColors.Coral, style = MaterialTheme.typography.bodySmall) }
+        }
+        if (report.warnings.isNotEmpty()) {
+            SectionLabel("Avisos")
+            report.warnings.forEach { Text("• ${it.message}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall) }
         }
     }
     Text("Para substituir uma animação: exporte do Aseprite (ver assets-source/hoodie/README.md) e coloque o .png + .json em app/src/main/assets/pixel/hoodie/.", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)

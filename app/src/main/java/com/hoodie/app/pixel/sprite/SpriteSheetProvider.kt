@@ -24,8 +24,20 @@ data class SheetFrame(
     val explicitAnchors: Set<Anchor> = Anchor.entries.toSet(),
 )
 
+enum class SheetProblemSeverity { WARNING, ERROR }
+
+/** ERROR = o clip (ou o arquivo) foi rejeitado e o procedural assume; WARNING = carregou, mas merece revisão. */
+data class SheetProblem(val severity: SheetProblemSeverity, val clip: AnimationId?, val message: String) {
+    override fun toString() = "${severity.name}: $message"
+}
+
 /** Resultado da carga: o que entrou e o que foi rejeitado (aparece no Pixel Lab). */
-data class SheetLoadReport(val loaded: List<String>, val problems: List<String>)
+data class SheetLoadReport(val loaded: List<String>, val issues: List<SheetProblem>) {
+    val errors: List<SheetProblem> get() = issues.filter { it.severity == SheetProblemSeverity.ERROR }
+    val warnings: List<SheetProblem> get() = issues.filter { it.severity == SheetProblemSeverity.WARNING }
+    /** Todas as mensagens (erros e avisos). */
+    val problems: List<String> get() = issues.map { it.toString() }
+}
 
 /**
  * Lê exportações do Aseprite no formato JSON array:
@@ -200,7 +212,8 @@ class SpriteSheetProvider(private val clips: Map<Pair<AnimationId, Facing>, List
         /** Carrega todos os pares .json/.png de [dir]. Erros não quebram o app: viram relatório. */
         fun load(assets: SpriteAssetSource, decoder: SpriteImageDecoder, dir: String = DIR): Pair<SpriteSheetProvider, SheetLoadReport> {
             val clips = LinkedHashMap<Pair<AnimationId, Facing>, List<SheetFrame>>()
-            val loaded = mutableListOf<String>(); val problems = mutableListOf<String>()
+            val loaded = mutableListOf<String>(); val issues = mutableListOf<SheetProblem>()
+            fun error(clip: AnimationId?, msg: String) { issues += SheetProblem(SheetProblemSeverity.ERROR, clip, msg) }
             val files = runCatching { assets.list(dir) }.getOrDefault(emptyList())
             for (json in files.filter { it.endsWith(".json") && !it.endsWith(".anchors.json") }.sorted()) {
                 val base = json.removeSuffix(".json")
@@ -208,31 +221,38 @@ class SpriteSheetProvider(private val clips: Map<Pair<AnimationId, Facing>, List
                     val text = assets.open("$dir/$json").bufferedReader().use { it.readText() }
                     val image = assets.open("$dir/$base.png").use { decoder.decode(it) } ?: error("PNG inválido")
                     val anchors = if ("$base.anchors.png" in files) assets.open("$dir/$base.anchors.png").use { decoder.decode(it) } else null
-                    val parsed = AsepriteSheetParser.parse(text, image, problems, anchors)
+                    val parserProblems = mutableListOf<String>()
+                    val parsed = AsepriteSheetParser.parse(text, image, parserProblems, anchors)
+                    parserProblems.forEach { error(null, "$base: $it") }
                     parsed.forEach { (key, frames) ->
                         val label = "$base ${key.first}/${key.second}"
                         // Eventos (pegar caneca, passo…) vêm do clip pelo índice: contagem diferente
                         // desalinha tudo. Sheet incompatível é REJEITADO → fica o procedural.
                         val expected = key.first.frames.size
                         if (frames.size != expected) {
-                            problems += "$label: ${frames.size} frames, o clip tem $expected — rejeitado (usa o procedural)"
+                            error(key.first, "$label: ${frames.size} frames, o clip tem $expected — rejeitado (usa o procedural)")
                             return@forEach
                         }
                         val bad = frames.firstOrNull { it.image.width != HoodiePainter.WIDTH || it.image.height != HoodiePainter.HEIGHT }
                         if (bad != null) {
-                            problems += "$label: frame ${bad.image.width}×${bad.image.height} (esperado 48×72) — rejeitado"
+                            error(key.first, "$label: frame ${bad.image.width}×${bad.image.height} (esperado 48×72) — rejeitado")
                             return@forEach
                         }
-                        // Âncora crítica faltando: o runtime aceita (item cai no padrão), mas o gate de arte falha.
-                        RequiredAnchors.missing(key.first, frames).takeIf { it.isNotEmpty() }?.let {
-                            problems += "$label: âncoras obrigatórias não desenhadas: ${it.joinToString()}"
+                        // Âncora crítica faltando: o item/efeito "flutuaria" longe da mão → REJEITADO.
+                        val missing = RequiredAnchors.missing(key.first, frames)
+                        if (missing.isNotEmpty()) {
+                            error(key.first, "$label: âncoras obrigatórias não desenhadas: ${missing.joinToString()} — rejeitado")
+                            return@forEach
                         }
+                        // Cores fora da paleta do personagem: carrega, mas avisa.
+                        val extras = frames.flatMap { f -> f.image.pixels.filter { it ushr 24 != 0 }.toSet() }.toSet() - HoodiePalette.ALL.toSet()
+                        if (extras.isNotEmpty()) issues += SheetProblem(SheetProblemSeverity.WARNING, key.first, "$label: paleta possui ${extras.size} cores extras")
                         clips[key] = frames
                         loaded += "${key.first.name.lowercase()}_${key.second.name.lowercase()}"
                     }
-                }.onFailure { problems += "$base: ${it.message}" }
+                }.onFailure { error(null, "$base: ${it.message}") }
             }
-            return SpriteSheetProvider(clips) to SheetLoadReport(loaded, problems)
+            return SpriteSheetProvider(clips) to SheetLoadReport(loaded, issues)
         }
     }
 }

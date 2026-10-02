@@ -9,7 +9,7 @@ import java.io.InputStream
 object AndroidSpriteSheets {
 
     @Volatile
-    var lastReport: SheetLoadReport = SheetLoadReport(emptyList(), emptyList())
+    var lastReport: SheetLoadReport = SheetLoadReport(emptyList(), emptyList<SheetProblem>())
         private set
 
     /** Clips/vistas servidos por arte final (para a cobertura no Pixel Lab). */

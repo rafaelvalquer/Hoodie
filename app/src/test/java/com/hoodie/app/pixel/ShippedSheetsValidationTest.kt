@@ -54,7 +54,7 @@ class ShippedSheetsValidationTest {
         val jsons = dir.listFiles { f -> f.name.endsWith(".json") }.orEmpty()
         jsons.forEach { json -> assertTrue("${json.name} sem PNG", File(dir, json.name.removeSuffix(".json") + ".png").exists()) }
         val (provider, report) = SpriteSheetProvider.load(folder(dir), SheetBaker.decoder)
-        assertTrue("Problemas de importação em ${dir.name}: ${report.problems}", report.problems.isEmpty())
+        assertTrue("Erros de importação em ${dir.name}: ${report.errors}", report.errors.isEmpty())
         if (jsons.isNotEmpty()) assertTrue("nenhuma animação reconhecida em ${jsons.map { it.name }}", provider.available.isNotEmpty())
 
         provider.available.forEach { (anim, facing) ->

@@ -105,7 +105,7 @@ class FinalArtExportTest {
     @Test
     fun `sheets finais carregam sem problemas e com as ancoras obrigatorias`() {
         val (provider, report) = SpriteSheetProvider.load(SheetBaker.assetSource(File("src/main/assets")), SheetBaker.decoder)
-        assertTrue(report.problems.toString(), report.problems.isEmpty())
+        assertTrue(report.errors.toString(), report.errors.isEmpty())
         assertTrue(RequiredShippedAnimations.missing(provider.available).isEmpty())
         FinalArtStudio.GROUPS.values.flatten().forEach { (anim, facing) ->
             val f = provider.frame(SpriteRequest(anim, SheetBaker.directionOf(facing), 0))
