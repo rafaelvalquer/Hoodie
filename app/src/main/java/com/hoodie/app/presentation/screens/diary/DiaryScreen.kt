@@ -193,7 +193,7 @@ internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("VELOCIDADE", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         ReplaySpeed.entries.forEach { speed ->
-            androidx.compose.material3.FilterChip(selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text(speed.label) })
+            androidx.compose.material3.FilterChip(selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text(speed.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelSmall) })
         }
     }
 }
