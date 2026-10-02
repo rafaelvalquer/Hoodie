@@ -1,0 +1,6 @@
+{
+  "walk": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null },
+  "idle": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null },
+  "sleep": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null },
+  "work": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null }
+}

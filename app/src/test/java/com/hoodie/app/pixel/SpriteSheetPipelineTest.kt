@@ -130,6 +130,11 @@ class SpriteSheetPipelineTest {
         val over = m.provider(com.hoodie.app.pixel.debug.CompareMode.OVERLAY, active).frame(req)
         assertEquals("spritesheet+procedural", over.source)
         assertEquals(active.frame(req).anchors, over.anchors)
+        // Difference: sheet = procedural aqui, então nada muda; um pixel alterado aparece.
+        val diff = m.provider(com.hoodie.app.pixel.debug.CompareMode.DIFFERENCE, active).frame(req)
+        assertTrue(diff.image.pixels.none { it == com.hoodie.app.pixel.debug.SourceCompare.DIFF_COLOR })
+        val changed = active.frame(req).image.let { PixelBuffer(it.width, it.height).also { c -> it.pixels.copyInto(c.pixels); c.pixels[100] = 0xFF00FF00.toInt() } }
+        assertEquals(1, m.difference(changed, active.frame(req).image).pixels.count { it == com.hoodie.app.pixel.debug.SourceCompare.DIFF_COLOR })
     }
 
     @Test

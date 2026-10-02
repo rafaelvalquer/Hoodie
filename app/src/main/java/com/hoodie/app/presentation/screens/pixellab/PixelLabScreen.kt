@@ -126,10 +126,13 @@ private fun AnimationTool() {
     val source = when (compare) {
         CompareMode.PROCEDURAL -> "procedural"
         CompareMode.OVERLAY -> "final + procedural (50%)"
+        CompareMode.DIFFERENCE -> "final ≠ procedural " + remember(request) {
+            "${(SourceCompare.changedRatio(active.frame(request).image, com.hoodie.app.pixel.sprite.ProceduralSpriteProvider.frame(request).image) * 100).toInt()}%"
+        }
         CompareMode.FINAL -> (active as? CompositeSpriteProvider)?.providerFor(request)?.name ?: active.name
     }
 
-    ChipRow(listOf("Procedural", "Final", "Overlay"), compare.ordinal, { compare = CompareMode.entries[it] })
+    ChipRow(listOf("Procedural", "Final", "Overlay", "Difference"), compare.ordinal, { compare = CompareMode.entries[it] })
     PixelPanel(Modifier.fillMaxWidth()) {
         Text(
             "SOURCE ${source.uppercase()} · ANIMATION ${anim.name} · DIRECTION ${viewFor(anim, direction).name} · FRAME ${frameIndex + 1}/$count",
@@ -258,14 +261,19 @@ private fun SpriteSources() {
     PixelPanel(Modifier.fillMaxWidth()) {
         SectionLabel("SPRITE COVERAGE")
         val total = RequiredShippedAnimations.coverage(available)
+        val status = AndroidSpriteSheets.artStatus
         Text("Arte final: ${total.percent}% (${total.finalCount}/${total.total} clips)", style = MaterialTheme.typography.titleMedium, color = HoodieColors.Gold)
         AnimGroup.entries.forEach { g ->
             val c = RequiredShippedAnimations.coverage(available, g)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(g.name.lowercase(), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                Text("${c.finalCount}/${c.total} · ${c.percent}%", style = MaterialTheme.typography.bodySmall, color = if (c.percent == 100) HoodieColors.Gold else HoodieColors.Muted)
+            val reviewed = com.hoodie.app.pixel.sprite.ArtReviewStatus.reviewedPercent(status, g)
+            Column(Modifier.padding(top = 6.dp)) {
+                Text(g.name, style = MaterialTheme.typography.labelLarge)
+                Row { Text("Final asset", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall); Text("${c.percent}% (${c.finalCount}/${c.total})", style = MaterialTheme.typography.bodySmall, color = if (c.percent == 100) HoodieColors.Gold else HoodieColors.Muted) }
+                Row { Text("Manual reviewed", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall); Text("$reviewed%", style = MaterialTheme.typography.bodySmall, color = if (reviewed == 100) HoodieColors.Gold else HoodieColors.Muted) }
             }
         }
+        val pending = com.hoodie.app.pixel.sprite.ArtReviewStatus.pendingReview(status)
+        if (pending.isNotEmpty()) Text("Revisão manual pendente (bloqueia a release): ${pending.joinToString()}", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Coral)
         val missing = RequiredShippedAnimations.missing(available)
         Text(
             if (missing.isEmpty()) "Obrigatórios da release: completos" else "Faltam na release: " + missing.joinToString { "${it.first.name}/${it.second.name}" },

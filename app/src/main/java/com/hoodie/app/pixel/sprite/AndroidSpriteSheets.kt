@@ -17,6 +17,11 @@ object AndroidSpriteSheets {
     var available: Set<Pair<com.hoodie.app.pixel.animation.AnimationId, Facing>> = emptySet()
         private set
 
+    /** Manifest de revisão artística (vazio se ausente). */
+    @Volatile
+    var artStatus: Map<String, ArtGroupStatus> = emptyMap()
+        private set
+
     fun install(context: Context) {
         val assets = object : SpriteAssetSource {
             override fun list(dir: String): List<String> = context.assets.list(dir)?.toList().orEmpty()
@@ -31,6 +36,7 @@ object AndroidSpriteSheets {
         val (sheets, report) = SpriteSheetProvider.load(assets, decoder)
         lastReport = report
         available = sheets.available
+        artStatus = runCatching { assets.open("${SpriteSheetProvider.DIR}/${ArtReviewStatus.FILE}").bufferedReader().use { ArtReviewStatus.parse(it.readText()) } }.getOrDefault(emptyMap())
         HoodieSprites.provider = if (sheets.available.isEmpty()) ProceduralSpriteProvider else CompositeSpriteProvider(sheets)
     }
 }

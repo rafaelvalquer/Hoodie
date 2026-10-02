@@ -215,7 +215,7 @@ class SpriteSheetProvider(private val clips: Map<Pair<AnimationId, Facing>, List
             val loaded = mutableListOf<String>(); val issues = mutableListOf<SheetProblem>()
             fun error(clip: AnimationId?, msg: String) { issues += SheetProblem(SheetProblemSeverity.ERROR, clip, msg) }
             val files = runCatching { assets.list(dir) }.getOrDefault(emptyList())
-            for (json in files.filter { it.endsWith(".json") && !it.endsWith(".anchors.json") }.sorted()) {
+            for (json in files.filter { it.endsWith(".json") && !it.endsWith(".anchors.json") && it != ArtReviewStatus.FILE }.sorted()) {
                 val base = json.removeSuffix(".json")
                 runCatching {
                     val text = assets.open("$dir/$json").bufferedReader().use { it.readText() }
