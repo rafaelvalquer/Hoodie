@@ -8,27 +8,20 @@ import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.HoodiePainter
 import com.hoodie.app.pixel.sprite.HoodiePalette
 import com.hoodie.app.pixel.sprite.ProceduralSpriteProvider
-import com.hoodie.app.pixel.sprite.SpriteFrame
+import com.hoodie.app.pixel.sprite.SpriteAnchors
 import com.hoodie.app.pixel.sprite.SpriteRequest
 
 /**
- * Arte final v1 do Hoodie, pixel a pixel, sobre as poses do procedural (mesma
- * proporção, mesmos pés e âncoras, mesma contagem de frames). Os retoques são os
- * de um acabamento à mão:
+ * BOOTSTRAP da arte: cria o `.aseprite` inicial de um grupo a partir das poses do
+ * procedural (mesma proporção, pés, âncoras e contagem de frames), com retoque de
+ * acabamento, os passes de [ArtPasses] e camadas semânticas por parte do corpo.
  *
- * 1. **Selective outline** — o contorno interno (braço sobre o corpo, pernas,
- *    dedos) troca o preto pelo tom escuro do material; só a silhueta fica preta.
- * 2. **Rim light** — a luz vem de cima/esquerda: a primeira fileira de pelo e de
- *    moletom encostada na silhueta ganha o tom claro.
- * 3. **Sombra de contato** — o moletom logo abaixo da cabeça escurece (a cabeça
- *    projeta sombra na gola), o que separa cabeça e corpo em todos os frames.
- *
- * O resultado vira um .aseprite com camadas por papel (outline, fur, hoodie…),
- * a camada `anchors` e a referência `baseline (referencia)` travada, e é exportado
- * para o APK no mesmo formato do `aseprite -b`. Um artista pode redesenhar por
- * cima no Aseprite e reexportar com assets-source/hoodie/export.sh.
+ * Desde a V0.2 RC o `.aseprite` é a FONTE DA VERDADE: este estúdio nunca sobrescreve
+ * um arquivo existente (só com `-PartBootstrap=<grupo>` explícito). Edições feitas no
+ * Aseprite são preservadas; o runtime é compilado do `.aseprite` pelo
+ * [AsepriteSourceCompiler].
  */
-object FinalArtStudio {
+object ArtBootstrapStudio {
 
     /** Arquivos fonte e o que cada um entrega (tags `<anim>_<vista>`). */
     val GROUPS: Map<String, List<Pair<AnimationId, Facing>>> = linkedMapOf(
@@ -41,37 +34,57 @@ object FinalArtStudio {
         ).map { it to Facing.FRONT },
     )
 
-    /** Camadas do .aseprite, de baixo para cima. */
-    const val BASELINE = "baseline (referencia)"
-    const val ANCHORS = "anchors"
-    val LAYERS = listOf(BASELINE, "legs", "fur", "fur_shadow", "hoodie", "hoodie_shadow", "arms", "ears", "strings", "face", "accessory", "outline", ANCHORS)
+    const val BASELINE = AsepriteSourceCompiler.BASELINE_LAYER
+    const val ANCHORS = AsepriteSourceCompiler.ANCHORS_LAYER
 
-    private val FUR = setOf(HoodiePalette.FUR, HoodiePalette.FUR_LIGHT)
+    /** Camadas semânticas, de baixo para cima. Nem todas são usadas em todas as animações. */
+    val LAYERS = listOf(
+        BASELINE, "tail", "leg_left", "leg_right", "backpack", "torso", "hoodie", "hoodie_shadow", "strings",
+        "arm_left", "arm_right", "hand_left", "hand_right", "head", "ears", "face", "accessory", "outline", ANCHORS,
+    )
+
     private val FUR_ALL = setOf(HoodiePalette.FUR, HoodiePalette.FUR_SHADE, HoodiePalette.FUR_LIGHT)
     private val HOOD_ALL = setOf(HoodiePalette.HOOD, HoodiePalette.HOOD_SHADE, HoodiePalette.HOOD_LIGHT, HoodiePalette.HOOD_DARK)
-    private val FACE = setOf(HoodiePalette.EYE, HoodiePalette.WHITE, HoodiePalette.NOSE, HoodiePalette.TONGUE, HoodiePalette.BLUSH)
+    private val HOOD_SHADOW = setOf(HoodiePalette.HOOD_SHADE, HoodiePalette.HOOD_DARK)
+    val FACE = setOf(HoodiePalette.EYE, HoodiePalette.WHITE, HoodiePalette.NOSE, HoodiePalette.TONGUE, HoodiePalette.BLUSH)
 
-    fun procedural(anim: AnimationId, facing: Facing, i: Int): SpriteFrame =
-        ProceduralSpriteProvider.frame(SpriteRequest(anim, SheetBaker.directionOf(facing), i))
-
-    fun frame(anim: AnimationId, facing: Facing, i: Int): SpriteFrame {
-        val base = procedural(anim, facing, i)
-        val headY = base.anchors.head.y
-        val pose = ProceduralSpriteProvider.poseFor(SpriteRequest(anim, SheetBaker.directionOf(facing), i))
-        return base.copy(image = retouch(base.image, faceBottom = if (pose.headOnly) Int.MAX_VALUE else headY + 26), source = "final")
+    /** Um frame em edição: imagem, dono (parte) de cada pixel e âncoras. */
+    class ArtFrame(val image: PixelBuffer, val parts: IntArray, var anchors: SpriteAnchors, val durationMs: Long) {
+        fun set(x: Int, y: Int, color: Int, part: HoodiePainter.Part) {
+            if (x !in 0 until image.width || y !in 0 until image.height) return
+            image.pixels[y * image.width + x] = color
+            parts[y * image.width + x] = part.ordinal
+        }
+        operator fun get(x: Int, y: Int) = image[x, y]
+        fun partAt(x: Int, y: Int): HoodiePainter.Part? =
+            if (x !in 0 until image.width || y !in 0 until image.height) null else parts[y * image.width + x].takeIf { it >= 0 }?.let { HoodiePainter.Part.entries[it] }
     }
 
-    /** Os três retoques, sem mudar a silhueta (pés, chão e âncoras ficam iguais). */
+    private fun request(anim: AnimationId, facing: Facing, i: Int) = SpriteRequest(anim, SheetBaker.directionOf(facing), i)
+
+    /** Frame do procedural, como referência (camada baseline). */
+    fun procedural(anim: AnimationId, facing: Facing, i: Int) = ProceduralSpriteProvider.frame(request(anim, facing, i))
+
+    /** Frame final do bootstrap: procedural com partes + retoque + passes do grupo. */
+    fun frame(anim: AnimationId, facing: Facing, i: Int): ArtFrame {
+        val pose = ProceduralSpriteProvider.poseFor(request(anim, facing, i))
+        val (painted, parts) = HoodiePainter.paintWithParts(pose)
+        val duration = anim.clip.frames[i].durationMs
+        val image = retouch(painted.image, faceBottom = if (pose.headOnly) Int.MAX_VALUE else painted.anchors.head.y + 26)
+        val f = ArtFrame(image, parts, painted.anchors, duration)
+        ArtPasses.apply(anim, facing, i, f)
+        return f
+    }
+
+    /** Selective outline, rim light e sombra de contato — sem mudar a silhueta. */
     fun retouch(src: PixelBuffer, faceBottom: Int): PixelBuffer {
         val out = PixelBuffer(src.width, src.height).also { src.pixels.copyInto(it.pixels) }
         fun c(x: Int, y: Int) = src[x, y]
         fun clear(x: Int, y: Int) = c(x, y) ushr 24 == 0
         val n4 = listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)
-
         for (y in 0 until src.height) for (x in 0 until src.width) {
             val px = c(x, y)
             when {
-                // 1. Selective outline: linha interna cercada de um único material.
                 px == HoodiePalette.OUTLINE -> {
                     var touchesOutside = false
                     for (dy in -1..1) for (dx in -1..1) if (clear(x + dx, y + dy)) touchesOutside = true
@@ -81,12 +94,10 @@ object FinalArtStudio {
                     if (around.all { it in HOOD_ALL }) out.set(x, y, HoodiePalette.HOOD_DARK)
                     else if (y > faceBottom && around.all { it in FUR_ALL }) out.set(x, y, HoodiePalette.INNER_EAR)
                 }
-                // 2. Rim light: encostado na silhueta por cima ou pela esquerda.
                 px == HoodiePalette.FUR || px == HoodiePalette.HOOD -> {
                     val lit = (c(x, y - 1) == HoodiePalette.OUTLINE && clear(x, y - 2)) || (c(x - 1, y) == HoodiePalette.OUTLINE && clear(x - 2, y))
                     if (lit) out.set(x, y, if (px == HoodiePalette.FUR) HoodiePalette.FUR_LIGHT else HoodiePalette.HOOD_LIGHT)
-                    // 3. Sombra de contato: moletom logo abaixo do contorno da cabeça (pelo acima).
-                    else if (px == HoodiePalette.HOOD && c(x, y - 1) == HoodiePalette.OUTLINE && c(x, y - 2) in FUR) out.set(x, y, HoodiePalette.HOOD_SHADE)
+                    else if (px == HoodiePalette.HOOD && c(x, y - 1) == HoodiePalette.OUTLINE && c(x, y - 2) in setOf(HoodiePalette.FUR, HoodiePalette.FUR_LIGHT)) out.set(x, y, HoodiePalette.HOOD_SHADE)
                 }
             }
         }
@@ -95,16 +106,17 @@ object FinalArtStudio {
 
     // ───────────── Documento .aseprite ─────────────
 
-    /** Papel de cada pixel → camada. As camadas particionam a imagem: compor tudo devolve o frame. */
-    fun layerOf(color: Int, y: Int, hemY: Int): String = when (color) {
-        HoodiePalette.OUTLINE -> if (y > hemY) "legs" else "outline"
-        HoodiePalette.FUR, HoodiePalette.FUR_LIGHT -> if (y > hemY) "legs" else "fur"
-        HoodiePalette.FUR_SHADE, HoodiePalette.INNER_EAR -> if (y > hemY) "legs" else "fur_shadow"
-        HoodiePalette.HOOD, HoodiePalette.HOOD_LIGHT -> "hoodie"
-        HoodiePalette.HOOD_SHADE, HoodiePalette.HOOD_DARK -> "hoodie_shadow"
-        HoodiePalette.STRING -> "strings"
-        in FACE -> "face"
-        else -> "accessory"
+    /** Camada de um pixel: contorno e rosto pela cor; o resto pela parte do corpo que o pintou. */
+    fun layerOf(color: Int, part: HoodiePainter.Part?): String = when {
+        color == HoodiePalette.OUTLINE -> "outline"
+        color in FACE -> "face"
+        part == null -> "accessory"
+        part == HoodiePainter.Part.TORSO -> when (color) {
+            in HOOD_SHADOW -> "hoodie_shadow"
+            in HOOD_ALL -> "hoodie"
+            else -> "torso"
+        }
+        else -> part.layer
     }
 
     fun document(group: String): AsepriteFile.Document {
@@ -116,35 +128,30 @@ object FinalArtStudio {
             val from = frames.size
             for (i in anim.frames.indices) {
                 val art = frame(anim, facing, i)
-                val base = procedural(anim, facing, i)
-                val hemY = (0 until art.image.height).lastOrNull { y -> (0 until art.image.width).any { x -> art.image[x, y] in HOOD_ALL } } ?: art.image.height
                 val layers = LAYERS.associateWith { PixelBuffer(HoodiePainter.WIDTH, HoodiePainter.HEIGHT) }
-                for (y in 0 until art.image.height) for (x in 0 until art.image.width) {
+                val w = art.image.width
+                for (y in 0 until art.image.height) for (x in 0 until w) {
                     val px = art.image[x, y]
                     if (px ushr 24 == 0) continue
                     colors += px
-                    layers.getValue(layerOf(px, y, hemY)).pixels[y * art.image.width + x] = px
+                    layers.getValue(layerOf(px, art.partAt(x, y))).pixels[y * w + x] = px
                 }
-                base.image.pixels.copyInto(layers.getValue(BASELINE).pixels)
+                procedural(anim, facing, i).image.pixels.copyInto(layers.getValue(BASELINE).pixels)
                 val a = art.anchors
                 val markers = layers.getValue(ANCHORS)
-                markers.set(a.feet.x, a.feet.y, AnchorMarkers.FEET); markers.set(a.head.x, a.head.y, AnchorMarkers.HEAD)
+                // Ordem importa quando duas âncoras caem no mesmo pixel (deitado: mãos = cabeça):
+                // as mais críticas (pés, cabeça) são pintadas por último e prevalecem.
                 markers.set(a.rightHand.x, a.rightHand.y, AnchorMarkers.RIGHT_HAND); markers.set(a.leftHand.x, a.leftHand.y, AnchorMarkers.LEFT_HAND)
                 markers.set(a.back.x, a.back.y, AnchorMarkers.BACK)
+                markers.set(a.head.x, a.head.y, AnchorMarkers.HEAD); markers.set(a.feet.x, a.feet.y, AnchorMarkers.FEET)
                 frames += AsepriteFile.Frame(art.durationMs.toInt(), LAYERS.mapIndexed { li, name -> AsepriteFile.Cel(li, 0, 0, layers.getValue(name)) })
             }
             tags += AsepriteFile.Tag("${anim.name.lowercase()}_${facing.name.lowercase()}", from, frames.size - 1)
         }
         val layers = LAYERS.map { name ->
-            when (name) {
-                // Referência: travada, escondida, nunca exportada.
-                BASELINE -> AsepriteFile.Layer(name, AsepriteFile.LAYER_REFERENCE, 128)
-                else -> AsepriteFile.Layer(name)
-            }
+            if (name == BASELINE) AsepriteFile.Layer(name, AsepriteFile.LAYER_REFERENCE, 128) // travada, escondida, nunca exportada
+            else AsepriteFile.Layer(name)
         }
         return AsepriteFile.Document(HoodiePainter.WIDTH, HoodiePainter.HEIGHT, layers, frames, tags, colors.toList())
     }
-
-    /** Sheet no formato `aseprite -b --format json-array --list-tags --list-slices` + camada de âncoras. */
-    fun bake(group: String): SheetBaker.Baked = SheetBaker.bake(GROUPS.getValue(group)) { anim, facing, i -> frame(anim, facing, i) }
 }
