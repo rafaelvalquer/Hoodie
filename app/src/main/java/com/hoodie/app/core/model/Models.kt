@@ -42,7 +42,7 @@ data class SleepSchedule(
     val sleepMinute: Int = 23 * 60,
 )
 
-enum class ContextSource { GEOFENCE, MANUAL, CONFIRMATION, ROUTINE, ONBOARDING, LOCATION_CHECK }
+enum class ContextSource { GEOFENCE, MANUAL, CONFIRMATION, ROUTINE, ONBOARDING, LOCATION_CHECK, MOBILITY }
 
 /** Contexto do usuário vigente num intervalo. endedAt == null → ainda ativo. */
 data class ContextEvent(
@@ -92,7 +92,23 @@ data class TimelineEvent(
 
 data class Memory(val key: String, val emoji: String, val title: String, val unlockedAt: Long)
 
-enum class QuestionKind { CONFIRM_CONTEXT, NEW_PLACE, SAVE_PLACE }
+enum class QuestionKind {
+    CONFIRM_CONTEXT, NEW_PLACE, SAVE_PLACE,
+    /** "Você saiu de Casa?" (movimento detectado). Sim/Não. */
+    CONFIRM_MOVEMENT,
+    /** "Como está se deslocando?" — escolha no app, nunca exige toque com o veículo andando. */
+    SELECT_TRANSPORT_MODE,
+    /** "Parece que você chegou ao Trabalho. Confirma?" Sim/Não. */
+    CONFIRM_ARRIVAL,
+    /** "Posso registrar esse trajeto sozinho daqui pra frente?" Sim/Não. */
+    CONFIRM_TRIP_PATTERN;
+
+    /** Perguntas respondidas pelo MobilityEngine (o resto é do ContextEngine). */
+    val isMobility: Boolean get() = this == CONFIRM_MOVEMENT || this == SELECT_TRANSPORT_MODE || this == CONFIRM_ARRIVAL || this == CONFIRM_TRIP_PATTERN
+
+    /** Respondível pelos botões Sim/Não da notificação. */
+    val isYesNo: Boolean get() = this == CONFIRM_CONTEXT || this == CONFIRM_MOVEMENT || this == CONFIRM_ARRIVAL || this == CONFIRM_TRIP_PATTERN
+}
 
 data class ContextQuestion(
     val id: Long,
@@ -109,6 +125,13 @@ data class ContextQuestion(
         get() = when (kind) {
             QuestionKind.NEW_PLACE -> "Parece que você está em um lugar novo. O que é?"
             QuestionKind.SAVE_PLACE -> "Salvar este lugar como ${chosenPlaceType?.label?.lowercase() ?: "lugar"}?"
+            QuestionKind.CONFIRM_MOVEMENT -> when (candidate) {
+                null, UserContextType.UNKNOWN, UserContextType.COMMUTING -> "🚶 Parece que você está se movimentando. Saiu agora?"
+                else -> "🚶 Parece que você está se movimentando. Você saiu de ${candidate.label}?"
+            }
+            QuestionKind.SELECT_TRANSPORT_MODE -> "🚘 Parece que você entrou em um veículo. Como está se deslocando?"
+            QuestionKind.CONFIRM_ARRIVAL -> "📍 Parece que você chegou${candidate?.let { " em: ${it.label}" } ?: ""}. Confirma?"
+            QuestionKind.CONFIRM_TRIP_PATTERN -> "🔁 Esse trajeto se repete. Posso registrá-lo sozinho daqui pra frente?"
             QuestionKind.CONFIRM_CONTEXT -> when (candidate) {
                 UserContextType.LUNCH -> "🍜 Você saiu para almoçar?"
                 UserContextType.WORK -> "🏢 Você está trabalhando hoje?"

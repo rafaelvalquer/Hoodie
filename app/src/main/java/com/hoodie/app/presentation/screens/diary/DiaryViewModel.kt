@@ -1,6 +1,10 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.core.error.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import androidx.lifecycle.ViewModel
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.currentDateFlow
@@ -25,6 +29,13 @@ class DiaryViewModel @Inject constructor(
     private var observedToday = clock.today()
     private val _state = MutableStateFlow(DiaryUiState(clock.today(), today = clock.today(), isLoading = true))
     val state: StateFlow<DiaryUiState> = _state.asStateFlow()
+    private val _events = Channel<DiaryUiEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
+    fun openPlace(nodeId: String) {
+        _events.trySend(DiaryUiEvent.ShowPlaceDetails(_state.value.selectedDate, nodeId))
+    }
+
     private var replayJob: Job? = null
     private var loadJob: Job? = null
     // Cache limitado à sessão da tela. Hoje permanece atualizável; dias passados
@@ -96,8 +107,9 @@ class DiaryViewModel @Inject constructor(
                 if (_state.value.selectedDate == date) _state.value = _state.value.copy(diary = diary, isLoading = false, error = null, replay = ReplayUiState())
             } catch (cancelled: CancellationException) {
                 throw cancelled
-            } catch (_: Exception) {
-                if (_state.value.selectedDate == date) _state.value = _state.value.copy(isLoading = false, error = "Não foi possível carregar este dia.")
+            } catch (error: Exception) {
+                Log.e("DiaryViewModel", "Failed to load diary", error)
+                if (_state.value.selectedDate == date) _state.value = _state.value.copy(isLoading = false, error = DatabaseError.ReadFailed)
             }
         }
     }

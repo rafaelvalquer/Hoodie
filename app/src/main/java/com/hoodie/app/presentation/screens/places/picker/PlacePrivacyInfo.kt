@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,9 +41,9 @@ val PLACE_PRIVACY_DETAILS = listOf(
 fun PlacePrivacyInfo(modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
     Row(modifier.fillMaxWidth().testTag(PlacePickerTags.PRIVACY), verticalAlignment = Alignment.CenterVertically) {
-        Text("🔒 Local salvo somente neste aparelho.", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.ui_place_privacy_info_1), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.weight(1f))
         Text(
-            "SAIBA MAIS",
+            stringResource(R.string.ui_place_privacy_info_2),
             style = MaterialTheme.typography.labelSmall,
             color = HoodieColors.Blue,
             modifier = Modifier.clickable { open = true }.semantics { role = Role.Button }.padding(8.dp).testTag(PlacePickerTags.PRIVACY_MORE),
@@ -50,7 +52,7 @@ fun PlacePrivacyInfo(modifier: Modifier = Modifier) {
     if (open) {
         ModalBottomSheet(onDismissRequest = { open = false }, sheetState = rememberModalBottomSheetState(), containerColor = HoodieColors.Panel) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp).testTag(PlacePickerTags.PRIVACY_SHEET), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                SectionLabel("🔒 Privacidade")
+                SectionLabel(stringResource(R.string.ui_place_privacy_info_3))
                 PLACE_PRIVACY_DETAILS.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, color = HoodieColors.Ink) }
             }
         }

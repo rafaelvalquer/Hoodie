@@ -84,6 +84,19 @@ class ContextEngine @Inject constructor(
 
     suspend fun answerSavePlace(questionId: Long, save: Boolean): Unit = mutex.withLock { placeLearningHandler.answerSavePlace(questionId, save) }
 
+    // ── Mobilidade: APIs explícitas; o ContextEngine segue dono do UserContextType ──
+
+    /** Início de deslocamento confirmado pela mobilidade. true quando o contexto mudou. */
+    suspend fun beginCommute(fromPlaceId: Long?, at: Long, confidence: Float): Boolean =
+        mutex.withLock { geofenceContextHandler.beginCommute(fromPlaceId, at, confidence) }
+
+    suspend fun arriveAt(placeId: Long, at: Long): Unit = mutex.withLock { geofenceContextHandler.arriveAt(placeId, at) }
+
+    suspend fun arriveAtPosition(lat: Double, lng: Double, askNewPlace: Boolean): Unit =
+        mutex.withLock { geofenceContextHandler.arriveAtPosition(lat, lng, askNewPlace) }
+
+    suspend fun rejectArrival(placeId: Long, at: Long): Boolean = mutex.withLock { geofenceContextHandler.rejectArrival(placeId, at) }
+
     companion object {
         const val FLAP_MS = HoodieConfig.GPS_FLAP_MS
         const val MANUAL_HOLD_MS = HoodieConfig.MANUAL_HOLD_MS

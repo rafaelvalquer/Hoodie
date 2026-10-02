@@ -1,5 +1,11 @@
 package com.hoodie.app.presentation.screens.pixellab
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import android.graphics.Bitmap
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -69,6 +75,7 @@ import com.hoodie.app.presentation.theme.HoodieColors
  */
 @Composable
 fun PixelLabScreen(onBack: () -> Unit) {
+    val closeLabel = stringResource(R.string.pixel_lab_close)
     var tab by remember { mutableIntStateOf(0) }
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -76,7 +83,7 @@ fun PixelLabScreen(onBack: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("PIXEL LAB", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-            Text("✕", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.clickable(onClick = onBack).padding(8.dp))
+            Text("✕", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(role = Role.Button, onClick = onBack).semantics { contentDescription = closeLabel }.padding(8.dp))
         }
         ChipRow(listOf("Animação", "Cena", "Galeria", "Cenas", "Sprites"), tab, { tab = it })
         when (tab) {

@@ -54,6 +54,9 @@ abstract class BindingsModule {
     @Binds abstract fun locationSource(impl: LocationProvider): LocationSource
     @Binds abstract fun notifier(impl: HoodieNotifier): Notifier
     @Binds abstract fun checkScheduler(impl: WorkScheduler): CheckScheduler
+    @Binds abstract fun mobilityScheduler(impl: WorkScheduler): com.hoodie.app.worker.MobilityScheduler
+    @Binds abstract fun activityRecognitionRegistrar(impl: com.hoodie.app.core.mobility.ActivityRecognitionProvider): com.hoodie.app.core.mobility.ActivityRecognitionRegistrar
+    @Binds abstract fun activityRecognitionPermissions(impl: com.hoodie.app.core.mobility.ActivityRecognitionPermissionManager): com.hoodie.app.core.mobility.ActivityRecognitionPermissions
     @Binds abstract fun transactions(impl: RoomTransactionRunner): TransactionRunner
     @Binds abstract fun usageStats(impl: AndroidUsageStatsSource): UsageStatsSource
     @Binds abstract fun appMetadata(impl: AndroidAppMetadataResolver): AppMetadataResolver
@@ -92,6 +95,8 @@ object DatabaseModule {
     @Provides fun timelineDao(db: HoodieDatabase) = db.timelineDao()
     @Provides fun memoryDao(db: HoodieDatabase) = db.memoryDao()
     @Provides fun deviceUsageDao(db: HoodieDatabase) = db.deviceUsageDao()
+    @Provides fun mobilitySessionDao(db: HoodieDatabase) = db.mobilitySessionDao()
+    @Provides fun mobilitySegmentDao(db: HoodieDatabase) = db.mobilitySegmentDao()
 
     @Provides @Singleton
     fun dialogues(@ApplicationContext context: Context): DialogueEngine =

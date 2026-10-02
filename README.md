@@ -60,7 +60,7 @@ O plano e a evidência de implementação estão em
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v5 (19 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v6 (21 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
@@ -145,7 +145,7 @@ ANDROID USAGE STATS ─► UsageStatsSource (só foreground/background, tela, bl
         ▼
 AppSessionBuilder ─► ScreenSessionBuilder ─► AppCategoryResolver ─► ContextUsageCorrelator ─► DailyPhoneUsageCalculator
         ▼                                                                 (PhoneInsightsAssembler, puro)
-DeviceUsageRepository ─► Room v5 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
+DeviceUsageRepository ─► Room v6 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
 ```
 
 * **Permissão**: `PACKAGE_USAGE_STATS` é ligada pelo usuário em *Acesso ao uso*. Antes, a tela "Análise do celular" explica
@@ -155,7 +155,7 @@ DeviceUsageRepository ─► Room v5 (agregados, horas, timeline e sessões) ─
   Aparelhos sem esses eventos (API 26–27, alguns fabricantes) caem em estimativa a partir do uso de apps e a UI marca "≈".
   Launchers e a interface do sistema contam como tela ligada, não como app usado.
 * **Categorias**: escolha do usuário → mapa interno (YouTube → Vídeo, Spotify → Música, Teams → Trabalho...) → `ApplicationInfo.category` → Outros.
-* **Persistência**: Room v5 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
+* **Persistência**: Room v6 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
   totais em `daily_context_usage`, 24 horas em `daily_screen_hourly`, blocos em `daily_phone_timeline` e `phone_app_sessions`.
   Migrações 1→2→3→4→5 preservam os registros anteriores. Categorias manuais ficam em `app_category_overrides`.
   Eventos brutos nunca são salvos. O Android só guarda eventos por alguns dias: um recálculo "menor" de um dia antigo não sobrescreve o histórico.
@@ -202,8 +202,7 @@ CT-GEO-001…005 em aparelho real (entrar/sair/reboot) dependem de dispositivo/e
 
 1. Validar geofences em aparelho real (ou emulador com rota GPX) e calibrar raios/loitering.
 2. Substituir a arte procedural por sprite sheets do Aseprite mantendo o mesmo `AnimationId`/`HoodiePose` como contrato.
-3. Criptografia integral do banco (SQLCipher) — a camada já isola os dados sensíveis.
-4. Pixel font própria (OFL) para títulos.
+3. Integrar a fonte pixel licenciada sob OFL e validar sua leitura nas telas pequenas.
 
 ## Hardening 1.0
 

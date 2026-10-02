@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,7 +47,7 @@ fun PlacePickerHeader(editing: Boolean, type: PlaceType, onClose: () -> Unit, ho
             modifier = Modifier.weight(1f),
         )
         Text(
-            "✕",
+            stringResource(R.string.ui_place_picker_header_1),
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier

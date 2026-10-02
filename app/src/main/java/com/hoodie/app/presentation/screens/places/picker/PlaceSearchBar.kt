@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -62,12 +64,12 @@ fun PlaceSearchBar(
             query, onQueryChange,
             singleLine = true,
             modifier = Modifier.fillMaxWidth().testTag(PlacePickerTags.SEARCH),
-            placeholder = { Text("Rua, número, cidade", maxLines = 1) },
-            leadingIcon = { Text("🔎") },
+            placeholder = { Text(stringResource(R.string.ui_place_search_bar_1), maxLines = 1) },
+            leadingIcon = { Text(stringResource(R.string.ui_place_search_bar_2)) },
             trailingIcon = {
                 if (searching) CircularProgressIndicator(Modifier.size(18.dp).testTag(PlacePickerTags.SEARCH_LOADING), strokeWidth = 2.dp)
                 else if (query.isNotBlank()) Text(
-                    "BUSCAR",
+                    stringResource(R.string.ui_place_search_bar_3),
                     style = MaterialTheme.typography.labelSmall,
                     color = HoodieColors.Blue,
                     modifier = Modifier.clickable(onClick = search).semantics { role = Role.Button; contentDescription = "Buscar endereço" }.padding(10.dp),
