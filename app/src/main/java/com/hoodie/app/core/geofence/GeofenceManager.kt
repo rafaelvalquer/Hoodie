@@ -50,11 +50,7 @@ class GeofenceManager @Inject constructor(
     private val _lastResult = MutableStateFlow<GeofenceRegistrationResult?>(null)
     override val lastResult: StateFlow<GeofenceRegistrationResult?> = _lastResult.asStateFlow()
 
-    private val pendingIntent: PendingIntent by lazy {
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
-        PendingIntent.getBroadcast(context, 0, Intent(context, GeofenceReceiver::class.java), flags)
-    }
+    private val pendingIntent: PendingIntent by lazy { pendingIntent(context) }
 
     @SuppressLint("MissingPermission")
     override suspend fun registerAll(): GeofenceRegistrationResult {
@@ -114,5 +110,16 @@ class GeofenceManager @Inject constructor(
     companion object {
         const val LOITERING_MS = HoodieConfig.GEOFENCE_LOITERING_MS
         const val DEFAULT_RADIUS = HoodieConfig.DEFAULT_GEOFENCE_RADIUS_M
+
+        fun pendingIntent(context: Context): PendingIntent {
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
+            return PendingIntent.getBroadcast(context, 0, Intent(context, GeofenceReceiver::class.java), flags)
+        }
+
+        /** Remove todos os geofences sem precisar do banco (recuperação / apagar tudo). */
+        suspend fun removeAll(context: Context) {
+            runCatching { LocationServices.getGeofencingClient(context).removeGeofences(pendingIntent(context)).await() }
+        }
     }
 }
