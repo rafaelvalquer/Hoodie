@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,7 +40,7 @@ import com.hoodie.app.presentation.theme.HoodieColors
 fun PlaceRadiusControl(radius: Float, onRadiusChange: (Float) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            SectionLabel("Raio do local", Modifier.weight(1f))
+            SectionLabel(stringResource(R.string.ui_place_radius_control_1), Modifier.weight(1f))
             Text("${radius.toInt()} m", style = MaterialTheme.typography.titleMedium, color = HoodieColors.Hood, modifier = Modifier.testTag(PlacePickerTags.RADIUS_VALUE))
         }
         Row(verticalAlignment = Alignment.CenterVertically) {

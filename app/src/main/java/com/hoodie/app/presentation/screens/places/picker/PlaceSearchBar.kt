@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -64,7 +66,7 @@ fun PlaceSearchSection(
     onFocusChange: (Boolean) -> Unit = {},
 ) {
     Column(modifier.testTag(PlacePickerTags.SEARCH_SECTION)) {
-        SectionLabel("🔎 Buscar endereço", Modifier.padding(bottom = 4.dp))
+        SectionLabel(stringResource(R.string.ui_place_search_section_title), Modifier.padding(bottom = 4.dp))
         PlaceSearchBar(query, searching, onQueryChange, onSearch, error, onFocusChange = onFocusChange)
         PlaceSearchResults(results, onChoose, Modifier.fillMaxWidth().padding(top = 6.dp))
     }
@@ -87,20 +89,21 @@ fun PlaceSearchBar(
         PixelTextField(
             query, onQueryChange,
             modifier = Modifier.onFocusChanged { onFocusChange(it.isFocused) }.testTag(PlacePickerTags.SEARCH),
-            placeholder = "Rua, número, cidade",
-            leadingIcon = { Text("🔎") },
+            placeholder = stringResource(R.string.ui_place_search_bar_1),
+            leadingIcon = { Text(stringResource(R.string.ui_place_search_bar_2)) },
             trailingIcon = {
                 if (searching) {
                     CircularProgressIndicator(Modifier.size(18.dp).testTag(PlacePickerTags.SEARCH_LOADING), strokeWidth = 2.dp, color = HoodieColors.Gold)
                 } else {
                     // Sempre à vista: deixa claro que é aqui que se busca.
+                    val actionDescription = stringResource(R.string.ui_place_search_action_description)
                     Text(
-                        "BUSCAR",
+                        stringResource(R.string.ui_place_search_bar_3),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (canSearch) HoodieColors.Gold else HoodieColors.Muted,
                         modifier = Modifier
                             .clickable(enabled = canSearch, onClick = search)
-                            .semantics { role = Role.Button; contentDescription = "Buscar endereço" }
+                            .semantics { role = Role.Button; contentDescription = actionDescription }
                             .padding(horizontal = 10.dp, vertical = 12.dp)
                             .testTag(PlacePickerTags.SEARCH_ACTION),
                     )

@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,14 +41,14 @@ fun VisitDetailSection(number: Int, details: DiaryVisitDetails, zone: ZoneId, ma
             }
             Text("${formatClock(v.arrivalAt, zone)}–${v.departureAt?.let { formatClock(it, zone) } ?: "agora"}", style = MaterialTheme.typography.bodyMedium)
             if (details.hoodieActivities.isNotEmpty()) {
-                Text("🐱 " + details.hoodieActivities.joinToString(" · ") { "${it.emoji} ${it.label}" }, style = MaterialTheme.typography.bodySmall, color = HoodieColors.Hood)
+                Text(stringResource(R.string.ui_visit_detail_section_1) + details.hoodieActivities.joinToString(" · ") { "${it.emoji} ${it.label}" }, style = MaterialTheme.typography.bodySmall, color = HoodieColors.Hood)
             }
             val phone = details.phoneUsage
             if (phone == null) {
-                Text("📱 sem uso do celular registrado", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+                Text(stringResource(R.string.ui_visit_detail_section_2), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
             } else {
                 Row(Modifier.padding(top = 2.dp)) {
-                    Text("📱 celular", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.ui_visit_detail_section_3), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
                     Text(formatDuration(phone.foregroundMs), style = MaterialTheme.typography.bodySmall, color = HoodieColors.Ink)
                 }
                 phone.apps.take(maxApps).forEach { app ->

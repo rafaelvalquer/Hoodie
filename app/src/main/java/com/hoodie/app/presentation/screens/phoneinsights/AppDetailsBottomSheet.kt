@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -54,10 +56,10 @@ fun AppDetailsBottomSheet(
             app.firstUsedAt?.let { Detail("Primeiro uso", formatClock(it, zone)) }
             app.lastUsedAt?.let { Detail("Último uso", formatClock(it, zone)) }
             if (byContext.isNotEmpty()) {
-                Text("ONDE FOI USADO", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted, modifier = Modifier.padding(top = 4.dp))
+                Text(stringResource(R.string.ui_app_details_bottom_sheet_1), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted, modifier = Modifier.padding(top = 4.dp))
                 byContext.sortedByDescending { it.foregroundMs }.forEach { Detail("${it.context.emoji} ${it.context.label}", formatDuration(it.foregroundMs)) }
             }
-            Text("CATEGORIA", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted, modifier = Modifier.padding(top = 4.dp))
+            Text(stringResource(R.string.ui_app_details_bottom_sheet_2), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted, modifier = Modifier.padding(top = 4.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 HoodieAppCategory.entries.forEach { c ->
                     val on = c == app.appCategory
@@ -74,11 +76,11 @@ fun AppDetailsBottomSheet(
             }
             val auto = AppCategoryResolver.known(app.packageName)
             Text(
-                "↺ Usar categoria automática" + (auto?.let { " (${it.label})" } ?: ""),
+                stringResource(R.string.ui_app_details_bottom_sheet_3) + (auto?.let { " (${it.label})" } ?: ""),
                 style = RetroFontStyles.Small, color = HoodieColors.Blue,
                 modifier = Modifier.clickable { onCategory(null) }.padding(vertical = 6.dp),
             )
-            Text("Só o nome do app e o tempo de uso são registrados — nunca o que aparece na tela.", style = RetroFontStyles.Small, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_app_details_bottom_sheet_4), style = RetroFontStyles.Small, color = HoodieColors.Muted)
         }
     }
 }

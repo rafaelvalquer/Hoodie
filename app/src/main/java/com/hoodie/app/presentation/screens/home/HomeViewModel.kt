@@ -41,9 +41,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
+import com.hoodie.app.core.error.*
+import com.hoodie.app.presentation.common.runUiAction
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -106,9 +108,12 @@ class HomeViewModel @Inject constructor(
     /** Modo real do deslocamento em andamento (null = sem sessão confirmada → preferência). */
     private val activeMobilityMode = mobilityRepo.activeMode
 
+    private val _events = Channel<HomeUiEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
     init {
         // App aberto: a escolha do transporte adiada (veículo andando) pode aparecer agora.
-        viewModelScope.launch { runCatching { mobility.onAppOpened() } }
+        action { mobility.onAppOpened() }
     }
 
     override fun onCleared() {
@@ -116,8 +121,6 @@ class HomeViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private val _reactions = MutableSharedFlow<AnimationId>(extraBufferCapacity = 4)
-    val reactions: SharedFlow<AnimationId> = _reactions
 
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy
@@ -210,62 +213,72 @@ class HomeViewModel @Inject constructor(
         )
     }
 
-    fun setManual(type: UserContextType) = viewModelScope.launch {
+    fun setManual(type: UserContextType) = action {
         contextEngine.setManual(type)
         // "Não estou no trabalho" logo após uma chegada automática: a mobilidade aprende a correção.
         runCatching { mobility.onManualContext(type, clock.nowMillis()) }
-        _reactions.tryEmit(AnimationId.HAPPY)
+        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
-    fun answerYesNo(id: Long, yes: Boolean) = viewModelScope.launch {
+    fun answerYesNo(id: Long, yes: Boolean) = action {
         // Contexto ou mobilidade: o roteador sabe de quem é a pergunta.
         router.answerYesNo(id, yes)
-        _reactions.tryEmit(if (yes) AnimationId.HAPPY else AnimationId.SHRUG)
+        _events.send(HomeUiEvent.React(if (yes) AnimationId.HAPPY else AnimationId.SHRUG))
     }
 
-    fun answerTransportMode(id: Long, mode: com.hoodie.app.core.mobility.MovementMode) = viewModelScope.launch {
+    fun answerTransportMode(id: Long, mode: com.hoodie.app.core.mobility.MovementMode) = action {
         router.answerTransportMode(id, mode)
-        _reactions.tryEmit(AnimationId.HAPPY)
+        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
-    fun answerNewPlace(id: Long, type: PlaceType) = viewModelScope.launch {
+    fun answerNewPlace(id: Long, type: PlaceType) = action {
         contextEngine.answerNewPlace(id, type)
-        _reactions.tryEmit(AnimationId.SURPRISED)
+        _events.send(HomeUiEvent.React(AnimationId.SURPRISED))
     }
 
-    fun answerSavePlace(id: Long, save: Boolean) = viewModelScope.launch {
+    fun answerSavePlace(id: Long, save: Boolean) = action {
         contextEngine.answerSavePlace(id, save)
-        _reactions.tryEmit(AnimationId.HAPPY)
+        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
-    fun dismissQuestion(id: Long) = viewModelScope.launch { contextEngine.dismissQuestion(id) }
+    fun dismissQuestion(id: Long) = action { contextEngine.dismissQuestion(id) }
 
-    fun toggleDayOff() = viewModelScope.launch {
+    fun toggleDayOff() = action {
         val today = clock.today()
         routines.setDayOff(today, !routines.isDayOff(today), clock.nowMillis())
-        _reactions.tryEmit(AnimationId.HAPPY)
+        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
     /** "Chegou ao trabalho? Salvar este local." */
     fun savePlaceHere(type: PlaceType) = viewModelScope.launch {
+        if (_busy.value) return@launch
         _busy.value = true
         try {
             log.log(DebugEventLogger.Category.PLACE, "SAVE_STARTED type=$type")
             val pos = location.current() ?: run {
                 log.log(DebugEventLogger.Category.PLACE, "SAVE_FAILED type=$type location_unavailable")
+                _events.send(HomeUiEvent.ShowError(LocationError.Unavailable))
                 return@launch
             }
             contextEngine.savePlaceHere(type, type.label, pos.first, pos.second)
             log.log(DebugEventLogger.Category.PLACE, "SAVE_SUCCESS type=$type")
-            _reactions.tryEmit(AnimationId.HAPPY)
+            _events.send(HomeUiEvent.React(AnimationId.HAPPY))
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (e: Exception) {
             Log.e(TAG, "Falha ao salvar lugar $type", e)
             log.log(DebugEventLogger.Category.PLACE, "SAVE_FAILED type=$type ${e.javaClass.simpleName}")
+            _events.send(HomeUiEvent.ShowError(e.appErrorOr(PlaceError.SaveFailed)))
         } finally {
             _busy.value = false
         }
+    }
+
+    private fun action(block: suspend () -> Unit) = viewModelScope.launch {
+        runUiAction(DatabaseError.WriteFailed, { error, cause ->
+            Log.e(TAG, "Home action failed", cause)
+            _events.send(HomeUiEvent.ShowError(error))
+        }, block)
     }
 
     companion object {

@@ -21,6 +21,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import com.hoodie.app.R
+import com.hoodie.app.core.error.*
+import com.hoodie.app.presentation.common.CollectUiEvents
+import com.hoodie.app.presentation.common.appErrorText
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -56,6 +61,12 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val permission by vm.permission.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    CollectUiEvents(vm.events) { event ->
+        when (event) {
+            OnboardingUiEvent.OpenAppSettings -> runCatching { context.startActivity(vm.appSettingsIntent()) }
+                .onFailure { vm.appSettingsFailed() }
+        }
+    }
     // Android 10 mostra o diálogo; 11+ manda para as configurações do app.
     val backgroundLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         permissionTick++; vm.revalidatePermission()
@@ -108,8 +119,16 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
             OnboardingStep.WORK, OnboardingStep.SCHEDULE -> AnimationId.WORK_TYPING
             else -> AnimationId.IDLE
         }
-        Text("HOODIE", style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
+        Text(stringResource(R.string.ui_onboarding_screen_1), style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
         AnimatedHoodie(anim, size = 150.dp)
+        state.error?.let { error ->
+            val text = when {
+                state.step == OnboardingStep.HOME && error == LocationError.Unavailable -> stringResource(R.string.onboarding_home_location_failed)
+                state.step == OnboardingStep.HOME -> stringResource(R.string.onboarding_home_save_failed)
+                else -> context.appErrorText(error)
+            }
+            Text(text, color = HoodieColors.Coral, textAlign = TextAlign.Center)
+        }
 
         when (state.step) {
             // Tratados acima, em tela cheia.
@@ -117,77 +136,76 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
             OnboardingStep.WELCOME -> {
                 SpeechBubble("Olá. Eu sou ${state.catName}.\nVamos descobrir como é o seu dia.")
                 Text(
-                    "Você vive a sua rotina. Eu vivo uma rotina paralela, reagindo a onde você está, ao horário e aos hábitos que você confirmar.",
+                    stringResource(R.string.ui_onboarding_screen_2),
                     color = HoodieColors.Muted, textAlign = TextAlign.Center,
                 )
-                PixelButton("Começar", { vm.go(OnboardingStep.NAME) }, Modifier.fillMaxWidth())
+                PixelButton(stringResource(R.string.ui_onboarding_screen_3), { vm.go(OnboardingStep.NAME) }, Modifier.fillMaxWidth())
             }
             OnboardingStep.NAME -> {
-                SectionLabel("Passo 1 · Nome do gato")
-                OutlinedTextField(state.catName, vm::setName, singleLine = true, label = { Text("Nome") }, modifier = Modifier.fillMaxWidth())
-                PixelButton("Continuar", { vm.go(OnboardingStep.PERMISSION) }, Modifier.fillMaxWidth(), enabled = state.catName.isNotBlank())
+                SectionLabel(stringResource(R.string.ui_onboarding_screen_4))
+                OutlinedTextField(state.catName, vm::setName, singleLine = true, label = { Text(stringResource(R.string.ui_onboarding_screen_5)) }, modifier = Modifier.fillMaxWidth())
+                PixelButton(stringResource(R.string.ui_onboarding_screen_6), { vm.go(OnboardingStep.PERMISSION) }, Modifier.fillMaxWidth(), enabled = state.catName.isNotBlank())
             }
             OnboardingStep.PERMISSION -> {
-                SectionLabel("Passo 2 · Localização")
+                SectionLabel(stringResource(R.string.ui_onboarding_screen_7))
                 PixelPanel(Modifier.fillMaxWidth()) {
                     Text("A localização permite ao ${state.catName} entender quando você está em casa, no trabalho ou em outros lugares importantes.")
-                    Text("\n🔒 Seus locais ficam armazenados só no celular, cifrados.\n📡 Sem rastreamento contínuo: usamos regiões (geofences), não o seu trajeto.\n✈️ Funciona sem internet.", color = HoodieColors.Muted)
+                    Text(stringResource(R.string.ui_onboarding_screen_8), color = HoodieColors.Muted)
                 }
                 if (permissionTick >= 0 && vm.hasLocation()) {
-                    PixelButton("Continuar", { vm.go(OnboardingStep.HOME) }, Modifier.fillMaxWidth())
+                    PixelButton(stringResource(R.string.ui_onboarding_screen_9), { vm.go(OnboardingStep.HOME) }, Modifier.fillMaxWidth())
                 } else {
-                    PixelButton("Permitir localização", {
+                    PixelButton(stringResource(R.string.ui_onboarding_screen_10), {
                         foregroundLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                     }, Modifier.fillMaxWidth())
-                    PixelButton("Agora não", { vm.go(OnboardingStep.HOME) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                    PixelButton(stringResource(R.string.ui_onboarding_screen_11), { vm.go(OnboardingStep.HOME) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
                 }
             }
             OnboardingStep.HOME -> {
-                SectionLabel("Passo 3 · Casa")
-                SpeechBubble("📍 Você está em casa agora?")
+                SectionLabel(stringResource(R.string.ui_onboarding_screen_12))
+                SpeechBubble(stringResource(R.string.ui_onboarding_screen_13))
                 if (state.busy) CircularProgressIndicator()
-                state.message?.let { Text(it, color = HoodieColors.Coral, textAlign = TextAlign.Center) }
                 if (vm.hasLocation()) {
-                    PixelButton("Sim", vm::markHomeHere, Modifier.fillMaxWidth(), enabled = !state.busy)
+                    PixelButton(stringResource(R.string.ui_onboarding_screen_14), vm::markHomeHere, Modifier.fillMaxWidth(), enabled = !state.busy)
                 } else {
                     Text("Sem localização, o ${state.catName} segue a rotina provável. Dá para ativar depois.", color = HoodieColors.Muted, textAlign = TextAlign.Center)
                 }
-                PixelButton("Não, buscar pelo endereço", { vm.go(OnboardingStep.HOME_ADDRESS) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
-                PixelButton("Definir depois", vm::afterHome, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                PixelButton(stringResource(R.string.ui_onboarding_screen_15), { vm.go(OnboardingStep.HOME_ADDRESS) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
+                PixelButton(stringResource(R.string.ui_onboarding_screen_16), vm::afterHome, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
             }
             OnboardingStep.BACKGROUND -> {
-                SectionLabel("Passo 3b · Segundo plano")
+                SectionLabel(stringResource(R.string.ui_onboarding_screen_17))
                 PixelPanel(Modifier.fillMaxWidth()) {
                     Text("Para o ${state.catName} perceber quando você chega ou sai mesmo com o aplicativo fechado, ative:")
-                    Text("\nLocalização\n→ Permitir o tempo todo", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.ui_onboarding_screen_18), style = MaterialTheme.typography.titleMedium)
                 }
                 if (permission == LocationPermissionState.BACKGROUND) {
                     Text("✅ Tudo certo: o ${state.catName} vai perceber suas chegadas.", color = HoodieColors.Mint, textAlign = TextAlign.Center)
-                    PixelButton("Continuar", { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth())
+                    PixelButton(stringResource(R.string.ui_onboarding_screen_19), { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth())
                 } else {
                     if (permission == LocationPermissionState.APPROXIMATE_ONLY) {
-                        Text("Ative também \"Usar local exato\".", color = HoodieColors.Coral, textAlign = TextAlign.Center)
+                        Text(stringResource(R.string.ui_onboarding_screen_20), color = HoodieColors.Coral, textAlign = TextAlign.Center)
                     }
-                    PixelButton("ABRIR CONFIGURAÇÕES", {
+                    PixelButton(stringResource(R.string.ui_onboarding_screen_21), {
                         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                        else context.startActivity(vm.appSettingsIntent())
+                        else vm.openAppSettings()
                     }, Modifier.fillMaxWidth())
-                    PixelButton("Agora não (só com o app aberto)", { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                    PixelButton(stringResource(R.string.ui_onboarding_screen_22), { vm.go(OnboardingStep.WORK) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
                 }
             }
             OnboardingStep.WORK -> {
-                SectionLabel("Passo 4 · Trabalho")
-                SpeechBubble("Você trabalha fora de casa?")
-                PixelButton("Sim, buscar o endereço", vm::pickWorkAddress, Modifier.fillMaxWidth())
-                PixelButton("Sim, marco quando chegar lá", { vm.setWorkMode(WorkMode.OFFICE) }, Modifier.fillMaxWidth(), color = HoodieColors.Blue)
-                PixelButton("Home office", { vm.setWorkMode(WorkMode.HOME_OFFICE) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
-                PixelButton("Não", { vm.setWorkMode(WorkMode.NONE) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                SectionLabel(stringResource(R.string.ui_onboarding_screen_23))
+                SpeechBubble(stringResource(R.string.ui_onboarding_screen_24))
+                PixelButton(stringResource(R.string.ui_onboarding_screen_25), vm::pickWorkAddress, Modifier.fillMaxWidth())
+                PixelButton(stringResource(R.string.ui_onboarding_screen_26), { vm.setWorkMode(WorkMode.OFFICE) }, Modifier.fillMaxWidth(), color = HoodieColors.Blue)
+                PixelButton(stringResource(R.string.ui_onboarding_screen_27), { vm.setWorkMode(WorkMode.HOME_OFFICE) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
+                PixelButton(stringResource(R.string.ui_onboarding_screen_28), { vm.setWorkMode(WorkMode.NONE) }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
                 if (state.routine.workMode == WorkMode.OFFICE) {
-                    Text("Quando chegar ao trabalho, toque em \"Salvar este local\" na tela inicial.", color = HoodieColors.Muted, textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.ui_onboarding_screen_29), color = HoodieColors.Muted, textAlign = TextAlign.Center)
                 }
             }
             OnboardingStep.SCHEDULE -> {
-                SectionLabel("Passo 5 · Horários")
+                SectionLabel(stringResource(R.string.ui_onboarding_screen_30))
                 val r = state.routine
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     TimeField("Entrada", r.startMinute, { m -> vm.updateRoutine { it.copy(startMinute = m) } }, Modifier.weight(1f))
@@ -197,21 +215,21 @@ fun OnboardingScreen(vm: OnboardingViewModel = hiltViewModel()) {
                     TimeField("Almoço", r.lunchStartMinute, { m -> vm.updateRoutine { it.copy(lunchStartMinute = m) } }, Modifier.weight(1f))
                     TimeField("Volta", r.lunchEndMinute, { m -> vm.updateRoutine { it.copy(lunchEndMinute = m) } }, Modifier.weight(1f))
                 }
-                PixelButton("Continuar", { vm.go(OnboardingStep.DAYS) }, Modifier.fillMaxWidth())
+                PixelButton(stringResource(R.string.ui_onboarding_screen_31), { vm.go(OnboardingStep.DAYS) }, Modifier.fillMaxWidth())
             }
             OnboardingStep.DAYS -> {
-                SectionLabel("Passo 6 · Dias")
+                SectionLabel(stringResource(R.string.ui_onboarding_screen_32))
                 DayToggles(state.routine.days, vm::toggleDay)
-                PixelButton("Continuar", { vm.go(OnboardingStep.DONE) }, Modifier.fillMaxWidth(), enabled = state.routine.days.isNotEmpty())
+                PixelButton(stringResource(R.string.ui_onboarding_screen_33), { vm.go(OnboardingStep.DONE) }, Modifier.fillMaxWidth(), enabled = state.routine.days.isNotEmpty())
             }
             OnboardingStep.DONE -> {
-                SpeechBubble("Prontinho! Agora é só viver o seu dia.\nEu vou junto.")
+                SpeechBubble(stringResource(R.string.ui_onboarding_screen_34))
                 PixelPanel(Modifier.fillMaxWidth()) {
-                    Text("Configurado:", style = MaterialTheme.typography.titleMedium)
-                    Text("🏠 Casa: " + if (state.homeSaved) "salva" else "definir depois", color = HoodieColors.Muted)
-                    Text("🏢 Trabalho: " + state.routine.workMode.label + if (state.workSaved) " · local salvo" else "", color = HoodieColors.Muted)
+                    Text(stringResource(R.string.ui_onboarding_screen_35), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.ui_onboarding_screen_36) + if (state.homeSaved) "salva" else "definir depois", color = HoodieColors.Muted)
+                    Text(stringResource(R.string.ui_onboarding_screen_37) + state.routine.workMode.label + if (state.workSaved) " · local salvo" else "", color = HoodieColors.Muted)
                 }
-                PixelButton("Vamos lá!", vm::finish, Modifier.fillMaxWidth(), color = HoodieColors.Gold)
+                PixelButton(stringResource(R.string.ui_onboarding_screen_38), vm::finish, Modifier.fillMaxWidth(), color = HoodieColors.Gold, enabled = !state.busy)
             }
         }
     }

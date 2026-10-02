@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,11 +26,11 @@ import com.hoodie.app.presentation.components.SectionLabel
 fun PlaceNameField(value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, onFocusChange: (Boolean) -> Unit = {}) {
     val focus = LocalFocusManager.current
     Column(modifier.fillMaxWidth()) {
-        SectionLabel("Nome do local", Modifier.padding(bottom = 4.dp))
+        SectionLabel(stringResource(R.string.ui_place_name_field_1), Modifier.padding(bottom = 4.dp))
         PixelTextField(
             value, onValueChange,
             modifier = Modifier.onFocusChanged { onFocusChange(it.isFocused) }.testTag(PlacePickerTags.NAME),
-            placeholder = "Ex.: Casa da praia",
+            placeholder = stringResource(R.string.ui_place_name_field_2),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
         )

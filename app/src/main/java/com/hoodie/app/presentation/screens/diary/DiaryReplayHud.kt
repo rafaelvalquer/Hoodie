@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -60,7 +62,7 @@ fun DiaryReplayHud(visual: ReplayVisualState, zone: ZoneId, modifier: Modifier =
                     Text(lines.app, style = MaterialTheme.typography.bodySmall, color = HoodieColors.Ink)
                 }
             } else {
-                Text("📱 celular parado", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.size(width = 200.dp, height = 18.dp))
+                Text(stringResource(R.string.ui_diary_replay_hud_1), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.size(width = 200.dp, height = 18.dp))
             }
         }
     }

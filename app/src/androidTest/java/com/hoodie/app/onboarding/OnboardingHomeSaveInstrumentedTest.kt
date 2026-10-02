@@ -160,7 +160,7 @@ class OnboardingHomeSaveInstrumentedTest {
         position.point = null
         reachHome()
         click("SIM")
-        ui.waitUntil(10_000) { vm.state.value.message != null && !vm.state.value.busy }
+        ui.waitUntil(10_000) { vm.state.value.error != null && !vm.state.value.busy }
         ui.mainClock.advanceTimeBy(32)
         ui.onNodeWithText("Não consegui sua localização agora.", substring = true).assertIsDisplayed()
         assertEquals(OnboardingStep.HOME, vm.state.value.step)
@@ -173,7 +173,7 @@ class OnboardingHomeSaveInstrumentedTest {
         reachHome()
         db.openHelper.writableDatabase.execSQL("CREATE TRIGGER fail_home BEFORE INSERT ON places BEGIN SELECT RAISE(ABORT, 'injected'); END")
         click("SIM")
-        ui.waitUntil(10_000) { vm.state.value.message != null && !vm.state.value.busy }
+        ui.waitUntil(10_000) { vm.state.value.error != null && !vm.state.value.busy }
         ui.mainClock.advanceTimeBy(32)
         ui.onNodeWithText("Não consegui salvar sua Casa. Tente novamente.").assertIsDisplayed()
         assertTrue(db.placeDao().getAll().isEmpty())

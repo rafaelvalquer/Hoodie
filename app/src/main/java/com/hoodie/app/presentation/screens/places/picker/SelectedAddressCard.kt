@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +30,7 @@ fun selectedAddressText(address: String?, latitude: Double, longitude: Double, h
 @Composable
 fun SelectedAddressCard(address: String?, latitude: Double, longitude: Double, hasPoint: Boolean, modifier: Modifier = Modifier) {
     PixelPanel(modifier.fillMaxWidth().testTag(PlacePickerTags.ADDRESS), color = HoodieColors.PanelLight) {
-        SectionLabel("📍 LOCAL SELECIONADO")
+        SectionLabel(stringResource(R.string.ui_selected_address_card_1))
         Text(
             selectedAddressText(address, latitude, longitude, hasPoint),
             style = MaterialTheme.typography.bodyMedium,

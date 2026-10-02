@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,7 +37,7 @@ fun TopAppsCard(apps: List<AppUsageEntry>, onApp: (AppUsageEntry) -> Unit, modif
     val shown = apps.take(if (expanded) HoodieConfig.TOP_APPS_SHOWN else 5)
     val max = apps.firstOrNull()?.foregroundMs?.coerceAtLeast(1) ?: 1
     HudPanel("Top apps", modifier.fillMaxWidth(), accent = HoodieColors.Gold, trailing = "${apps.size} apps") {
-        if (apps.isEmpty()) Text("Nenhum app usado neste dia.", style = RetroFontStyles.Body, color = HoodieColors.Muted)
+        if (apps.isEmpty()) Text(stringResource(R.string.ui_top_apps_card_1), style = RetroFontStyles.Body, color = HoodieColors.Muted)
         shown.forEachIndexed { index, app -> AppRow(index + 1, app, app.foregroundMs.toFloat() / max) { onApp(app) } }
         if (apps.size > 5) {
             Text(
@@ -44,7 +46,7 @@ fun TopAppsCard(apps: List<AppUsageEntry>, onApp: (AppUsageEntry) -> Unit, modif
                 modifier = Modifier.clickable { expanded = !expanded }.padding(vertical = 4.dp),
             )
         }
-        Text("Toque num app para ver detalhes e mudar a categoria.", style = RetroFontStyles.Small, color = HoodieColors.Muted)
+        Text(stringResource(R.string.ui_top_apps_card_2), style = RetroFontStyles.Small, color = HoodieColors.Muted)
     }
 }
 

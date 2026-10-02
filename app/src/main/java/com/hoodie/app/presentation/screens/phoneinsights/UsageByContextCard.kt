@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,7 +36,7 @@ fun UsageByContextCard(
     val max = usage.maxOfOrNull { it.foregroundMs }?.coerceAtLeast(1) ?: 1
     HudPanel("Uso por contexto", modifier.fillMaxWidth(), accent = HoodieColors.Mint) {
         if (usage.isEmpty()) {
-            Text("Sem contextos registrados para cruzar com o uso do celular.", style = RetroFontStyles.Body, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_usage_by_context_card_1), style = RetroFontStyles.Body, color = HoodieColors.Muted)
         }
         usage.forEach { ctx ->
             ContextUsageBlock(ctx, ctx.foregroundMs.toFloat() / max, apps, showApps)

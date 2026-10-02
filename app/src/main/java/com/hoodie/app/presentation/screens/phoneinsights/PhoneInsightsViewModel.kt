@@ -1,5 +1,8 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import com.hoodie.app.core.error.*
+import com.hoodie.app.presentation.common.runUiAction
+import android.util.Log
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -62,7 +65,7 @@ class PhoneInsightsViewModel @Inject constructor(
         val before = _state.value.permission
         val now = access.refresh()
         _state.value = _state.value.copy(permission = now)
-        if (now == UsagePermissionState.GRANTED) viewModelScope.launch {
+        if (now == UsagePermissionState.GRANTED) action {
             val digital = settings.current().digital
             if (digital.analysisRequested) {
                 settings.setDigital(digital.copy(analysisEnabled = true, analysisRequested = false))
@@ -76,7 +79,7 @@ class PhoneInsightsViewModel @Inject constructor(
     fun permissionIntent(): Intent = access.settingsIntent()
     fun appDetailsIntent(): Intent = access.appDetailsIntent()
 
-    fun enableAnalysis() = viewModelScope.launch {
+    fun enableAnalysis() = action {
         val granted = access.isGranted()
         settings.setDigital(settings.current().digital.copy(analysisEnabled = granted, analysisRequested = !granted))
         if (!granted) _events.send(PhoneInsightsUiEvent.OpenUsageSettings)
@@ -87,10 +90,19 @@ class PhoneInsightsViewModel @Inject constructor(
     fun closeApp() { _state.value = _state.value.copy(selectedApp = null) }
 
     /** Troca a categoria de um app (null = automática) e recalcula o dia. */
-    fun changeCategory(packageName: String, category: HoodieAppCategory?) = viewModelScope.launch {
+    fun changeCategory(packageName: String, category: HoodieAppCategory?) = action {
         setCategory(packageName, category)
         _state.value = _state.value.copy(selectedApp = _state.value.selectedApp?.let { if (it.packageName == packageName && category != null) it.copy(appCategory = category) else it })
         reload(keepSelection = true)
+    }
+
+    fun permissionLaunchFailed() { _events.trySend(PhoneInsightsUiEvent.ShowError(UsageAccessError.Unavailable)) }
+
+    private fun action(block: suspend () -> Unit) = viewModelScope.launch {
+        runUiAction(DatabaseError.WriteFailed, { error, cause ->
+            Log.e("PhoneInsightsViewModel", "Failed to update digital settings", cause)
+            _events.send(PhoneInsightsUiEvent.ShowError(error))
+        }, block)
     }
 
     private fun reload(keepSelection: Boolean = false) {
@@ -98,15 +110,16 @@ class PhoneInsightsViewModel @Inject constructor(
         loadJob?.cancel()
         _state.value = _state.value.copy(isLoading = true, error = null, permission = access.refresh())
         loadJob = viewModelScope.launch {
-            runCatching { loadInsights(date) }
-                .onSuccess { insights ->
+            runUiAction(UsageAccessError.ReadFailed, { error, cause ->
+                Log.e("PhoneInsightsViewModel", "Failed to load usage insights", cause)
+                if (_state.value.date == date) _state.value = _state.value.copy(isLoading = false, error = error)
+            }) {
+                val insights = loadInsights(date)
+                if (_state.value.date == date) {
                     val selected = if (keepSelection) _state.value.selectedApp?.let { s -> insights?.topApps?.firstOrNull { it.packageName == s.packageName } ?: s } else null
                     _state.value = _state.value.copy(insights = insights, isLoading = false, selectedApp = selected)
                 }
-                .onFailure {
-                    if (it is CancellationException) throw it
-                    _state.value = _state.value.copy(isLoading = false, error = "Não foi possível ler o uso do celular.")
-                }
+            }
         }
     }
 }

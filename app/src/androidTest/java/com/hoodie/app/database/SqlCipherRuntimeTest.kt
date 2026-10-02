@@ -78,7 +78,8 @@ class SqlCipherRuntimeTest {
         val date = "2026-10-01"
         val first = open(passphrase)
         try {
-            assertEquals(5, first.openHelper.writableDatabase.version)
+            // Versão atual do schema = destino da última migração (não fixa um número que envelhece).
+            assertEquals(com.hoodie.app.core.database.migrations.ALL_MIGRATIONS.last().endVersion, first.openHelper.writableDatabase.version)
             first.deviceUsageDao().replaceDay(
                 DailyDeviceUsageEntity(date, 400, 40, 40, 0, 400, 10, false, 40, 500),
                 List(40) { DailyAppUsageEntity(date, "app.$it", "App $it", "OTHER", 10, 1, 0, 10, 500) },
