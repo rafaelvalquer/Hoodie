@@ -9,6 +9,7 @@ import com.hoodie.app.core.location.AddressSearch
 import com.hoodie.app.core.location.CurrentPosition
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.time.ClockProvider
+import com.hoodie.app.core.error.PlaceException
 import com.hoodie.app.data.repository.PlaceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -23,7 +24,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed interface PlaceLoadState {
+    data object Idle : PlaceLoadState
+    data object Loading : PlaceLoadState
+    data object Ready : PlaceLoadState
+    data object NotFound : PlaceLoadState
+    data class Error(val cause: Throwable) : PlaceLoadState
+}
+
 data class PlacePickerState(
+    val loadState: PlaceLoadState = PlaceLoadState.Idle,
     val type: PlaceType = PlaceType.HOME,
     val editingId: Long? = null,
     val name: String = "",
@@ -46,7 +56,7 @@ data class PlacePickerState(
     val saving: Boolean = false,
 ) {
     val editing: Boolean get() = editingId != null
-    val canSave: Boolean get() = hasPoint && !saving
+    val canSave: Boolean get() = hasPoint && !saving && (!editing || loadState == PlaceLoadState.Ready)
 
     companion object {
         // Centro inicial neutro (São Paulo) até haver busca, GPS ou um lugar em edição.
@@ -92,15 +102,27 @@ class PlacePickerViewModel @Inject constructor(
         if (initialized) return
         initialized = true
         _state.update { it.copy(type = type, editingId = placeId, name = type.label) }
-        viewModelScope.launch {
-            val existing = placeId?.let { runCatching { places.byId(it) }.getOrNull() }
-            if (existing != null) {
+        if (placeId != null) reloadPlace()
+    }
+
+    fun reloadPlace() = viewModelScope.launch {
+        val placeId = _state.value.editingId ?: return@launch
+        _state.update { it.copy(loadState = PlaceLoadState.Loading, hasPoint = false, saveError = null) }
+        try {
+            val existing = places.byId(placeId)
+            if (existing == null) {
+                _state.update { it.copy(loadState = PlaceLoadState.NotFound) }
+            } else {
                 _state.update {
-                    it.copy(type = existing.type, name = existing.name, radius = existing.radiusMeters,
+                    it.copy(loadState = PlaceLoadState.Ready, type = existing.type, name = existing.name, radius = existing.radiusMeters,
                         latitude = existing.latitude, longitude = existing.longitude, hasPoint = true, recenterKey = it.recenterKey + 1)
                 }
                 lookupAddress(existing.latitude, existing.longitude)
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(loadState = PlaceLoadState.Error(e)) }
         }
     }
 
@@ -168,8 +190,8 @@ class PlacePickerViewModel @Inject constructor(
         _state.update { it.copy(saving = true, saveError = null) }
         try {
             val name = s.name.trim().ifBlank { s.type.label }
-            val existing = s.editingId?.let { places.byId(it) }
-            if (existing != null) {
+            if (s.editingId != null) {
+                val existing = places.byId(s.editingId) ?: throw PlaceException.NotFound(s.editingId)
                 places.update(existing.copy(name = name, type = s.type, latitude = s.latitude, longitude = s.longitude, radiusMeters = s.radius))
             } else {
                 places.add(name, s.type, s.latitude, s.longitude, s.radius, clock.nowMillis())
@@ -177,6 +199,9 @@ class PlacePickerViewModel @Inject constructor(
         } catch (e: CancellationException) {
             _state.update { it.copy(saving = false) }
             throw e
+        } catch (e: PlaceException.NotFound) {
+            _state.update { it.copy(saving = false, hasPoint = false, loadState = PlaceLoadState.NotFound) }
+            return@launch
         } catch (_: Exception) {
             _state.update { it.copy(saving = false, saveError = PlacePickerState.SAVE_FAILED) }
             return@launch

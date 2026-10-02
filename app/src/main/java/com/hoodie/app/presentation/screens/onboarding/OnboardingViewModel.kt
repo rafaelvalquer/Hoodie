@@ -1,5 +1,9 @@
 package com.hoodie.app.presentation.screens.onboarding
 
+import com.hoodie.app.core.error.*
+import com.hoodie.app.presentation.common.runUiAction
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.util.Log
@@ -8,7 +12,7 @@ import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.geofence.GeofenceRegistrar
 import com.hoodie.app.core.location.LocationPermissionManager
 import com.hoodie.app.core.location.LocationPermissionState
-import com.hoodie.app.core.location.LocationProvider
+import com.hoodie.app.core.location.CurrentPosition
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.Routine
 import com.hoodie.app.core.model.WorkMode
@@ -41,7 +45,7 @@ data class OnboardingState(
     val homeSaved: Boolean = false,
     val workSaved: Boolean = false,
     val busy: Boolean = false,
-    val message: String? = null,
+    val error: AppError? = null,
     val routine: Routine = Routine(workMode = WorkMode.OFFICE),
 )
 
@@ -50,7 +54,7 @@ class OnboardingViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val routines: RoutineRepository,
     private val contextEngine: ContextEngine,
-    private val location: LocationProvider,
+    private val location: CurrentPosition,
     private val geofences: GeofenceRegistrar,
     private val permissions: LocationPermissionManager,
     private val memory: MemoryEngine,
@@ -62,13 +66,19 @@ class OnboardingViewModel @Inject constructor(
     private val _state = MutableStateFlow(OnboardingState())
     val state = _state.asStateFlow()
 
-    fun go(step: OnboardingStep) = _state.update { it.copy(step = step, message = null) }
+    private val _events = Channel<OnboardingUiEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
+    fun openAppSettings() { _events.trySend(OnboardingUiEvent.OpenAppSettings) }
+    fun appSettingsFailed() { _state.update { it.copy(error = LocationError.Unavailable) } }
+
+    fun go(step: OnboardingStep) = _state.update { it.copy(step = step, error = null) }
 
     fun setName(name: String) = _state.update { it.copy(catName = name.take(16)) }
 
     val permission: StateFlow<LocationPermissionState> = permissions.state
 
-    fun hasLocation() = location.hasForeground()
+    fun hasLocation() = permissions.hasForeground()
 
     fun needsBackground() = permissions.current().needsBackgroundStep
 
@@ -82,17 +92,18 @@ class OnboardingViewModel @Inject constructor(
 
     /** "📍 Você está em casa agora? [SIM]" — uma leitura pontual e o lugar vira um geofence. */
     fun markHomeHere() = viewModelScope.launch {
-        _state.update { it.copy(busy = true, message = null) }
+        if (_state.value.busy) return@launch
+        _state.update { it.copy(busy = true, error = null) }
         try {
             log.log(DebugEventLogger.Category.ONBOARDING, "HOME_SAVE_STARTED")
             val pos = location.current()
             if (pos == null) {
-                _state.update { it.copy(message = "Não consegui sua localização agora. Você pode definir a Casa depois em Lugares.") }
+                _state.update { it.copy(error = LocationError.Unavailable) }
                 log.log(DebugEventLogger.Category.PLACE, "HOME_SAVE_FAILED location_unavailable")
                 return@launch
             }
             contextEngine.savePlaceHere(PlaceType.HOME, "Casa", pos.first, pos.second)
-            _state.update { it.copy(homeSaved = true, message = null) }
+            _state.update { it.copy(homeSaved = true, error = null) }
             log.log(DebugEventLogger.Category.PLACE, "HOME_SAVE_SUCCESS")
             afterHome()
         } catch (cancelled: CancellationException) {
@@ -100,7 +111,7 @@ class OnboardingViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Falha ao salvar Casa no onboarding", e)
             log.log(DebugEventLogger.Category.ONBOARDING, "HOME_SAVE_FAILED ${e.javaClass.simpleName}")
-            _state.update { it.copy(message = "Não consegui salvar sua Casa. Tente novamente.") }
+            _state.update { it.copy(error = e.appErrorOr(PlaceError.SaveFailed)) }
         } finally {
             _state.update { it.copy(busy = false) }
         }
@@ -130,15 +141,28 @@ class OnboardingViewModel @Inject constructor(
     fun toggleDay(day: DayOfWeek) = updateRoutine { r -> r.copy(days = if (day in r.days) r.days - day else r.days + day) }
 
     fun finish() = viewModelScope.launch {
-        val s = _state.value
-        val now = clock.nowMillis()
-        routines.save(s.routine, now)
-        settings.completeOnboarding(s.catName, now)
-        memory.unlock(Milestone.FIRST_DAY, now)
-        geofences.registerAll()
-        contextEngine.applyRoutineFallbackIfNeeded()
-        hoodie.resolve()
-        scheduler.schedulePeriodic()
+        if (_state.value.busy) return@launch
+        _state.update { it.copy(busy = true, error = null) }
+        try {
+            runUiAction(DatabaseError.WriteFailed, { error, cause ->
+                Log.e(TAG, "Onboarding completion failed", cause)
+                _state.update { it.copy(error = error) }
+            }) {
+                val s = _state.value
+                val now = clock.nowMillis()
+                routines.save(s.routine, now)
+                settings.setCatName(s.catName)
+                memory.unlock(Milestone.FIRST_DAY, now)
+                geofences.registerAll()
+                contextEngine.applyRoutineFallbackIfNeeded()
+                hoodie.resolve()
+                scheduler.schedulePeriodic()
+                // Root navigation observes this flag; publish it after setup succeeds.
+                settings.completeOnboarding(s.catName, now)
+            }
+        } finally {
+            _state.update { it.copy(busy = false) }
+        }
     }
 
     private companion object {

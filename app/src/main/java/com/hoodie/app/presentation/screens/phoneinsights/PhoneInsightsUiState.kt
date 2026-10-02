@@ -8,6 +8,13 @@ import com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights
 import com.hoodie.app.engine.deviceusage.DigitalReaction
 import com.hoodie.app.engine.deviceusage.HoodieDigitalReactions
 import java.time.LocalDate
+import com.hoodie.app.BuildConfig
+import com.hoodie.app.core.error.AppError
+
+data class UsagePermissionUiState(
+    val permission: UsagePermissionState,
+    val showRestrictedHelp: Boolean = BuildConfig.DEBUG && permission == UsagePermissionState.DENIED,
+)
 
 enum class PhoneInsightsStatus {
     /** Usuário desligou a análise em Ajustes e não há histórico salvo. */
@@ -21,16 +28,22 @@ enum class PhoneInsightsStatus {
     READY,
 }
 
+sealed interface PhoneInsightsUiEvent {
+    data object OpenUsageSettings : PhoneInsightsUiEvent
+    data class ShowError(val error: AppError) : PhoneInsightsUiEvent
+}
+
 data class PhoneInsightsUiState(
     val date: LocalDate,
     val permission: UsagePermissionState = UsagePermissionState.DENIED,
     val settings: DigitalSettings = DigitalSettings(),
     val insights: DailyPhoneInsights? = null,
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: AppError? = null,
     val catName: String = "Hoodie",
     val selectedApp: AppUsageEntry? = null,
 ) {
+    val permissionUi: UsagePermissionUiState get() = UsagePermissionUiState(permission)
     val status: PhoneInsightsStatus get() = statusOf(permission, settings, insights, isLoading, error)
 
     val reaction: DigitalReaction get() = HoodieDigitalReactions.react(insights, catName)
@@ -51,7 +64,7 @@ data class PhoneInsightsUiState(
             settings: DigitalSettings,
             insights: DailyPhoneInsights?,
             isLoading: Boolean,
-            error: String?,
+            error: AppError?,
         ): PhoneInsightsStatus = when {
             insights != null && !insights.isEmpty -> PhoneInsightsStatus.READY
             isLoading -> PhoneInsightsStatus.LOADING

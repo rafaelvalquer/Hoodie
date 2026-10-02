@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.database.LocationEventDao
+import com.hoodie.app.core.database.DeviceUsageDao
 import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.deviceusage.UsageAccessManager
@@ -40,6 +41,9 @@ class ReconcileWorker @AssistedInject constructor(
     private val notifier: Notifier,
     private val geofencesLazy: Lazy<GeofenceManager>,
     private val locationEventsLazy: Lazy<LocationEventDao>,
+    private val deviceUsageDaoLazy: Lazy<DeviceUsageDao>,
+    private val mobilityRepoLazy: Lazy<com.hoodie.app.data.repository.MobilityRepository>,
+    private val mobilityLazy: Lazy<com.hoodie.app.engine.mobility.MobilityEngine>,
     private val gate: DatabaseGate,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
@@ -49,21 +53,30 @@ class ReconcileWorker @AssistedInject constructor(
         val s = settings.current()
         if (!s.onboardingDone) return Result.success()
         if (!gate.isReady()) return Result.retry()
-        val geofences = geofencesLazy.get()
-        val locationEvents = locationEventsLazy.get()
-        log.log(DebugEventLogger.Category.WORKER, "reconcile")
-        contextEngineLazy.get().applyRoutineFallbackIfNeeded()
-        val snapshot = hoodieLazy.get().resolve()
-        memoryLazy.get().checkCalendar()
-        maybeNotifyAutonomy(snapshot.started.map { it.activity to it.userContext })
+        return runWorkerTask(onFailure = { log.log(DebugEventLogger.Category.WORKER, "RECONCILE_FAILED ${it.javaClass.simpleName}") }) {
+            val geofences = geofencesLazy.get()
+            val locationEvents = locationEventsLazy.get()
+            log.log(DebugEventLogger.Category.WORKER, "reconcile")
+            contextEngineLazy.get().applyRoutineFallbackIfNeeded()
+            val snapshot = hoodieLazy.get().resolve()
+            memoryLazy.get().checkCalendar()
+            maybeNotifyAutonomy(snapshot.started.map { it.activity to it.userContext })
 
-        val now = clock.nowMillis()
-        locationEvents.deleteOlderThan(now - HoodieConfig.LOCATION_EVENT_RETENTION_MS)
-        // Geofences podem sumir (Play Services reiniciado, localização religada):
-        // re-registra uma vez por dia e sempre que o último registro falhou.
-        val last = geofences.lastResult.value
-        if (now.atZone(clock.zone()).hour == DAILY_REREGISTER_HOUR || last == null || !last.ok) geofences.registerAll()
-        return Result.success()
+            val now = clock.nowMillis()
+            locationEvents.deleteOlderThan(now - HoodieConfig.LOCATION_EVENT_RETENTION_MS)
+            // Geofences podem sumir (Play Services reiniciado, localização religada):
+            // re-registra uma vez por dia e sempre que o último registro falhou.
+            val last = geofences.lastResult.value
+            val local = now.atZone(clock.zone())
+            val today = local.toLocalDate().toEpochDay()
+            deviceUsageDaoLazy.get().deleteSessionsOlderThan(today - HoodieConfig.PHONE_SESSION_RETENTION_DAYS)
+            // Mobilidade: retenção + sessão esquecida aberta (evento perdido) é encerrada.
+            mobilityRepoLazy.get().cleanup(now)
+            mobilityLazy.get().onCheck()
+            if (GeofenceRegistrationPolicy.shouldRegister(local.hour, today, s.lastGeofenceRegisterDay, last?.ok)) {
+                if (geofences.registerAll().ok) settings.setLastGeofenceRegisterDay(today)
+            }
+        }
     }
 
     /** "🐱 Hoodie decidiu jogar um pouco." — no máximo uma vez por dia, à noite. */
@@ -88,7 +101,6 @@ class ReconcileWorker @AssistedInject constructor(
 
     companion object {
         const val NAME = "hoodie_reconcile"
-        private const val DAILY_REREGISTER_HOUR = 4
     }
 }
 
@@ -103,12 +115,13 @@ class CheckWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         if (!gate.isReady()) return Result.retry()
-        val contextEngine = contextEngineLazy.get()
-        when (inputData.getString(KIND)) {
-            LUNCH -> contextEngine.onLunchCheck(inputData.getLong(AT, 0), inputData.getLong(PLACE, 0))
-            COMMUTE -> contextEngine.onCommuteCheck(inputData.getLong(EVENT, 0))
+        return runWorkerTask {
+            val contextEngine = contextEngineLazy.get()
+            when (inputData.getString(KIND)) {
+                LUNCH -> contextEngine.onLunchCheck(inputData.getLong(AT, 0), inputData.getLong(PLACE, 0))
+                COMMUTE -> contextEngine.onCommuteCheck(inputData.getLong(EVENT, 0))
+            }
         }
-        return Result.success()
     }
 
     companion object {
@@ -119,6 +132,25 @@ class CheckWorker @AssistedInject constructor(
         const val LUNCH = "hoodie_lunch_check"
         const val COMMUTE = "hoodie_commute_check"
     }
+}
+
+/**
+ * Checagem atrasada da mobilidade (movimento sustentado, chegada por parada).
+ * Não lê sensor nenhum sozinha: só reavalia o que o Activity Recognition já disse.
+ */
+@HiltWorker
+class MobilityCheckWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val mobilityLazy: Lazy<com.hoodie.app.engine.mobility.MobilityEngine>,
+    private val gate: DatabaseGate,
+) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        if (!gate.isReady()) return Result.retry()
+        return runWorkerTask { mobilityLazy.get().onCheck() }
+    }
+
+    companion object { const val NAME = "hoodie_mobility_check" }
 }
 
 /**
@@ -142,14 +174,13 @@ class PhoneInsightsWorker @AssistedInject constructor(
         val digital = settings.current().digital
         if (!digital.analysisEnabled || !digital.saveHistory || !access.isGranted()) return Result.success()
         if (!gate.isReady()) return Result.retry()
-        val deviceUsage = deviceUsageLazy.get()
-        log.log(DebugEventLogger.Category.WORKER, "phone insights")
-        val today = clock.today()
-        runCatching {
+        return runWorkerTask(onFailure = { log.log(DebugEventLogger.Category.WORKER, "PHONE_INSIGHTS_FAILED ${it.javaClass.simpleName}") }) {
+            val deviceUsage = deviceUsageLazy.get()
+            log.log(DebugEventLogger.Category.WORKER, "phone insights")
+            val today = clock.today()
             deviceUsage.refreshDay(today.minusDays(1))
             deviceUsage.refreshDay(today)
-        }.onFailure { return Result.retry() }
-        return Result.success()
+        }
     }
 
     companion object {

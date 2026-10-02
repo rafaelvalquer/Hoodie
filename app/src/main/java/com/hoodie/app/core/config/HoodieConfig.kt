@@ -41,6 +41,37 @@ object HoodieConfig {
     // ── Retenção ──
     const val LOCATION_EVENT_RETENTION_MS = 30 * DAY_MS
 
+    // ── Mobilidade (Activity Recognition + geofence) ──
+    /** Caminhada só vale como deslocamento depois de sustentada por este tempo. */
+    const val WALK_CONFIRM_MS = 2 * MINUTE_MS
+    /** Veículo: o Android já filtra bastante, mas um semáforo não é uma viagem. */
+    const val VEHICLE_CONFIRM_MS = 90_000L
+    /** Parado por este tempo durante um deslocamento = provável chegada. */
+    const val STILL_ARRIVAL_MS = 3 * MINUTE_MS
+    /** Score de mobilidade: abaixo de ASK ignora, entre ASK e APPLY pergunta, acima aplica. */
+    const val MOBILITY_ASK_SCORE = 40
+    const val MOBILITY_APPLY_SCORE = 80
+    const val MOBILITY_SCORE_MOVEMENT = 30
+    const val MOBILITY_SCORE_GEOFENCE_EXIT = 40
+    const val MOBILITY_SCORE_SUSTAINED = 15
+    const val MOBILITY_SCORE_TIME_MATCH = 10
+    const val MOBILITY_SCORE_HISTORY = 15
+    /** Confirmações seguidas de chegada num lugar para passar a confirmar sozinho. */
+    const val ARRIVAL_AUTO_CONFIRM_COUNT = 3
+    /** Mesmo modo escolhido para o mesmo trajeto este número de vezes = vira padrão aprendido. */
+    const val TRANSPORT_LEARN_COUNT = 3
+    /** Trajeto repetido este número de vezes = "histórico semelhante" no score. */
+    const val TRIP_PATTERN_MIN_COUNT = 2
+    /** Janela (± minutos) para dois deslocamentos contarem como "mesmo horário". */
+    const val TRIP_PATTERN_WINDOW_MIN = 60
+    /** Perguntas de mobilidade por sessão (a escolha do transporte pode ser uma segunda). */
+    const val MOBILITY_MAX_QUESTIONS_PER_SESSION = 1
+    /** Candidato a movimento que não virou deslocamento é descartado depois disso. */
+    const val MOVEMENT_CANDIDATE_MAX_MS = 30 * MINUTE_MS
+    /** Sessão aberta há mais que isso (app morto, evento perdido) é encerrada sem destino. */
+    const val MOBILITY_SESSION_MAX_MS = 6 * HOUR_MS
+    const val MOBILITY_RETENTION_DAYS = 365L
+
     // ── Phone Insights (Diário Digital) ──
     /** Lê eventos um pouco antes da meia-noite para saber o que já estava aberto às 00:00. */
     const val USAGE_LOOKBACK_MS = 2 * HOUR_MS
@@ -57,8 +88,8 @@ object HoodieConfig {
     /** No Diário geral, só blocos maiores entram (para não poluir a história do dia). */
     const val DIARY_PHONE_ITEM_MIN_MS = 5 * MINUTE_MS
     const val PHONE_TIMELINE_MAX_ITEMS = 80
-    const val TOP_APPS_STORED = 30
     const val TOP_APPS_SHOWN = 10
     const val CONTEXT_TOP_APPS = 5
     const val PHONE_INSIGHTS_REFRESH_HOURS = 3L
+    const val PHONE_SESSION_RETENTION_DAYS = 365L
 }

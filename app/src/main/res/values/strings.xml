@@ -1,4 +1,185 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="error_database_unavailable">Não consegui abrir os dados do Hoodie. Tente novamente.</string>
+    <string name="error_database_read">Não consegui carregar os dados. Tente novamente.</string>
+    <string name="error_database_write">Não consegui salvar a alteração. Tente novamente.</string>
+    <string name="error_location_unavailable">Não consegui sua localização agora. Tente novamente ou busque pelo endereço.</string>
+    <string name="error_location_permission">Ative a permissão de localização para usar sua posição.</string>
+    <string name="error_location_disabled">Ative a localização do aparelho para usar sua posição.</string>
+    <string name="error_place_missing">Este local não está mais salvo. Volte à lista de lugares.</string>
+    <string name="error_place_save">Não consegui salvar o local. Tente novamente.</string>
+    <string name="error_usage_permission">Autorize o acesso ao uso para analisar o celular.</string>
+    <string name="error_usage_unavailable">O acesso ao uso não está disponível neste aparelho.</string>
+    <string name="error_usage_read">Não consegui ler o uso do celular. Tente novamente.</string>
+    <string name="usage_optional_help">Não conseguiu ativar?</string>
     <string name="app_name">Hoodie</string>
+    <string name="place_load_failed">Não consegui carregar este local.</string>
+    <string name="place_retry_load">Tentar novamente</string>
+    <string name="place_back">Voltar</string>
+    <string name="usage_restricted_hint">Não conseguiu ativar? Em alguns aparelhos, apps instalados manualmente precisam liberar Configurações restritas.</string>
+    <string name="usage_restricted_help">Ver como liberar</string>
+    <string name="usage_restricted_title">Configurações restritas</string>
+    <string name="usage_restricted_steps">1. Abra Informações do Hoodie\n2. Toque em ⋮\n3. Permitir configurações restritas\n4. Confirme PIN ou digital\n5. Volte para Acesso aos dados de uso\n6. Autorize o Hoodie</string>
+    <string name="usage_open_app_details">Abrir informações do app</string>
+    <string name="onboarding_home_location_failed">Não consegui sua localização agora. Você pode definir a Casa depois em Lugares.</string>
+    <string name="onboarding_home_save_failed">Não consegui salvar sua Casa. Tente novamente.</string>
+    <string name="mobility_history_cleared">Histórico de deslocamentos apagado.</string>
+    <string name="geofences_registered">Geofences registrados.</string>
+    <string name="geofences_registration_failed">Não foi possível registrar.</string>
+    <string name="digital_history_cleared">Histórico digital apagado.</string>
+    <string name="pixel_lab_close">Fechar Pixel Lab</string>
+    <string name="ui_onboarding_screen_1" formatted="false">HOODIE</string>
+    <string name="ui_onboarding_screen_2" formatted="false">Você vive a sua rotina. Eu vivo uma rotina paralela, reagindo a onde você está, ao horário e aos hábitos que você confirmar.</string>
+    <string name="ui_onboarding_screen_3" formatted="false">Começar</string>
+    <string name="ui_onboarding_screen_4" formatted="false">Passo 1 · Nome do gato</string>
+    <string name="ui_onboarding_screen_5" formatted="false">Nome</string>
+    <string name="ui_onboarding_screen_6" formatted="false">Continuar</string>
+    <string name="ui_onboarding_screen_7" formatted="false">Passo 2 · Localização</string>
+    <string name="ui_onboarding_screen_8" formatted="false">\n🔒 Seus locais ficam armazenados só no celular, cifrados.\n📡 Sem rastreamento contínuo: usamos regiões (geofences), não o seu trajeto.\n✈️ Funciona sem internet.</string>
+    <string name="ui_onboarding_screen_9" formatted="false">Continuar</string>
+    <string name="ui_onboarding_screen_10" formatted="false">Permitir localização</string>
+    <string name="ui_onboarding_screen_11" formatted="false">Agora não</string>
+    <string name="ui_onboarding_screen_12" formatted="false">Passo 3 · Casa</string>
+    <string name="ui_onboarding_screen_13" formatted="false">📍 Você está em casa agora?</string>
+    <string name="ui_onboarding_screen_14" formatted="false">Sim</string>
+    <string name="ui_onboarding_screen_15" formatted="false">Não, buscar pelo endereço</string>
+    <string name="ui_onboarding_screen_16" formatted="false">Definir depois</string>
+    <string name="ui_onboarding_screen_17" formatted="false">Passo 3b · Segundo plano</string>
+    <string name="ui_onboarding_screen_18" formatted="false">\nLocalização\n→ Permitir o tempo todo</string>
+    <string name="ui_onboarding_screen_19" formatted="false">Continuar</string>
+    <string name="ui_onboarding_screen_20" formatted="false">Ative também \"Usar local exato\".</string>
+    <string name="ui_onboarding_screen_21" formatted="false">ABRIR CONFIGURAÇÕES</string>
+    <string name="ui_onboarding_screen_22" formatted="false">Agora não (só com o app aberto)</string>
+    <string name="ui_onboarding_screen_23" formatted="false">Passo 4 · Trabalho</string>
+    <string name="ui_onboarding_screen_24" formatted="false">Você trabalha fora de casa?</string>
+    <string name="ui_onboarding_screen_25" formatted="false">Sim, buscar o endereço</string>
+    <string name="ui_onboarding_screen_26" formatted="false">Sim, marco quando chegar lá</string>
+    <string name="ui_onboarding_screen_27" formatted="false">Home office</string>
+    <string name="ui_onboarding_screen_28" formatted="false">Não</string>
+    <string name="ui_onboarding_screen_29" formatted="false">Quando chegar ao trabalho, toque em \"Salvar este local\" na tela inicial.</string>
+    <string name="ui_onboarding_screen_30" formatted="false">Passo 5 · Horários</string>
+    <string name="ui_onboarding_screen_31" formatted="false">Continuar</string>
+    <string name="ui_onboarding_screen_32" formatted="false">Passo 6 · Dias</string>
+    <string name="ui_onboarding_screen_33" formatted="false">Continuar</string>
+    <string name="ui_onboarding_screen_34" formatted="false">Prontinho! Agora é só viver o seu dia.\nEu vou junto.</string>
+    <string name="ui_onboarding_screen_35" formatted="false">Configurado:</string>
+    <string name="ui_onboarding_screen_36" formatted="false">🏠 Casa: </string>
+    <string name="ui_onboarding_screen_37" formatted="false">🏢 Trabalho: </string>
+    <string name="ui_onboarding_screen_38" formatted="false">Vamos lá!</string>
+    <string name="ui_home_screen_1" formatted="false">🗺 Buscar pelo endereço</string>
+    <string name="ui_home_screen_2" formatted="false">Você</string>
+    <string name="ui_home_screen_3" formatted="false">Próximo evento</string>
+    <string name="ui_home_screen_4" formatted="false">O que estou fazendo?</string>
+    <string name="ui_home_screen_5" formatted="false">O QUE ESTOU FAZENDO?</string>
+    <string name="ui_home_screen_6" formatted="false">Sim</string>
+    <string name="ui_home_screen_7" formatted="false">Não</string>
+    <string name="ui_home_screen_8" formatted="false">Agora não</string>
+    <string name="ui_home_screen_9" formatted="false">Agora não</string>
+    <string name="ui_home_screen_10" formatted="false">Sim</string>
+    <string name="ui_home_screen_11" formatted="false">Só hoje</string>
+    <string name="ui_settings_screen_1" formatted="false">AJUSTES</string>
+    <string name="ui_settings_screen_2" formatted="false">Nome do gato</string>
+    <string name="ui_settings_screen_3" formatted="false">Rotina e horários</string>
+    <string name="ui_settings_screen_4" formatted="false">Memórias</string>
+    <string name="ui_settings_screen_5" formatted="false">Notificações</string>
+    <string name="ui_settings_screen_6" formatted="false">Chegadas e confirmações (no máximo poucas por dia)</string>
+    <string name="ui_settings_screen_7" formatted="false">Localização</string>
+    <string name="ui_settings_screen_8" formatted="false">Permissões</string>
+    <string name="ui_settings_screen_9" formatted="false">Re-registrar</string>
+    <string name="ui_settings_screen_10" formatted="false">Apagar histórico de deslocamentos?</string>
+    <string name="ui_settings_screen_11" formatted="false">Apagar</string>
+    <string name="ui_settings_screen_12" formatted="false">Cancelar</string>
+    <string name="ui_settings_screen_13" formatted="false">Privacidade</string>
+    <string name="ui_settings_screen_14" formatted="false">• Tudo fica neste aparelho: sem conta, sem servidor, sem nuvem.\n</string>
+    <string name="ui_settings_screen_15" formatted="false">Apagar todos os dados</string>
+    <string name="ui_settings_screen_16" formatted="false">🧪 Developer Lab</string>
+    <string name="ui_settings_screen_17" formatted="false">Nome do gato</string>
+    <string name="ui_settings_screen_18" formatted="false">Salvar</string>
+    <string name="ui_settings_screen_19" formatted="false">Cancelar</string>
+    <string name="ui_settings_screen_20" formatted="false">Apagar histórico digital?</string>
+    <string name="ui_settings_screen_21" formatted="false">Tempo de tela, apps e uso por contexto salvos serão apagados deste aparelho. O resto do Diário continua.</string>
+    <string name="ui_settings_screen_22" formatted="false">Apagar</string>
+    <string name="ui_settings_screen_23" formatted="false">Cancelar</string>
+    <string name="ui_settings_screen_24" formatted="false">Apagar tudo?</string>
+    <string name="ui_settings_screen_25" formatted="false">Apagar</string>
+    <string name="ui_settings_screen_26" formatted="false">Cancelar</string>
+    <string name="ui_settings_screen_27" formatted="false">🚶 Detecção de movimento</string>
+    <string name="ui_settings_screen_28" formatted="false">Permitir que o Hoodie reconheça quando você está andando ou se deslocando. </string>
+    <string name="ui_settings_screen_29" formatted="false">⚠️ Reconhecimento de atividade não permitido: o Hoodie usa só as geofences.</string>
+    <string name="ui_settings_screen_30" formatted="false">Permitir reconhecimento de atividade</string>
+    <string name="ui_settings_screen_31" formatted="false">✅ Reconhecimento de atividade permitido</string>
+    <string name="ui_settings_screen_32" formatted="false">Modo de transporte preferido</string>
+    <string name="ui_settings_screen_33" formatted="false">Apagar histórico de deslocamentos</string>
+    <string name="ui_settings_screen_34" formatted="false">📱 Diário digital</string>
+    <string name="ui_settings_screen_35" formatted="false">Acesso ao uso</string>
+    <string name="ui_settings_screen_36" formatted="false">Apagar histórico</string>
+    <string name="ui_diary_lab_screen_1" formatted="false">DIARY LAB</string>
+    <string name="ui_diary_lab_screen_2" formatted="false">CENÁRIO DE REGRESSÃO V0.2</string>
+    <string name="ui_diary_lab_screen_3" formatted="false">06:50 Casa → 08:00 sai → 08:45 Trabalho → 12:00 Restaurante → 13:00 Trabalho → 18:00 Academia → 19:30 Casa (até 22h)</string>
+    <string name="ui_diary_lab_screen_4" formatted="false">O cenário é sintético e permanece no dispositivo.</string>
+    <string name="ui_diary_lab_screen_5" formatted="false">DIARY MAP PERFORMANCE</string>
+    <string name="ui_diary_lab_screen_6" formatted="false">PHONE</string>
+    <string name="ui_diary_map_view_1" formatted="false">MAPA DO DIA · SEM ROTA GPS</string>
+    <string name="ui_diary_replay_hud_1" formatted="false">📱 celular parado</string>
+    <string name="ui_diary_screen_1" formatted="false">DIÁRIO</string>
+    <string name="ui_diary_screen_2" formatted="false">Montando seu dia…</string>
+    <string name="ui_diary_screen_3" formatted="false">Tentar novamente</string>
+    <string name="ui_diary_screen_4" formatted="false">🌙  Ainda não há dados suficientes</string>
+    <string name="ui_diary_screen_5" formatted="false">Os contextos e momentos do Hoodie registrados nesta data aparecerão aqui.</string>
+    <string name="ui_diary_screen_6" formatted="false">O mapa reconstrói lugares conhecidos; não registra uma rota GPS.</string>
+    <string name="ui_diary_screen_7" formatted="false">DESLOCAMENTOS</string>
+    <string name="ui_diary_screen_8" formatted="false">SEU DIA</string>
+    <string name="ui_diary_screen_9" formatted="false">Sem contextos registrados.</string>
+    <string name="ui_diary_screen_10" formatted="false">↺</string>
+    <string name="ui_diary_screen_11" formatted="false">VELOCIDADE</string>
+    <string name="ui_diary_screen_12" formatted="false">LINHA DO TEMPO</string>
+    <string name="ui_diary_screen_13" formatted="false">Sem eventos registrados.</string>
+    <string name="ui_place_detail_bottom_sheet_1" formatted="false">EVENTOS RELACIONADOS</string>
+    <string name="ui_place_detail_bottom_sheet_2" formatted="false">Nenhum evento relacionado neste período.</string>
+    <string name="ui_place_detail_bottom_sheet_3" formatted="false">Este prédio representa um lugar conhecido, não uma localização precisa.</string>
+    <string name="ui_visit_detail_section_1" formatted="false">🐱 </string>
+    <string name="ui_visit_detail_section_2" formatted="false">📱 sem uso do celular registrado</string>
+    <string name="ui_visit_detail_section_3" formatted="false">📱 celular</string>
+    <string name="ui_app_details_bottom_sheet_1" formatted="false">ONDE FOI USADO</string>
+    <string name="ui_app_details_bottom_sheet_2" formatted="false">CATEGORIA</string>
+    <string name="ui_app_details_bottom_sheet_3" formatted="false">↺ Usar categoria automática</string>
+    <string name="ui_app_details_bottom_sheet_4" formatted="false">Só o nome do app e o tempo de uso são registrados — nunca o que aparece na tela.</string>
+    <string name="ui_phone_insights_components_1" formatted="false">Sem apps categorizados.</string>
+    <string name="ui_phone_insights_components_2" formatted="false">Os blocos de uso aparecem no dia em que são registrados. Dias antigos guardam só o resumo.</string>
+    <string name="ui_phone_insights_components_3" formatted="false">Lendo o uso do celular…</string>
+    <string name="ui_phone_insights_components_4" formatted="false">📱 TELA</string>
+    <string name="ui_phone_insights_components_5" formatted="false">🔓 DESBLOQ.</string>
+    <string name="ui_phone_insights_components_6" formatted="false">📦 APPS</string>
+    <string name="ui_phone_insights_components_7" formatted="false">TOP APPS DO DIA</string>
+    <string name="ui_phone_insights_components_8" formatted="false">Sem uso do celular registrado neste contexto.</string>
+    <string name="ui_phone_insights_screen_1" formatted="false">⚠ Acesso ao uso desligado — mostrando o histórico salvo.</string>
+    <string name="ui_phone_insights_screen_2" formatted="false">Reativar acesso</string>
+    <string name="ui_phone_insights_screen_3" formatted="false">🔒 Só app + tempo, guardados neste aparelho.</string>
+    <string name="ui_screen_time_card_1" formatted="false">📱 Tempo de tela</string>
+    <string name="ui_screen_time_card_2" formatted="false">Uso por hora</string>
+    <string name="ui_top_apps_card_1" formatted="false">Nenhum app usado neste dia.</string>
+    <string name="ui_top_apps_card_2" formatted="false">Toque num app para ver detalhes e mudar a categoria.</string>
+    <string name="ui_usage_by_context_card_1" formatted="false">Sem contextos registrados para cruzar com o uso do celular.</string>
+    <string name="ui_usage_permission_screen_1" formatted="false">O Hoodie pode usar os dados de uso do Android para montar seu diário digital.</string>
+    <string name="ui_usage_permission_screen_2" formatted="false">🔒 Tudo fica salvo neste aparelho. Nada vai para servidor ou nuvem.</string>
+    <string name="ui_usage_permission_screen_3" formatted="false">Você pode desligar em Ajustes e apagar o histórico digital quando quiser.</string>
+    <string name="ui_usage_permission_screen_4" formatted="false">Este aparelho não oferece a tela de “Acesso ao uso”.</string>
+    <string name="ui_usage_permission_screen_5" formatted="false">Ativar acesso</string>
+    <string name="ui_usage_permission_screen_6" formatted="false">Na tela do Android, procure “Hoodie” e ligue “Permitir acesso ao uso”.</string>
+    <string name="ui_place_name_field_1" formatted="false">Nome</string>
+    <string name="ui_place_name_field_2" formatted="false">Ex.: Casa da praia</string>
+    <string name="ui_place_picker_header_1" formatted="false">✕</string>
+    <string name="ui_place_privacy_info_1" formatted="false">🔒 Local salvo somente neste aparelho.</string>
+    <string name="ui_place_privacy_info_2" formatted="false">SAIBA MAIS</string>
+    <string name="ui_place_privacy_info_3" formatted="false">🔒 Privacidade</string>
+    <string name="ui_place_radius_control_1" formatted="false">Raio do local</string>
+    <string name="ui_place_search_bar_1" formatted="false">Rua, número, cidade</string>
+    <string name="ui_place_search_bar_2" formatted="false">🔎</string>
+    <string name="ui_place_search_bar_3" formatted="false">BUSCAR</string>
+    <string name="ui_place_type_bottom_sheet_1" formatted="false">Tipo do lugar</string>
+    <string name="ui_place_type_bottom_sheet_2" formatted="false">✓</string>
+    <string name="ui_place_type_selector_1" formatted="false">Tipo</string>
+    <string name="ui_place_type_selector_2" formatted="false">ALTERAR</string>
+    <string name="ui_place_type_selector_3" formatted="false">Tipo</string>
+    <string name="ui_selected_address_card_1" formatted="false">📍 LOCAL SELECIONADO</string>
 </resources>

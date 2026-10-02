@@ -1,5 +1,6 @@
 package com.hoodie.app.pixel.scene
 
+import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
@@ -73,15 +74,28 @@ data class VisualState(
 /** HoodieActivity + contexto do usuário → cena, âncora, sequências e microações. */
 object VisualDirector {
 
-    fun sceneFor(activity: HoodieActivity, context: UserContextType, homeOffice: Boolean, commute: CommuteStyle, variant: Int): SceneId =
+    /**
+     * Cena do deslocamento. Prioridade: sessão real de mobilidade → preferência
+     * [CommuteStyle] → variação. Assim a preferência continua valendo com a detecção desligada.
+     */
+    fun commuteScene(mobilityMode: MovementMode?, commute: CommuteStyle, variant: Int): SceneId = when (mobilityMode) {
+        MovementMode.WALKING, MovementMode.RUNNING -> SceneId.STREET
+        // BikeScene ainda não existe: a rua é o mais próximo.
+        MovementMode.BICYCLE -> SceneId.STREET
+        MovementMode.CAR -> SceneId.CAR
+        MovementMode.BUS, MovementMode.TRAIN, MovementMode.METRO, MovementMode.PUBLIC_TRANSPORT, MovementMode.VEHICLE_UNKNOWN -> SceneId.TRANSIT
+        MovementMode.OTHER, MovementMode.NONE, null -> when (commute) {
+            CommuteStyle.WALK -> SceneId.STREET
+            CommuteStyle.BUS -> SceneId.TRANSIT
+            CommuteStyle.RANDOM -> if (variant % 2 == 0) SceneId.STREET else SceneId.TRANSIT
+        }
+    }
+
+    fun sceneFor(activity: HoodieActivity, context: UserContextType, homeOffice: Boolean, commute: CommuteStyle, variant: Int, mobilityMode: MovementMode? = null): SceneId =
         when (context) {
             UserContextType.HOME -> if (activity == HoodieActivity.WALKING) SceneId.GENERIC_OUTDOOR else SceneId.HOME
             UserContextType.WORK -> if (homeOffice) SceneId.HOME else SceneId.OFFICE
-            UserContextType.COMMUTING -> when (commute) {
-                CommuteStyle.WALK -> SceneId.STREET
-                CommuteStyle.BUS -> SceneId.TRANSIT
-                CommuteStyle.RANDOM -> if (variant % 2 == 0) SceneId.STREET else SceneId.TRANSIT
-            }
+            UserContextType.COMMUTING -> commuteScene(mobilityMode, commute, variant)
             UserContextType.LUNCH -> SceneId.RESTAURANT
             UserContextType.GYM -> SceneId.GYM
             UserContextType.STUDY, UserContextType.SHOPPING, UserContextType.VISITING -> SceneId.GENERIC_INDOOR
@@ -94,11 +108,12 @@ object VisualDirector {
         context: UserContextType,
         homeOffice: Boolean = false,
         commute: CommuteStyle = CommuteStyle.RANDOM,
+        mobilityMode: MovementMode? = null,
         variant: Int = 0,
         energy: Int = 70,
         mood: Int = 70,
     ): VisualState {
-        val scene = sceneFor(activity, context, homeOffice, commute, variant)
+        val scene = sceneFor(activity, context, homeOffice, commute, variant, mobilityMode)
         val tired = if (energy < 20) Expression.TIRED else null
         val base = forScene(scene, activity, Mood(energy, mood))
         return base.copy(variant = variant, expression = base.expression ?: tired)
@@ -238,6 +253,11 @@ object VisualDirector {
         }
         // Na rua o mundo corre para a esquerda: o Hoodie anda de lado, para a direita.
         SceneId.STREET -> VisualState(scene, SpotId.WALK, one(WALK_BACKPACK, Direction.RIGHT), backpackWalk = true)
+        // No carro o Hoodie vai sentado, olhando a janela; de vez em quando, o celular (passageiro).
+        SceneId.CAR -> VisualState(
+            scene, SpotId.SEAT, listOf(MicroAction(BUS_SIT, 70), MicroAction(IDLE_SIT, 20), MicroAction(IDLE_LOOK, 10, once = true)),
+            backpackWalk = true, gaze = windowGaze,
+        )
         SceneId.TRANSIT -> VisualState(
             scene, SpotId.SEAT, listOf(MicroAction(BUS_SIT, 75), MicroAction(IDLE_SIT, 10)) + phone(3).take(1),
             backpackWalk = true, gaze = windowGaze,

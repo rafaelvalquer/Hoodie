@@ -58,6 +58,7 @@ class PlacePickerScreenTest {
     private val longAddress = "1600 Amphitheatre Parkway, Mountain View, California, United States of America, Planet Earth, Milky Way"
 
     private fun editing(address: String? = "Charleston Rd, Mountain View, CA") = PlacePickerState(
+        loadState = com.hoodie.app.presentation.screens.places.PlaceLoadState.Ready,
         type = PlaceType.HOME, editingId = 1L, name = "Casa", hasPoint = true, address = address, radius = 150f,
         latitude = 37.42, longitude = -122.08,
     )

@@ -7,6 +7,21 @@ import org.junit.Test
 import java.time.LocalDate
 
 class DailySummaryCalculatorTest {
+    @Test fun openContextStopsAtNowAndFutureSpansDoNotAddTime() {
+        val summary = DailySummaryCalculator.compute(
+            listOf(ContextSpan(UserContextType.HOME, 100, null), ContextSpan(UserContextType.WORK, 600, 800)),
+            LocalDate.of(2026, 1, 1), 0, 1_000, 500,
+        )
+        assertEquals(400L, summary.homeMs)
+        assertEquals(0L, summary.workMs)
+        assertEquals(400L, summary.totalMs)
+    }
+
+    @Test fun emptyDayHasZeroTotals() {
+        val summary = DailySummaryCalculator.compute(emptyList(), LocalDate.of(2026, 1, 1), 0, 1_000, 500)
+        assertEquals(0L, summary.totalMs)
+    }
+
     @Test fun clipsAtMidnightAndCountsUnmappedContextsAsOther() {
         val date = LocalDate.of(2026, 1, 1)
         val day = 86_400_000L

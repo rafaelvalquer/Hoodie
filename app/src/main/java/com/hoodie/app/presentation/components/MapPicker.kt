@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -22,7 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -64,11 +65,13 @@ fun MapPicker(
     modifier: Modifier = Modifier,
     onMyLocation: (() -> Unit)? = null,
     loadingLocation: Boolean = false,
+    onMapInteraction: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentOnChange by rememberUpdatedState(onCenterChanged)
     val currentRadius by rememberUpdatedState(radiusMeters)
+    val currentOnInteraction by rememberUpdatedState(onMapInteraction)
 
     val map = remember {
         MapView(context).apply {
@@ -101,12 +104,16 @@ fun MapPicker(
         val notify = Runnable { map.mapCenter.let { currentOnChange(it.latitude, it.longitude) } }
         val listener = object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
+                currentOnInteraction()
                 refreshCircle()
                 // Debounce: só avisa quando o usuário para de arrastar.
                 map.removeCallbacks(notify); map.postDelayed(notify, 350)
                 return false
             }
-            override fun onZoom(event: ZoomEvent?): Boolean = false
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                currentOnInteraction()
+                return false
+            }
         }
         map.addMapListener(listener)
         val observer = LifecycleEventObserver { _, e ->
@@ -168,7 +175,8 @@ fun MapOverlayButton(text: String, enabled: Boolean, onClick: () -> Unit, modifi
         modifier = modifier
             .border(2.dp, HoodieColors.Outline)
             .background(HoodieColors.Panel)
-            .clickable(enabled = enabled, onClick = onClick)
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .semantics { role = Role.Button }
             .padding(horizontal = 10.dp, vertical = 6.dp),
     )

@@ -1,5 +1,15 @@
 package com.hoodie.app.presentation.screens.settings
 
+import androidx.compose.ui.res.stringResource
+import com.hoodie.app.R
+import com.hoodie.app.core.error.*
+import com.hoodie.app.presentation.common.runUiAction
+import com.hoodie.app.presentation.common.CollectUiEvents
+import com.hoodie.app.presentation.common.appErrorText
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import android.util.Log
 import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +67,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -68,44 +79,93 @@ class SettingsViewModel @Inject constructor(
     private val wiper: DataWiper,
     private val usageAccess: UsageAccessManager,
     private val clearDigital: ClearDigitalHistoryUseCase,
+    private val activityPermissions: com.hoodie.app.core.mobility.ActivityRecognitionPermissionManager,
+    private val mobilityRegistration: com.hoodie.app.core.mobility.MobilityRegistration,
+    private val mobilityEngine: com.hoodie.app.engine.mobility.MobilityEngine,
 ) : ViewModel() {
+    val activityPermission: StateFlow<com.hoodie.app.core.mobility.ActivityRecognitionPermissionState> = activityPermissions.stateFlow
+    /** Permissão a pedir em runtime (null abaixo do Android 10: já concedida na instalação). */
+    val activityRuntimePermission: String? = activityPermissions.runtimePermission
+
+    fun setMobility(m: com.hoodie.app.core.datastore.MobilitySettings) = action {
+        settings.setMobility(m)
+        mobilityRegistration.sync()
+    }
+
+    /** Resultado do pedido de permissão (ou volta dos Ajustes do sistema). */
+    fun onActivityPermissionResult() = action {
+        activityPermissions.refresh()
+        mobilityRegistration.sync()
+    }
+
+    fun activityAppSettingsIntent(): Intent = activityPermissions.appSettingsIntent()
+
+    fun clearMobilityHistory() = action {
+        mobilityEngine.clearHistory()
+        _events.send(SettingsUiEvent.ShowMessage(R.string.mobility_history_cleared))
+    }
     val usagePermission: StateFlow<UsagePermissionState> = usageAccess.state
     val state = settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
     val permission: StateFlow<LocationPermissionState> = permissions.state
     val geofenceResult: StateFlow<GeofenceRegistrationResult?> = geofences.lastResult
-    val info = MutableStateFlow<String?>(null)
+    private val _events = kotlinx.coroutines.channels.Channel<SettingsUiEvent>(kotlinx.coroutines.channels.Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
-    fun setName(n: String) = viewModelScope.launch { settings.setCatName(n) }
-    fun setCommute(s: CommuteStyle) = viewModelScope.launch { settings.setCommuteStyle(s) }
-    fun setNotifications(on: Boolean) = viewModelScope.launch { settings.setNotifications(on) }
+    fun setName(n: String) = action { settings.setCatName(n) }
+    fun setCommute(s: CommuteStyle) = action { settings.setCommuteStyle(s) }
+    fun setNotifications(on: Boolean) = action { settings.setNotifications(on) }
 
     /** Voltou das configurações do sistema: revalida e reaplica os geofences. */
-    fun onResume() = viewModelScope.launch {
-        usageAccess.refresh()
+    fun onResume() = action {
+        val usage = usageAccess.refresh()
+        val digital = settings.current().digital
+        if (usage == UsagePermissionState.GRANTED && digital.analysisRequested) {
+            settings.setDigital(digital.copy(analysisEnabled = true, analysisRequested = false))
+        }
+        activityPermissions.refresh()
+        mobilityRegistration.sync()
         val before = permission.value
         val now = permissions.refresh()
         if (before != now || geofences.lastResult.value == null) geofences.registerAll()
     }
 
-    fun reregister() = viewModelScope.launch {
+    fun reregister() = action {
         val r = geofences.registerAll()
-        info.value = if (r.ok) "Geofences registrados." else "Não foi possível registrar."
+        _events.send(SettingsUiEvent.ShowMessage(if (r.ok) R.string.geofences_registered else R.string.geofences_registration_failed))
     }
 
     fun appSettingsIntent(): Intent = permissions.appSettingsIntent()
     fun locationSettingsIntent(): Intent = permissions.locationSettingsIntent()
 
     /** Apaga tudo: banco, chave do banco, preferências, geofences, tarefas e notificações. Volta ao onboarding. */
-    fun deleteEverything() = viewModelScope.launch { wiper.deleteEverything() }
+    fun deleteEverything() = action { wiper.deleteEverything() }
 
-    fun setDigital(d: DigitalSettings) = viewModelScope.launch { settings.setDigital(d) }
+    fun setDigital(d: DigitalSettings) = action {
+        val request = d.analysisEnabled && !usageAccess.isGranted()
+        settings.setDigital(d.copy(analysisEnabled = d.analysisEnabled && !request, analysisRequested = request))
+        if (request) _events.send(SettingsUiEvent.OpenUsageSettings)
+    }
     fun usageAccessIntent(): Intent = usageAccess.settingsIntent()
+    fun permissionLaunchFailed() { _events.trySend(SettingsUiEvent.ShowError(UsageAccessError.Unavailable)) }
+
+    private fun action(block: suspend () -> Unit) = viewModelScope.launch {
+        runUiAction(DatabaseError.WriteFailed, { error, cause ->
+            Log.e("SettingsViewModel", "Failed to apply settings action", cause)
+            _events.send(SettingsUiEvent.ShowError(error))
+        }, block)
+    }
 
     /** Apaga só os agregados do Diário Digital (as categorias escolhidas ficam). */
-    fun clearDigitalHistory() = viewModelScope.launch {
+    fun clearDigitalHistory() = action {
         clearDigital()
-        info.value = "Histórico digital apagado."
+        _events.send(SettingsUiEvent.ShowMessage(R.string.digital_history_cleared))
     }
+}
+
+sealed interface SettingsUiEvent {
+    data object OpenUsageSettings : SettingsUiEvent
+    data class ShowError(val error: AppError) : SettingsUiEvent
+    data class ShowMessage(@androidx.annotation.StringRes val resource: Int) : SettingsUiEvent
 }
 
 /** Texto do card "Localização" a partir da permissão e do último registro de geofences. */
@@ -134,10 +194,19 @@ internal fun locationSummary(permission: LocationPermissionState, result: Geofen
 @Composable
 fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
-    val info by vm.info.collectAsStateWithLifecycle()
     val permission by vm.permission.collectAsStateWithLifecycle()
     val geofenceResult by vm.geofenceResult.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    CollectUiEvents(vm.events) { event ->
+        when (event) {
+            SettingsUiEvent.OpenUsageSettings -> runCatching { context.startActivity(vm.usageAccessIntent()) }
+                .onFailure { vm.permissionLaunchFailed() }
+            is SettingsUiEvent.ShowError -> scope.launch { snackbar.showSnackbar(context.appErrorText(event.error)) }
+            is SettingsUiEvent.ShowMessage -> scope.launch { snackbar.showSnackbar(context.getString(event.resource)) }
+        }
+    }
     LifecycleResumeEffect(Unit) {
         vm.onResume()
         onPauseOrDispose { }
@@ -152,15 +221,16 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("AJUSTES", style = MaterialTheme.typography.headlineSmall)
+        SnackbarHost(snackbar)
+        Text(stringResource(R.string.ui_settings_screen_1), style = MaterialTheme.typography.headlineSmall)
 
         PixelPanel(Modifier.fillMaxWidth(), onClick = { editingName = true }) {
-            SectionLabel("Nome do gato")
+            SectionLabel(stringResource(R.string.ui_settings_screen_2))
             Text(s.catName, style = MaterialTheme.typography.titleMedium)
         }
-        PixelButton("Rotina e horários", { onOpen(Routes.ROUTINE) }, Modifier.fillMaxWidth())
+        PixelButton(stringResource(R.string.ui_settings_screen_3), { onOpen(Routes.ROUTINE) }, Modifier.fillMaxWidth())
         PixelButton("Perfil do ${s.catName}", { onOpen(Routes.PROFILE) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
-        PixelButton("Memórias", { onOpen(Routes.MEMORIES) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
+        PixelButton(stringResource(R.string.ui_settings_screen_4), { onOpen(Routes.MEMORIES) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
 
         PixelPanel(Modifier.fillMaxWidth()) {
             SectionLabel("Como o ${s.catName} se desloca")
@@ -170,25 +240,48 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
         PixelPanel(Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    SectionLabel("Notificações")
-                    Text("Chegadas e confirmações (no máximo poucas por dia)", color = HoodieColors.Muted)
+                    SectionLabel(stringResource(R.string.ui_settings_screen_5))
+                    Text(stringResource(R.string.ui_settings_screen_6), color = HoodieColors.Muted)
                 }
                 Switch(s.notificationsEnabled, vm::setNotifications)
             }
         }
 
         PixelPanel(Modifier.fillMaxWidth()) {
-            SectionLabel("Localização")
+            SectionLabel(stringResource(R.string.ui_settings_screen_7))
             Text(locationSummary(permission, geofenceResult))
-            info?.let { Text(it, color = HoodieColors.Muted) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                PixelButton("Permissões", {
+                PixelButton(stringResource(R.string.ui_settings_screen_8), {
                     context.startActivity(
                         if (permission == LocationPermissionState.LOCATION_DISABLED) vm.locationSettingsIntent() else vm.appSettingsIntent(),
                     )
                 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
-                PixelButton("Re-registrar", vm::reregister, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+                PixelButton(stringResource(R.string.ui_settings_screen_9), vm::reregister, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
             }
+        }
+
+        val activityPermission by vm.activityPermission.collectAsStateWithLifecycle()
+        var confirmMobilityDelete by remember { mutableStateOf(false) }
+        val requestActivity = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+        ) { vm.onActivityPermissionResult() }
+        MobilitySettingsPanel(
+            s.mobility, activityPermission,
+            onChange = vm::setMobility,
+            onPermission = {
+                val p = vm.activityRuntimePermission
+                if (p != null) runCatching { requestActivity.launch(p) } else context.startActivity(vm.activityAppSettingsIntent())
+            },
+            onClear = { confirmMobilityDelete = true },
+        )
+        if (confirmMobilityDelete) {
+            AlertDialog(
+                onDismissRequest = { confirmMobilityDelete = false },
+                title = { Text(stringResource(R.string.ui_settings_screen_10)) },
+                text = { Text("Os deslocamentos salvos (horários e meios de transporte) e o que o ${s.catName} aprendeu dos seus trajetos serão apagados deste aparelho.") },
+                confirmButton = { TextButton(onClick = { vm.clearMobilityHistory(); confirmMobilityDelete = false }) { Text(stringResource(R.string.ui_settings_screen_11), color = HoodieColors.Coral) } },
+                dismissButton = { TextButton(onClick = { confirmMobilityDelete = false }) { Text(stringResource(R.string.ui_settings_screen_12)) } },
+            )
         }
 
         DigitalSettingsPanel(
@@ -199,19 +292,20 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
         )
 
         PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
-            SectionLabel("Privacidade")
+            SectionLabel(stringResource(R.string.ui_settings_screen_13))
             Text(
-                "• Tudo fica neste aparelho: sem conta, sem servidor, sem nuvem.\n" +
+                stringResource(R.string.ui_settings_screen_14) +
                     "• Internet só ao buscar um endereço no mapa: o texto vai ao serviço de mapas do Android e o mapa vem do OpenStreetMap.\n" +
                     "• Guardamos lugares (cifrados), horários, contextos, histórico e o estado do gato.\n" +
                     "• Não guardamos trajeto GPS nem posição contínua.\n" +
+                    "• Deslocamentos (opcional): só de onde, para onde, horários e o meio (a pé, ônibus, carro…). Nunca as ruas percorridas.\n" +
                     "• Diário digital (opcional): só app + tempo de uso por dia. Nunca mensagens, texto, fotos ou conteúdo da tela.\n" +
                     "• Backup em nuvem desativado.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }
 
-        PixelButton("Apagar todos os dados", { confirmDelete = true }, Modifier.fillMaxWidth(), color = HoodieColors.Coral)
+        PixelButton(stringResource(R.string.ui_settings_screen_15), { confirmDelete = true }, Modifier.fillMaxWidth(), color = HoodieColors.Coral)
 
         Text(
             "Hoodie ${BuildConfig.VERSION_NAME}",
@@ -220,7 +314,7 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
         )
         // Ferramenta interna: sempre visível em debug, escondida (5 toques) em release.
         if (BuildConfig.DEBUG || versionTaps >= 5) {
-            PixelButton("🧪 Developer Lab", { onOpen(Routes.DEV_LAB) }, Modifier.fillMaxWidth(), color = HoodieColors.Mint)
+            PixelButton(stringResource(R.string.ui_settings_screen_16), { onOpen(Routes.DEV_LAB) }, Modifier.fillMaxWidth(), color = HoodieColors.Mint)
         }
     }
 
@@ -228,29 +322,64 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
         var name by remember { mutableStateOf(s.catName) }
         AlertDialog(
             onDismissRequest = { editingName = false },
-            title = { Text("Nome do gato") },
+            title = { Text(stringResource(R.string.ui_settings_screen_17)) },
             text = { OutlinedTextField(name, { name = it.take(16) }, singleLine = true) },
-            confirmButton = { TextButton(onClick = { vm.setName(name); editingName = false }) { Text("Salvar") } },
-            dismissButton = { TextButton(onClick = { editingName = false }) { Text("Cancelar") } },
+            confirmButton = { TextButton(onClick = { vm.setName(name); editingName = false }) { Text(stringResource(R.string.ui_settings_screen_18)) } },
+            dismissButton = { TextButton(onClick = { editingName = false }) { Text(stringResource(R.string.ui_settings_screen_19)) } },
         )
     }
     if (confirmDigitalDelete) {
         AlertDialog(
             onDismissRequest = { confirmDigitalDelete = false },
-            title = { Text("Apagar histórico digital?") },
-            text = { Text("Tempo de tela, apps e uso por contexto salvos serão apagados deste aparelho. O resto do Diário continua.") },
-            confirmButton = { TextButton(onClick = { vm.clearDigitalHistory(); confirmDigitalDelete = false }) { Text("Apagar", color = HoodieColors.Coral) } },
-            dismissButton = { TextButton(onClick = { confirmDigitalDelete = false }) { Text("Cancelar") } },
+            title = { Text(stringResource(R.string.ui_settings_screen_20)) },
+            text = { Text(stringResource(R.string.ui_settings_screen_21)) },
+            confirmButton = { TextButton(onClick = { vm.clearDigitalHistory(); confirmDigitalDelete = false }) { Text(stringResource(R.string.ui_settings_screen_22), color = HoodieColors.Coral) } },
+            dismissButton = { TextButton(onClick = { confirmDigitalDelete = false }) { Text(stringResource(R.string.ui_settings_screen_23)) } },
         )
     }
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Apagar tudo?") },
+            title = { Text(stringResource(R.string.ui_settings_screen_24)) },
             text = { Text("Lugares, histórico, memórias e o estado do ${s.catName} serão apagados deste aparelho. Não dá para desfazer.") },
-            confirmButton = { TextButton(onClick = { vm.deleteEverything(); confirmDelete = false }) { Text("Apagar", color = HoodieColors.Coral) } },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancelar") } },
+            confirmButton = { TextButton(onClick = { vm.deleteEverything(); confirmDelete = false }) { Text(stringResource(R.string.ui_settings_screen_25), color = HoodieColors.Coral) } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.ui_settings_screen_26)) } },
         )
+    }
+}
+
+/** Mobilidade Contextual: detecção, aprendizado, transporte preferido e histórico. */
+@Composable
+private fun MobilitySettingsPanel(
+    m: com.hoodie.app.core.datastore.MobilitySettings,
+    permission: com.hoodie.app.core.mobility.ActivityRecognitionPermissionState,
+    onChange: (com.hoodie.app.core.datastore.MobilitySettings) -> Unit,
+    onPermission: () -> Unit,
+    onClear: () -> Unit,
+) {
+    PixelPanel(Modifier.fillMaxWidth()) {
+        SectionLabel(stringResource(R.string.ui_settings_screen_27))
+        Text(
+            stringResource(R.string.ui_settings_screen_28) +
+                "Usamos essa informação para adaptar o Hoodie à sua rotina. O trajeto não é gravado e os dados permanecem no aparelho.",
+            style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted,
+        )
+        if (!permission.granted) {
+            Text(stringResource(R.string.ui_settings_screen_29), modifier = Modifier.padding(top = 6.dp))
+            PixelButton(stringResource(R.string.ui_settings_screen_30), onPermission, Modifier.fillMaxWidth().padding(top = 6.dp))
+        } else {
+            Text(stringResource(R.string.ui_settings_screen_31), modifier = Modifier.padding(top = 6.dp))
+        }
+        DigitalSwitch("Detectar deslocamentos automaticamente", "Andando, de ônibus, de carro…", m.detectionEnabled) { onChange(m.copy(detectionEnabled = it)) }
+        DigitalSwitch("Aprender meus trajetos frequentes", "Com o tempo o Hoodie pergunta menos", m.learnTrips) { onChange(m.copy(learnTrips = it)) }
+        DigitalSwitch("Confirmar locais novos", "Perguntar o que é um lugar desconhecido onde você parou", m.confirmNewPlaces) { onChange(m.copy(confirmNewPlaces = it)) }
+        SectionLabel(stringResource(R.string.ui_settings_screen_32), Modifier.padding(top = 8.dp))
+        val modes = listOf<com.hoodie.app.core.mobility.MovementMode?>(null) + listOf(
+            com.hoodie.app.core.mobility.MovementMode.CAR, com.hoodie.app.core.mobility.MovementMode.BUS,
+            com.hoodie.app.core.mobility.MovementMode.TRAIN, com.hoodie.app.core.mobility.MovementMode.METRO,
+        )
+        ChipRow(modes.map { it?.let { mode -> "${mode.emoji} ${mode.label}" } ?: "Automático" }, modes.indexOf(m.preferredMode), { onChange(m.copy(preferredMode = modes[it])) })
+        PixelButton(stringResource(R.string.ui_settings_screen_33), onClear, Modifier.fillMaxWidth().padding(top = 8.dp), color = HoodieColors.Coral)
     }
 }
 
@@ -264,7 +393,7 @@ private fun DigitalSettingsPanel(
     onClear: () -> Unit,
 ) {
     PixelPanel(Modifier.fillMaxWidth()) {
-        SectionLabel("📱 Diário digital")
+        SectionLabel(stringResource(R.string.ui_settings_screen_34))
         Text(
             when (permission) {
                 UsagePermissionState.GRANTED -> "✅ Acesso ao uso liberado"
@@ -277,8 +406,8 @@ private fun DigitalSettingsPanel(
         DigitalSwitch("Salvar histórico digital", "Guarda o resumo de cada dia neste aparelho", d.saveHistory) { onChange(d.copy(saveHistory = it)) }
         DigitalSwitch("Mostrar top apps por contexto", "Casa, trabalho, transporte...", d.showTopAppsByContext) { onChange(d.copy(showTopAppsByContext = it)) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-            PixelButton("Acesso ao uso", onAccess, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
-            PixelButton("Apagar histórico", onClear, Modifier.weight(1f), color = HoodieColors.Coral)
+            PixelButton(stringResource(R.string.ui_settings_screen_35), onAccess, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+            PixelButton(stringResource(R.string.ui_settings_screen_36), onClear, Modifier.weight(1f), color = HoodieColors.Coral)
         }
     }
 }

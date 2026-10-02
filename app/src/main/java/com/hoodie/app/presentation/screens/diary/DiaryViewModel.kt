@@ -1,6 +1,10 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.core.error.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import androidx.lifecycle.ViewModel
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.currentDateFlow
@@ -25,8 +29,18 @@ class DiaryViewModel @Inject constructor(
     private var observedToday = clock.today()
     private val _state = MutableStateFlow(DiaryUiState(clock.today(), today = clock.today(), isLoading = true))
     val state: StateFlow<DiaryUiState> = _state.asStateFlow()
+    private val _events = Channel<DiaryUiEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
+    fun openPlace(nodeId: String) {
+        _events.trySend(DiaryUiEvent.ShowPlaceDetails(_state.value.selectedDate, nodeId))
+    }
+
     private var replayJob: Job? = null
     private var loadJob: Job? = null
+    // Cache limitado à sessão da tela. Hoje permanece atualizável; dias passados
+    // são reutilizados ao alternar datas sem reconstruir mapa e replay.
+    private val dayCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.domain.diary.model.DailyDiary>()
 
     init {
         load(_state.value.selectedDate)
@@ -47,6 +61,12 @@ class DiaryViewModel @Inject constructor(
         stopReplay()
         _state.value = _state.value.copy(selectedDate = date, diary = null, isLoading = true, error = null, replay = ReplayUiState())
         load(date)
+    }
+
+    fun retry() {
+        _state.value = _state.value.copy(isLoading = true, error = null)
+        dayCache.remove(_state.value.selectedDate)
+        load(_state.value.selectedDate)
     }
 
     fun play() {
@@ -71,7 +91,7 @@ class DiaryViewModel @Inject constructor(
     }
 
     fun pause() { replayJob?.cancel(); replayJob = null; _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.PAUSED)) }
-    fun reset() { stopReplay(); _state.value = _state.value.copy(replay = ReplayUiState()) }
+    fun reset() { stopReplay(); _state.value = _state.value.copy(replay = ReplayUiState(speed = _state.value.replay.speed)) }
     fun setSpeed(speed: ReplaySpeed) { _state.value = _state.value.copy(replay = _state.value.replay.copy(speed = speed)) }
     private fun stopReplay() { replayJob?.cancel(); replayJob = null }
 
@@ -79,12 +99,17 @@ class DiaryViewModel @Inject constructor(
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             try {
-                val diary = loadDiary(date)
+                val diary = dayCache[date]?.takeIf { date.isBefore(clock.today()) } ?: loadDiary(date)
+                if (date.isBefore(clock.today())) {
+                    dayCache[date] = diary
+                    if (dayCache.size > 7) dayCache.remove(dayCache.keys.first())
+                }
                 if (_state.value.selectedDate == date) _state.value = _state.value.copy(diary = diary, isLoading = false, error = null, replay = ReplayUiState())
             } catch (cancelled: CancellationException) {
                 throw cancelled
-            } catch (_: Exception) {
-                if (_state.value.selectedDate == date) _state.value = _state.value.copy(isLoading = false, error = "Não foi possível carregar este dia.")
+            } catch (error: Exception) {
+                Log.e("DiaryViewModel", "Failed to load diary", error)
+                if (_state.value.selectedDate == date) _state.value = _state.value.copy(isLoading = false, error = DatabaseError.ReadFailed)
             }
         }
     }

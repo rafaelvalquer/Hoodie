@@ -1,11 +1,15 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,12 +31,15 @@ fun UsagePermissionScreen(
     permission: UsagePermissionState,
     onActivate: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenAppDetails: () -> Unit = {},
 ) {
+    var showHelp by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    if (showHelp) RestrictedSettingsHelpSheet(onDismiss = { showHelp = false }, onOpenAppDetails = onOpenAppDetails)
     HudPanel("Análise do celular", modifier.fillMaxWidth(), accent = RetroUiTheme.Screen) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             AnimatedHoodie(AnimationId.PHONE_SCROLL, size = 84.dp)
             Text(
-                "O Hoodie pode usar os dados de uso do Android para montar seu diário digital.",
+                stringResource(R.string.ui_usage_permission_screen_1),
                 style = RetroFontStyles.Body, color = HoodieColors.Ink, modifier = Modifier.weight(1f),
             )
         }
@@ -44,13 +51,19 @@ fun UsagePermissionScreen(
             "Não vemos", HoodieColors.Coral, "✖",
             listOf("mensagens", "texto digitado", "fotos", "conteúdo da tela"),
         )
-        Text("🔒 Tudo fica salvo neste aparelho. Nada vai para servidor ou nuvem.", style = RetroFontStyles.BodyBold, color = HoodieColors.Gold)
-        Text("Você pode desligar em Ajustes e apagar o histórico digital quando quiser.", style = RetroFontStyles.Small, color = HoodieColors.Muted)
+        Text(stringResource(R.string.ui_usage_permission_screen_2), style = RetroFontStyles.BodyBold, color = HoodieColors.Gold)
+        Text(stringResource(R.string.ui_usage_permission_screen_3), style = RetroFontStyles.Small, color = HoodieColors.Muted)
         if (permission == UsagePermissionState.UNAVAILABLE) {
-            Text("Este aparelho não oferece a tela de “Acesso ao uso”.", style = RetroFontStyles.Small, color = HoodieColors.Coral)
+            Text(stringResource(R.string.ui_usage_permission_screen_4), style = RetroFontStyles.Small, color = HoodieColors.Coral)
         } else {
-            PixelButton("Ativar acesso", onActivate, Modifier.fillMaxWidth(), color = RetroUiTheme.Screen)
-            Text("Na tela do Android, procure “Hoodie” e ligue “Permitir acesso ao uso”.", style = RetroFontStyles.Small, color = HoodieColors.Muted)
+            PixelButton(stringResource(R.string.ui_usage_permission_screen_5), onActivate, Modifier.fillMaxWidth(), color = RetroUiTheme.Screen)
+            Text(stringResource(R.string.ui_usage_permission_screen_6), style = RetroFontStyles.Small, color = HoodieColors.Muted)
+            val permissionUi = UsagePermissionUiState(permission)
+            Text(androidx.compose.ui.res.stringResource(if (permissionUi.showRestrictedHelp)
+                com.hoodie.app.R.string.usage_restricted_hint else com.hoodie.app.R.string.usage_optional_help),
+                style = RetroFontStyles.Small, color = HoodieColors.Muted)
+            PixelButton(androidx.compose.ui.res.stringResource(com.hoodie.app.R.string.usage_restricted_help),
+                { showHelp = true }, Modifier.fillMaxWidth())
         }
     }
 }

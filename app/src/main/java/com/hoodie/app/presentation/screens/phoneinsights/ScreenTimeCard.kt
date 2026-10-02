@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +27,7 @@ import java.time.ZoneId
 fun ScreenTimeCard(insights: DailyPhoneInsights, zone: ZoneId, modifier: Modifier = Modifier) {
     val s = insights.summary
     HudPanel("Resumo do celular", modifier.fillMaxWidth(), accent = RetroUiTheme.Screen, trailing = if (s.isEstimated) "≈ estimado" else null) {
-        SectionLabel("📱 Tempo de tela")
+        SectionLabel(stringResource(R.string.ui_screen_time_card_1))
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(formatDuration(s.screenTimeMs), style = RetroFontStyles.HudNumberLarge, color = HoodieColors.Ink)
             if (s.firstUseAt != null && s.lastUseAt != null) {
@@ -44,7 +46,7 @@ fun ScreenTimeCard(insights: DailyPhoneInsights, zone: ZoneId, modifier: Modifie
             HudStatTile("${insights.appCount}", "📦 Apps", HoodieColors.Hood, Modifier.weight(1f))
         }
         if (insights.hourlyScreenMs.any { it > 0 }) {
-            SectionLabel("Uso por hora")
+            SectionLabel(stringResource(R.string.ui_screen_time_card_2))
             val peak = insights.hourlyScreenMs.indices.maxByOrNull { insights.hourlyScreenMs[it] }
             HourlyPixelChart(insights.hourlyScreenMs, highlightHour = peak)
             peak?.let { Text("Pico às ${"%02d".format(it)}h", style = RetroFontStyles.Small, color = HoodieColors.Gold) }

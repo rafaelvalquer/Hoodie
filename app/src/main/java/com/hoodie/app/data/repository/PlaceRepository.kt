@@ -2,6 +2,7 @@ package com.hoodie.app.data.repository
 
 import com.hoodie.app.core.database.PlaceDao
 import com.hoodie.app.core.database.PlaceEntity
+import com.hoodie.app.core.error.PlaceException
 import com.hoodie.app.core.model.Place
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.security.CoordinateCipher
@@ -35,7 +36,7 @@ class PlaceRepository @Inject constructor(
     }
 
     suspend fun update(place: Place) {
-        val existing = dao.getById(place.id) ?: return
+        val existing = dao.getById(place.id) ?: throw PlaceException.NotFound(place.id)
         dao.update(
             existing.copy(
                 name = place.name, type = place.type, radiusMeters = place.radiusMeters,

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.SleepSchedule
@@ -29,7 +30,28 @@ data class AppSettings(
     val notificationsEnabled: Boolean = true,
     /** Último dia (epochDay) em que avisamos uma atividade autônoma — no máximo 1/dia. */
     val lastAutonomyNotifyDay: Long = -1,
+    val lastGeofenceRegisterDay: Long = -1,
     val digital: DigitalSettings = DigitalSettings(),
+    val mobility: MobilitySettings = MobilitySettings(),
+)
+
+/**
+ * Mobilidade Contextual. Sem a permissão de reconhecimento de atividade nada disso
+ * roda e o Hoodie segue só com geofences (comportamento anterior).
+ */
+data class MobilitySettings(
+    /** Detectar deslocamentos automaticamente (Activity Recognition). */
+    val detectionEnabled: Boolean = true,
+    /** Aprender trajetos frequentes (reduz perguntas com o tempo). */
+    val learnTrips: Boolean = true,
+    /** Perguntar o que é um lugar novo ao parar num lugar desconhecido. */
+    val confirmNewPlaces: Boolean = true,
+    /** Meio de transporte preferido quando o sistema só sabe "veículo" (null = Automático/perguntar). */
+    val preferredMode: com.hoodie.app.core.mobility.MovementMode? = null,
+    /** Trajetos ("origem>destino") que o usuário deixou registrar sozinhos. */
+    val approvedPatterns: Set<String> = emptySet(),
+    /** Trajetos que o usuário preferiu continuar confirmando. */
+    val declinedPatterns: Set<String> = emptySet(),
 )
 
 /**
@@ -37,14 +59,16 @@ data class AppSettings(
  * concedida E [analysisEnabled]; os outros controlam o que aparece e o que é salvo.
  */
 data class DigitalSettings(
-    val analysisEnabled: Boolean = true,
+    val analysisEnabled: Boolean = false,
+    val analysisRequested: Boolean = false,
     val showInDiary: Boolean = true,
     val saveHistory: Boolean = true,
     val showTopAppsByContext: Boolean = true,
 )
 
 @Singleton
-class SettingsRepository @Inject constructor(@ApplicationContext private val context: Context) {
+class SettingsRepository(private val store: DataStore<Preferences>) {
+    @Inject constructor(@ApplicationContext context: Context) : this(context.dataStore)
 
     private object Keys {
         val ONBOARDING = booleanPreferencesKey("onboarding_done")
@@ -55,13 +79,21 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val COMMUTE = stringPreferencesKey("commute_style")
         val NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
         val AUTONOMY_DAY = longPreferencesKey("last_autonomy_notify_day")
+        val LAST_GEOFENCE_REGISTER_DAY = longPreferencesKey("last_geofence_register_day")
         val DIGITAL_ENABLED = booleanPreferencesKey("digital_analysis_enabled")
+        val DIGITAL_REQUESTED = booleanPreferencesKey("digital_analysis_requested")
         val DIGITAL_IN_DIARY = booleanPreferencesKey("digital_show_in_diary")
         val DIGITAL_SAVE = booleanPreferencesKey("digital_save_history")
         val DIGITAL_BY_CONTEXT = booleanPreferencesKey("digital_top_apps_by_context")
+        val MOBILITY_DETECT = booleanPreferencesKey("mobility_detect")
+        val MOBILITY_LEARN = booleanPreferencesKey("mobility_learn")
+        val MOBILITY_NEW_PLACES = booleanPreferencesKey("mobility_confirm_new_places")
+        val MOBILITY_PREFERRED = stringPreferencesKey("mobility_preferred_mode")
+        val MOBILITY_APPROVED = stringSetPreferencesKey("mobility_approved_patterns")
+        val MOBILITY_DECLINED = stringSetPreferencesKey("mobility_declined_patterns")
     }
 
-    val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
+    val settings: Flow<AppSettings> = store.data.map { p ->
         AppSettings(
             onboardingDone = p[Keys.ONBOARDING] ?: false,
             catName = p[Keys.CAT_NAME] ?: "Hoodie",
@@ -70,39 +102,60 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             commuteStyle = p[Keys.COMMUTE]?.let { runCatching { CommuteStyle.valueOf(it) }.getOrNull() } ?: CommuteStyle.RANDOM,
             notificationsEnabled = p[Keys.NOTIFICATIONS] ?: true,
             lastAutonomyNotifyDay = p[Keys.AUTONOMY_DAY] ?: -1,
+            lastGeofenceRegisterDay = p[Keys.LAST_GEOFENCE_REGISTER_DAY] ?: -1,
             digital = DigitalSettings(
-                analysisEnabled = p[Keys.DIGITAL_ENABLED] ?: true,
+                analysisEnabled = p[Keys.DIGITAL_ENABLED] ?: false,
+                analysisRequested = p[Keys.DIGITAL_REQUESTED] ?: false,
                 showInDiary = p[Keys.DIGITAL_IN_DIARY] ?: true,
                 saveHistory = p[Keys.DIGITAL_SAVE] ?: true,
                 showTopAppsByContext = p[Keys.DIGITAL_BY_CONTEXT] ?: true,
+            ),
+            mobility = MobilitySettings(
+                detectionEnabled = p[Keys.MOBILITY_DETECT] ?: true,
+                learnTrips = p[Keys.MOBILITY_LEARN] ?: true,
+                confirmNewPlaces = p[Keys.MOBILITY_NEW_PLACES] ?: true,
+                preferredMode = com.hoodie.app.core.mobility.MovementMode.parse(p[Keys.MOBILITY_PREFERRED]),
+                approvedPatterns = p[Keys.MOBILITY_APPROVED] ?: emptySet(),
+                declinedPatterns = p[Keys.MOBILITY_DECLINED] ?: emptySet(),
             ),
         )
     }
 
     suspend fun current(): AppSettings = settings.first()
 
-    suspend fun completeOnboarding(catName: String, now: Long) = context.dataStore.edit {
+    suspend fun completeOnboarding(catName: String, now: Long) = store.edit {
         it[Keys.ONBOARDING] = true
         it[Keys.CAT_NAME] = catName.ifBlank { "Hoodie" }
         if (it[Keys.INSTALLED_AT] == null) it[Keys.INSTALLED_AT] = now
     }
 
-    suspend fun setCatName(name: String) = context.dataStore.edit { it[Keys.CAT_NAME] = name.ifBlank { "Hoodie" } }
+    suspend fun setCatName(name: String) = store.edit { it[Keys.CAT_NAME] = name.ifBlank { "Hoodie" } }
 
-    suspend fun setSleep(s: SleepSchedule) = context.dataStore.edit { it[Keys.WAKE] = s.wakeMinute; it[Keys.SLEEP] = s.sleepMinute }
+    suspend fun setSleep(s: SleepSchedule) = store.edit { it[Keys.WAKE] = s.wakeMinute; it[Keys.SLEEP] = s.sleepMinute }
 
-    suspend fun setCommuteStyle(style: CommuteStyle) = context.dataStore.edit { it[Keys.COMMUTE] = style.name }
+    suspend fun setCommuteStyle(style: CommuteStyle) = store.edit { it[Keys.COMMUTE] = style.name }
 
-    suspend fun setNotifications(enabled: Boolean) = context.dataStore.edit { it[Keys.NOTIFICATIONS] = enabled }
+    suspend fun setNotifications(enabled: Boolean) = store.edit { it[Keys.NOTIFICATIONS] = enabled }
 
-    suspend fun setAutonomyNotified(epochDay: Long) = context.dataStore.edit { it[Keys.AUTONOMY_DAY] = epochDay }
+    suspend fun setAutonomyNotified(epochDay: Long) = store.edit { it[Keys.AUTONOMY_DAY] = epochDay }
+    suspend fun setLastGeofenceRegisterDay(epochDay: Long) = store.edit { it[Keys.LAST_GEOFENCE_REGISTER_DAY] = epochDay }
 
-    suspend fun setDigital(d: DigitalSettings) = context.dataStore.edit {
+    suspend fun setDigital(d: DigitalSettings) = store.edit {
         it[Keys.DIGITAL_ENABLED] = d.analysisEnabled
+        it[Keys.DIGITAL_REQUESTED] = d.analysisRequested
         it[Keys.DIGITAL_IN_DIARY] = d.showInDiary
         it[Keys.DIGITAL_SAVE] = d.saveHistory
         it[Keys.DIGITAL_BY_CONTEXT] = d.showTopAppsByContext
     }
 
-    suspend fun clear() = context.dataStore.edit { it.clear() }
+    suspend fun setMobility(m: MobilitySettings) = store.edit {
+        it[Keys.MOBILITY_DETECT] = m.detectionEnabled
+        it[Keys.MOBILITY_LEARN] = m.learnTrips
+        it[Keys.MOBILITY_NEW_PLACES] = m.confirmNewPlaces
+        if (m.preferredMode == null) it.remove(Keys.MOBILITY_PREFERRED) else it[Keys.MOBILITY_PREFERRED] = m.preferredMode.name
+        it[Keys.MOBILITY_APPROVED] = m.approvedPatterns
+        it[Keys.MOBILITY_DECLINED] = m.declinedPatterns
+    }
+
+    suspend fun clear() = store.edit { it.clear() }
 }

@@ -24,6 +24,7 @@ import com.hoodie.app.engine.diary.DiaryDigitalMerger
 import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsStatus
 import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsUiState
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -91,14 +92,15 @@ class PhoneDiaryIntegrationTest {
 
     @Test
     fun `estados da tela digital`() {
-        val on = DigitalSettings()
-        fun status(p: UsagePermissionState, s: DigitalSettings = on, i: DailyPhoneInsights? = null, loading: Boolean = false, error: String? = null) =
+        assertFalse(DigitalSettings().analysisEnabled)
+        val on = DigitalSettings(analysisEnabled = true)
+        fun status(p: UsagePermissionState, s: DigitalSettings = on, i: DailyPhoneInsights? = null, loading: Boolean = false, error: com.hoodie.app.core.error.AppError? = null) =
             PhoneInsightsUiState.statusOf(p, s, i, loading, error)
         assertEquals(PhoneInsightsStatus.NEEDS_PERMISSION, status(UsagePermissionState.DENIED))
         assertEquals(PhoneInsightsStatus.DISABLED, status(UsagePermissionState.GRANTED, on.copy(analysisEnabled = false)))
         assertEquals(PhoneInsightsStatus.LOADING, status(UsagePermissionState.GRANTED, loading = true))
         assertEquals(PhoneInsightsStatus.EMPTY, status(UsagePermissionState.GRANTED))
-        assertEquals(PhoneInsightsStatus.ERROR, status(UsagePermissionState.GRANTED, error = "x"))
+        assertEquals(PhoneInsightsStatus.ERROR, status(UsagePermissionState.GRANTED, error = com.hoodie.app.core.error.UsageAccessError.ReadFailed))
         assertEquals(PhoneInsightsStatus.READY, status(UsagePermissionState.GRANTED, i = insights()))
         // Permissão revogada, mas com histórico salvo: mostra o histórico + aviso.
         assertEquals(PhoneInsightsStatus.READY, status(UsagePermissionState.DENIED, i = insights()))

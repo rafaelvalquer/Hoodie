@@ -4,9 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 /**
- * Banco 100% local. A camada de persistência já separa os dados sensíveis
- * (coordenadas cifradas no PlaceEntity); a criptografia integral do arquivo
- * (ex.: SQLCipher) pode ser plugada depois no builder sem mudar DAOs.
+ * Banco local cifrado com SQLCipher no DatabaseModule. As coordenadas possuem
+ * também cifragem própria; v5 preserva gráfico, timeline e totais digitais.
  */
 @Database(
     entities = [
@@ -26,8 +25,13 @@ import androidx.room.RoomDatabase
         DailyContextAppUsageEntity::class,
         AppCategoryOverrideEntity::class,
         PhoneAppSessionEntity::class,
+        DailyScreenHourlyEntity::class,
+        DailyContextUsageEntity::class,
+        DailyPhoneTimelineEntity::class,
+        MobilitySessionEntity::class,
+        MobilitySegmentEntity::class,
     ],
-    version = 4,
+    version = 6,
     exportSchema = true,
 )
 abstract class HoodieDatabase : RoomDatabase() {
@@ -43,6 +47,8 @@ abstract class HoodieDatabase : RoomDatabase() {
     abstract fun timelineDao(): TimelineDao
     abstract fun memoryDao(): MemoryDao
     abstract fun deviceUsageDao(): DeviceUsageDao
+    abstract fun mobilitySessionDao(): MobilitySessionDao
+    abstract fun mobilitySegmentDao(): MobilitySegmentDao
 
     companion object {
         const val NAME = "hoodie.db"

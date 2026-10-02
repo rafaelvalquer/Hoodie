@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,10 +72,10 @@ fun DiaryLabScreen(modifier: Modifier = Modifier, vm: DiaryLabViewModel = hiltVi
     }
 
     Column(modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("DIARY LAB", style = MaterialTheme.typography.titleLarge, color = HoodieColors.Hood)
+        Text(stringResource(R.string.ui_diary_lab_screen_1), style = MaterialTheme.typography.titleLarge, color = HoodieColors.Hood)
         PixelPanel(Modifier.fillMaxWidth()) {
-            SectionLabel("CENÁRIO DE REGRESSÃO V0.2")
-            Text("06:50 Casa → 08:00 sai → 08:45 Trabalho → 12:00 Restaurante → 13:00 Trabalho → 18:00 Academia → 19:30 Casa (até 22h)", color = HoodieColors.Muted)
+            SectionLabel(stringResource(R.string.ui_diary_lab_screen_2))
+            Text(stringResource(R.string.ui_diary_lab_screen_3), color = HoodieColors.Muted)
         }
         SummarySection(diary.summary)
         DiaryMapView(layout, replay, onNode = { selectedNodeId = it.id })
@@ -96,7 +98,7 @@ fun DiaryLabScreen(modifier: Modifier = Modifier, vm: DiaryLabViewModel = hiltVi
         DiaryMapPerformance(layout.nodes.size, layout.trips.size, replay, stored)
         TimelineSection(diary.timeline, replay.currentTimestamp, zone, replay.highlightedTimelineItemIds)
         PixelPanel(Modifier.fillMaxWidth()) {
-            Text("O cenário é sintético e permanece no dispositivo.", style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted)
+            Text(stringResource(R.string.ui_diary_lab_screen_4), style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted)
         }
     }
 
@@ -110,7 +112,7 @@ private fun DiaryMapPerformance(nodes: Int, trips: Int, replay: ReplayUiState, s
     LaunchedEffect(Unit) { while (true) { delay(1_000); tick++ } }
     val active = replay.state == ReplayState.PLAYING
     PixelPanel(Modifier.fillMaxWidth()) {
-        SectionLabel("DIARY MAP PERFORMANCE")
+        SectionLabel(stringResource(R.string.ui_diary_lab_screen_5))
         tick.let { _ ->
             PerfRow("Map size", "${DiaryMapTiles.WIDTH}×${DiaryMapTiles.HEIGHT}")
             PerfRow("Nodes", nodes.toString())
@@ -120,7 +122,7 @@ private fun DiaryMapPerformance(nodes: Int, trips: Int, replay: ReplayUiState, s
             PerfRow("FPS target", DiaryMapClock.targetFps(active).toString())
             PerfRow("FPS actual", DiaryMapPerf.fpsActual.toString())
         }
-        SectionLabel("PHONE")
+        SectionLabel(stringResource(R.string.ui_diary_lab_screen_6))
         PerfRow("Stored sessions", if (storedSessions < 0) "—" else storedSessions.toString())
         PerfRow("Active replay app", replay.activePhoneApp?.appLabel ?: "—")
     }

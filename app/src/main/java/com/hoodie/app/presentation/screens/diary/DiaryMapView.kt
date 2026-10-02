@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.diary
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.compose.foundation.Canvas
@@ -34,7 +36,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -110,7 +112,7 @@ fun diaryMapScene(layout: DiaryMapLayout, replay: ReplayUiState, timeMs: Long): 
 fun DiaryMapView(layout: DiaryMapLayout, replay: ReplayUiState, onNode: (DiaryMapPlaceNode) -> Unit, modifier: Modifier = Modifier) {
     var selectedNodeId by remember(layout) { mutableStateOf<String?>(null) }
     PixelPanel(modifier.fillMaxWidth()) {
-        SectionLabel("MAPA DO DIA · SEM ROTA GPS")
+        SectionLabel(stringResource(R.string.ui_diary_map_view_1))
         Spacer(Modifier.height(8.dp))
         val time = rememberDiaryMapClock(activeReplay = replay.state == ReplayState.PLAYING)
         val scene = diaryMapScene(layout, replay, time).let { if (layout.isEmpty) it.copy(period = DayPeriod.NIGHT) else it }
@@ -143,7 +145,7 @@ fun DiaryMapView(layout: DiaryMapLayout, replay: ReplayUiState, onNode: (DiaryMa
                 with(density) {
                     Box(
                         Modifier.offset(topLeft.x.toDp(), topLeft.y.toDp())
-                            .size((bottomRight.x - topLeft.x).toDp(), (bottomRight.y - topLeft.y).toDp())
+                            .size((bottomRight.x - topLeft.x).toDp().coerceAtLeast(48.dp), (bottomRight.y - topLeft.y).toDp().coerceAtLeast(48.dp))
                             .semantics {
                                 contentDescription = "${node.label}, ${node.visitIndices.size} visita(s)"
                                 role = Role.Button

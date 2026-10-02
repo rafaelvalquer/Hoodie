@@ -67,7 +67,9 @@ class FakeGeofences : GeofenceRegistrar {
     override val lastResult = MutableStateFlow<GeofenceRegistrationResult?>(null)
     var registrations = 0
     var cleared = false
+    var beforeRegister: (suspend () -> Unit)? = null
     override suspend fun registerAll(): GeofenceRegistrationResult {
+        beforeRegister?.invoke()
         registrations++
         return GeofenceRegistrationResult(0, 0, 0, null).also { lastResult.value = it }
     }

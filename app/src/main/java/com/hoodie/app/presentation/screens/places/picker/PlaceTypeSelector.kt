@@ -1,8 +1,11 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import com.hoodie.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,11 +55,11 @@ fun PlaceTypeSelector(type: PlaceType, mode: PlaceTypeSelectorMode, onChange: (P
         PlaceTypeSelectorMode.SUMMARY -> {
             var open by remember { mutableStateOf(false) }
             PixelPanel(modifier.fillMaxWidth().testTag(PlacePickerTags.TYPE_SUMMARY), color = HoodieColors.PanelLight) {
-                SectionLabel("Tipo")
+                SectionLabel(stringResource(R.string.ui_place_type_selector_1))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                     Text("${type.emoji} ${type.label}", style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Text(
-                        "ALTERAR",
+                        stringResource(R.string.ui_place_type_selector_2),
                         style = MaterialTheme.typography.labelLarge,
                         color = HoodieColors.Blue,
                         modifier = Modifier.clickable { open = true }.semantics { role = Role.Button }.padding(8.dp).testTag(PlacePickerTags.TYPE_CHANGE),
@@ -66,7 +69,7 @@ fun PlaceTypeSelector(type: PlaceType, mode: PlaceTypeSelectorMode, onChange: (P
             if (open) PlaceTypeBottomSheet(type, onSelect = { onChange(it); open = false }, onDismiss = { open = false })
         }
         PlaceTypeSelectorMode.GRID -> Column(modifier.fillMaxWidth().testTag(PlacePickerTags.TYPE_GRID), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            SectionLabel("Tipo")
+            SectionLabel(stringResource(R.string.ui_place_type_selector_3))
             PlaceType.entries.chunked(3).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     row.forEach { t -> PlaceTypeCell(t, t == type, { onChange(t) }, Modifier.weight(1f)) }
@@ -84,7 +87,7 @@ private fun PlaceTypeCell(t: PlaceType, selected: Boolean, onClick: () -> Unit, 
             .heightIn(min = 48.dp)
             .border(2.dp, if (selected) HoodieColors.Gold else HoodieColors.Outline)
             .background(if (selected) HoodieColors.PanelLight else HoodieColors.Panel)
-            .clickable(onClick = onClick)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
             .semantics { role = Role.RadioButton; this.selected = selected }
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .testTag(PlacePickerTags.typeCell(t)),

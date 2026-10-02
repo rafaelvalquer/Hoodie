@@ -10,7 +10,9 @@ import com.hoodie.app.core.time.startOfDay
 import com.hoodie.app.domain.diary.model.DailyDiary
 import com.hoodie.app.engine.diary.DiaryAssembler
 import com.hoodie.app.engine.diary.DiaryDigitalMerger
+import com.hoodie.app.engine.diary.DiaryMobilityMerger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
@@ -26,6 +28,8 @@ class DiaryRepository @Inject constructor(
     /** Camada digital: opcional para o Diário funcionar (e ser testado) sem ela. */
     private val deviceUsage: DeviceUsageRepository? = null,
     private val settings: SettingsRepository? = null,
+    /** Deslocamentos (Mobilidade Contextual): opcional, como a camada digital. */
+    private val mobility: MobilityRepository? = null,
 ) {
     suspend fun loadDiary(date: LocalDate): DailyDiary = withContext(Dispatchers.IO) {
         val zone = clock.zone()
@@ -41,8 +45,15 @@ class DiaryRepository @Inject constructor(
         }
         // Camada digital é opcional: sem permissão, desligada ou com erro, o Diário segue igual.
         val phone = if (deviceUsage != null && settings?.current()?.digital?.showInDiary == true) {
-            runCatching { deviceUsage.insightsFor(date) }.getOrNull()
+            try {
+                deviceUsage.insightsFor(date)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
         } else null
-        DiaryDigitalMerger.merge(diary, phone, zone)
+        val trips = try { mobility?.tripsBetween(from, to).orEmpty() } catch (cancelled: CancellationException) { throw cancelled } catch (_: Exception) { emptyList() }
+        DiaryMobilityMerger.merge(DiaryDigitalMerger.merge(diary, phone, zone), trips, from, to, now, zone)
     }
 }

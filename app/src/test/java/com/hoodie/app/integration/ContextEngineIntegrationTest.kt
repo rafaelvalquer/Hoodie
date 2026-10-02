@@ -11,6 +11,10 @@ import com.hoodie.app.engine.context.GeofenceTransition
 import com.hoodie.app.engine.ms
 import com.hoodie.app.engine.officeRoutine
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -30,6 +34,22 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class ContextEngineIntegrationTest {
+
+    @Test fun facadeSerializesPlaceLearningAndManualContextWithoutNestedLocks() = runBlocking {
+        g.clock.millis = at(MONDAY, 9).ms()
+        val registering = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        g.geofences.beforeRegister = { registering.complete(Unit); release.await() }
+        val save = async { g.engine.savePlaceHere(PlaceType.GYM, "Academia", -23.7, -46.63) }
+        withTimeout(10_000) { registering.await() }
+        val manual = async(start = CoroutineStart.UNDISPATCHED) { g.engine.setManual(UserContextType.WORK) }
+        assertFalse("Manual context must wait for the facade's in-flight operation", manual.isCompleted)
+        release.complete(Unit)
+        withTimeout(10_000) { save.await(); manual.await() }
+        assertHoodieFollows(UserContextType.WORK)
+        assertEquals(1, events().count { it.endedAt == null })
+        assertEquals(1, runBlocking { g.places.all().count { it.name == "Academia" } })
+    }
 
     private lateinit var g: TestGraph
     private var homeId = 0L

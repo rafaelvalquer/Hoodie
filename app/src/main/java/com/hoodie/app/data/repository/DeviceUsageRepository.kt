@@ -18,6 +18,9 @@ import com.hoodie.app.engine.deviceusage.AppCategoryResolver
 import com.hoodie.app.engine.deviceusage.DeviceUsageMappers
 import com.hoodie.app.engine.deviceusage.DeviceUsageMappers.toDayEntity
 import com.hoodie.app.engine.deviceusage.DeviceUsageMappers.toEntity
+import com.hoodie.app.engine.deviceusage.DeviceUsageMappers.hourlyEntities
+import com.hoodie.app.engine.deviceusage.DeviceUsageMappers.contextTotalEntities
+import com.hoodie.app.engine.deviceusage.DeviceUsageMappers.timelineEntities
 import com.hoodie.app.engine.deviceusage.PhoneInsightsAssembler
 import com.hoodie.app.engine.timeline.ContextSpan
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +69,9 @@ class DeviceUsageRepositoryImpl @Inject constructor(
         mutex.withLock { refreshLocked(date, settings.current().digital) }
     }
 
-    override suspend fun loadDay(date: LocalDate): DailyPhoneInsights? = withContext(Dispatchers.IO) { loadStoredLocked(date) }
+    override suspend fun loadDay(date: LocalDate): DailyPhoneInsights? = withContext(Dispatchers.IO) {
+        mutex.withLock { loadStoredLocked(date) }
+    }
 
     override suspend fun insightsFor(date: LocalDate): DailyPhoneInsights? {
         if (date.isAfter(clock.today())) return null
@@ -112,7 +117,10 @@ class DeviceUsageRepositoryImpl @Inject constructor(
             dao.replaceDay(
                 computed.toDayEntity(now),
                 computed.topApps.map { it.toEntity(date, now) },
+                computed.contextTotalEntities(),
                 computed.usageByContext.flatMap { ctx -> ctx.apps.map { it.toEntity(date) } },
+                computed.hourlyEntities(),
+                computed.timelineEntities(),
                 DeviceUsageMappers.sessionEntities(computed.appSessions, date.toEpochDay()),
                 epochDay = date.toEpochDay(),
             )
@@ -128,6 +136,9 @@ class DeviceUsageRepositoryImpl @Inject constructor(
             categoryOf = { pkg, stored -> overrides[pkg] ?: stored },
             installed = metadata::isInstalled,
             sessions = dao.sessions(date.toEpochDay()),
+            contextTotals = dao.contextTotals(day.date),
+            hourly = dao.hourly(day.date),
+            timeline = dao.phoneTimeline(day.date),
         )
     }
 

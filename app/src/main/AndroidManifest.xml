@@ -14,6 +14,9 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Mobilidade: reconhecer quando a pessoa anda, para ou está num veículo (sem GPS contínuo). -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
     <!--
         Diário Digital: o usuário libera em Configurações → "Acesso ao uso".
@@ -64,6 +67,9 @@
             android:name=".receiver.GeofenceReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".receiver.ActivityTransitionReceiver"
+            android:exported="false" />
         <receiver
             android:name=".receiver.QuestionActionReceiver"
             android:exported="false" />

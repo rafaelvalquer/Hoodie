@@ -128,7 +128,7 @@ fun MainScaffold() {
     Scaffold(
         containerColor = HoodieColors.Night,
         bottomBar = {
-            NavigationBar(containerColor = HoodieColors.Panel) {
+            if (tabs.any { it.route == current?.route }) NavigationBar(containerColor = HoodieColors.Panel) {
                 tabs.forEach { tab ->
                     val selected = current?.hierarchy?.any { it.route == tab.route } == true
                     NavigationBarItem(

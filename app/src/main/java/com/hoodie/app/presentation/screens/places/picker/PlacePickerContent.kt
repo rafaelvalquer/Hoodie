@@ -13,6 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.res.stringResource
+import com.hoodie.app.R
+import com.hoodie.app.presentation.components.PixelButton
+import com.hoodie.app.presentation.screens.places.PlaceLoadState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -104,6 +109,8 @@ data class PlacePickerDimensions(val mapHeight: Dp, val horizontalPadding: Dp, v
 
 /** Ações da tela (o ViewModel no app, lambdas nos testes de UI). */
 data class PlacePickerActions(
+    val onRetryLoad: () -> Unit = {},
+    val onMapInteraction: () -> Unit = {},
     val onClose: () -> Unit = {},
     val onQueryChange: (String) -> Unit = {},
     val onSearch: () -> Unit = {},
@@ -133,7 +140,7 @@ fun PlacePickerLayout(
     allowTypeChange: Boolean = true,
     map: @Composable (Modifier) -> Unit = { m ->
         MapPicker(state.latitude, state.longitude, state.radius, state.recenterKey, actions.onCenterChanged, m,
-            onMyLocation = actions.onMyLocation, loadingLocation = state.locating)
+            onMyLocation = actions.onMyLocation, loadingLocation = state.locating, onMapInteraction = actions.onMapInteraction)
     },
 ) {
     BoxWithConstraints(modifier.fillMaxSize().testTag(PlacePickerTags.ROOT)) {
@@ -141,6 +148,22 @@ fun PlacePickerLayout(
         val pad = dims.horizontalPadding
         Column(Modifier.fillMaxSize()) {
             PlacePickerHeader(state.editing, state.type, actions.onClose, pad)
+            if (state.editing && state.loadState != PlaceLoadState.Ready) {
+                Column(
+                    Modifier.weight(1f).fillMaxWidth().padding(pad),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    if (state.loadState == PlaceLoadState.Loading || state.loadState == PlaceLoadState.Idle) {
+                        CircularProgressIndicator()
+                    } else {
+                        Text(stringResource(R.string.place_load_failed), color = HoodieColors.Coral)
+                        PixelButton(stringResource(R.string.place_retry_load), actions.onRetryLoad, Modifier.fillMaxWidth())
+                        PixelButton(stringResource(R.string.place_back), actions.onClose, Modifier.fillMaxWidth())
+                    }
+                }
+                return@Column
+            }
             PlaceSearchBar(
                 state.query, state.searching, actions.onQueryChange, actions.onSearch, state.searchError,
                 Modifier.padding(horizontal = pad).padding(bottom = 8.dp),
@@ -201,6 +224,8 @@ fun PlacePickerContent(
     PlacePickerLayout(
         s,
         PlacePickerActions(
+            onRetryLoad = { vm.reloadPlace() },
+            onMapInteraction = vm::dismissResults,
             onClose = onCancel,
             onQueryChange = vm::setQuery,
             onSearch = { vm.search() },
