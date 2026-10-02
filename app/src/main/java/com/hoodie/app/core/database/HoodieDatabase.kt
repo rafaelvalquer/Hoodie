@@ -25,8 +25,9 @@ import androidx.room.RoomDatabase
         DailyAppUsageEntity::class,
         DailyContextAppUsageEntity::class,
         AppCategoryOverrideEntity::class,
+        PhoneAppSessionEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class HoodieDatabase : RoomDatabase() {

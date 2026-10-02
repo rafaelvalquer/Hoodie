@@ -245,14 +245,39 @@ interface DeviceUsageDao {
     @Query("DELETE FROM daily_context_app_usage WHERE date = :date")
     suspend fun deleteContextApps(date: String)
 
+    @Query("SELECT * FROM phone_app_sessions WHERE epochDay = :epochDay ORDER BY startedAt")
+    suspend fun sessions(epochDay: Long): List<PhoneAppSessionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSessions(sessions: List<PhoneAppSessionEntity>)
+
+    @Query("DELETE FROM phone_app_sessions WHERE epochDay = :epochDay")
+    suspend fun deleteSessions(epochDay: Long)
+
+    @Query("DELETE FROM phone_app_sessions")
+    suspend fun clearSessions()
+
+    @Query("SELECT COUNT(*) FROM phone_app_sessions")
+    suspend fun sessionCount(): Int
+
     /** Troca o dia inteiro de uma vez: o Diário nunca vê metade de um recálculo. */
     @Transaction
-    suspend fun replaceDay(day: DailyDeviceUsageEntity, apps: List<DailyAppUsageEntity>, contexts: List<DailyContextAppUsageEntity>) {
+    suspend fun replaceDay(
+        day: DailyDeviceUsageEntity,
+        apps: List<DailyAppUsageEntity>,
+        contexts: List<DailyContextAppUsageEntity>,
+        sessions: List<PhoneAppSessionEntity> = emptyList(),
+        epochDay: Long? = null,
+    ) {
         deleteApps(day.date)
         deleteContextApps(day.date)
         upsertDay(day)
         insertApps(apps)
         insertContextApps(contexts)
+        if (epochDay != null) {
+            deleteSessions(epochDay)
+            insertSessions(sessions)
+        }
     }
 
     @Query("SELECT * FROM app_category_overrides")
@@ -279,6 +304,7 @@ interface DeviceUsageDao {
         clearDays()
         clearApps()
         clearContextApps()
+        clearSessions()
     }
 
     @Query("SELECT COUNT(*) FROM daily_device_usage")

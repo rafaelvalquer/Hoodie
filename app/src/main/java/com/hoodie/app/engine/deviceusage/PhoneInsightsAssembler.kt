@@ -47,6 +47,7 @@ object PhoneInsightsAssembler {
             categoryUsage = DailyPhoneUsageCalculator.categories(apps),
             hourlyScreenMs = DailyPhoneUsageCalculator.hourly(screen.sessions, zone),
             appCount = apps.size,
+            appSessions = appSessions,
         )
     }
 

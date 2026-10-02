@@ -1,5 +1,8 @@
 package com.hoodie.app.engine.deviceusage
 
+import com.hoodie.app.core.database.PhoneAppSessionEntity
+import com.hoodie.app.domain.phoneinsights.model.AppSession
+
 import com.hoodie.app.core.database.DailyAppUsageEntity
 import com.hoodie.app.core.database.DailyContextAppUsageEntity
 import com.hoodie.app.core.database.DailyDeviceUsageEntity
@@ -60,6 +63,7 @@ object DeviceUsageMappers {
         contexts: List<DailyContextAppUsageEntity>,
         categoryOf: (packageName: String, stored: HoodieAppCategory) -> HoodieAppCategory,
         installed: (String) -> Boolean,
+        sessions: List<PhoneAppSessionEntity> = emptyList(),
     ): DailyPhoneInsights {
         val date = LocalDate.parse(day.date)
         val entries = apps.map {
@@ -102,6 +106,11 @@ object DeviceUsageMappers {
             categoryUsage = DailyPhoneUsageCalculator.categories(entries),
             hourlyScreenMs = emptyList(),
             appCount = day.appCount,
+            appSessions = sessions.map { AppSession(it.packageName, it.startedAt, it.endedAt) },
         )
     }
+
+    /** Sessões do dia para persistir; o id é estável (pacote + início), então recalcular não duplica. */
+    fun sessionEntities(sessions: List<AppSession>, epochDay: Long): List<PhoneAppSessionEntity> =
+        sessions.map { PhoneAppSessionEntity("${it.packageName}@${it.startedAt}", epochDay, it.packageName, it.startedAt, it.endedAt) }
 }
