@@ -47,7 +47,7 @@ class Migration2To3Test {
             .build()
         try {
             // Abrir dispara as migrações (2→3→4) + validação do schema atual.
-            assertEquals(6, room.openHelper.writableDatabase.version)
+            assertEquals(com.hoodie.app.core.database.HOODIE_DATABASE_VERSION, room.openHelper.writableDatabase.version)
             assertEquals("Casa", room.timelineDao().range(0, Long.MAX_VALUE).single().text)
 
             val dao = room.deviceUsageDao()

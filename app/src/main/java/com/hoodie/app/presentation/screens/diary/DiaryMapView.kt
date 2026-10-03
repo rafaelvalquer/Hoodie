@@ -1,5 +1,9 @@
 package com.hoodie.app.presentation.screens.diary
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import android.graphics.Bitmap
@@ -31,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
@@ -63,7 +68,6 @@ import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.theme.HoodieColors
 import kotlinx.coroutines.delay
 
-const val DIARY_MAP_EMPTY_TEXT = "Ainda não tenho lugares suficientes para montar o mapa deste dia."
 
 /** Cadência do mapa: ~10 FPS com replay ativo, ~2,5 FPS parado; pausa fora da tela. */
 object DiaryMapClock {
@@ -76,6 +80,7 @@ object DiaryMapClock {
 /** Relógio próprio do mapa (não roda a cada frame da UI) e só enquanto a tela está RESUMED. */
 @Composable
 fun rememberDiaryMapClock(activeReplay: Boolean): Long {
+    com.hoodie.app.presentation.components.LocalPixelRenderFrame.current?.let { return it.animationMillis }
     var time by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(activeReplay, lifecycle) {
@@ -110,8 +115,9 @@ fun diaryMapScene(layout: DiaryMapLayout, replay: ReplayUiState, timeMs: Long): 
  */
 @Composable
 fun DiaryMapView(layout: DiaryMapLayout, replay: ReplayUiState, onNode: (DiaryMapPlaceNode) -> Unit, modifier: Modifier = Modifier) {
+    val uiTextContext = LocalContext.current
     var selectedNodeId by remember(layout) { mutableStateOf<String?>(null) }
-    PixelPanel(modifier.fillMaxWidth()) {
+    PixelPanel(modifier.fillMaxWidth().testTag("diary_map")) {
         SectionLabel(stringResource(R.string.ui_diary_map_view_1))
         Spacer(Modifier.height(8.dp))
         val time = rememberDiaryMapClock(activeReplay = replay.state == ReplayState.PLAYING)
@@ -134,11 +140,14 @@ fun DiaryMapView(layout: DiaryMapLayout, replay: ReplayUiState, onNode: (DiaryMa
             }
             if (layout.isEmpty) {
                 Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                    PixelPanel(color = HoodieColors.Panel) { Text(DIARY_MAP_EMPTY_TEXT, color = HoodieColors.Ink, style = MaterialTheme.typography.bodyMedium) }
+                    PixelPanel(color = HoodieColors.Panel) { Text(stringResource(R.string.diary_map_empty), color = HoodieColors.Ink, style = MaterialTheme.typography.bodyMedium) }
                 }
             }
             // Áreas de toque: mesma conversão do Canvas.
             layout.nodes.forEach { node ->
+                val nodeDescription = pluralStringResource(R.plurals.diary_place_visits, node.visitIndices.size, node.label, node.visitIndices.size)
+                val nodeSelected = selectedNodeId == node.id || replay.activeNodeId == node.id
+                val selectionDescription = stringResource(if (nodeSelected) R.string.control_selected else R.string.control_not_selected)
                 val (px, py, pw, ph) = node.footprint.pixels.toList()
                 val topLeft = viewport.toScreen(MapPoint(px, py))
                 val bottomRight = viewport.toScreen(MapPoint(px + pw, py + ph + DiaryMapTiles.SIZE))
@@ -147,7 +156,9 @@ fun DiaryMapView(layout: DiaryMapLayout, replay: ReplayUiState, onNode: (DiaryMa
                         Modifier.offset(topLeft.x.toDp(), topLeft.y.toDp())
                             .size((bottomRight.x - topLeft.x).toDp().coerceAtLeast(48.dp), (bottomRight.y - topLeft.y).toDp().coerceAtLeast(48.dp))
                             .semantics {
-                                contentDescription = "${node.label}, ${node.visitIndices.size} visita(s)"
+                                contentDescription = nodeDescription
+                                selected = nodeSelected
+                                stateDescription = selectionDescription
                                 role = Role.Button
                             }
                             .clickable { selectedNodeId = node.id; onNode(node) },
@@ -199,7 +210,7 @@ fun DiaryMapView(layout: DiaryMapLayout, replay: ReplayUiState, onNode: (DiaryMa
             }
         }
         Text(
-            if (layout.isEmpty) "O mapa aparece quando o dia tiver lugares conhecidos." else "Cada prédio é um lugar do dia · toque para ver as visitas",
+            if (layout.isEmpty) uiTextContext.getString(R.string.ui_extra_diary_map_view_1) else uiTextContext.getString(R.string.ui_extra_diary_map_view_2),
             style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp),
         )
     }

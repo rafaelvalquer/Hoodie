@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import androidx.compose.foundation.layout.sizeIn
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
@@ -102,6 +103,7 @@ fun PlaceSearchBar(
                         style = MaterialTheme.typography.labelLarge,
                         color = if (canSearch) HoodieColors.Gold else HoodieColors.Muted,
                         modifier = Modifier
+                            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                             .clickable(enabled = canSearch, onClick = search)
                             .semantics { role = Role.Button; contentDescription = actionDescription }
                             .padding(horizontal = 10.dp, vertical = 12.dp)
@@ -121,7 +123,7 @@ fun PlaceSearchBar(
 }
 
 /**
- * Lista curta (máx. 168 dp), 100% opaca, logo abaixo do campo de busca — fora
+ * Lista curta (máx. 140 dp), 100% opaca, logo abaixo do campo de busca — fora
  * da área do mapa. Escolher um resultado fecha a lista e recentraliza o mapa.
  */
 @Composable
@@ -129,7 +131,7 @@ fun PlaceSearchResults(results: List<AddressResult>, onChoose: (AddressResult) -
     if (results.isEmpty()) return
     LazyColumn(
         modifier
-            .heightIn(max = 168.dp)
+            .heightIn(max = 140.dp)
             .border(2.dp, HoodieColors.Outline)
             .background(HoodieColors.Panel)
             .testTag(PlacePickerTags.RESULTS),
@@ -137,7 +139,7 @@ fun PlaceSearchResults(results: List<AddressResult>, onChoose: (AddressResult) -
         items(results) { r ->
             val (line1, line2) = addressLines(r.label)
             Column(
-                Modifier.fillMaxWidth().background(HoodieColors.Panel).clickable { onChoose(r) }
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).background(HoodieColors.Panel).clickable { onChoose(r) }
                     .semantics { role = Role.Button }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             ) {

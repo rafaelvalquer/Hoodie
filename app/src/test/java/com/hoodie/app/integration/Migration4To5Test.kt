@@ -45,7 +45,7 @@ class Migration4To5Test {
             .allowMainThreadQueries()
             .build()
         try {
-            assertEquals(6, room.openHelper.writableDatabase.version)
+            assertEquals(com.hoodie.app.core.database.HOODIE_DATABASE_VERSION, room.openHelper.writableDatabase.version)
             val dao = room.deviceUsageDao()
             assertEquals(1000L, dao.day("2026-10-05")!!.screenTimeMs)
             assertEquals(1, dao.sessionCount())

@@ -1,6 +1,6 @@
 {
-  "walk": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null },
-  "idle": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null },
-  "sleep": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null },
-  "work": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null }
+  "walk": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" },
+  "idle": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" },
+  "sleep": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" },
+  "work": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" }
 }

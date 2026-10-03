@@ -3,6 +3,9 @@
 Plano original: [stability-architecture-plan.md](stability-architecture-plan.md).
 Trabalho diretamente em `main`. O objetivo só termina após implementar e verificar todas as fases.
 
+## Estado atual da reintegração
+
+Em 02/10/2026, a árvore reintegrada passou em 390 testes JVM (77 classes) e 72 testes Android API 34, sem falhas, erros ou ignorados; o teclado virtual real executou. Arte aprovada por Rafael, manifests sincronizados e fontes pixel OFL integradas. A matriz gravou 180 casos/222 imagens; todas foram inspecionadas e aceitas após recapturar Ajustes com os botões corrigidos. A comparação automática aprovou os 180 casos e 222 imagens, sem falhas ou ignorados, em 556,248 s. A auditoria final identificou ajustes adicionais nos alvos de toque das abas do Diário e recursos de texto dos cards digitais; sua implementação, recaptura e validação final, além da promoção dev → RC → estável, permanecem pendentes. A tabela abaixo é o registro histórico por fase; resultados posteriores detalhados ao final prevalecem sobre menções antigas a validações pendentes.
 | Fase | Entrega | Estado e evidência |
 | --- | --- | --- |
 | 1 | Onboarding E2E real | Três cenários aprovados no Pixel 8 / Android 17, inclusive após a refatoração: UI desde Welcome, Casa cifrada, contexto HOME, reação do Hoodie e avanço; posição ausente recuperável; falha SQLCipher de escrita seguida de retry. Keystore/Room/SQLCipher/engines reais e DataStore isolado. Relógio Compose explícito evita aguardar o sprite contínuo. |
@@ -40,7 +43,7 @@ Trabalho diretamente em `main`. O objetivo só termina após implementar e verif
 | 33 | Índices/migração Room | Parcial: índice composto endedAt/start em context_events e índices date/start na timeline digital. Outros índices em auditoria. |
 | 34 | Documentação | Plano preservado; docs funcionais pendentes. |
 | 35 | Versionamento | Pendente; manter dev durante implementação. |
-| 36 | Revisão de arte | Pendente; não atribuir revisão a Rafael sem revisão real dele. |
+| 36 | Revisão de arte | Rafael revisou e aprovou walk, idle, sleep e work, conforme confirmação humana em 02/10/2026. Ambos os manifests registram manual-v1, manualReview=true e reviewedBy=Rafael; cópias conferidas idênticas. |
 | 37 | Fonte pixel OFL | Pendente |
 
 ## Validação em andamento
@@ -86,3 +89,72 @@ As quatro migrações preparadas foram aplicadas depois que o Gradle terminou. M
 Nova validação em execução: os mesmos 28 testes JVM, mais OnboardingHomeSaveInstrumentedTest, DiaryControlsTest, PlacePickerScreenTest e CommonAccessibilityTest no emulator-5554 com Vulkan. Ainda não registrar aprovação dessa nova rodada. Sem edição de fontes durante a compilação.
 
 Fonte Press Start 2P e licença SIL OFL 1.1 obtidas do repositório oficial Google Fonts; arquivos temporários em app/build/PressStart2P-Regular.ttf e app/build/PressStart2P-OFL.txt. Integração em res/font e tipografia ainda pendente (fase 37).
+
+
+## Reintegração autorizada — 02/10/2026
+
+Uma restauração da árvore local removeu entregas ainda não commitadas (ver `stability-restore-audit.md`). O usuário autorizou: “Continue e reintegre o plano completo”. Resultados anteriores continuam históricos; não comprovam automaticamente a árvore atual.
+
+Recuperados no checkout atual:
+
+- **24–26:** erros tipados do PlacePicker, UiState de carregamento de Ajustes com retry, mensagens `UiText` para localização, 110 textos estáticos adicionais e 20 mensagens formatadas, launchers do sistema com falhas recuperáveis.
+- **27:** dias da semana como checkboxes de 48 dp com descrição completa; controles do replay com estado e quebra de linha; dismiss de perguntas com PixelButton; busca/resultados e tipo/raio com alvos mínimos.
+- **28:** conteúdos de produção separados em cinco telas, matriz de 180 casos e 42 capturas adicionais, relógios e arte determinísticos, MapView offline para fixtures. As referências não foram geradas/aprovadas ainda.
+- **30–31:** melhorias atuais de foco preservadas, resultados limitados a 140 dp, geofence em host de Snackbar que permite nova tentativa após navegar sem salvar novamente o lugar.
+- **33:** migração v6→v7 e sete índices compostos, schema 7 exportado, teste de preservação e planos SQL. Reexecução pendente.
+- **34–35:** docs de regressão visual, índices, fonte e checklist direto na main. Versão dev preservada; RC/estável aguardam gates.
+- **37:** Press Start 2P integrada com SIL OFL no APK e no repositório; textos longos continuam com fonte normal. Verificação visual pendente.
+
+Na primeira rodada reintegrada, o código principal compilou; os testes expuseram o helper UiText ausente. Depois da recuperação desse helper, o merge de recursos encontrou três duplicatas idênticas, removidas. Uma nova compilação principal passou; a compilação completa dos testes continua em execução. Nenhuma aprovação de testes ou imagens foi inferida desses builds.
+
+Pendências de conclusão: executar a suíte atual; native E2E, keyboard, acessibilidade e consentimento/reabertura; gerar, inspecionar e comparar toda a matriz visual; verificar navegação; revisar a arte com Rafael; promover versões somente após os gates. O objetivo completo permanece aberto.
+
+### Suíte JVM da árvore reintegrada
+
+Em 02/10/2026, a execução completa de `testDebugUnitTest` produziu **381 testes em 75 classes, zero falhas, zero erros e zero ignorados**. Os XMLs atuais incluem Migration6To7Test (preservação e sete EXPLAIN, schemas 1–6 até v7), Migration5To6Test, SystemActionTest (4 casos), PlacePickerViewModelTest (22 casos), todas as regras digitais/diário/mobilidade/workers e regressões de arte. Consistência de README/versionamento passou. Evidência agregada em `app/build/reintegration-jvm-evidence.json`; relatórios em `app/build/test-results/testDebugUnitTest`. APKs e testes instrumentados ainda em montagem, capturas pendentes.
+
+### Android da árvore reintegrada
+
+APK de app e testes montados com sucesso; `am instrument` concluiu **46 testes, todos aprovados e nenhum ignorado**, no Pixel_8/API 37 com Vulkan. Classes: onboarding HOME, SQLCipherRuntime, DataStorePersistence, PlacePickerScreen, DiaryControls, CommonAccessibility, GeofenceFeedback, UiTextResource e DigitalConsent. O caso `teclado_nao_cobre_o_salvar_nem_o_campo` executou e passou com teclado virtual real. Consentimento: permissão sozinha não habilita; pedido explícito sobrevive à reabertura; retorno concedido habilita e persiste; retorno negado/cancelamento mantém desativado. Evidências em `app/build/reintegration-native-1.log` e `reintegration-native-evidence.json`. Captura piloto em execução.
+
+### Aprovação manual de arte — 02/10/2026
+
+O usuário confirmou: Rafael revisou e aprovou os quatro grupos walk, idle, sleep e work. A fase 36 tem aprovação humana; a sincronização dos dois art-status.json e a validação automática após a alteração continuam pendentes nesta compilação. A galeria docs/art-review.html registra a confirmação e conserva os hashes das fontes apresentadas.
+
+
+### Validação posterior de estados, navegação e arte
+
+A segunda rodada executou 389 testes: 387 aprovados e dois testes novos de RetryableUiState falharam. O teste de cancelamento passou a cancelar a coleta real, verificando job cancelado, propagação à coleta e ausência de erro de UI. O teste de erro fatal verifica tipo, mensagem e preservação da exceção original na cadeia de causas, aceitando a recuperação de pilha feita pelas corrotinas. A implementação do helper não foi alterada para contornar essas falhas.
+
+Os dois art-status.json foram sincronizados com a aprovação humana dos quatro grupos. A comparação textual e a conferência dos quatro campos passaram. Migrados os rótulos restantes VISITA, agora e uso do celular por contexto para strings.xml. A terceira rodada de suíte completa e montagem de APKs está em execução; resultados ainda pendentes.
+
+Resultado JVM da terceira rodada: 389 testes em 77 classes, zero falhas, erros ou ignorados. Inclui os novos testes de retry e navegação e a conferência dos metadados aprovados por Rafael. Evidência agregada em app/build/reintegration-jvm-evidence-3.json. Montagem dos APKs e execução Android/visual ainda pendentes.
+
+
+### API 34, lint e piloto visual
+
+A imagem oficial Google APIs API 34 r14 x86_64 foi obtida do catálogo Android, com tamanho 1.563.721.130 bytes e SHA-1 e0f6c9a0691aa27bd597d0deb1bcfdc943ac8ca7 conferidos. O emulador isolado usa 1080×2400, densidade 420 e SwiftShader/OpenGL; a versão API foi confirmada no dispositivo. O Pixel_8/API 37 desta tarefa foi encerrado preservando seus dados.
+
+Lint debug concluiu com sucesso. A suíte Android completa sem a matriz visual executou 72 testes e teve oito falhas: corrida no fechamento/reabertura do DataStore, um timeout de consentimento, três amostras de mapa em fixtures maiores que a área disponível com barras do sistema e três buscas de botões com capitalização incorreta. DataStore recebeu arquivos únicos e cancelAndJoin em ambos os jobs com finally; fixtures do mapa ocultam as barras para acomodar as dimensões declaradas; testes de botões usam o texto exibido em caixa alta. Consentimento isolado passou nos três cenários em 0,318 s; a repetição integral permanece necessária.
+
+Piloto visual API 34: seis casos full/360×640/fonte 1,3 executados e 13 PNGs gerados, incluindo finais da rolagem e mapa. Todos foram inspecionados. O contraste da Home está corrigido e o Diário não travou. Foram identificados horários quebrados, data parcialmente fora do viewport e espaçamento insuficiente nos contadores. Aplicados horários sem quebra, FlowRow no seletor de data e lineHeight/peso normal nos estilos HUD, com separação entre rótulo e duração no resumo. As imagens piloto ainda não são referências aprovadas. Nova montagem em execução.
+
+
+### Correções de layout e validação API 34
+
+A suíte JVM posterior aos ajustes de fonte/data/horários e ao suporte de nomes RC passou com 390 testes em 77 classes, zero falhas, erros e ignorados. Evidência em app/build/reintegration-jvm-evidence-visual-layout.json.
+
+A terceira rodada Android corrigiu o uso de boundsInWindow recortado na amostragem de pixels do mapa; a origem sem recorte corresponde à camada capturada. Todas as seis dimensões do teste com MapView real passaram. PixelButton agora expõe contentDescription explícita, conferida junto a papel e alvo mínimo. O runner relatou OK (72 tests), mas a auditoria dos códigos individuais identificou um AssumptionViolated (-4) no teste de teclado: resultado efetivo 71 aprovados e um ignorado, zero falhas. Não considerar a rodada integral concluída. O teste foi alterado para solicitar a IME real explicitamente e exigir sua presença, com tempo de espera limitado; ausência agora falha em vez de ser ignorada. Reexecução pendente.
+
+O segundo piloto visual gerou 13 imagens e todos os seis casos passaram. As 13 imagens foram inspecionadas: data completa em duas linhas de controles quando necessário, horários sem quebra, contraste da Home e rótulos/contadores legíveis. A gravação da matriz completa de 180 casos está em execução. A configuração do CI foi alinhada a API 34, perfil pixel_8, 1080×2400/densidade 420, SwiftShader/OpenGL e teclado virtual habilitado.
+
+
+### Matriz completa e teclado real — validação posterior
+
+Gravação API 34 concluída: 180 casos, 222 PNGs (180 iniciais, 36 finais da rolagem, seis mapas). Todos os nomes, dimensões, opacidade nos cantos e SHA-256 foram conferidos. As 222 imagens foram inspecionadas em 37 folhas de seis capturas em resolução original. Aceitas 198; 24 imagens de Ajustes precisam recaptura porque os pares Permissões/Re-registrar e Acesso ao uso/Apagar histórico quebravam palavras com fonte ampliada. As ações passaram a usar FlowRow sem dividir a largura igualmente. Compilação dessa correção em execução. Referências ainda não foram publicadas nem a comparação automática executada.
+
+O teste estrito identificou um diálogo “System UI isn't responding” sobre a janela do emulador, impedindo foco e solicitação da IME. Recuperado o System UI, o teste de teclado virtual real passou em 6,406 s. A quarta execução integral Android passou nos 72 casos em 142,352 s, com 72 códigos de sucesso e nenhum código de falha ou ignorado. Evidências: app/build/api34-strict-keyboard-4.log e reintegration-native-api34-evidence-4.json. Essa execução precede o ajuste visual dos botões de Ajustes.
+
+
+Correção de Ajustes compilada em 4m39s. Recaptura executou 30 casos em 70,847 s, todos aprovados. As 24 imagens afetadas foram reinspecionadas em resolução original e aceitas: rótulos inteiros, botões em linhas separadas quando necessário e final da rolagem preservado. As 198 imagens restantes tiveram hashes idênticos. As 222 referências aceitas estão em app/src/androidTest/assets/goldens/screens, com dimensões/hashes e ambiente em docs/golden-reference-manifest.json. A comparação pixel a pixel ainda está pendente; gravação e revisão não substituem essa execução.
+

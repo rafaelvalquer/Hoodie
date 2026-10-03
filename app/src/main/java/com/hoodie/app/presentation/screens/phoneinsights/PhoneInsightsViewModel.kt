@@ -37,6 +37,9 @@ class PhoneInsightsViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val clock: ClockProvider,
 ) : ViewModel() {
+    val zone get() = clock.zone()
+    val today get() = clock.today()
+
     private val _state = MutableStateFlow(PhoneInsightsUiState(clock.today(), permission = access.state.value))
     val state: StateFlow<PhoneInsightsUiState> = _state.asStateFlow()
     private val _events = Channel<PhoneInsightsUiEvent>(Channel.BUFFERED)

@@ -3,9 +3,12 @@ package com.hoodie.app.core.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
+const val HOODIE_DATABASE_VERSION = 7
+
 /**
  * Banco local cifrado com SQLCipher no DatabaseModule. As coordenadas possuem
- * também cifragem própria; v5 preserva gráfico, timeline e totais digitais.
+ * também cifragem própria; v5 preserva o histórico digital, v6 adiciona
+ * mobilidade e v7 otimiza as consultas sem reescrever os dados.
  */
 @Database(
     entities = [
@@ -31,7 +34,7 @@ import androidx.room.RoomDatabase
         MobilitySessionEntity::class,
         MobilitySegmentEntity::class,
     ],
-    version = 6,
+    version = HOODIE_DATABASE_VERSION,
     exportSchema = true,
 )
 abstract class HoodieDatabase : RoomDatabase() {

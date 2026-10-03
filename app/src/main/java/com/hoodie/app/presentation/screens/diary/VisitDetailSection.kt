@@ -36,10 +36,10 @@ fun VisitDetailSection(number: Int, details: DiaryVisitDetails, zone: ZoneId, ma
     PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("VISITA $number", style = MaterialTheme.typography.labelLarge, color = HoodieColors.Gold, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.diary_visit_number, number), style = MaterialTheme.typography.labelLarge, color = HoodieColors.Gold, modifier = Modifier.weight(1f))
                 Text(formatDuration(v.durationMs), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
             }
-            Text("${formatClock(v.arrivalAt, zone)}–${v.departureAt?.let { formatClock(it, zone) } ?: "agora"}", style = MaterialTheme.typography.bodyMedium)
+            Text("${formatClock(v.arrivalAt, zone)}–${v.departureAt?.let { formatClock(it, zone) } ?: stringResource(R.string.diary_visit_now)}", style = MaterialTheme.typography.bodyMedium)
             if (details.hoodieActivities.isNotEmpty()) {
                 Text(stringResource(R.string.ui_visit_detail_section_1) + details.hoodieActivities.joinToString(" · ") { "${it.emoji} ${it.label}" }, style = MaterialTheme.typography.bodySmall, color = HoodieColors.Hood)
             }

@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -33,9 +34,10 @@ fun UsagePermissionScreen(
     modifier: Modifier = Modifier,
     onOpenAppDetails: () -> Unit = {},
 ) {
+    val uiTextContext = LocalContext.current
     var showHelp by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     if (showHelp) RestrictedSettingsHelpSheet(onDismiss = { showHelp = false }, onOpenAppDetails = onOpenAppDetails)
-    HudPanel("Análise do celular", modifier.fillMaxWidth(), accent = RetroUiTheme.Screen) {
+    HudPanel(uiTextContext.getString(R.string.ui_extra_usage_permission_screen_1), modifier.fillMaxWidth(), accent = RetroUiTheme.Screen) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             AnimatedHoodie(AnimationId.PHONE_SCROLL, size = 84.dp)
             Text(
@@ -44,12 +46,12 @@ fun UsagePermissionScreen(
             )
         }
         PermissionList(
-            "Podemos ver", HoodieColors.Mint, "✔",
-            listOf("tempo de tela", "apps usados", "tempo por app", "sessões", "desbloqueios"),
+            uiTextContext.getString(R.string.ui_extra_usage_permission_screen_2), HoodieColors.Mint, "✔",
+            listOf(uiTextContext.getString(R.string.ui_extra_usage_permission_screen_3), uiTextContext.getString(R.string.ui_extra_usage_permission_screen_4), uiTextContext.getString(R.string.ui_extra_usage_permission_screen_5), uiTextContext.getString(R.string.ui_extra_usage_permission_screen_6), uiTextContext.getString(R.string.ui_extra_usage_permission_screen_7)),
         )
         PermissionList(
-            "Não vemos", HoodieColors.Coral, "✖",
-            listOf("mensagens", "texto digitado", "fotos", "conteúdo da tela"),
+            uiTextContext.getString(R.string.ui_extra_usage_permission_screen_8), HoodieColors.Coral, "✖",
+            listOf(uiTextContext.getString(R.string.ui_extra_usage_permission_screen_9), uiTextContext.getString(R.string.ui_extra_usage_permission_screen_10), uiTextContext.getString(R.string.ui_extra_usage_permission_screen_11), uiTextContext.getString(R.string.ui_extra_usage_permission_screen_12)),
         )
         Text(stringResource(R.string.ui_usage_permission_screen_2), style = RetroFontStyles.BodyBold, color = HoodieColors.Gold)
         Text(stringResource(R.string.ui_usage_permission_screen_3), style = RetroFontStyles.Small, color = HoodieColors.Muted)

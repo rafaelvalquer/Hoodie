@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.diary
 
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +39,7 @@ fun visitsOfNode(node: DiaryMapPlaceNode, details: List<DiaryVisitDetails>): Lis
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceDetailBottomSheet(node: DiaryMapPlaceNode, details: List<DiaryVisitDetails>, zone: ZoneId, onDismiss: () -> Unit) {
+    val uiTextContext = LocalContext.current
     val mine = visitsOfNode(node, details)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(), containerColor = HoodieColors.Panel) {
         Column(
@@ -46,10 +48,10 @@ fun PlaceDetailBottomSheet(node: DiaryMapPlaceNode, details: List<DiaryVisitDeta
         ) {
             Text("${node.type.emoji} ${node.label.uppercase()}", style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
             Text(node.type.label, color = HoodieColors.Muted)
-            DetailLine("Tempo total", formatDuration(mine.sumOf { it.visit.durationMs }))
-            DetailLine("Visitas hoje", mine.size.toString())
+            DetailLine(uiTextContext.getString(R.string.ui_extra_place_detail_bottom_sheet_1), formatDuration(mine.sumOf { it.visit.durationMs }))
+            DetailLine(uiTextContext.getString(R.string.ui_extra_place_detail_bottom_sheet_2), mine.size.toString())
             val phoneTotal = mine.sumOf { it.phoneUsage?.foregroundMs ?: 0L }
-            if (phoneTotal > 0) DetailLine("📱 celular aqui", formatDuration(phoneTotal))
+            if (phoneTotal > 0) DetailLine(uiTextContext.getString(R.string.ui_extra_place_detail_bottom_sheet_3), formatDuration(phoneTotal))
             mine.forEachIndexed { i, d -> VisitDetailSection(i + 1, d, zone) }
             val events = mine.flatMap { it.events }.distinctBy { it.id }.sortedBy { it.timestamp }
             SectionLabel(stringResource(R.string.ui_place_detail_bottom_sheet_1))

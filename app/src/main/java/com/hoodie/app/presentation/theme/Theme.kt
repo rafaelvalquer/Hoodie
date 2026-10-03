@@ -5,8 +5,12 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import com.hoodie.app.R
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.shape.CutCornerShape
@@ -46,16 +50,16 @@ private val scheme = darkColorScheme(
     outline = HoodieColors.Outline,
 )
 
-/** Monoespaçada para títulos: lembra o texto dos consoles portáteis. */
-val PixelFont = FontFamily.Monospace
+/** Press Start 2P, SIL OFL 1.1; license is bundled in assets/licenses. */
+val PixelFont = FontFamily(Font(R.font.hoodie_pixel))
 
 private val typography = Typography(
-    displaySmall = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Bold, fontSize = 30.sp, letterSpacing = 2.sp),
-    headlineSmall = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Bold, fontSize = 22.sp, letterSpacing = 1.sp),
-    titleLarge = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Bold, fontSize = 19.sp),
-    titleMedium = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Bold, fontSize = 15.sp, letterSpacing = 1.sp),
-    labelLarge = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Bold, fontSize = 14.sp, letterSpacing = 1.sp),
-    labelSmall = TextStyle(fontFamily = PixelFont, fontSize = 11.sp, letterSpacing = 1.sp),
+    displaySmall = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 22.sp, lineHeight = 33.sp, letterSpacing = 0.sp),
+    headlineSmall = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp, letterSpacing = 0.sp),
+    titleLarge = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 21.sp),
+    titleMedium = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 18.sp, letterSpacing = 0.sp),
+    labelLarge = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 11.sp, lineHeight = 17.sp, letterSpacing = 0.sp),
+    labelSmall = TextStyle(fontFamily = PixelFont, fontSize = 9.sp, lineHeight = 14.sp, letterSpacing = 0.sp),
 )
 
 private val shapes = Shapes(
@@ -68,5 +72,7 @@ private val shapes = Shapes(
 
 @Composable
 fun HoodieTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes, content = content)
+    MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
+        CompositionLocalProvider(LocalContentColor provides scheme.onBackground, content = content)
+    }
 }

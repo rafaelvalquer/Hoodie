@@ -60,7 +60,7 @@ O plano e a evidência de implementação estão em
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v6 (21 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v7 (21 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
@@ -119,7 +119,7 @@ HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Di
   o resto vem do pintor procedural. Pipeline, camadas do sprite master e exportação: [assets-source/hoodie/README.md](assets-source/hoodie/README.md).
 * **Direção**: frente, costas e lado (RIGHT = espelho de LEFT). Caminhada de 8 poses com tempo por frame,
   cabeça e mochila com 1 frame de atraso e cordões do moletom em follow-through.
-* **Clips** (`AnimationClip`): ~90 animações com duração por frame, `InterruptPolicy`
+* **Clips** (`AnimationClip`): 84 animações com duração por frame, `InterruptPolicy`
   (IMMEDIATE / FINISH_FRAME / FINISH_CYCLE / PLAY_EXIT) e eventos (`SIT`, `MUG_PICKUP`, `FOOD_SERVED`, `FOOTSTEP`…)
   que sincronizam props: a caneca some da mesa quando ele a pega, a comida aparece depois do `WAIT_FOOD`,
   a cadeira mostra se está ocupada, a porta abre e fecha em 4 frames.
@@ -146,7 +146,7 @@ ANDROID USAGE STATS ─► UsageStatsSource (só foreground/background, tela, bl
         ▼
 AppSessionBuilder ─► ScreenSessionBuilder ─► AppCategoryResolver ─► ContextUsageCorrelator ─► DailyPhoneUsageCalculator
         ▼                                                                 (PhoneInsightsAssembler, puro)
-DeviceUsageRepository ─► Room v6 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
+DeviceUsageRepository ─► Room v7 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
 ```
 
 * **Permissão**: `PACKAGE_USAGE_STATS` é ligada pelo usuário em *Acesso ao uso*. Antes, a tela "Análise do celular" explica
@@ -156,7 +156,7 @@ DeviceUsageRepository ─► Room v6 (agregados, horas, timeline e sessões) ─
   Aparelhos sem esses eventos (API 26–27, alguns fabricantes) caem em estimativa a partir do uso de apps e a UI marca "≈".
   Launchers e a interface do sistema contam como tela ligada, não como app usado.
 * **Categorias**: escolha do usuário → mapa interno (YouTube → Vídeo, Spotify → Música, Teams → Trabalho...) → `ApplicationInfo.category` → Outros.
-* **Persistência**: Room v6 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
+* **Persistência**: Room v7 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
   totais em `daily_context_usage`, 24 horas em `daily_screen_hourly`, blocos em `daily_phone_timeline` e `phone_app_sessions`.
   Migrações 1→2→3→4→5 preservam os registros anteriores. Categorias manuais ficam em `app_category_overrides`.
   Eventos brutos nunca são salvos. O Android só guarda eventos por alguns dias: um recálculo "menor" de um dia antigo não sobrescreve o histórico.
@@ -234,3 +234,16 @@ Regras que valem para qualquer mudança nova (documentação completa em `docs/v
 A CI (`.github/workflows/android-ci.yml`) roda compile → unit tests → lint → assembleDebug e os testes
 instrumentados num emulador. Geofence real, reboot e homologação por aparelho seguem os roteiros manuais de
 `docs/validation/GEOFENCE_SCENARIOS.md` e `RELEASE_CHECKLIST.md`.
+
+
+## Estabilidade e validação da versão 0.2
+
+O plano técnico é acompanhado em [stability-architecture-progress.md](docs/stability-architecture-progress.md). A versão permanece dev enquanto os gates de teste, UI e revisão artística estão em andamento.
+
+O banco atual é Room v7: v5 completa o histórico digital, v6 adiciona mobilidade e v7 acrescenta índices compostos sem reescrever dados. Sessões individuais são mantidas por 365 dias; agregados diários permanecem. Ver [auditoria dos índices](docs/database-index-audit.md).
+
+O Diário Digital começa desativado. Ativar solicita o acesso ao uso do Android; a análise só liga após a permissão. A ajuda de Configurações restritas está disponível na tela de ativação. A permissão Android sozinha não equivale a consentimento no app.
+
+A UI usa erros tipados, eventos coletados conforme o ciclo de vida e textos em recursos. Falha de edição nunca vira cadastro novo; falhas ao carregar um lugar permitem tentar novamente ou voltar. Falha de geofence após salvar aparece em Snackbar, com nova tentativa que não grava o lugar novamente.
+
+As telas usam Press Start 2P (SIL OFL 1.1) em títulos, labels, botões e números; descrições longas usam fonte normal. Ver [fonte e licença](docs/pixel-font.md). A [regressão visual](docs/visual-regression.md) cobre seis telas, cinco estados, três dimensões e duas escalas de fonte, além do fim da rolagem e mapa do Diário.

@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
@@ -24,8 +26,9 @@ import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.presentation.theme.HoodieColors
 
 /** Título da tela: editar um lugar existente ou criar um novo. */
+@Composable
 fun placePickerTitle(editing: Boolean, type: PlaceType): String =
-    if (editing) "📍 MUDAR LOCAL" else "${type.emoji} NOVO LOCAL"
+    if (editing) stringResource(R.string.place_edit_title) else stringResource(R.string.place_new_title, type.emoji)
 
 /**
  *     📍 MUDAR LOCAL                    ✕
@@ -34,6 +37,7 @@ fun placePickerTitle(editing: Boolean, type: PlaceType): String =
  */
 @Composable
 fun PlacePickerHeader(editing: Boolean, type: PlaceType, onClose: () -> Unit, horizontalPadding: Dp = 16.dp) {
+    val uiTextContext = LocalContext.current
     Row(
         Modifier.fillMaxWidth().height(52.dp).padding(start = horizontalPadding, end = 4.dp).testTag(PlacePickerTags.HEADER),
         verticalAlignment = Alignment.CenterVertically,
@@ -54,8 +58,8 @@ fun PlacePickerHeader(editing: Boolean, type: PlaceType, onClose: () -> Unit, ho
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .size(48.dp)
-                .clickable(onClick = onClose)
-                .semantics { contentDescription = "Fechar" }
+                .clickable(role = Role.Button, onClick = onClose)
+                .semantics { contentDescription = uiTextContext.getString(R.string.ui_extra_place_picker_header_1) }
                 .padding(top = 10.dp)
                 .testTag(PlacePickerTags.CLOSE),
         )

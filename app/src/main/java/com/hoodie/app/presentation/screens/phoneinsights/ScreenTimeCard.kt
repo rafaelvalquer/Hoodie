@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -25,8 +26,9 @@ import java.time.ZoneId
 /** Card 1 — placar do dia: tempo de tela grande, contadores e o "equalizador" por hora. */
 @Composable
 fun ScreenTimeCard(insights: DailyPhoneInsights, zone: ZoneId, modifier: Modifier = Modifier) {
+    val uiTextContext = LocalContext.current
     val s = insights.summary
-    HudPanel("Resumo do celular", modifier.fillMaxWidth(), accent = RetroUiTheme.Screen, trailing = if (s.isEstimated) "≈ estimado" else null) {
+    HudPanel(uiTextContext.getString(R.string.ui_extra_screen_time_card_1), modifier.fillMaxWidth(), accent = RetroUiTheme.Screen, trailing = if (s.isEstimated) uiTextContext.getString(R.string.ui_extra_screen_time_card_2) else null) {
         SectionLabel(stringResource(R.string.ui_screen_time_card_1))
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(formatDuration(s.screenTimeMs), style = RetroFontStyles.HudNumberLarge, color = HoodieColors.Ink)
@@ -38,18 +40,18 @@ fun ScreenTimeCard(insights: DailyPhoneInsights, zone: ZoneId, modifier: Modifie
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HudStatTile("${if (s.isEstimated) "≈" else ""}${s.unlockCount}", "🔓 Desbloq.", RetroUiTheme.Unlock, Modifier.weight(1f))
-            HudStatTile("${s.sessionCount}", "Sessões", RetroUiTheme.Sessions, Modifier.weight(1f))
+            HudStatTile("${if (s.isEstimated) "≈" else ""}${s.unlockCount}", stringResource(R.string.phone_unlock_count), RetroUiTheme.Unlock, Modifier.weight(1f))
+            HudStatTile("${s.sessionCount}", stringResource(R.string.phone_session_count), RetroUiTheme.Sessions, Modifier.weight(1f))
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HudStatTile(formatDuration(s.longestSessionMs), "Maior sessão", RetroUiTheme.Longest, Modifier.weight(1f))
-            HudStatTile("${insights.appCount}", "📦 Apps", HoodieColors.Hood, Modifier.weight(1f))
+            HudStatTile(formatDuration(s.longestSessionMs), uiTextContext.getString(R.string.ui_extra_screen_time_card_3), RetroUiTheme.Longest, Modifier.weight(1f))
+            HudStatTile("${insights.appCount}", stringResource(R.string.phone_app_count), HoodieColors.Hood, Modifier.weight(1f))
         }
         if (insights.hourlyScreenMs.any { it > 0 }) {
             SectionLabel(stringResource(R.string.ui_screen_time_card_2))
             val peak = insights.hourlyScreenMs.indices.maxByOrNull { insights.hourlyScreenMs[it] }
             HourlyPixelChart(insights.hourlyScreenMs, highlightHour = peak)
-            peak?.let { Text("Pico às ${"%02d".format(it)}h", style = RetroFontStyles.Small, color = HoodieColors.Gold) }
+            peak?.let { Text(stringResource(R.string.phone_peak_hour, it), style = RetroFontStyles.Small, color = HoodieColors.Gold) }
         }
     }
 }

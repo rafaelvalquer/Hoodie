@@ -9,7 +9,8 @@ import com.hoodie.app.core.location.AddressSearch
 import com.hoodie.app.core.location.CurrentPosition
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.time.ClockProvider
-import com.hoodie.app.core.error.PlaceException
+import com.hoodie.app.core.error.*
+import android.util.Log
 import com.hoodie.app.data.repository.PlaceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -29,7 +30,7 @@ sealed interface PlaceLoadState {
     data object Loading : PlaceLoadState
     data object Ready : PlaceLoadState
     data object NotFound : PlaceLoadState
-    data class Error(val cause: Throwable) : PlaceLoadState
+    data class Error(val cause: Throwable, val error: AppError = DatabaseError.ReadFailed) : PlaceLoadState
 }
 
 data class PlacePickerState(
@@ -50,9 +51,9 @@ data class PlacePickerState(
     val address: String? = null,
     val radius: Float = GeofenceManager.DEFAULT_RADIUS,
     /** Erros perto de onde nasceram: busca, mapa/localização e salvar. */
-    val searchError: String? = null,
-    val locationError: String? = null,
-    val saveError: String? = null,
+    val searchError: AppError? = null,
+    val locationError: AppError? = null,
+    val saveError: AppError? = null,
     val saving: Boolean = false,
 ) {
     val editing: Boolean get() = editingId != null
@@ -65,17 +66,17 @@ data class PlacePickerState(
         const val MIN_RADIUS = 75f
         const val MAX_RADIUS = 400f
         val QUICK_RADII = listOf(100f, 150f, 200f, 300f)
-        const val SEARCH_NOT_FOUND = "Endereço não encontrado. Confira a internet ou tente com rua, número e cidade."
-        const val LOCATION_FAILED = "Não consegui acessar sua localização agora."
-        const val SAVE_FAILED = "Não foi possível salvar. Tente de novo."
-        const val GEOFENCE_FAILED = "Local salvo. O aviso de chegada não pôde ser ativado agora — ele será reativado automaticamente."
+        val SEARCH_NOT_FOUND = PlaceError.AddressNotFound
+        val LOCATION_FAILED = LocationError.Unavailable
+        val SAVE_FAILED = PlaceError.SaveFailed
+        val GEOFENCE_FAILED = PlaceError.GeofenceRegistrationFailed
     }
 }
 
 /** Ações pontuais (não ficam no estado): fechar a tela, avisar algo que sobrevive à navegação. */
 sealed interface PlacePickerUiEvent {
     data object Saved : PlacePickerUiEvent
-    data class ShowMessage(val text: String) : PlacePickerUiEvent
+    data object RetryGeofence : PlacePickerUiEvent
 }
 
 /**
@@ -122,7 +123,8 @@ class PlacePickerViewModel @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _state.update { it.copy(loadState = PlaceLoadState.Error(e)) }
+            Log.e("PlacePickerViewModel", "Failed to load place", e)
+            _state.update { it.copy(loadState = PlaceLoadState.Error(e, e.appErrorOr(DatabaseError.ReadFailed))) }
         }
     }
 
@@ -149,6 +151,8 @@ class PlacePickerViewModel @Inject constructor(
         it.copy(latitude = r.latitude, longitude = r.longitude, address = r.label, results = emptyList(), hasPoint = true,
             recenterKey = it.recenterKey + 1, searchError = null, locationError = null)
     }
+
+    suspend fun retryGeofences(): Boolean = geofences.registerAll().ok
 
     fun dismissResults() = _state.update { it.copy(results = emptyList()) }
 
@@ -202,13 +206,14 @@ class PlacePickerViewModel @Inject constructor(
         } catch (e: PlaceException.NotFound) {
             _state.update { it.copy(saving = false, hasPoint = false, loadState = PlaceLoadState.NotFound) }
             return@launch
-        } catch (_: Exception) {
-            _state.update { it.copy(saving = false, saveError = PlacePickerState.SAVE_FAILED) }
+        } catch (error: Exception) {
+            Log.e("PlacePickerViewModel", "Failed to save place", error)
+            _state.update { it.copy(saving = false, saveError = error.appErrorOr(PlaceError.SaveFailed)) }
             return@launch
         }
         val geofenceOk = try { geofences.registerAll().ok } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
         _state.update { it.copy(saving = false) }
-        if (!geofenceOk) _events.send(PlacePickerUiEvent.ShowMessage(PlacePickerState.GEOFENCE_FAILED))
+        if (!geofenceOk) _events.send(PlacePickerUiEvent.RetryGeofence)
         _events.send(PlacePickerUiEvent.Saved)
     }
 }

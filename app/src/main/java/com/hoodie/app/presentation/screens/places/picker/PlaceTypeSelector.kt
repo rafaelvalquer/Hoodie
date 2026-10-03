@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import androidx.compose.foundation.layout.sizeIn
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -62,7 +64,7 @@ fun PlaceTypeSelector(type: PlaceType, mode: PlaceTypeSelectorMode, onChange: (P
                         stringResource(R.string.ui_place_type_selector_2),
                         style = MaterialTheme.typography.labelLarge,
                         color = HoodieColors.Blue,
-                        modifier = Modifier.clickable { open = true }.semantics { role = Role.Button }.padding(8.dp).testTag(PlacePickerTags.TYPE_CHANGE),
+                        modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable { open = true }.semantics { role = Role.Button }.padding(8.dp).testTag(PlacePickerTags.TYPE_CHANGE),
                     )
                 }
             }
@@ -88,7 +90,7 @@ private fun PlaceTypeCell(t: PlaceType, selected: Boolean, onClick: () -> Unit, 
             .border(2.dp, if (selected) HoodieColors.Gold else HoodieColors.Outline)
             .background(if (selected) HoodieColors.PanelLight else HoodieColors.Panel)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
-            .semantics { role = Role.RadioButton; this.selected = selected }
+            .semantics { role = Role.RadioButton; this.selected = selected; contentDescription = t.label }
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .testTag(PlacePickerTags.typeCell(t)),
         horizontalAlignment = Alignment.CenterHorizontally,

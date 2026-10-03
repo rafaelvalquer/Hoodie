@@ -1,5 +1,9 @@
 package com.hoodie.app.presentation.screens.home
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.sizeIn
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
@@ -26,6 +30,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -72,8 +77,7 @@ import java.time.ZoneId
 fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
-    var manualOpen by remember { mutableStateOf(false) }
-    val zone = ZoneId.systemDefault()
+    val zone = vm.zone
     val snackbar = remember { SnackbarHostState() }
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
     val context = LocalContext.current
@@ -89,13 +93,73 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         }
     }
 
+    HomeContent(
+        state = state,
+        busy = busy,
+        zone = zone,
+        onOpen = onOpen,
+        actions = HomeActions(
+            retryLoad = vm::retryLoad,
+            savePlaceHere = { vm.savePlaceHere(it) },
+            setManual = { vm.setManual(it) },
+            toggleDayOff = { vm.toggleDayOff() },
+            answerYesNo = { id, yes -> vm.answerYesNo(id, yes) },
+            answerNewPlace = { id, type -> vm.answerNewPlace(id, type) },
+            answerTransportMode = { id, mode -> vm.answerTransportMode(id, mode) },
+            dismissQuestion = { vm.dismissQuestion(it) },
+            answerSavePlace = { id, save -> vm.answerSavePlace(id, save) },
+        ),
+        reactions = reactions,
+        snackbar = snackbar,
+    )
+}
+
+internal data class HomeActions(
+    val retryLoad: () -> Unit = {},
+    val savePlaceHere: (PlaceType) -> Unit = {},
+    val setManual: (UserContextType) -> Unit = {},
+    val toggleDayOff: () -> Unit = {},
+    val answerYesNo: (Long, Boolean) -> Unit = { _, _ -> },
+    val answerNewPlace: (Long, PlaceType) -> Unit = { _, _ -> },
+    val answerTransportMode: (Long, com.hoodie.app.core.mobility.MovementMode) -> Unit = { _, _ -> },
+    val dismissQuestion: (Long) -> Unit = {},
+    val answerSavePlace: (Long, Boolean) -> Unit = { _, _ -> },
+)
+
+/** Production UI shared by the connected screen and deterministic visual fixtures. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun HomeContent(
+    state: HomeUiState,
+    busy: Boolean,
+    zone: ZoneId,
+    onOpen: (String) -> Unit,
+    actions: HomeActions = HomeActions(),
+    reactions: kotlinx.coroutines.flow.Flow<AnimationId>? = null,
+    snackbar: SnackbarHostState = remember { SnackbarHostState() },
+) {
+    val uiTextContext = LocalContext.current
+    var manualOpen by remember { mutableStateOf(false) }
+    if (state.loading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            androidx.compose.material3.CircularProgressIndicator()
+        }
+        return
+    }
+    if (state.error != null) {
+        PixelPanel(Modifier.fillMaxWidth().padding(16.dp)) {
+            Text(uiTextContext.appErrorText(requireNotNull(state.error)), color = HoodieColors.Coral)
+            PixelButton(stringResource(R.string.place_retry_load), actions.retryLoad, Modifier.fillMaxWidth())
+        }
+        return
+    }
     Box(Modifier.fillMaxSize()) {
 
     Column(
         Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState()).testTag("home_scroll"),
     ) {
         // Cabeçalho: hora + período + atalhos.
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -103,8 +167,8 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             Spacer(Modifier.width(8.dp))
             Text(periodEmoji(state.period) + " " + state.period.label, color = HoodieColors.Muted, style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.weight(1f))
-            HeaderIcon("✨") { onOpen(Routes.MEMORIES) }
-            HeaderIcon("🐱") { onOpen(Routes.PROFILE) }
+            HeaderIcon("✨", stringResource(R.string.home_memories)) { onOpen(Routes.MEMORIES) }
+            HeaderIcon("🐱", stringResource(R.string.home_profile)) { onOpen(Routes.PROFILE) }
         }
 
         // Cena viva.
@@ -117,43 +181,43 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             state.snapshot?.let { snap ->
                 val a = snap.state.activity
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("${state.catName} está ${a.label}", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.home_activity, state.catName, a.label), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                     val since = state.now - snap.state.startedAt
                     Text(
-                        "desde ${formatClock(snap.state.startedAt, zone)} · há ${formatDuration(since)}",
+                        stringResource(R.string.home_activity_since, formatClock(snap.state.startedAt, zone), formatDuration(since)),
                         color = HoodieColors.Muted, style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
 
-            state.question?.let { q -> QuestionCard(q, vm) }
+            state.question?.let { q -> QuestionCard(q, actions) }
 
             if (state.probableMode || state.locationStatus != LocationStatus.OK) {
                 PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
                     Text(
                         when (state.locationStatus) {
-                            LocationStatus.NO_PERMISSION, LocationStatus.DISABLED -> "Não consegui descobrir onde você está."
-                            LocationStatus.NO_BACKGROUND -> "Sem localização em segundo plano, só percebo mudanças com o app aberto."
-                            LocationStatus.OK -> "Ainda não sei onde você está."
+                            LocationStatus.NO_PERMISSION, LocationStatus.DISABLED -> uiTextContext.getString(R.string.ui_extra_home_screen_1)
+                            LocationStatus.NO_BACKGROUND -> uiTextContext.getString(R.string.ui_extra_home_screen_2)
+                            LocationStatus.OK -> uiTextContext.getString(R.string.ui_extra_home_screen_3)
                         },
                     )
-                    Text("🐱 ${state.catName} está seguindo a rotina provável.", color = HoodieColors.Muted)
+                    Text(stringResource(R.string.home_probable_routine, state.catName), color = HoodieColors.Muted)
                 }
             }
 
             state.suggestSavePlace?.let { type ->
                 PixelPanel(Modifier.fillMaxWidth()) {
                     val title = when {
-                        state.canSaveHere && type == PlaceType.WORK -> "🏢 Chegou ao trabalho?"
-                        state.canSaveHere -> "🏠 Está em casa agora?"
-                        type == PlaceType.WORK -> "🏢 Onde fica o seu trabalho?"
-                        else -> "🏠 Onde fica a sua casa?"
+                        state.canSaveHere && type == PlaceType.WORK -> uiTextContext.getString(R.string.ui_extra_home_screen_4)
+                        state.canSaveHere -> uiTextContext.getString(R.string.ui_extra_home_screen_5)
+                        type == PlaceType.WORK -> uiTextContext.getString(R.string.ui_extra_home_screen_6)
+                        else -> uiTextContext.getString(R.string.ui_extra_home_screen_7)
                     }
                     Text(title, style = MaterialTheme.typography.titleMedium)
-                    Text("Salve o local para o ${state.catName} perceber suas chegadas sozinho.", color = HoodieColors.Muted)
+                    Text(stringResource(R.string.home_save_place_reason, state.catName), color = HoodieColors.Muted)
                     Spacer(Modifier.padding(4.dp))
                     if (state.canSaveHere) {
-                        PixelButton(if (busy) "Localizando..." else "Salvar este local como ${type.label}", { vm.savePlaceHere(type) }, Modifier.fillMaxWidth(), enabled = !busy)
+                        PixelButton(if (busy) stringResource(R.string.home_locating) else stringResource(R.string.home_save_place_as, type.label), { actions.savePlaceHere(type) }, Modifier.fillMaxWidth(), enabled = !busy)
                         Spacer(Modifier.padding(4.dp))
                     }
                     PixelButton(stringResource(R.string.ui_home_screen_1), { onOpen(Routes.placePicker(type)) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
@@ -165,8 +229,8 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
                 SectionLabel(stringResource(R.string.ui_home_screen_2))
                 val ctx = state.context
                 val type = ctx?.type ?: UserContextType.UNKNOWN
-                Text("${type.emoji} ${type.label}" + if (state.probableMode && ctx != null) " (provável)" else "", style = MaterialTheme.typography.titleMedium)
-                ctx?.let { Text("desde ${formatClock(it.startedAt, zone)}", color = HoodieColors.Muted) }
+                Text("${type.emoji} ${type.label}" + if (state.probableMode && ctx != null) stringResource(R.string.home_probable_suffix) else "", style = MaterialTheme.typography.titleMedium)
+                ctx?.let { Text(stringResource(R.string.home_context_since, formatClock(it.startedAt, zone)), color = HoodieColors.Muted) }
                 state.next?.let {
                     Spacer(Modifier.padding(4.dp))
                     SectionLabel(stringResource(R.string.ui_home_screen_3))
@@ -177,8 +241,8 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             PixelButton(stringResource(R.string.ui_home_screen_4), { manualOpen = true }, Modifier.fillMaxWidth(), color = HoodieColors.Gold)
             if (state.isWorkDay) {
                 PixelButton(
-                    if (state.isDayOff) "Hoje é dia normal de trabalho" else "Hoje não vou trabalhar",
-                    vm::toggleDayOff, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink,
+                    if (state.isDayOff) uiTextContext.getString(R.string.ui_extra_home_screen_8) else uiTextContext.getString(R.string.ui_extra_home_screen_9),
+                    actions.toggleDayOff, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink,
                 )
             }
         }
@@ -191,10 +255,10 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         ModalBottomSheet(onDismissRequest = { manualOpen = false }, containerColor = HoodieColors.Panel) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.ui_home_screen_5), style = MaterialTheme.typography.titleMedium)
-                Text("Isso também ensina o ${state.catName} sobre a sua rotina.", color = HoodieColors.Muted)
+                Text(stringResource(R.string.home_routine_learning, state.catName), color = HoodieColors.Muted)
                 UserContextType.manualOptions.forEach { t ->
-                    PixelButton("${t.emoji} ${if (t == UserContextType.UNKNOWN) "Outro" else t.label}", {
-                        vm.setManual(t); manualOpen = false
+                    PixelButton("${t.emoji} ${if (t == UserContextType.UNKNOWN) stringResource(R.string.context_other) else t.label}", {
+                        actions.setManual(t); manualOpen = false
                     }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
                 }
                 Spacer(Modifier.padding(12.dp))
@@ -204,13 +268,15 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun HeaderIcon(emoji: String, onClick: () -> Unit) {
+private fun HeaderIcon(emoji: String, description: String, onClick: () -> Unit) {
     Box(
         Modifier
             .padding(start = 8.dp)
             .background(HoodieColors.Panel)
             .border(2.dp, HoodieColors.Outline)
-            .clickable(onClick = onClick)
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description }
             .padding(horizontal = 10.dp, vertical = 6.dp),
     ) { Text(emoji) }
 }
@@ -223,31 +289,31 @@ private fun periodEmoji(p: com.hoodie.app.core.time.DayPeriod) = when (p) {
 }
 
 @Composable
-private fun QuestionCard(q: ContextQuestion, vm: HomeViewModel) {
+private fun QuestionCard(q: ContextQuestion, actions: HomeActions) {
     PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
         Text(q.prompt, style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.padding(6.dp))
         when (q.kind) {
             QuestionKind.CONFIRM_CONTEXT, QuestionKind.CONFIRM_MOVEMENT, QuestionKind.CONFIRM_ARRIVAL, QuestionKind.CONFIRM_TRIP_PATTERN -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                PixelButton(stringResource(R.string.ui_home_screen_6), { vm.answerYesNo(q.id, true) }, Modifier.weight(1f))
-                PixelButton(stringResource(R.string.ui_home_screen_7), { vm.answerYesNo(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
+                PixelButton(stringResource(R.string.ui_home_screen_6), { actions.answerYesNo(q.id, true) }, Modifier.weight(1f))
+                PixelButton(stringResource(R.string.ui_home_screen_7), { actions.answerYesNo(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
             }
             QuestionKind.NEW_PLACE -> {
                 val options = PlaceType.newPlaceOptions
-                ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { vm.answerNewPlace(q.id, options[it]) })
+                ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { actions.answerNewPlace(q.id, options[it]) })
                 Spacer(Modifier.padding(4.dp))
-                Text(stringResource(R.string.ui_home_screen_8), color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
+                PixelButton(stringResource(R.string.ui_home_screen_8), { actions.dismissQuestion(q.id) }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.PanelLight)
             }
             QuestionKind.SELECT_TRANSPORT_MODE -> {
                 // Escolha só dentro do app (nunca um botão de notificação com o veículo andando).
                 val options = com.hoodie.app.core.mobility.MovementMode.TRANSPORT_CHOICES
-                ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { vm.answerTransportMode(q.id, options[it]) })
+                ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { actions.answerTransportMode(q.id, options[it]) })
                 Spacer(Modifier.padding(4.dp))
-                Text(stringResource(R.string.ui_home_screen_9), color = HoodieColors.Muted, modifier = Modifier.clickable { vm.dismissQuestion(q.id) }.padding(4.dp))
+                PixelButton(stringResource(R.string.ui_home_screen_9), { actions.dismissQuestion(q.id) }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.PanelLight)
             }
             QuestionKind.SAVE_PLACE -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                PixelButton(stringResource(R.string.ui_home_screen_10), { vm.answerSavePlace(q.id, true) }, Modifier.weight(1f))
-                PixelButton(stringResource(R.string.ui_home_screen_11), { vm.answerSavePlace(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
+                PixelButton(stringResource(R.string.ui_home_screen_10), { actions.answerSavePlace(q.id, true) }, Modifier.weight(1f))
+                PixelButton(stringResource(R.string.ui_home_screen_11), { actions.answerSavePlace(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
             }
         }
     }

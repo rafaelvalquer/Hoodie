@@ -1,6 +1,9 @@
 package com.hoodie.app.presentation.screens.places.picker
 
-import android.widget.Toast
+import com.hoodie.app.presentation.common.CollectUiEvents
+import com.hoodie.app.presentation.common.appErrorText
+import com.hoodie.app.presentation.common.GeofenceFeedbackHost
+import com.hoodie.app.presentation.common.LocalGeofenceWarning
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -168,6 +171,7 @@ fun PlacePickerLayout(
     map: (@Composable (Modifier) -> Unit)? = null,
 ) {
     var focus by remember { mutableStateOf(PlacePickerFocus.NONE) }
+    val context = LocalContext.current
     BoxWithConstraints(modifier.fillMaxSize().background(HoodieColors.Night).testTag(PlacePickerTags.ROOT)) {
         val dims = PlacePickerDimensions.forHeight(maxHeight, LocalDensity.current.fontScale, focus)
         val pad = dims.horizontalPadding
@@ -191,7 +195,7 @@ fun PlacePickerLayout(
             }
             PlaceSearchSection(
                 state.query, state.searching, state.results,
-                actions.onQueryChange, actions.onSearch, actions.onChooseResult, state.searchError,
+                actions.onQueryChange, actions.onSearch, actions.onChooseResult, state.searchError?.let { context.appErrorText(it) },
                 Modifier.fillMaxWidth().background(HoodieColors.Night).padding(horizontal = pad).padding(bottom = 8.dp),
                 onFocusChange = { focused -> focus = focusAfter(focus, PlacePickerFocus.SEARCH, focused) },
             )
@@ -202,7 +206,7 @@ fun PlacePickerLayout(
             }
             state.locationError?.let {
                 Text(
-                    "⚠ $it", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Coral, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    context.appErrorText(it), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Coral, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth().background(HoodieColors.Night).padding(horizontal = pad, vertical = 4.dp).testTag(PlacePickerTags.LOCATION_ERROR),
                 )
             }
@@ -221,7 +225,7 @@ fun PlacePickerLayout(
                 item("radius") { PlaceRadiusControl(state.radius, actions.onRadiusChange, Modifier.testTag(PlacePickerTags.RADIUS)) }
                 item("privacy") { PlacePrivacyInfo() }
             }
-            PlaceSaveBar(state.type, state.canSave, state.saving, actions.onSave, state.saveError, pad)
+            PlaceSaveBar(state.type, state.canSave, state.saving, actions.onSave, state.saveError?.let { context.appErrorText(it) }, pad)
         }
     }
 }
@@ -241,17 +245,19 @@ fun PlacePickerContent(
     allowTypeChange: Boolean = true,
     vm: PlacePickerViewModel = hiltViewModel(key = "picker_${type.name}_${placeId ?: "new"}"),
 ) {
+    if (LocalGeofenceWarning.current == null) {
+        GeofenceFeedbackHost { PlacePickerContent(type, placeId, onDone, onCancel, modifier, allowTypeChange, vm) }
+        return
+    }
+    val warning by rememberUpdatedState(requireNotNull(LocalGeofenceWarning.current))
     LaunchedEffect(type, placeId) { vm.init(type, placeId) }
     val s by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val done by rememberUpdatedState(onDone)
-    LaunchedEffect(vm) {
-        vm.events.collect { e ->
-            when (e) {
-                PlacePickerUiEvent.Saved -> done()
-                // Aviso que precisa sobreviver ao fechamento da tela (ex.: geofence não ativado).
-                is PlacePickerUiEvent.ShowMessage -> Toast.makeText(context, e.text, Toast.LENGTH_LONG).show()
-            }
+    CollectUiEvents(vm.events) { event ->
+        when (event) {
+            PlacePickerUiEvent.Saved -> done()
+            PlacePickerUiEvent.RetryGeofence -> warning(vm::retryGeofences)
         }
     }
     PlacePickerLayout(

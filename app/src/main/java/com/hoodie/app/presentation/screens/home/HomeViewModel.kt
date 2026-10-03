@@ -43,6 +43,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import com.hoodie.app.core.error.*
 import com.hoodie.app.presentation.common.runUiAction
+import com.hoodie.app.presentation.common.retryableUiState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,6 +62,7 @@ import kotlin.random.Random
 
 data class HomeUiState(
     val loading: Boolean = true,
+    val error: AppError? = null,
     val catName: String = "Hoodie",
     val now: Long = 0,
     val period: DayPeriod = DayPeriod.DAY,
@@ -104,6 +106,8 @@ class HomeViewModel @Inject constructor(
     contextDao: ContextEventDao,
     questionDao: QuestionDao,
 ) : ViewModel() {
+    val zone get() = clock.zone()
+
 
     /** Modo real do deslocamento em andamento (null = sem sessão confirmada → preferência). */
     private val activeMobilityMode = mobilityRepo.activeMode
@@ -144,10 +148,22 @@ class HomeViewModel @Inject constructor(
     private var dialogueText: String? = null
     private var dialogueUntil = 0L
 
-    val state: StateFlow<HomeUiState> = combine(inputs, ticker, activeMobilityMode) { i, now, mode -> Triple(i, now, mode) }
-        .mapLatest { (i, now, mode) -> build(i, now, hoodie.resolve(), mode) }
-        .combineWithQuestion()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+    private val reloadHome = MutableStateFlow(0L)
+    val state: StateFlow<HomeUiState> = retryableUiState(
+        retries = reloadHome,
+        loading = HomeUiState(),
+        onFailure = { cause ->
+            Log.e(TAG, "Failed to load home", cause)
+            HomeUiState(loading = false, error = cause.appErrorOr(DatabaseError.ReadFailed))
+        },
+        source = {
+            combine(inputs, ticker, activeMobilityMode) { i, now, mode -> Triple(i, now, mode) }
+                .mapLatest { (i, now, mode) -> build(i, now, hoodie.resolve(), mode) }
+                .combineWithQuestion()
+        },
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+
+    fun retryLoad() { reloadHome.value += 1 }
 
     private fun kotlinx.coroutines.flow.Flow<HomeUiState>.combineWithQuestion() =
         combine(this, pendingQuestion) { s, q -> s.copy(question = q) }
@@ -216,7 +232,7 @@ class HomeViewModel @Inject constructor(
     fun setManual(type: UserContextType) = action {
         contextEngine.setManual(type)
         // "Não estou no trabalho" logo após uma chegada automática: a mobilidade aprende a correção.
-        runCatching { mobility.onManualContext(type, clock.nowMillis()) }
+        mobility.onManualContext(type, clock.nowMillis())
         _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 

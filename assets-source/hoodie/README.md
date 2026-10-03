@@ -57,7 +57,7 @@ procedural desenhou.
 ### Revisão artística — `art-status.json`
 
 ```json
-{ "walk": { "final": true, "manualReview": false, "pass": "claude-v1", "reviewedBy": null } }
+{ "walk": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" } }
 ```
 
 `manualReview` só vira `true` quando uma pessoa revisar o grupo no Aseprite (preencha
@@ -161,3 +161,8 @@ próprio `idle`. Clips sem desenho continuam procedurais, com tudo isso funciona
 3. `sit_down`, `stand_up`, `bed_sit`, `bed_lie_down`, `sleep`, `wake_eyes`, `bed_exit`
 4. `work_typing`, `work_mouse`, `reach_mug`, `drink`, `put_mug`
 5. o restante, por grupo
+
+## Revisão manual aprovada — 02/10/2026
+
+Rafael revisou e aprovou os quatro grupos: walk, idle, sleep e work. A confirmação foi fornecida pelo usuário neste chat. A galeria em docs/art-review.html conserva os sprites e os hashes das fontes apresentadas. Os dois art-status.json registram manualReview=true, pass=manual-v1 e reviewedBy=Rafael após a sincronização dos assets.
+

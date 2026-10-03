@@ -119,8 +119,19 @@ jobs:
           api-level: 34
           target: google_apis
           arch: x86_64
+          profile: pixel_8
+          cores: 2
+          ram-size: 2048M
+          heap-size: 256
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest
+          script: |
+            adb shell wm size 1080x2400
+            adb shell wm density 420
+            adb shell setprop debug.hwui.renderer skiagl
+            adb shell settings put system font_scale 1.0
+            adb shell settings put secure show_ime_with_hard_keyboard 1
+            ./gradlew :app:connectedDebugAndroidTest
       - name: Upload instrumentation reports
         if: always()
         uses: actions/upload-artifact@v4

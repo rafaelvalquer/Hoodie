@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import androidx.compose.foundation.layout.sizeIn
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
@@ -30,9 +31,7 @@ import com.hoodie.app.presentation.theme.HoodieColors
 
 /** Detalhes de privacidade do seletor (mostrados só em "Saiba mais"). */
 val PLACE_PRIVACY_DETAILS = listOf(
-    "O endereço usado na busca é enviado ao serviço de geocodificação do Android.",
-    "Os tiles do mapa são fornecidos pelo OpenStreetMap.",
-    "As coordenadas do local salvo são armazenadas cifradas, somente neste aparelho.",
+    R.string.place_privacy_geocoding, R.string.place_privacy_tiles, R.string.place_privacy_coordinates,
 )
 
 /** 🔒 Local salvo somente neste aparelho. SAIBA MAIS → bottom sheet. */
@@ -46,14 +45,14 @@ fun PlacePrivacyInfo(modifier: Modifier = Modifier) {
             stringResource(R.string.ui_place_privacy_info_2),
             style = MaterialTheme.typography.labelSmall,
             color = HoodieColors.Blue,
-            modifier = Modifier.clickable { open = true }.semantics { role = Role.Button }.padding(8.dp).testTag(PlacePickerTags.PRIVACY_MORE),
+            modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable { open = true }.semantics { role = Role.Button }.padding(8.dp).testTag(PlacePickerTags.PRIVACY_MORE),
         )
     }
     if (open) {
         ModalBottomSheet(onDismissRequest = { open = false }, sheetState = rememberModalBottomSheetState(), containerColor = HoodieColors.Panel) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp).testTag(PlacePickerTags.PRIVACY_SHEET), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SectionLabel(stringResource(R.string.ui_place_privacy_info_3))
-                PLACE_PRIVACY_DETAILS.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, color = HoodieColors.Ink) }
+                PLACE_PRIVACY_DETAILS.forEach { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium, color = HoodieColors.Ink) }
             }
         }
     }

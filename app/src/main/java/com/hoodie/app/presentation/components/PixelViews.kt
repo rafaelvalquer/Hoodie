@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +49,20 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
+/** Fixed animation time for previews and visual regression captures. Null keeps live rendering. */
+data class PixelRenderFrame(
+    val animationMillis: Long = 1_000L,
+    val minuteOfDay: Int = 10 * 60,
+    val period: DayPeriod = DayPeriod.DAY,
+) {
+    init {
+        require(animationMillis >= 0)
+        require(minuteOfDay in 0 until 24 * 60)
+    }
+}
+
+val LocalPixelRenderFrame = staticCompositionLocalOf<PixelRenderFrame?> { null }
+
 /**
  * A cena viva. Um único relógio de frames (withFrameMillis) dirige a máquina de
  * estados e o renderer; cada animação tem seu próprio FPS. Quando a tela some,
@@ -63,7 +78,10 @@ fun HoodieSceneView(
     speed: Float = 1f,
     periodOverride: DayPeriod? = null,
 ) {
-    val machine = remember { AnimationStateMachine() }
+    val fixedFrame = LocalPixelRenderFrame.current
+    val machine = remember(fixedFrame != null) {
+        AnimationStateMachine(if (fixedFrame != null) Random(0) else Random(System.nanoTime()))
+    }
     val renderer = remember { SceneRenderer() }
     val bitmap = remember { Bitmap.createBitmap(PixelScene.SCENE_W, PixelScene.SCENE_H, Bitmap.Config.ARGB_8888) }
     val image = remember { bitmap.asImageBitmap() }
@@ -72,12 +90,20 @@ fun HoodieSceneView(
     val currentSpeed by rememberUpdatedState(speed)
     val currentPeriod by rememberUpdatedState(periodOverride)
 
-    LaunchedEffect(visual) {
+    LaunchedEffect(visual, fixedFrame) {
         // Ao abrir o app o ReactionDirector decide se ele reage (olha, acena, sorri…).
-        visual?.let { machine.setVisual(it, clock.now(currentSpeed), greet = greet) }
+        visual?.let { machine.setVisual(it, if (fixedFrame != null) 1L else clock.now(currentSpeed), greet = greet) }
     }
-    LaunchedEffect(reactions) { reactions?.collect { machine.react(it, clock.now(currentSpeed)) } }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(reactions, fixedFrame) { if (fixedFrame == null) reactions?.collect { machine.react(it, clock.now(currentSpeed)) } }
+    LaunchedEffect(fixedFrame, visual) {
+        if (fixedFrame != null) {
+            machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
+                val buf = renderer.render(f, fixedFrame.animationMillis)
+                bitmap.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height)
+                frames++
+            }
+            return@LaunchedEffect
+        }
         var last = -1L
         while (true) {
             withFrameMillis {
@@ -146,6 +172,7 @@ fun AnimatedHoodie(
     direction: Direction = Direction.FRONT,
     posture: Posture = Posture.STANDING,
 ) {
+    val fixedFrame = LocalPixelRenderFrame.current
     val w = HoodiePainter.WIDTH; val h = HoodiePainter.HEIGHT
     val bitmap = remember { Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888) }
     val image = remember { bitmap.asImageBitmap() }
@@ -155,7 +182,20 @@ fun AnimatedHoodie(
     val currentSpeed by rememberUpdatedState(speed)
     val currentDir by rememberUpdatedState(direction)
     val currentPosture by rememberUpdatedState(posture)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(fixedFrame, if (fixedFrame != null) anim else null, if (fixedFrame != null) expression else null, if (fixedFrame != null) direction else null, if (fixedFrame != null) posture else null) {
+        if (fixedFrame != null) {
+            val request = SpriteRequest(anim, direction, 0, posture,
+                IdleDirector(Random(0)).overlay(fixedFrame.animationMillis, allowLook = false).copy(expression = expression))
+            val elapsed = if (anim.loop) fixedFrame.animationMillis else fixedFrame.animationMillis % (anim.durationMs + 1_500)
+            val frame = HoodieSprites.provider.frameAt(request, elapsed)
+            val canvas = PixelBuffer(w, h)
+            canvas.clear()
+            canvas.blit(frame.image, HoodiePainter.FEET.x - frame.anchors.feet.x, HoodiePainter.FEET.y - frame.anchors.feet.y)
+            frame.itemOverlay?.let { HoodiePainter.drawItemAt(canvas, it, frame.anchors.rightHand) }
+            bitmap.setPixels(canvas.pixels, 0, w, 0, 0, w, h)
+            frames++
+            return@LaunchedEffect
+        }
         val clock = VirtualClock()
         val idle = IdleDirector(Random)
         val canvas = PixelBuffer(w, h)

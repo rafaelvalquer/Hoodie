@@ -16,6 +16,7 @@ class VersionConsistencyTest {
     private val props = Properties().apply { File("../gradle.properties").inputStream().use(::load) }
     private val code = props.getProperty("HOODIE_VERSION_CODE")?.toInt()
     private val name = props.getProperty("HOODIE_VERSION_NAME")
+    private val versionPattern = Regex("""\d+\.\d+\.\d+(-(dev|rc[1-9]\d*))?""")
 
     @Test
     fun `gradle properties e a fonte unica da versao do build`() {
@@ -28,7 +29,13 @@ class VersionConsistencyTest {
     @Test
     fun `versionCode avancou e o nome segue semver`() {
         assertTrue("versionCode deve ser > 1 (recebe +1 a cada build distribuído)", code!! > 1)
-        assertTrue("versionName fora do padrão x.y.z[-dev]: $name", Regex("""\d+\.\d+\.\d+(-dev)?""").matches(name!!))
+        assertTrue("versionName fora do padrão x.y.z[-dev|-rcN]: $name", versionPattern.matches(name!!))
+    }
+
+    @Test
+    fun `nomes aceitam desenvolvimento candidato e estavel`() {
+        listOf("0.2.0-dev", "0.2.0-rc1", "0.2.0-rc12", "0.2.0").forEach { assertTrue(it, versionPattern.matches(it)) }
+        listOf("0.2.0-rc0", "0.2.0-rc", "0.2.0-mvp", "0.2", "0.2.0-").forEach { assertFalse(it, versionPattern.matches(it)) }
     }
 
     @Test

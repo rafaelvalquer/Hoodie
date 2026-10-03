@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
@@ -42,6 +43,7 @@ fun AppDetailsBottomSheet(
     onCategory: (HoodieAppCategory?) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val uiTextContext = LocalContext.current
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = HoodieColors.Panel) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -51,10 +53,10 @@ fun AppDetailsBottomSheet(
                     Text(app.packageName, style = RetroFontStyles.Small, color = HoodieColors.Muted, maxLines = 1)
                 }
             }
-            Detail("Tempo no dia", formatDuration(app.foregroundMs))
-            Detail("Sessões", app.sessionCount.toString())
-            app.firstUsedAt?.let { Detail("Primeiro uso", formatClock(it, zone)) }
-            app.lastUsedAt?.let { Detail("Último uso", formatClock(it, zone)) }
+            Detail(uiTextContext.getString(R.string.ui_extra_app_details_bottom_sheet_1), formatDuration(app.foregroundMs))
+            Detail(uiTextContext.getString(R.string.ui_extra_app_details_bottom_sheet_2), app.sessionCount.toString())
+            app.firstUsedAt?.let { Detail(uiTextContext.getString(R.string.ui_extra_app_details_bottom_sheet_3), formatClock(it, zone)) }
+            app.lastUsedAt?.let { Detail(uiTextContext.getString(R.string.ui_extra_app_details_bottom_sheet_4), formatClock(it, zone)) }
             if (byContext.isNotEmpty()) {
                 Text(stringResource(R.string.ui_app_details_bottom_sheet_1), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted, modifier = Modifier.padding(top = 4.dp))
                 byContext.sortedByDescending { it.foregroundMs }.forEach { Detail("${it.context.emoji} ${it.context.label}", formatDuration(it.foregroundMs)) }

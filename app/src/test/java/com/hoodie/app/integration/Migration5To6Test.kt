@@ -27,7 +27,7 @@ import java.io.File
 
 /**
  * v5 → v6 (Mobilidade): tabelas novas sem tocar no que existe. O banco v5 vem do
- * schema exportado; o Room v6 valida o schema inteiro ao abrir.
+ * schema exportado; o Room atual valida o schema inteiro ao abrir.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -42,9 +42,9 @@ class Migration5To6Test {
         createV5 { db ->
             db.execSQL("INSERT INTO context_questions (id, kind, candidate, placeId, encryptedCoordinates, chosenPlaceType, contextEventId, askedAt, answeredAt, answer) VALUES (1, 'CONFIRM_CONTEXT', 'WORK', NULL, NULL, NULL, NULL, 1000, NULL, NULL)")
         }
-        val room = Room.databaseBuilder(context, HoodieDatabase::class.java, DB).addMigrations(Migration5To6).allowMainThreadQueries().build()
+        val room = Room.databaseBuilder(context, HoodieDatabase::class.java, DB).addMigrations(*com.hoodie.app.core.database.migrations.ALL_MIGRATIONS).allowMainThreadQueries().build()
         try {
-            assertEquals(6, room.openHelper.writableDatabase.version)
+            assertEquals(com.hoodie.app.core.database.HOODIE_DATABASE_VERSION, room.openHelper.writableDatabase.version)
             val q = room.questionDao().getById(1)!!
             assertNull("perguntas antigas não têm deslocamento", q.mobilitySessionId)
             val id = room.mobilitySessionDao().insert(

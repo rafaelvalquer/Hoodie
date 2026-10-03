@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.diary
 
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +38,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiaryLabViewModel @Inject constructor(private val deviceUsage: DeviceUsageRepository) : ViewModel() {
-    suspend fun storedSessions(): Int = runCatching { deviceUsage.storedSessionCount() }.getOrDefault(-1)
+    suspend fun storedSessions(): Int = try { deviceUsage.storedSessionCount() } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (error: Exception) { android.util.Log.e("DiaryLabViewModel", "Failed to count stored sessions", error); -1 }
 }
 
 /**
@@ -108,6 +109,7 @@ fun DiaryLabScreen(modifier: Modifier = Modifier, vm: DiaryLabViewModel = hiltVi
 /** DIARY MAP PERFORMANCE + PHONE (Developer Lab). Atualiza a cada segundo. */
 @Composable
 private fun DiaryMapPerformance(nodes: Int, trips: Int, replay: ReplayUiState, storedSessions: Int) {
+    val uiTextContext = LocalContext.current
     var tick by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { while (true) { delay(1_000); tick++ } }
     val active = replay.state == ReplayState.PLAYING
@@ -115,16 +117,16 @@ private fun DiaryMapPerformance(nodes: Int, trips: Int, replay: ReplayUiState, s
         SectionLabel(stringResource(R.string.ui_diary_lab_screen_5))
         tick.let { _ ->
             PerfRow("Map size", "${DiaryMapTiles.WIDTH}×${DiaryMapTiles.HEIGHT}")
-            PerfRow("Nodes", nodes.toString())
-            PerfRow("Trips", trips.toString())
+            PerfRow(uiTextContext.getString(R.string.ui_extra_diary_lab_screen_1), nodes.toString())
+            PerfRow(uiTextContext.getString(R.string.ui_extra_diary_lab_screen_2), trips.toString())
             PerfRow("Static cache", if (DiaryMapPerf.lastCacheHit) "HIT" else "MISS (${DiaryMapPerf.staticBuilds} builds)")
-            PerfRow("Last render", "%.1fms".format(DiaryMapPerf.lastRenderNanos / 1_000_000.0))
-            PerfRow("FPS target", DiaryMapClock.targetFps(active).toString())
-            PerfRow("FPS actual", DiaryMapPerf.fpsActual.toString())
+            PerfRow(uiTextContext.getString(R.string.ui_extra_diary_lab_screen_3), uiTextContext.getString(R.string.ui_extra_diary_lab_screen_4).format(DiaryMapPerf.lastRenderNanos / 1_000_000.0))
+            PerfRow(uiTextContext.getString(R.string.ui_extra_diary_lab_screen_5), DiaryMapClock.targetFps(active).toString())
+            PerfRow(uiTextContext.getString(R.string.ui_extra_diary_lab_screen_6), DiaryMapPerf.fpsActual.toString())
         }
         SectionLabel(stringResource(R.string.ui_diary_lab_screen_6))
-        PerfRow("Stored sessions", if (storedSessions < 0) "—" else storedSessions.toString())
-        PerfRow("Active replay app", replay.activePhoneApp?.appLabel ?: "—")
+        PerfRow(uiTextContext.getString(R.string.ui_extra_diary_lab_screen_7), if (storedSessions < 0) "—" else storedSessions.toString())
+        PerfRow(uiTextContext.getString(R.string.ui_extra_diary_lab_screen_8), replay.activePhoneApp?.appLabel ?: "—")
     }
 }
 

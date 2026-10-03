@@ -18,3 +18,14 @@ suspend fun runUiAction(
         onFailure(error.appErrorOr(fallback), error)
     }
 }
+
+/** Synchronous platform launches preserve cancellation/fatal errors and report recoverable failures. */
+fun runSystemAction(onFailure: (Exception) -> Unit, block: () -> Unit) {
+    try {
+        block()
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (error: Exception) {
+        onFailure(error)
+    }
+}

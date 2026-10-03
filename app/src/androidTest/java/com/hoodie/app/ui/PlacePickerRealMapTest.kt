@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
@@ -21,6 +22,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.presentation.components.MAP_MY_LOCATION_TAG
 import com.hoodie.app.presentation.screens.places.PlacePickerState
@@ -38,6 +41,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.osmdroid.views.MapView
 import kotlin.math.abs
+import android.graphics.Bitmap
+import java.io.File
 
 /**
  * A mesma tela, mas com o **MapView real** do osmdroid (AndroidView), que é o que
@@ -50,6 +55,11 @@ class PlacePickerRealMapTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     private fun show(w: Dp, h: Dp, font: Float = 1f) {
+        rule.runOnUiThread {
+            WindowCompat.setDecorFitsSystemWindows(rule.activity.window, false)
+            WindowCompat.getInsetsController(rule.activity.window, rule.activity.window.decorView)
+                .hide(WindowInsetsCompat.Type.systemBars())
+        }
         rule.setContent {
             val d = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(d.density, font)) {
@@ -62,6 +72,17 @@ class PlacePickerRealMapTest {
             }
         }
         rule.waitForIdle()
+        // Esconder as barras do sistema dispara um novo layout; espera a altura do mapa
+        // assentar (duas leituras iguais) antes de medir — evita medir um frame intermediário.
+        val deadline = System.currentTimeMillis() + STABLE_TIMEOUT_MS
+        var last = -1f
+        while (System.currentTimeMillis() < deadline) {
+            Thread.sleep(STABLE_POLL_MS)
+            rule.waitForIdle()
+            val now = win(PlacePickerTags.MAP).height
+            if (now == last) break
+            last = now
+        }
     }
 
     /** Bounds na janela, em px. */
@@ -108,11 +129,21 @@ class PlacePickerRealMapTest {
         assertTrue("$tag Minha localização dentro do mapa", myLocation.top >= map.top - 1 && myLocation.bottom <= map.bottom + 1)
 
         // Pixel a pixel: a faixa logo abaixo do mapa (padding do topo dos detalhes) é só fundo da tela.
-        val image = rule.onNodeWithTag(PlacePickerTags.ROOT).captureToImage().toPixelMap()
-        val y = (map.bottom - root.top + 6 * density).toInt().coerceIn(0, image.height - 1)
+        val rootNode = rule.onNodeWithTag(PlacePickerTags.ROOT).fetchSemanticsNode()
+        val capture = rule.onNodeWithTag(PlacePickerTags.ROOT).captureToImage()
+        val image = capture.toPixelMap()
+        // boundsInWindow is clipped to the window; captureToImage uses the complete layer.
+        // Use its unclipped origin when the requested viewport reaches a system inset.
+        val y = (map.bottom - rootNode.positionInWindow.y + 6 * density).toInt().coerceIn(0, image.height - 1)
         val xs = (1..9).map { (image.width * it / 10f).toInt() }
         xs.forEach { x ->
             val px = image[x, y]
+            if (!px.close(HoodieColors.Night)) {
+                val diagnostics = File(rule.activity.getExternalFilesDir(null), "map-containment").apply { mkdirs() }
+                File(diagnostics, "${w.value.toInt()}x${h.value.toInt()}_${(font * 100).toInt()}.png").outputStream().use {
+                    capture.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+                }
+            }
             assertTrue("$tag pixel ($x,$y) abaixo do mapa deveria ser o fundo, era $px", px.close(HoodieColors.Night))
         }
 
@@ -134,4 +165,9 @@ class PlacePickerRealMapTest {
 
     private fun Color.close(other: Color, tol: Float = 0.03f) =
         abs(red - other.red) < tol && abs(green - other.green) < tol && abs(blue - other.blue) < tol
+
+    private companion object {
+        const val STABLE_TIMEOUT_MS = 3_000L
+        const val STABLE_POLL_MS = 150L
+    }
 }

@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.res.stringResource
+import com.hoodie.app.R
+import org.osmdroid.tileprovider.tilesource.XYTileSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -68,15 +72,18 @@ fun MapPicker(
     loadingLocation: Boolean = false,
     onMapInteraction: () -> Unit = {},
 ) {
+    val fixedFrame = LocalPixelRenderFrame.current
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentOnChange by rememberUpdatedState(onCenterChanged)
     val currentRadius by rememberUpdatedState(radiusMeters)
     val currentOnInteraction by rememberUpdatedState(onMapInteraction)
 
-    val map = remember {
+    val map = remember(fixedFrame != null) {
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
+            // Visual previews use the real MapView in its offline state, with a separate cache key.
+            setTileSource(if (fixedFrame != null) XYTileSource("HoodieVisualOffline", 0, 19, 256, ".png", emptyArray()) else TileSourceFactory.MAPNIK)
+            setUseDataConnection(fixedFrame == null)
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             isTilesScaledToDpi = true
@@ -91,7 +98,7 @@ fun MapPicker(
             clipToOutline = true
         }
     }
-    val circle = remember {
+    val circle = remember(map) {
         Polygon(map).apply {
             fillPaint.color = AColor.argb(60, 134, 169, 232)
             outlinePaint.color = AColor.argb(220, 26, 28, 51)
@@ -141,7 +148,8 @@ fun MapPicker(
     }
 
     LaunchedEffect(recenterKey) {
-        map.controller.animateTo(GeoPoint(latitude, longitude))
+        if (fixedFrame != null) map.controller.setCenter(GeoPoint(latitude, longitude))
+        else map.controller.animateTo(GeoPoint(latitude, longitude))
         refreshCircle()
     }
     LaunchedEffect(radiusMeters) { refreshCircle() }
@@ -154,7 +162,7 @@ fun MapPicker(
         PixelPin(Modifier.align(Alignment.Center).padding(bottom = 36.dp))
         if (onMyLocation != null) {
             MapOverlayButton(
-                if (loadingLocation) "◌ Localizando..." else "◎ Minha localização",
+                if (loadingLocation) stringResource(R.string.map_locating) else stringResource(R.string.map_my_location),
                 enabled = !loadingLocation,
                 onClick = onMyLocation,
                 modifier = Modifier.align(Alignment.BottomStart).padding(8.dp).testTag(MAP_MY_LOCATION_TAG),
@@ -186,7 +194,7 @@ fun MapOverlayButton(text: String, enabled: Boolean, onClick: () -> Unit, modifi
             .background(HoodieColors.Panel)
             .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .semantics { role = Role.Button }
+            .semantics { role = Role.Button; contentDescription = text }
             .padding(horizontal = 10.dp, vertical = 6.dp),
     )
 }

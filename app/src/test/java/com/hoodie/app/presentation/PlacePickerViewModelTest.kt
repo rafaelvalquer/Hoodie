@@ -350,7 +350,7 @@ class PlacePickerViewModelTest {
             vm.save()
             assertEquals("$mode: lugar continua salvo", 1, dao.rows.value.size)
             assertEquals(
-                listOf(PlacePickerUiEvent.ShowMessage(PlacePickerState.GEOFENCE_FAILED), PlacePickerUiEvent.Saved),
+                listOf(PlacePickerUiEvent.RetryGeofence, PlacePickerUiEvent.Saved),
                 events,
             )
             assertNull(vm.state.value.saveError)
@@ -402,5 +402,19 @@ class PlacePickerViewModelTest {
         assertTrue(dao.rows.value.isEmpty())
         assertFalse(vm.state.value.saving)
         assertEquals(0, registrar.calls)
+    }
+
+    @Test
+    fun `tentar geofence novamente nao repete a gravacao do lugar`() = runTest {
+        registrar.mode = "error"
+        val vm = vm(); vm.init(PlaceType.HOME, null)
+        vm.onCenterChanged(-23.5, -46.5)
+        vm.save()
+        val saved = dao.rows.value.single()
+        assertFalse(vm.retryGeofences())
+        registrar.mode = "ok"
+        assertTrue(vm.retryGeofences())
+        assertEquals(listOf(saved), dao.rows.value)
+        assertEquals(3, registrar.calls)
     }
 }

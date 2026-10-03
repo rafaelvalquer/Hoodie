@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.phoneinsights
 
+import androidx.compose.ui.platform.LocalContext
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
@@ -46,8 +47,9 @@ import java.time.ZoneId
 /** Card 4 — tempo por categoria: uma barra fatiada + legenda em blocos. */
 @Composable
 fun CategoryUsageCard(categories: List<CategoryUsageSummary>, modifier: Modifier = Modifier) {
+    val uiTextContext = LocalContext.current
     val total = categories.sumOf { it.foregroundMs }.coerceAtLeast(1)
-    HudPanel("Uso por categoria", modifier.fillMaxWidth(), accent = HoodieColors.Coral) {
+    HudPanel(uiTextContext.getString(R.string.ui_extra_phone_insights_components_1), modifier.fillMaxWidth(), accent = HoodieColors.Coral) {
         if (categories.isEmpty()) {
             Text(stringResource(R.string.ui_phone_insights_components_1), style = RetroFontStyles.Body, color = HoodieColors.Muted)
             return@HudPanel
@@ -77,7 +79,7 @@ fun DigitalTimelineCard(items: List<PhoneTimelineItem>, apps: List<AppUsageEntry
         items.forEach { item ->
             val entry = apps.firstOrNull { it.packageName == item.packageName }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(formatClock(item.startedAt, zone), style = RetroFontStyles.HudLabel, color = HoodieColors.Gold, modifier = Modifier.width(44.dp))
+                Text(formatClock(item.startedAt, zone), style = RetroFontStyles.HudLabel, color = HoodieColors.Gold, maxLines = 1, softWrap = false)
                 // Trilho vertical em pixels ligando os blocos.
                 Box(Modifier.width(4.dp).height(28.dp).background(RetroUiTheme.category(item.category)).border(1.dp, HoodieColors.Outline))
                 AppBadge(entry?.iconSource ?: AppIconSource.Installed(item.packageName), item.category, size = 26.dp, showCategoryDot = false)
@@ -146,8 +148,9 @@ fun DigitalEmptyState(title: String, text: String, modifier: Modifier = Modifier
 /** Card "Seu celular": resumo compacto que leva para a aba Digital. */
 @Composable
 fun DiaryPhoneCard(insights: DailyPhoneInsights, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+    val uiTextContext = LocalContext.current
     val s = insights.summary
-    HudPanel("Seu celular", modifier.fillMaxWidth(), accent = RetroUiTheme.Screen, trailing = "ver digital ▶", onClick = onOpen) {
+    HudPanel(uiTextContext.getString(R.string.ui_extra_phone_insights_components_2), modifier.fillMaxWidth(), accent = RetroUiTheme.Screen, trailing = uiTextContext.getString(R.string.ui_extra_phone_insights_components_3), onClick = onOpen) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.ui_phone_insights_components_4), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
@@ -184,7 +187,7 @@ fun DiaryPhoneCard(insights: DailyPhoneInsights, onOpen: () -> Unit, modifier: M
 fun ContextPhoneUsageSection(insights: DailyPhoneInsights?, context: com.hoodie.app.core.model.UserContextType, modifier: Modifier = Modifier) {
     val usage = insights?.usageIn(context)
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("📱 USO DO CELULAR · ${context.label.uppercase()}", style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
+        Text(stringResource(R.string.phone_usage_context_title, context.label.uppercase()), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted)
         if (usage == null || usage.apps.isEmpty()) {
             Text(stringResource(R.string.ui_phone_insights_components_8), style = RetroFontStyles.Small, color = HoodieColors.Muted)
         } else {

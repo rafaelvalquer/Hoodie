@@ -52,7 +52,7 @@ data class DayExceptionEntity(
 )
 
 /** Evento de geofence. Guarda o lugar e a transição — nunca latitude/longitude. */
-@Entity(tableName = "location_events", indices = [Index("timestamp")])
+@Entity(tableName = "location_events", indices = [Index("timestamp"), Index(value = ["placeId", "timestamp"])])
 data class LocationEventEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val placeId: Long,
@@ -114,7 +114,7 @@ data class HoodieStateEntity(
     val userContext: UserContextType,
 )
 
-@Entity(tableName = "hoodie_activities", indices = [Index("startedAt")])
+@Entity(tableName = "hoodie_activities", indices = [Index("startedAt"), Index(value = ["endedAt", "startedAt"])])
 data class HoodieActivityEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val activity: HoodieActivity,
@@ -127,7 +127,7 @@ data class HoodieActivityEntity(
  * Linha da timeline ligada ao registro que a originou ([sourceType] + [sourceId]),
  * para que correções (ex.: oscilação de GPS desfeita) apaguem também o que foi contado.
  */
-@Entity(tableName = "timeline_events", indices = [Index("timestamp"), Index("sourceType", "sourceId")])
+@Entity(tableName = "timeline_events", indices = [Index("timestamp"), Index("sourceType", "sourceId"), Index(value = ["sourceType", "timestamp"])])
 data class TimelineEventEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long,
@@ -165,7 +165,7 @@ data class DailyDeviceUsageEntity(
     val updatedAt: Long,
 )
 
-@Entity(tableName = "daily_app_usage", primaryKeys = ["date", "packageName"])
+@Entity(tableName = "daily_app_usage", primaryKeys = ["date", "packageName"], indices = [Index(value = ["date", "foregroundMs"])])
 data class DailyAppUsageEntity(
     val date: String,
     val packageName: String,
@@ -178,7 +178,7 @@ data class DailyAppUsageEntity(
     val updatedAt: Long,
 )
 
-@Entity(tableName = "daily_context_app_usage", primaryKeys = ["date", "context", "packageName"])
+@Entity(tableName = "daily_context_app_usage", primaryKeys = ["date", "context", "packageName"], indices = [Index(value = ["date", "foregroundMs"])])
 data class DailyContextAppUsageEntity(
     val date: String,
     val context: String,
@@ -194,7 +194,7 @@ data class DailyScreenHourlyEntity(val date: String, val hour: Int, val screenMs
 @Entity(tableName = "daily_context_usage", primaryKeys = ["date", "context"])
 data class DailyContextUsageEntity(val date: String, val context: String, val foregroundMs: Long, val sessionCount: Int)
 
-@Entity(tableName = "daily_phone_timeline", indices = [Index("date"), Index("startedAt")])
+@Entity(tableName = "daily_phone_timeline", indices = [Index("date"), Index("startedAt"), Index(value = ["date", "startedAt", "id"])])
 data class DailyPhoneTimelineEntity(
     @PrimaryKey val id: String,
     val date: String,
@@ -212,7 +212,7 @@ data class DailyPhoneTimelineEntity(
  */
 @Entity(
     tableName = "phone_app_sessions",
-    indices = [Index("epochDay"), Index("packageName"), Index("startedAt")],
+    indices = [Index("epochDay"), Index("packageName"), Index("startedAt"), Index(value = ["epochDay", "startedAt"])],
 )
 data class PhoneAppSessionEntity(
     @PrimaryKey val id: String,

@@ -25,6 +25,7 @@ class DiaryViewModel @Inject constructor(
     private val loadDiary: LoadDiaryUseCase,
     private val clock: ClockProvider,
 ) : ViewModel() {
+    val nowMillis: Long get() = clock.nowMillis()
     val zone get() = clock.zone()
     private var observedToday = clock.today()
     private val _state = MutableStateFlow(DiaryUiState(clock.today(), today = clock.today(), isLoading = true))

@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -79,6 +81,7 @@ fun PixelButton(
             .background(bg)
             .border(2.dp, HoodieColors.Outline)
             .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .semantics { contentDescription = text }
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
@@ -159,6 +162,7 @@ fun ChipRow(options: List<String>, selected: Int?, onSelect: (Int) -> Unit, modi
                     .border(2.dp, HoodieColors.Outline)
                     .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                     .selectable(selected = on, role = Role.RadioButton, onClick = { onSelect(i) })
+                    .semantics { contentDescription = label }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) HoodieColors.Outline else HoodieColors.Ink)

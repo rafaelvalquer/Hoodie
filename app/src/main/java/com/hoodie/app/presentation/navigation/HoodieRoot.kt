@@ -1,5 +1,12 @@
 package com.hoodie.app.presentation.navigation
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.res.stringResource
+import com.hoodie.app.R
+import com.hoodie.app.presentation.common.GeofenceFeedbackHost
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -71,6 +79,11 @@ class RootViewModel @Inject constructor(settings: SettingsRepository) : ViewMode
 @Composable
 fun HoodieRoot(vm: RootViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    GeofenceFeedbackHost(bottomPadding = if (state == RootState.MAIN) 80.dp else 0.dp) { HoodieRootContent(state) }
+}
+
+@Composable
+private fun HoodieRootContent(state: RootState) {
     Box(Modifier.fillMaxSize().background(HoodieColors.Night)) {
         when (state) {
             RootState.SPLASH -> SplashScreen()
@@ -93,14 +106,14 @@ fun SplashScreen() {
     }
 }
 
-private data class Tab(val route: String, val emoji: String, val label: String)
+private data class Tab(val route: String, val emoji: String, @androidx.annotation.StringRes val label: Int)
 
 private val tabs = listOf(
-    Tab(Routes.HOME, "🐱", "Hoje"),
-    Tab(Routes.TIMELINE, "📅", "Histórico"),
-    Tab(Routes.PLACES, "📍", "Lugares"),
-    Tab(Routes.DIARY, "🗺️", "Diário"),
-    Tab(Routes.SETTINGS, "⚙️", "Ajustes"),
+    Tab(Routes.HOME, "🐱", R.string.nav_home),
+    Tab(Routes.TIMELINE, "📅", R.string.nav_timeline),
+    Tab(Routes.PLACES, "📍", R.string.nav_places),
+    Tab(Routes.DIARY, "🗺️", R.string.nav_diary),
+    Tab(Routes.SETTINGS, "⚙️", R.string.nav_settings),
 )
 
 object Routes {
@@ -120,6 +133,32 @@ object Routes {
     fun placePicker(type: PlaceType, placeId: Long? = null) = "place_picker?type=${type.name}&placeId=${placeId ?: -1}"
 }
 
+/** Only exact primary destinations retain the navigation bar. */
+internal fun showsBottomNavigation(route: String?): Boolean = tabs.any { it.route == route }
+
+@Composable
+internal fun HoodieBottomNavigation(route: String?, onNavigate: (String) -> Unit) {
+    if (!showsBottomNavigation(route)) return
+    NavigationBar(modifier = Modifier.testTag("bottom_navigation"), containerColor = HoodieColors.Panel) {
+        tabs.forEach { tab ->
+            val label = stringResource(tab.label)
+            val selected = route == tab.route
+            val description = stringResource(if (selected) R.string.control_selected else R.string.control_not_selected)
+            NavigationBarItem(
+                modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).semantics {
+                    contentDescription = label
+                    stateDescription = description
+                },
+                selected = selected,
+                onClick = { onNavigate(tab.route) },
+                icon = { Text(tab.emoji, style = MaterialTheme.typography.titleLarge) },
+                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = HoodieColors.PanelLight, selectedTextColor = HoodieColors.Hood, unselectedTextColor = HoodieColors.Muted),
+            )
+        }
+    }
+}
+
 @Composable
 fun MainScaffold() {
     val nav = rememberNavController()
@@ -128,22 +167,11 @@ fun MainScaffold() {
     Scaffold(
         containerColor = HoodieColors.Night,
         bottomBar = {
-            if (tabs.any { it.route == current?.route }) NavigationBar(containerColor = HoodieColors.Panel) {
-                tabs.forEach { tab ->
-                    val selected = current?.hierarchy?.any { it.route == tab.route } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            nav.navigate(tab.route) {
-                                popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Text(tab.emoji, style = MaterialTheme.typography.titleLarge) },
-                        label = { Text(tab.label, style = MaterialTheme.typography.labelSmall) },
-                        colors = NavigationBarItemDefaults.colors(indicatorColor = HoodieColors.PanelLight, selectedTextColor = HoodieColors.Hood, unselectedTextColor = HoodieColors.Muted),
-                    )
+            HoodieBottomNavigation(current?.route) { route ->
+                nav.navigate(route) {
+                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
                 }
             }
         },

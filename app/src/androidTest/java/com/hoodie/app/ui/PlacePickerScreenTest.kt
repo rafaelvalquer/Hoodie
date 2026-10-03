@@ -51,7 +51,8 @@ import com.hoodie.app.presentation.theme.HoodieColors
 import com.hoodie.app.presentation.theme.HoodieTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
+import android.view.WindowManager
+import androidx.compose.ui.test.assertIsFocused
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -355,15 +356,21 @@ class PlacePickerScreenTest {
     /** Teclado virtual real: o campo em edição e o Salvar ficam acima dele. */
     @Test
     fun teclado_nao_cobre_o_salvar_nem_o_campo() {
-        rule.runOnUiThread { WindowCompat.setDecorFitsSystemWindows(rule.activity.window, false) }
+        rule.runOnUiThread {
+            WindowCompat.setDecorFitsSystemWindows(rule.activity.window, false)
+            rule.activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        }
         rule.setContent { Picker(editing(), modifier = Modifier.imePadding()) }
-        rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
-        rule.onNodeWithTag(PlacePickerTags.NAME).performClick()
         val view = rule.activity.window.decorView
+        rule.waitUntil(timeoutMillis = 10_000) { view.hasWindowFocus() }
+        rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
+        rule.onNodeWithTag(PlacePickerTags.NAME).performClick().assertIsFocused()
+        rule.runOnUiThread {
+            WindowCompat.getInsetsController(rule.activity.window, view).show(WindowInsetsCompat.Type.ime())
+        }
         fun imeBottom() = ViewCompat.getRootWindowInsets(view)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
-        val deadline = System.currentTimeMillis() + 5_000
-        while (imeBottom() == 0 && System.currentTimeMillis() < deadline) { Thread.sleep(100); rule.waitForIdle() }
-        assumeTrue("teclado virtual não apareceu (teclado físico?)", imeBottom() > 0)
+        rule.waitUntil(timeoutMillis = 15_000) { imeBottom() > 0 }
+        assertTrue("teclado virtual real deve estar visível", imeBottom() > 0)
         rule.waitForIdle()
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
         val visibleBottom = view.height - imeBottom()

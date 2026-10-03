@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.sizeIn
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
@@ -66,7 +68,8 @@ fun PlaceRadiusControl(radius: Float, onRadiusChange: (Float) -> Unit, modifier:
                         .heightIn(min = 40.dp)
                         .border(2.dp, HoodieColors.Outline)
                         .background(if (selected) HoodieColors.Gold else HoodieColors.PanelLight)
-                        .clickable { onRadiusChange(r) }
+                        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                        .selectable(selected = selected, role = Role.RadioButton, onClick = { onRadiusChange(r) })
                         .semantics { role = Role.RadioButton; this.selected = selected }
                         .wrapContentHeight(Alignment.CenterVertically)
                         .testTag(PlacePickerTags.quickRadius(r.toInt())),

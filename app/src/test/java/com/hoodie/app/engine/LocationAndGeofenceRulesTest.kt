@@ -11,6 +11,8 @@ import com.hoodie.app.core.location.LocationStatus
 import com.hoodie.app.core.model.Place
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.presentation.screens.settings.locationSummary
+import com.hoodie.app.presentation.common.UiText
+import com.hoodie.app.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -83,11 +85,11 @@ class LocationAndGeofenceRulesTest {
     @Test
     fun `Ajustes mostra locais monitorados ou o motivo da pausa`() {
         val ok = GeofenceRegistrationResult(4, 4, 0, null)
-        assertEquals("✅ 4 locais monitorados", locationSummary(LocationPermissionState.BACKGROUND, ok))
+        assertEquals(UiText.Quantity(R.plurals.location_places_monitored, 4, listOf(4)), locationSummary(LocationPermissionState.BACKGROUND, ok))
         val skipped = GeofenceRegistrationResult(100, 95, 5, null)
-        assertTrue(locationSummary(LocationPermissionState.BACKGROUND, skipped).contains("5 fora do limite"))
-        assertEquals("⚠️ Geofences pausados\nLocalização em segundo plano desativada", locationSummary(LocationPermissionState.FOREGROUND, ok))
+        assertEquals(UiText.Resource(R.string.location_places_skipped, listOf(95, 5)), locationSummary(LocationPermissionState.BACKGROUND, skipped))
+        assertEquals(UiText.Resource(R.string.location_foreground_summary), locationSummary(LocationPermissionState.FOREGROUND, ok))
         val failed = GeofenceRegistrationResult.failure(3, GeofenceRegistrationError.GEOFENCE_NOT_AVAILABLE, 0)
-        assertTrue(locationSummary(LocationPermissionState.BACKGROUND, failed).startsWith("⚠️ Geofences pausados"))
+        assertEquals(UiText.Resource(R.string.location_paused_reason, listOf(UiText.Resource(R.string.location_geofence_unavailable))), locationSummary(LocationPermissionState.BACKGROUND, failed))
     }
 }

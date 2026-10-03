@@ -6,6 +6,7 @@ import com.hoodie.app.core.error.*
 
 /** Localization belongs to presentation, including transient snackbar messages. */
 fun Context.appErrorText(error: AppError): String = getString(when (error) {
+    SystemSettingsError.Unavailable -> R.string.error_system_settings_unavailable
     DatabaseError.Unavailable -> R.string.error_database_unavailable
     DatabaseError.ReadFailed -> R.string.error_database_read
     DatabaseError.WriteFailed -> R.string.error_database_write
@@ -14,6 +15,8 @@ fun Context.appErrorText(error: AppError): String = getString(when (error) {
     LocationError.Disabled -> R.string.error_location_disabled
     is PlaceError.NotFound -> R.string.error_place_missing
     PlaceError.SaveFailed -> R.string.error_place_save
+    PlaceError.AddressNotFound -> R.string.error_address_not_found
+    PlaceError.GeofenceRegistrationFailed -> R.string.error_geofence_registration
     UsageAccessError.PermissionDenied -> R.string.error_usage_permission
     UsageAccessError.Unavailable -> R.string.error_usage_unavailable
     UsageAccessError.ReadFailed -> R.string.error_usage_read

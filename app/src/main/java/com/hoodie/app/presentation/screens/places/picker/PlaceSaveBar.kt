@@ -1,5 +1,7 @@
 package com.hoodie.app.presentation.screens.places.picker
 
+import androidx.compose.ui.res.stringResource
+import com.hoodie.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,8 +20,9 @@ import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.theme.HoodieColors
 
+@Composable
 fun saveButtonLabel(type: PlaceType, saving: Boolean): String =
-    if (saving) "SALVANDO..." else "SALVAR COMO ${type.label.uppercase()}"
+    if (saving) stringResource(R.string.place_saving) else stringResource(R.string.place_save_as, type.label.uppercase())
 
 /**
  * Barra fixa fora da área de rolagem: Salvar sempre acessível.

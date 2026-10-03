@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.screens.diary
 
+import androidx.compose.ui.semantics.stateDescription
 import com.hoodie.app.R
 import androidx.compose.ui.res.stringResource
 import com.hoodie.app.presentation.common.CollectUiEvents
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,6 +57,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -86,8 +89,6 @@ import java.util.Locale
 @Composable
 fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val today = state.today
-    val context = LocalContext.current
     var selectedNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
     val selectedDate by rememberUpdatedState(state.selectedDate)
     CollectUiEvents(vm.events) { event ->
@@ -96,23 +97,63 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
         }
     }
     val zone = vm.zone
+    DiaryContent(
+        state = state,
+        zone = zone,
+        nowMillis = vm.nowMillis,
+        selectedNodeId = selectedNodeId,
+        onSelectedNodeChange = { selectedNodeId = it },
+        actions = DiaryActions(
+            selectDate = vm::selectDate,
+            retry = vm::retry,
+            openPlace = vm::openPlace,
+            pause = vm::pause,
+            play = vm::play,
+            reset = vm::reset,
+            setSpeed = vm::setSpeed,
+        ),
+    )
+}
+
+internal data class DiaryActions(
+    val selectDate: (LocalDate) -> Unit = {},
+    val retry: () -> Unit = {},
+    val openPlace: (String) -> Unit = {},
+    val pause: () -> Unit = {},
+    val play: () -> Unit = {},
+    val reset: () -> Unit = {},
+    val setSpeed: (ReplaySpeed) -> Unit = {},
+)
+
+@Composable
+internal fun DiaryContent(
+    state: DiaryUiState,
+    zone: ZoneId,
+    nowMillis: Long,
+    selectedNodeId: String? = null,
+    onSelectedNodeChange: (String?) -> Unit = {},
+    actions: DiaryActions = DiaryActions(),
+    digitalContent: @Composable (LocalDate) -> Unit = { PhoneInsightsScreen(it) },
+) {
+    val today = state.today
+    val context = LocalContext.current
     var tab by rememberSaveable { mutableStateOf(DiaryTab.GENERAL) }
     var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("diary_scroll").padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text(stringResource(R.string.ui_diary_screen_1), style = MaterialTheme.typography.headlineSmall, color = HoodieColors.Hood)
-        DateSelector(state.selectedDate, today, context, zone, onSelect = vm::selectDate)
+        DateSelector(state.selectedDate, today, context, zone, onSelect = actions.selectDate)
         DiaryTabs(tab, onSelect = { tab = it })
         if (tab == DiaryTab.DIGITAL) {
-            PhoneInsightsScreen(state.selectedDate)
+            digitalContent(state.selectedDate)
         } else if (state.isLoading) {
             PixelPanel(Modifier.fillMaxWidth()) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp); Text(stringResource(R.string.ui_diary_screen_2), color = HoodieColors.Muted) } }
         } else if (state.error != null) {
             PixelPanel(Modifier.fillMaxWidth()) {
                 Text(context.appErrorText(requireNotNull(state.error)), color = HoodieColors.Coral)
-                PixelButton(stringResource(R.string.ui_diary_screen_3), vm::retry)
+                PixelButton(stringResource(R.string.ui_diary_screen_3), actions.retry)
             }
         } else {
             val diary = state.diary
@@ -133,13 +174,13 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
                 }
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
                 val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
-                DiaryMapView(layout, state.replay, onNode = { vm.openPlace(it.id) })
+                DiaryMapView(layout, state.replay, onNode = { actions.openPlace(it.id) })
                 DiaryReplayHud(state.replay.visual, zone)
                 ReplayControls(
                     state.replay,
-                    onToggle = { if (state.replay.state == ReplayState.PLAYING) vm.pause() else vm.play() },
-                    onReset = vm::reset,
-                    onSpeed = vm::setSpeed,
+                    onToggle = { if (state.replay.state == ReplayState.PLAYING) actions.pause() else actions.play() },
+                    onReset = actions.reset,
+                    onSpeed = actions.setSpeed,
                 )
                 if (state.replay.currentTimestamp != null) {
                     LinearProgressIndicator(progress = { state.replay.progress }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.Mint, trackColor = HoodieColors.PanelLight)
@@ -151,8 +192,8 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     state.diary?.let { diary ->
         val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
         layout.node(selectedNodeId)?.let { node ->
-            val details = remember(diary) { com.hoodie.app.engine.diary.ReplayHudAssembler.visitDetails(diary, System.currentTimeMillis()) }
-            PlaceDetailBottomSheet(node, details, zone) { selectedNodeId = null }
+            val details = remember(diary, nowMillis) { com.hoodie.app.engine.diary.ReplayHudAssembler.visitDetails(diary, nowMillis) }
+            PlaceDetailBottomSheet(node, details, zone) { onSelectedNodeChange(null) }
         }
     }
     selectedContext?.let { ctx -> ContextPhoneSheet(ctx, state.diary?.phoneInsights) { selectedContext = null } }
@@ -160,9 +201,10 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
 
 @Composable
 internal fun DateSelector(date: LocalDate, today: LocalDate, context: android.content.Context, zone: ZoneId, onSelect: (LocalDate) -> Unit) {
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        DateChip("Hoje", date == today) { onSelect(today) }
-        DateChip("Ontem", date == today.minusDays(1)) { onSelect(today.minusDays(1)) }
+    val uiTextContext = LocalContext.current
+    androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        DateChip(uiTextContext.getString(R.string.ui_extra_diary_screen_1), date == today) { onSelect(today) }
+        DateChip(uiTextContext.getString(R.string.ui_extra_diary_screen_2), date == today.minusDays(1)) { onSelect(today.minusDays(1)) }
         DateChip(date.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.forLanguageTag("pt-BR"))).uppercase(), date != today && date != today.minusDays(1)) {
             val initial = date
             DatePickerDialog(
@@ -178,7 +220,7 @@ internal fun DateSelector(date: LocalDate, today: LocalDate, context: android.co
 
 @Composable
 private fun DateChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(Modifier.heightIn(min = 48.dp).background(if (selected) HoodieColors.Blue else HoodieColors.PanelLight).border(2.dp, HoodieColors.Outline).semantics { this.selected = selected }.clickable(role = Role.Button, onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.heightIn(min = 48.dp).background(if (selected) HoodieColors.Blue else HoodieColors.PanelLight).border(2.dp, HoodieColors.Outline).semantics { this.selected = selected; contentDescription = label }.clickable(role = Role.Button, onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp), contentAlignment = Alignment.Center) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = if (selected) HoodieColors.Outline else HoodieColors.Ink)
     }
 }
@@ -187,12 +229,13 @@ private data class SummaryItem(val label: String, val emoji: String, val duratio
 
 @Composable
 internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType) -> Unit)? = null) {
+    val uiTextContext = LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionLabel(stringResource(R.string.ui_diary_screen_8))
         val items = listOf(
-            SummaryItem("Casa", "🏠", summary.homeMs, UserContextType.HOME), SummaryItem("Trabalho", "🏢", summary.workMs, UserContextType.WORK),
-            SummaryItem("Transporte", "🚶", summary.commutingMs, UserContextType.COMMUTING), SummaryItem("Almoço", "🍽️", summary.lunchMs, UserContextType.LUNCH),
-        SummaryItem("Academia", "🏋️", summary.gymMs, UserContextType.GYM), SummaryItem("Lazer", "🎉", summary.leisureMs, UserContextType.LEISURE), SummaryItem("Outros", "📍", summary.otherMs),
+            SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_3), "🏠", summary.homeMs, UserContextType.HOME), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_4), "🏢", summary.workMs, UserContextType.WORK),
+            SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_5), "🚶", summary.commutingMs, UserContextType.COMMUTING), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_6), uiTextContext.getString(R.string.ui_extra_diary_screen_7), summary.lunchMs, UserContextType.LUNCH),
+        SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_8), uiTextContext.getString(R.string.ui_extra_diary_screen_9), summary.gymMs, UserContextType.GYM), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_10), "🎉", summary.leisureMs, UserContextType.LEISURE), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_11), "📍", summary.otherMs),
         ).filter { it.duration > 0 }
         if (items.isEmpty()) PixelPanel(Modifier.fillMaxWidth()) { Text(stringResource(R.string.ui_diary_screen_9), color = HoodieColors.Muted) }
         items.chunked(2).forEach { row ->
@@ -202,6 +245,7 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
                     PixelPanel(Modifier.weight(1f), color = HoodieColors.PanelLight, onClick = click) {
                         Text(item.emoji, style = MaterialTheme.typography.titleLarge)
                         Text(item.label.uppercase(), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+                        Spacer(Modifier.height(4.dp))
                         Text(formatDuration(item.duration), style = MaterialTheme.typography.titleMedium, color = HoodieColors.Hood)
                     }
                 }
@@ -213,20 +257,28 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
 
 @Composable
 internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset: () -> Unit, onSpeed: (ReplaySpeed) -> Unit) {
+    val uiTextContext = LocalContext.current
+    val replayDescription = uiTextContext.getString(when (replay.state) {
+        ReplayState.IDLE -> R.string.replay_idle
+        ReplayState.PLAYING -> R.string.replay_playing
+        ReplayState.PAUSED -> R.string.replay_paused
+        ReplayState.FINISHED -> R.string.replay_finished
+    })
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        PixelButton(if (replay.state == ReplayState.PLAYING) "Pausar" else if (replay.state == ReplayState.FINISHED) "Rever dia" else "▶ Reproduzir meu dia", onToggle, modifier = Modifier.weight(1f), color = HoodieColors.Mint)
-        TextButton(onClick = onReset, modifier = Modifier.semantics { contentDescription = "Reiniciar replay" }) { Text(stringResource(R.string.ui_diary_screen_10), color = HoodieColors.Hood) }
+        PixelButton(if (replay.state == ReplayState.PLAYING) uiTextContext.getString(R.string.ui_extra_diary_screen_12) else if (replay.state == ReplayState.FINISHED) uiTextContext.getString(R.string.ui_extra_diary_screen_13) else uiTextContext.getString(R.string.ui_extra_diary_screen_14), onToggle, modifier = Modifier.weight(1f).semantics { stateDescription = replayDescription }, color = HoodieColors.Mint)
+        TextButton(onClick = onReset, modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = uiTextContext.getString(R.string.ui_extra_diary_screen_15) }) { Text(stringResource(R.string.ui_diary_screen_10), color = HoodieColors.Hood) }
     }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(stringResource(R.string.ui_diary_screen_11), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         ReplaySpeed.entries.forEach { speed ->
-            androidx.compose.material3.FilterChip(selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text(speed.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelSmall) })
+            androidx.compose.material3.FilterChip(modifier = Modifier.heightIn(min = 48.dp).semantics { role = Role.RadioButton; contentDescription = speed.label }, selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text(speed.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelSmall) })
         }
     }
 }
 
 @Composable
 internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, replayAt: Long?, zone: ZoneId, highlightedIds: Set<String> = emptySet()) {
+    val uiTextContext = LocalContext.current
     val activeIndex = if (replayAt == null) -1 else items.indexOfFirst { it.id in highlightedIds }
     val timelineScroll = rememberLazyListState()
     LaunchedEffect(activeIndex, items) {
@@ -245,17 +297,17 @@ internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.Diary
                 else -> HoodieColors.Muted
             }
             val actorLabel = when (item.actor) {
-                com.hoodie.app.domain.diary.model.DiaryActor.USER -> "Você"
+                com.hoodie.app.domain.diary.model.DiaryActor.USER -> uiTextContext.getString(R.string.ui_extra_diary_screen_16)
                 com.hoodie.app.domain.diary.model.DiaryActor.HOODIE -> "Hoodie"
-                else -> "Sistema"
+                else -> uiTextContext.getString(R.string.ui_extra_diary_screen_17)
             }
             Row(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
                 selected = highlighted
                 contentDescription = "$actorLabel, ${formatClock(item.timestamp, zone)}, ${item.title}" +
                     (item.subtitle?.let { ", $it" } ?: "")
             }.padding(vertical = 6.dp).background(if (highlighted) HoodieColors.PanelLight else Color.Transparent).padding(4.dp), verticalAlignment = Alignment.Top) {
-                Text(formatClock(item.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = if (highlighted) HoodieColors.Gold else HoodieColors.Muted, modifier = Modifier.width(48.dp))
-                Text(if (item.actor.name == "HOODIE") "🐱" else if (item.actor.name == "SYSTEM") "⚙️" else (item.emoji ?: "📍"), color = actorColor, modifier = Modifier.width(28.dp))
+                Text(formatClock(item.timestamp, zone), style = MaterialTheme.typography.labelSmall, color = if (highlighted) HoodieColors.Gold else HoodieColors.Muted, maxLines = 1, softWrap = false)
+                Text(if (item.actor.name == "HOODIE") "🐱" else if (item.actor.name == "SYSTEM") uiTextContext.getString(R.string.ui_extra_diary_screen_18) else (item.emoji ?: "📍"), color = actorColor, modifier = Modifier.width(28.dp))
                 Column(Modifier.weight(1f)) {
                     Text(item.title, style = MaterialTheme.typography.bodyMedium, color = if (highlighted) HoodieColors.Hood else HoodieColors.Ink)
                     item.subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted) }
