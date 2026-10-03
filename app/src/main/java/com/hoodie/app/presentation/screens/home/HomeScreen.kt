@@ -253,7 +253,7 @@ internal fun HomeContent(
 
     if (manualOpen) {
         ModalBottomSheet(onDismissRequest = { manualOpen = false }, containerColor = HoodieColors.Panel) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.ui_home_screen_5), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.home_routine_learning, state.catName), color = HoodieColors.Muted)
                 UserContextType.manualOptions.forEach { t ->
