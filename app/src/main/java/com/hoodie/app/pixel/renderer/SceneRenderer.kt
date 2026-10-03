@@ -5,7 +5,9 @@ import com.hoodie.app.pixel.animation.RenderFrame
 import com.hoodie.app.pixel.scene.PixelScene
 import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.scene.SceneId
+import com.hoodie.app.pixel.transport.TransportLighting
 import com.hoodie.app.pixel.sprite.HoodiePainter
+import com.hoodie.app.pixel.npc.NpcRenderer
 
 /**
  * Compõe um frame: fundo (cacheado) → objetos atrás → Hoodie → objetos na frente
@@ -25,8 +27,12 @@ class SceneRenderer {
         val scene = frame.scene
         buffer.copyFrom(background(scene, frame.env))
 
-        val (behind, front) = scene.sortedProps.partition { it.baseline <= frame.y }
-        behind.forEach { it.draw(buffer, frame.env, timeMs) }
+        val npcs = scene.ambientNpcs(frame.env)
+        val behindProps = scene.sortedProps.filter { it.baseline <= frame.y }
+        val behindNpcs = npcs.filter { it.baseline <= frame.y }
+        (behindProps.map { it.baseline to { it.draw(buffer, frame.env, timeMs) } } +
+            behindNpcs.map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } })
+            .sortedBy { it.first }.forEach { it.second() }
 
         // O ponto dos pés do frame é alinhado ao chão: sprite sheets e procedural usam o mesmo contrato.
         val sprite = frame.sprite
@@ -37,9 +43,14 @@ class SceneRenderer {
             val hand = sprite.anchors.rightHand
             HoodiePainter.drawItemAt(buffer, item, com.hoodie.app.pixel.sprite.Point(left + hand.x, top + hand.y))
         }
-        front.forEach { it.draw(buffer, frame.env, timeMs) }
+        val frontProps = scene.sortedProps.filter { it.baseline > frame.y }
+        val frontNpcs = npcs.filter { it.baseline > frame.y }
+        (frontProps.map { it.baseline to { it.draw(buffer, frame.env, timeMs) } } +
+            frontNpcs.map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } })
+            .sortedBy { it.first }.forEach { it.second() }
 
         Lighting.apply(buffer, Lighting.map(scene, frame.env))
+        applyTransportLighting(buffer, frame.env.transportAmbient?.lighting)
         frame.effects.forEach { (kind, pos) -> Effects.draw(buffer, kind, pos.first, pos.second, timeMs) }
         Lighting.fade(buffer, frame.fade)
         return buffer
@@ -48,8 +59,28 @@ class SceneRenderer {
     /** Cena sem personagem (galeria de cenas / thumbnails). */
     fun renderEmpty(scene: PixelScene, env: SceneEnv, timeMs: Long): PixelBuffer {
         buffer.copyFrom(background(scene, env))
-        scene.sortedProps.forEach { it.draw(buffer, env, timeMs) }
+        (scene.sortedProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
+            scene.ambientNpcs(env).map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } })
+            .sortedBy { it.first }.forEach { it.second() }
         Lighting.apply(buffer, Lighting.map(scene, env))
+        applyTransportLighting(buffer, env.transportAmbient?.lighting)
         return buffer
+    }
+
+    /** Ajusta cabine aberta, interior diurno ou túnel após a iluminação de horário da cena. */
+    private fun applyTransportLighting(buffer: PixelBuffer, lighting: TransportLighting?) {
+        val factor = when (lighting) {
+            TransportLighting.OPEN_AIR, null -> null
+            TransportLighting.DAYLIGHT_INTERIOR -> intArrayOf(244, 248, 252)
+            TransportLighting.TUNNEL -> intArrayOf(176, 194, 232)
+        } ?: return
+        val pixels = buffer.pixels
+        for (i in pixels.indices) {
+            val color = pixels[i]
+            val red = ((color ushr 16) and 0xFF) * factor[0] / 256
+            val green = ((color ushr 8) and 0xFF) * factor[1] / 256
+            val blue = (color and 0xFF) * factor[2] / 256
+            pixels[i] = (color and -0x1000000) or (red shl 16) or (green shl 8) or blue
+        }
     }
 }

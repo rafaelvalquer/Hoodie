@@ -18,4 +18,13 @@ internal class ManualContextHandler(private val processor: ContextSignalProcesso
         switchTo(type, now, 1f, placeId, ContextSource.MANUAL, TransitionReason.MANUAL)
         recordConfirmation(type, placeId, now, accepted = true)
     }
+
+    suspend fun setManualPlace(placeType: PlaceType): Unit = with(processor) {
+        val now = clock.nowMillis()
+        val type = contextFor(placeType, now)
+        val placeId = places.firstOfType(placeType)?.id
+        scheduler.cancelChecks()
+        switchTo(type, now, 1f, placeId, ContextSource.MANUAL, TransitionReason.MANUAL)
+        recordConfirmation(type, placeId, now, accepted = true)
+    }
 }

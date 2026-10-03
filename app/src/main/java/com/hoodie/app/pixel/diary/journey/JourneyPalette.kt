@@ -1,7 +1,10 @@
 package com.hoodie.app.pixel.diary.journey
 
 import com.hoodie.app.core.mobility.MovementMode
+import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.pixel.diary.DiaryMapPalette
+import com.hoodie.app.pixel.transport.TransportRouteStyle
+import com.hoodie.app.pixel.transport.TransportVisualRegistry
 
 /**
  * Cores da Jornada. Herda o chão, a água, as árvores e os prédios do mapa
@@ -50,13 +53,15 @@ object JourneyPalette {
     /** Estilo de rua por meio: cor principal, cor secundária e traço (plano §10.1). */
     data class RouteStyle(val color: Int, val accent: Int, val stroke: Stroke)
 
-    fun route(mode: MovementMode?): RouteStyle = when (mode) {
-        MovementMode.WALKING, MovementMode.RUNNING -> RouteStyle(0xFF7FE0A0.toInt(), 0xFF4FB676.toInt(), Stroke.DOTTED)
-        MovementMode.CAR, MovementMode.VEHICLE_UNKNOWN -> RouteStyle(0xFFC9CCD8.toInt(), 0xFF8A8FA6.toInt(), Stroke.DOUBLE)
-        MovementMode.BUS, MovementMode.PUBLIC_TRANSPORT -> RouteStyle(0xFF6FA3F2.toInt(), 0xFF3F72C4.toInt(), Stroke.SOLID)
-        MovementMode.TRAIN, MovementMode.METRO -> RouteStyle(0xFFB58CF0.toInt(), 0xFF6FE0E8.toInt(), Stroke.SEGMENTED)
-        MovementMode.BICYCLE -> RouteStyle(0xFFF2CF5B.toInt(), 0xFFC9A63A.toInt(), Stroke.THIN)
-        MovementMode.OTHER, MovementMode.NONE, null -> RouteStyle(0xFFDAE5FA.toInt(), 0xFFA9B4CC.toInt(), Stroke.DOTTED)
+    fun route(mode: MovementMode?): RouteStyle = when (TransportVisualRegistry.profileFor(mode, CommuteStyle.WALK).journey.routeStyle) {
+        TransportRouteStyle.WALK -> RouteStyle(0xFF7FE0A0.toInt(), 0xFF4FB676.toInt(), Stroke.DOTTED)
+        TransportRouteStyle.CAR -> RouteStyle(0xFFC9CCD8.toInt(), 0xFF8A8FA6.toInt(), Stroke.DOUBLE)
+        TransportRouteStyle.BUS -> RouteStyle(0xFF6FA3F2.toInt(), 0xFF3F72C4.toInt(), Stroke.SOLID)
+        TransportRouteStyle.TRAIN -> RouteStyle(0xFFB58CF0.toInt(), 0xFF6FE0E8.toInt(), Stroke.SEGMENTED)
+        TransportRouteStyle.METRO -> RouteStyle(0xFFBA78E4.toInt(), 0xFF4CE0DE.toInt(), Stroke.SEGMENTED)
+        TransportRouteStyle.BICYCLE -> RouteStyle(0xFFF2CF5B.toInt(), 0xFFC9A63A.toInt(), Stroke.THIN)
+        TransportRouteStyle.OTHER -> RouteStyle(0xFFF09A55.toInt(), 0xFFFFD084.toInt(), Stroke.DOTTED)
+        TransportRouteStyle.GENERIC_TRANSIT -> RouteStyle(0xFF9AA6B8.toInt(), 0xFFD5DCE6.toInt(), Stroke.SOLID)
     }
 
     /** Céu do horizonte por período (topo, base). */

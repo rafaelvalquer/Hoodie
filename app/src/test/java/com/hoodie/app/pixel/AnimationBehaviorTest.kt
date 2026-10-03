@@ -70,8 +70,48 @@ class AnimationBehaviorTest {
         assertEquals(AnimationId.WALK_BACKPACK, last.animation)
         assertEquals(Direction.RIGHT, last.direction)
         // Quando anda para os lados, usa a vista lateral (nunca "de frente deslizando").
-        run.frames.filter { it.animation == AnimationId.WALK && it.direction in setOf(Direction.LEFT, Direction.RIGHT) }.forEach {
+        run.frames.filter { it.animation in setOf(AnimationId.WALK, AnimationId.WALK_BACKPACK) && it.direction in setOf(Direction.LEFT, Direction.RIGHT) }.forEach {
             assertEquals("lado", com.hoodie.app.pixel.sprite.Facing.SIDE, it.direction.facing)
+        }
+    }
+
+    @Test
+    fun `trocas walk bus carro bicicleta e destino executam exit fade enter`() {
+        val sm = AnimationStateMachine(Random(31))
+        val run = Run(sm)
+        val walk = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = com.hoodie.app.core.mobility.MovementMode.WALKING)
+        val bus = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = com.hoodie.app.core.mobility.MovementMode.BUS)
+        val car = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = com.hoodie.app.core.mobility.MovementMode.CAR)
+        val bike = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = com.hoodie.app.core.mobility.MovementMode.BICYCLE)
+        val destination = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME)
+        sm.setVisual(walk, run.t); run.until(100)
+        listOf(bus to AnimationId.BUS_ENTER, car to AnimationId.CAR_ENTER, bike to AnimationId.BIKE_START, destination to AnimationId.WALK_STOP).forEach { (target, enter) ->
+            sm.setVisual(target, run.t)
+            run.until(20_000) { it.scene.id == target.scene && sm.phase == Phase.LOOP }
+            assertEquals(target.scene, sm.currentVisual?.scene)
+            if (enter != AnimationId.WALK_STOP) assertTrue("${target.scene} enter", run.frames.any { it.animation == enter })
+            assertTrue("mudança de cena usa fade", run.frames.any { it.fade < 1f })
+        }
+    }
+
+    @Test
+    fun `chegada executa saida especifica de carro onibus e metro`() {
+        val cases = listOf(
+            com.hoodie.app.core.mobility.MovementMode.CAR to AnimationId.CAR_EXIT,
+            com.hoodie.app.core.mobility.MovementMode.BUS to AnimationId.BUS_EXIT,
+            com.hoodie.app.core.mobility.MovementMode.METRO to AnimationId.METRO_EXIT,
+        )
+        cases.forEachIndexed { index, (mode, expectedExit) ->
+            val sm = AnimationStateMachine(Random(410 + index))
+            val run = Run(sm)
+            val journey = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = mode)
+            val destination = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME)
+            sm.setVisual(journey, run.t)
+            run.until(100)
+            sm.setVisual(destination, run.t)
+            run.until(20_000) { it.scene == com.hoodie.app.pixel.scene.SceneRegistry[destination.scene] && sm.phase == Phase.LOOP }
+            assertTrue("$mode deve tocar $expectedExit", run.frames.any { it.animation == expectedExit })
+            assertEquals(destination.scene, sm.currentVisual?.scene)
         }
     }
 

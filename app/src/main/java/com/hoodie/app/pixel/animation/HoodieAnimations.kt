@@ -11,7 +11,7 @@ import com.hoodie.app.pixel.sprite.Legs
 import com.hoodie.app.pixel.sprite.Mouth
 
 /** Grupos só para organizar o Pixel Lab. */
-enum class AnimGroup { LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION, STUDY, SHOPPING, VISIT, LEISURE }
+enum class AnimGroup { LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION, STUDY, SHOPPING, VISIT, LEISURE, TRANSPORT }
 
 /**
  * Identificador estável de animação. É o contrato entre o motor (VisualDirector,
@@ -114,7 +114,63 @@ enum class AnimationId(val label: String, val group: AnimGroup) {
     WATCH_TV("Ver TV", AnimGroup.HOME),
     COOK("Cozinhar", AnimGroup.HOME),
     CLEAN("Varrer", AnimGroup.HOME),
-    BUS_SIT("Sentado no ônibus", AnimGroup.HOME),
+    BUS_SIT("Sentado no ônibus", AnimGroup.TRANSPORT),
+
+    // Carro
+    CAR_ENTER("Entrar no carro", AnimGroup.TRANSPORT),
+    CAR_IDLE("Viajar de carro", AnimGroup.TRANSPORT),
+    CAR_LOOK_WINDOW("Olhar a janela do carro", AnimGroup.TRANSPORT),
+    CAR_LOOK_FRONT("Olhar para a frente no carro", AnimGroup.TRANSPORT),
+    CAR_BUMP("Balançar com o carro", AnimGroup.TRANSPORT),
+    CAR_EXIT("Sair do carro", AnimGroup.TRANSPORT),
+
+    // Ônibus
+    BUS_ENTER("Entrar no ônibus", AnimGroup.TRANSPORT),
+    BUS_LOOK_WINDOW("Olhar a janela do ônibus", AnimGroup.TRANSPORT),
+    BUS_PHONE("Olhar o celular no ônibus", AnimGroup.TRANSPORT),
+    BUS_BUMP("Balançar no ônibus", AnimGroup.TRANSPORT),
+    BUS_STAND("Levantar no ônibus", AnimGroup.TRANSPORT),
+    BUS_EXIT("Sair do ônibus", AnimGroup.TRANSPORT),
+
+    // Trem
+    TRAIN_ENTER("Entrar no trem", AnimGroup.TRANSPORT),
+    TRAIN_SIT("Sentar no trem", AnimGroup.TRANSPORT),
+    TRAIN_WINDOW("Olhar a janela do trem", AnimGroup.TRANSPORT),
+    TRAIN_PHONE("Olhar o celular no trem", AnimGroup.TRANSPORT),
+    TRAIN_STAND("Levantar no trem", AnimGroup.TRANSPORT),
+    TRAIN_BRAKE("Reagir à frenagem do trem", AnimGroup.TRANSPORT),
+    TRAIN_EXIT("Sair do trem", AnimGroup.TRANSPORT),
+
+    // Metrô
+    METRO_ENTER("Entrar no metrô", AnimGroup.TRANSPORT),
+    METRO_SIT("Sentar no metrô", AnimGroup.TRANSPORT),
+    METRO_STAND("Levantar no metrô", AnimGroup.TRANSPORT),
+    METRO_HANDLE("Segurar a barra do metrô", AnimGroup.TRANSPORT),
+    METRO_LOOK_WINDOW("Olhar a janela do metrô", AnimGroup.TRANSPORT),
+    METRO_PHONE("Olhar o celular no metrô", AnimGroup.TRANSPORT),
+    METRO_BRAKE("Reagir à frenagem do metrô", AnimGroup.TRANSPORT),
+    METRO_EXIT("Sair do metrô", AnimGroup.TRANSPORT),
+
+    // Bicicleta
+    BIKE_START("Começar a pedalar", AnimGroup.TRANSPORT),
+    BIKE_PEDAL("Pedalar", AnimGroup.TRANSPORT),
+    BIKE_COAST("Deslizar sem pedalar", AnimGroup.TRANSPORT),
+    BIKE_LOOK("Olhar durante o pedal", AnimGroup.TRANSPORT),
+    BIKE_BRAKE("Frear a bicicleta", AnimGroup.TRANSPORT),
+    BIKE_STOP("Parar a bicicleta", AnimGroup.TRANSPORT),
+
+    // Outro veículo pessoal
+    OTHER_RIDE_START("Começar outro transporte", AnimGroup.TRANSPORT),
+    OTHER_RIDE("Seguir em outro transporte", AnimGroup.TRANSPORT),
+    OTHER_RIDE_LOOK("Olhar durante o trajeto", AnimGroup.TRANSPORT),
+    OTHER_RIDE_STOP("Parar outro transporte", AnimGroup.TRANSPORT),
+
+    // Transporte coletivo ou veículo ainda não identificado (sem marcação de modal).
+    TRANSIT_ENTER("Entrar no transporte", AnimGroup.TRANSPORT),
+    TRANSIT_SIT("Viajar sentado no transporte", AnimGroup.TRANSPORT),
+    TRANSIT_LOOK_WINDOW("Olhar a janela do transporte", AnimGroup.TRANSPORT),
+    TRANSIT_BUMP("Reagir ao movimento do transporte", AnimGroup.TRANSPORT),
+    TRANSIT_EXIT("Sair do transporte", AnimGroup.TRANSPORT),
 
     // Escola
     STUDY_READ("Estudar lendo", AnimGroup.STUDY),

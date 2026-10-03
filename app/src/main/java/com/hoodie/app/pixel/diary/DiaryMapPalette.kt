@@ -44,7 +44,7 @@ object DiaryMapPalette {
         PlaceType.WORK -> 0xFF88AFE9.toInt() to 0xFF6586CE.toInt()
         PlaceType.RESTAURANT -> 0xFFE99C7D.toInt() to 0xFFC97A5D.toInt()
         PlaceType.GYM -> 0xFFE6C86D.toInt() to 0xFFC4A64E.toInt()
-        PlaceType.MARKET -> 0xFF86C99A.toInt() to 0xFF5FA676.toInt()
+        PlaceType.MARKET, PlaceType.STORE -> 0xFF86C99A.toInt() to 0xFF5FA676.toInt()
         PlaceType.SCHOOL -> 0xFFB79AE9.toInt() to 0xFF9478C9.toInt()
         PlaceType.LEISURE -> 0xFFEFA3C8.toInt() to 0xFFCB7FA6.toInt()
         PlaceType.FAMILY -> 0xFFF0B27A.toInt() to 0xFFCF9058.toInt()

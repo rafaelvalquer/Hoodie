@@ -117,7 +117,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
 internal data class HomeActions(
     val retryLoad: () -> Unit = {},
     val savePlaceHere: (PlaceType) -> Unit = {},
-    val setManual: (UserContextType) -> Unit = {},
+    val setManual: (PlaceType) -> Unit = {},
     val toggleDayOff: () -> Unit = {},
     val answerYesNo: (Long, Boolean) -> Unit = { _, _ -> },
     val answerNewPlace: (Long, PlaceType) -> Unit = { _, _ -> },
@@ -256,8 +256,8 @@ internal fun HomeContent(
             Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.ui_home_screen_5), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.home_routine_learning, state.catName), color = HoodieColors.Muted)
-                UserContextType.manualOptions.forEach { t ->
-                    PixelButton("${t.emoji} ${if (t == UserContextType.UNKNOWN) stringResource(R.string.context_other) else t.label}", {
+                PlaceType.entries.forEach { t ->
+                    PixelButton("${t.emoji} ${t.label}", {
                         actions.setManual(t); manualOpen = false
                     }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
                 }

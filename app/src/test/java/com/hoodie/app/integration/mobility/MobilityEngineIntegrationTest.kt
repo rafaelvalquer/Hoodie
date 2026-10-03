@@ -77,7 +77,7 @@ class MobilityEngineIntegrationTest {
         assertNotNull(q)
         runBlocking { m.router.answerTransportMode(q!!.id, MovementMode.BUS) }
         assertEquals(MovementMode.BUS, m.open()!!.currentMode)
-        assertEquals(SceneId.TRANSIT, scene())
+        assertEquals(SceneId.BUS, scene())
 
         // 08:25 desce e anda.
         m.at(MONDAY, 8, 25); m.move(DetectedMovement.WALKING)

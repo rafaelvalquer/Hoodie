@@ -158,3 +158,33 @@ O teste estrito identificou um diálogo “System UI isn't responding” sobre a
 
 Correção de Ajustes compilada em 4m39s. Recaptura executou 30 casos em 70,847 s, todos aprovados. As 24 imagens afetadas foram reinspecionadas em resolução original e aceitas: rótulos inteiros, botões em linhas separadas quando necessário e final da rolagem preservado. As 198 imagens restantes tiveram hashes idênticos. As 222 referências aceitas estão em app/src/androidTest/assets/goldens/screens, com dimensões/hashes e ambiente em docs/golden-reference-manifest.json. A comparação pixel a pixel ainda está pendente; gravação e revisão não substituem essa execução.
 
+### Lugares físicos e perfis visuais de transporte — 03/10/2026
+
+- Catálogo único usado tanto por “O que estou fazendo?” quanto por “Adicionar lugar”: Casa, Trabalho, Academia, Escola, Restaurante, Mercado, Loja, Casa de amigos ou familiares, Lazer e Outro. O tipo persistido `STORE` foi adicionado sem renomear IDs existentes; `Outro` mantém contexto UNKNOWN e não vira passeio automaticamente. Os dois seletores podem rolar quando a altura disponível é pequena.
+- Adicionar lugar associa cada opção a um contexto físico coerente; “Loja” agora tem representação própria de fachada/ícone no mapa e comparte a categoria de compras sem se confundir com Mercado.
+- Criado o registro de perfil de transporte para WALKING, RUNNING, bicicleta, carro, ônibus, trem, metrô, outros veículos e transporte público/veículo não identificado. O perfil escolhe cena, clips de entrada/loop/saída, ambientação/paralaxe e estilo de rota. Cenas próprias de ônibus/trem/metrô, bicicleta e veículo pessoal genérico; fallback desconhecido usa clips TRANSIT neutros, sem animações nomeadas BUS. Pixel Lab, Journey e mapa usam o mesmo perfil. Biblioteca agora enumera 142 animações e 19 cenas.
+- Galeria de 16 capturas das oito classes de transporte em dia/noite revisada visualmente; galeria das cenas novas e Jornada inspecionadas. Referências dos estados Jornada e cenas novas atualizadas após revisão; o hash de `BUS_SIT` permaneceu igual ao clip legado. Marcadores representativos cobertos por imagens, além dos testes de registro e transição walk→bus→car→bike→destino. O manifest anterior da matriz registra comparação aprovada de 180 casos/222 imagens; os diálogos de seleção física ainda não fazem parte dessa matriz.
+- Validação JVM nesta árvore: **485 testes aprovados, zero falhas/erros/ignorados** (`:app:testDebugUnitTest`). Inclui catálogo e coerência de cenas/spots para todas as combinações, transição do escritório para caminhada lateral e para carro/ônibus/metrô, render de iluminação de transporte e regressões visuais de Jornada/animações. Os novos goldens SHA-256 de cenas e marcadores de transporte foram gerados após inspeção das galerias e passaram em execução posterior em modo de comparação.
+- `:app:assembleDebug` passou depois das mudanças; APK em `app/build/outputs/apk/debug/app-debug.apk` (artefato local, não distribuído).
+
+O objetivo integral do plano permanece aberto: a validação visual/native após a atualização dos seletores ainda precisa ser executada; outras pendências históricas nas fases 3–8, 24–35 também não são encerradas por esta rodada. Promoção de versão continua condicionada aos gates documentados acima.
+
+Tentativa de verificar 12 goldens Home pós-alteração foi executada no AVD Pixel_8/API 37 disponível; todos foram ignorados pelo gate de segurança `verifyGoldens=true`, que só compara no aparelho API 34 de referência. Essa tentativa não conta como validação. O runner atual de `ScreenGoldenMatrixTest` não inclui os diálogos “O que estou fazendo?” e “Adicionar lugar”; falta adicionar/capturar esses estados e revisar suas imagens no dispositivo de referência.
+
+
+### Resultado de validação de transporte — 03/10/2026
+
+- `:app:testDebugUnitTest` executado em modo de comparação depois de gravar e revisar os novos arquivos de hash: **484 testes, 0 falhas, 0 erros, 0 ignorados**. Artefatos por modo: `app/src/test/resources/transport-scenes-v1.sha256` (16 capturas dia/noite) e `journey-transport-markers-v1.sha256` (8 classes de marcador).
+- `:app:assembleDebug` passou após a mudança de iluminação e os ajustes de Pixel Lab.
+- Persistência revisada: preferências de mobilidade usam `MovementMode.name` com `MovementMode.parse`; `STORE` só estende `PlaceType` (não há coluna enum por ordinal). Não foi necessária migração adicional de banco para transporte ou Loja.
+- Falta uma integração instrumentada no AVD API 34 para os dois seletores físicos e comparação pixel a pixel da matriz após a atualização. O único AVD disponível nesta sessão é API 37 e o gate existente ignorou corretamente os goldens de referência.
+- Perfis controlam velocidade/paralaxe, vibração e iluminação diferenciada para exterior, interior diurno e túnel. A diferença entre os três perfis é coberta por teste de render.
+- Pixel Lab recebeu uma aba Transportes com modos explícitos e revisão de ENTER/LOOP/EXIT, horário, direção, energia, humor e velocidade.
+- `ScreenGoldenMatrixTest` agora contém estados reais dos seletores “O que estou fazendo?” e “Novo lugar”; a compilação de `:app:compileDebugAndroidTestKotlin` passou. A execução conectada dos novos casos foi tentada, mas o runner retornou `java.io.IOException: Acesso negado` antes de apresentar casos. Não conta como instrumentação aprovada; a captura/comparação requer AVD autorizado (baseline oficial API 34).
+- A regressão nova `chegada executa saida especifica de carro onibus e metro` foi incluída. Resultado consolidado JVM: **485/485 aprovados**; APK debug recompilado com sucesso.
+
+#### Seletores físicos — smoke visual posterior
+
+Foram adicionados dois casos de preview/captura à matriz: seleção manual da Home e conteúdo do formulário “Novo lugar”. Os estados visuais usam fixtures no viewport Compose para evitar capturas vazias da janela separada `ModalBottomSheet`/`AlertDialog`; a composição do formulário reaproveita a lista de produção e o diálogo real agora permite rolagem em telas baixas. As duas imagens passaram em execução individual no AVD API 37 e foram inspecionadas: os dez tipos aparecem na Home; o formulário mostra as categorias, busca no mapa, nome e ações. Arquivos locais de smoke em `app/build/pixel-preview/android-smoke/`.
+
+Isso não substitui teste de interação da modal nem comparação de baselines: a tentativa de consultar a semântica `IsDialog` após clique não foi conclusiva, e os PNGs não foram promovidos. O AVD Hoodie_API34 existe dentro de `app/build`, mas o emulador nesta sessão não inicia por bloqueio de acesso ao lock global `C:\Users\Z565244\.android\emu-last-feature-flags.protobuf.lock`; a validação API 34 e a revisão dos dois estados seguem pendentes.

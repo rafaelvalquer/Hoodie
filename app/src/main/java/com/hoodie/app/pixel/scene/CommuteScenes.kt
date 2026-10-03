@@ -77,7 +77,7 @@ class StreetScene : PixelScene(SceneId.STREET) {
     override fun lights(env: SceneEnv): List<Light> = listOf(Light.Glow(120, 230, 120, 0.45f))
 }
 
-/** Interior de ônibus/metrô: a janela corre e dá sensação de viagem. */
+/** Interior neutro: usado quando a detecção não sabe qual veículo é. */
 class TransitScene : PixelScene(SceneId.TRANSIT) {
     override val spots = mapOf(SpotId.SEAT to Spot(120, 258), SpotId.CENTER to Spot(120, 258))
     override val defaultSpot = SpotId.SEAT
@@ -85,32 +85,28 @@ class TransitScene : PixelScene(SceneId.TRANSIT) {
 
     override fun drawBackground(b: PixelBuffer, env: SceneEnv) {
         b.box(0, 0, 239, 24, 0xFFD8DDE3.toInt())
-        b.box(0, 25, 239, 172, 0xFF3F8F7F.toInt())
-        b.box(0, 138, 239, 143, P.YELLOW)
+        b.box(0, 25, 239, 172, 0xFF657887.toInt())
         b.box(0, 173, 239, 319, 0xFF6C7180.toInt())
-        for (y in 180..319 step 6) b.hline(0, 239, y, 0xFF62677A.toInt())
+        for (y in 180..319 step 10) b.hline(0, 239, y, 0xFF62677A.toInt())
         b.box(0, 172, 239, 174, P.OUTLINE)
-        b.box(0, 300, 239, 303, P.YELLOW)
         b.box(0, 26, 239, 28, P.METAL); b.hline(0, 239, 29, P.METAL_DARK)
     }
 
     override fun props(): List<Prop> = listOf(
         Prop(0) { b, env, t ->
+            val speed = env.transportAmbient?.outsideSpeed ?: .7f
             for (wx in intArrayOf(10, 86, 162)) {
                 b.box(wx - 2, 38, wx + 70, 122, P.OUTLINE)
                 b.box(wx - 1, 39, wx + 69, 121, 0xFFCDD3DB.toInt())
                 SceneArt.skyBands(b, wx + 2, 42, wx + 66, 118, env.period)
-                SceneArt.city(b, wx + 2, wx + 66, 118, env.period, offset = (t / 6).toInt() + wx * 3, seed = wx)
-                val pole = ((t / 4) % 300).toInt()
+                SceneArt.city(b, wx + 2, wx + 66, 118, env.period, offset = (t * speed / .7f / 6).toInt() + wx * 3, seed = wx)
+                val pole = ((t * speed / .7f / 4) % 300).toInt()
                 val px = wx + 66 - (pole - wx * 2).mod(300)
                 if (px in wx + 2..wx + 66) b.box(px, 42, px + 2, 118, P.METAL_DARK)
             }
-            // Alças penduradas balançando.
-            val sway = if ((t / 500) % 2 == 0L) 0 else 1
-            for (hx in 20..230 step 30) {
-                b.vline(hx + sway, 29, 40, P.METAL_DARK)
-                b.disc(hx + sway, 44, 3, P.OUTLINE); b.disc(hx + sway, 44, 2, 0xFFCDD3DB.toInt())
-            }
+            // Painel neutro sem ícones ou acessórios que afirmem ônibus, trem ou metrô.
+            b.outlined(82, 12, 158, 27, 0xFF46566A.toInt(), P.OUTLINE)
+            b.box(88, 17, 152, 22, 0xFFC6D6E2.toInt())
         },
         Prop(200) { b, _, _ ->
             val seat = 0xFF2F5E9E.toInt()

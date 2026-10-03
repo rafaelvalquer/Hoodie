@@ -80,6 +80,8 @@ class ContextEngine @Inject constructor(
 
     suspend fun setManual(type: UserContextType): Unit = mutex.withLock { manualContextHandler.setManual(type) }
 
+    suspend fun setManualPlace(type: PlaceType): Unit = mutex.withLock { manualContextHandler.setManualPlace(type) }
+
     suspend fun savePlaceHere(type: PlaceType, name: String, lat: Double, lng: Double): Place = mutex.withLock { placeLearningHandler.savePlaceHere(type, name, lat, lng) }
 
     suspend fun answerSavePlace(questionId: Long, save: Boolean): Unit = mutex.withLock { placeLearningHandler.answerSavePlace(questionId, save) }

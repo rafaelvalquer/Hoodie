@@ -11,6 +11,10 @@ import com.hoodie.app.pixel.sprite.Anchor
 import com.hoodie.app.pixel.sprite.Direction
 import com.hoodie.app.pixel.sprite.Expression
 import com.hoodie.app.pixel.sprite.Eyes
+import com.hoodie.app.pixel.transport.TransportVisualProfile
+import com.hoodie.app.pixel.transport.TransportVisualRegistry
+import com.hoodie.app.pixel.transport.TransportLighting
+import com.hoodie.app.pixel.diary.journey.JourneyVehicle
 
 /**
  * Efeito visual. Com [anchor] ele segue uma âncora do frame (Zzz na cabeça,
@@ -69,6 +73,7 @@ data class VisualState(
     val gaze: List<GazeStep> = emptyList(),
     /** Props já "no estado" quando a cena abre direto no loop (sem tocar o enter). */
     val steadyFlags: Set<SceneFlag> = emptySet(),
+    val transportAmbient: com.hoodie.app.pixel.transport.TransportAmbientProfile? = null,
 )
 
 /** HoodieActivity + contexto do usuário → cena, âncora, sequências e microações. */
@@ -78,18 +83,8 @@ object VisualDirector {
      * Cena do deslocamento. Prioridade: sessão real de mobilidade → preferência
      * [CommuteStyle] → variação. Assim a preferência continua valendo com a detecção desligada.
      */
-    fun commuteScene(mobilityMode: MovementMode?, commute: CommuteStyle, variant: Int): SceneId = when (mobilityMode) {
-        MovementMode.WALKING, MovementMode.RUNNING -> SceneId.STREET
-        // BikeScene ainda não existe: a rua é o mais próximo.
-        MovementMode.BICYCLE -> SceneId.STREET
-        MovementMode.CAR -> SceneId.CAR
-        MovementMode.BUS, MovementMode.TRAIN, MovementMode.METRO, MovementMode.PUBLIC_TRANSPORT, MovementMode.VEHICLE_UNKNOWN -> SceneId.TRANSIT
-        MovementMode.OTHER, MovementMode.NONE, null -> when (commute) {
-            CommuteStyle.WALK -> SceneId.STREET
-            CommuteStyle.BUS -> SceneId.TRANSIT
-            CommuteStyle.RANDOM -> if (variant % 2 == 0) SceneId.STREET else SceneId.TRANSIT
-        }
-    }
+    fun commuteScene(mobilityMode: MovementMode?, commute: CommuteStyle, variant: Int): SceneId =
+        TransportVisualRegistry.profileFor(mobilityMode, commute, variant).scene
 
     fun sceneFor(activity: HoodieActivity, context: UserContextType, homeOffice: Boolean, commute: CommuteStyle, variant: Int, mobilityMode: MovementMode? = null): SceneId =
         when (context) {
@@ -122,8 +117,43 @@ object VisualDirector {
     ): VisualState {
         val scene = sceneFor(activity, context, homeOffice, commute, variant, mobilityMode)
         val tired = if (energy < 20) Expression.TIRED else null
-        val base = forScene(scene, activity, Mood(energy, mood, social, hunger, focus))
+        val currentMood = Mood(energy, mood, social, hunger, focus)
+        val base = if (context == UserContextType.COMMUTING) {
+            transportState(TransportVisualRegistry.profileFor(mobilityMode, commute, variant), currentMood)
+        } else forScene(scene, activity, currentMood)
         return base.copy(variant = variant, expression = base.expression ?: tired)
+    }
+
+    private fun transportState(profile: TransportVisualProfile, mood: Mood): VisualState {
+        val actions = profile.animationSet.primary.mapIndexed { index, animation ->
+            val baseWeight = when (profile.scene) {
+                SceneId.CAR -> listOf(44, 24, 22, 10).getOrElse(index) { 10 }
+                SceneId.BUS -> listOf(40, 25, 15, 10).getOrElse(index) { 10 }
+                SceneId.TRANSIT -> listOf(55, 35, 10).getOrElse(index) { 10 }
+                SceneId.TRAIN -> listOf(40, 25, 15, 12).getOrElse(index) { 10 }
+                SceneId.METRO -> listOf(36, 28, 18, 12).getOrElse(index) { 10 }
+                else -> listOf(55, 30, 15).getOrElse(index) { 10 }
+            }
+            MicroAction(animation, baseWeight, 4_000, 9_000, once = animation in setOf(CAR_BUMP, BUS_BUMP, TRAIN_BRAKE, METRO_BRAKE, BIKE_LOOK, OTHER_RIDE_LOOK, TRANSIT_BUMP))
+        }.toMutableList()
+        if (mood.tired && profile.journey.vehicle in setOf(JourneyVehicle.BUS, JourneyVehicle.TRAIN, JourneyVehicle.METRO, JourneyVehicle.GENERIC_TRANSIT)) {
+            actions += MicroAction(NAP_SIT, 8, 4_000, 8_000)
+        }
+        val streetWalk = profile.scene == SceneId.STREET && profile.mode == null
+        val exteriorRide = profile.scene in setOf(SceneId.STREET, SceneId.BICYCLE, SceneId.GENERIC_RIDE)
+        val spot = if (exteriorRide) SpotId.WALK else SpotId.SEAT
+        if (streetWalk) actions.clear().also { actions += MicroAction(WALK_BACKPACK, 100, direction = Direction.RIGHT) }
+        return VisualState(
+            scene = profile.scene,
+            spot = spot,
+            actions = actions,
+            variant = 0,
+            enter = profile.animationSet.enter,
+            exit = profile.animationSet.exit,
+            gaze = if (profile.ambient.lighting != TransportLighting.OPEN_AIR) windowGaze else emptyList(),
+            backpackWalk = exteriorRide,
+            transportAmbient = profile.ambient,
+        )
     }
 
     /** Animação de deslocamento entre spots: mochila no trajeto, passo lento no passeio. */
@@ -344,15 +374,21 @@ object VisualDirector {
         }
         // Na rua o mundo corre para a esquerda: o Hoodie anda de lado, para a direita.
         SceneId.STREET -> VisualState(scene, SpotId.WALK, one(WALK_BACKPACK, Direction.RIGHT), backpackWalk = true)
-        // No carro o Hoodie vai sentado, olhando a janela; de vez em quando, o celular (passageiro).
-        SceneId.CAR -> VisualState(
-            scene, SpotId.SEAT, listOf(MicroAction(BUS_SIT, 70), MicroAction(IDLE_SIT, 20), MicroAction(IDLE_LOOK, 10, once = true)),
-            backpackWalk = true, gaze = windowGaze,
-        )
+        SceneId.CAR -> transportState(TransportVisualRegistry.profileFor(MovementMode.CAR, CommuteStyle.WALK), m)
         SceneId.TRANSIT -> VisualState(
             scene, SpotId.SEAT, listOf(MicroAction(BUS_SIT, 75), MicroAction(IDLE_SIT, 10)) + phone(3).take(1),
             backpackWalk = true, gaze = windowGaze,
         )
+        SceneId.BUS, SceneId.TRAIN, SceneId.METRO, SceneId.BICYCLE, SceneId.GENERIC_RIDE ->
+            transportState(TransportVisualRegistry.profileFor(
+                when (scene) {
+                    SceneId.BUS -> MovementMode.BUS
+                    SceneId.TRAIN -> MovementMode.TRAIN
+                    SceneId.METRO -> MovementMode.METRO
+                    SceneId.BICYCLE -> MovementMode.BICYCLE
+                    else -> MovementMode.OTHER
+                }, CommuteStyle.WALK,
+            ), m)
         SceneId.RESTAURANT -> {
             val foodSteam = listOf(EffectSpec(EffectKind.STEAM, -4, -32, requires = SceneFlag.FOOD_SERVED))
             val meal = listOf(SIT_TABLE, LOOK_MENU, WAIT_FOOD)

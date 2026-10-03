@@ -51,6 +51,15 @@ object DiaryMapIcons {
             "..#..#.",
             ".......",
         ),
+        PlaceType.STORE to listOf(
+            "#######",
+            "#o#o#o#",
+            "#ooooo#",
+            "#o#o#o#",
+            "#o#o#o#",
+            "#ooooo#",
+            "#######",
+        ),
         PlaceType.SCHOOL to listOf(
             ".......",
             "###.###",

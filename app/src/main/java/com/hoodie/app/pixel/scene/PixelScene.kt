@@ -2,13 +2,21 @@ package com.hoodie.app.pixel.scene
 
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.transport.TransportAmbientProfile
+import com.hoodie.app.pixel.npc.AmbientNpcSlot
+import com.hoodie.app.pixel.npc.NpcDirector
 
 enum class SceneId(val label: String) {
     HOME("Casa"),
     OFFICE("Escritório"),
     STREET("Rua"),
-    TRANSIT("Ônibus"),
+    TRANSIT("Transporte genérico"),
     CAR("Carro"),
+    BUS("Ônibus"),
+    TRAIN("Trem"),
+    METRO("Metrô"),
+    BICYCLE("Bicicleta"),
+    GENERIC_RIDE("Outro transporte"),
     RESTAURANT("Restaurante"),
     GYM("Academia"),
 
@@ -57,6 +65,8 @@ data class SceneEnv(
     val doorFrame: Int = 0,
     /** Estado de props sincronizado por eventos das animações. */
     val flags: Set<SceneFlag> = emptySet(),
+    /** Perfil ambiental do transporte ativo (paralaxe, balanço e iluminação). */
+    val transportAmbient: TransportAmbientProfile? = null,
 ) {
     companion object {
         const val DOOR_OPEN = 3
@@ -123,6 +133,9 @@ abstract class PixelScene(val id: SceneId) {
     val sortedProps: List<Prop> by lazy { props().sortedBy { it.baseline } }
 
     open fun lights(env: SceneEnv): List<Light> = emptyList()
+
+    /** Personagens ambientais estáveis da cena; nunca adicionados a cenas privadas. */
+    open fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> = NpcDirector.plan(id, env.variant)
 
     fun spot(id: SpotId): Spot = spots[id] ?: spots.getValue(defaultSpot)
 

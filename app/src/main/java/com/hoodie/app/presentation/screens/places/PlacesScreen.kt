@@ -140,7 +140,7 @@ fun PlacesScreen(onOpen: (String) -> Unit, vm: PlacesViewModel = hiltViewModel()
 private val placeTypes = PlaceType.entries
 
 @Composable
-private fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -> Unit, onManual: (PlaceType, String, String) -> Unit, onMap: (PlaceType) -> Unit) {
+internal fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -> Unit, onManual: (PlaceType, String, String) -> Unit, onMap: (PlaceType) -> Unit) {
     var type by remember { mutableIntStateOf(0) }
     var name by remember { mutableStateOf("") }
     var coords by remember { mutableStateOf("") }
@@ -149,7 +149,7 @@ private fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) ->
         onDismissRequest = onDismiss,
         title = { Text("Novo lugar") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 ChipRow(placeTypes.map { "${it.emoji} ${it.label}" }, type, { type = it })
                 PixelButton("🗺 Buscar endereço no mapa", { onMap(placeTypes[type]) }, Modifier.fillMaxWidth())
                 OutlinedTextField(name, { name = it }, label = { Text("Nome (opcional)") }, singleLine = true)
@@ -167,6 +167,27 @@ private fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) ->
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
     )
+}
+
+@Composable
+internal fun AddPlaceDialogContent() {
+    var type by remember { mutableIntStateOf(0) }
+    var name by remember { mutableStateOf("") }
+    var coords by remember { mutableStateOf("") }
+    var manual by remember { mutableStateOf(false) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Novo lugar", style = MaterialTheme.typography.titleLarge)
+        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            ChipRow(placeTypes.map { "${it.emoji} ${it.label}" }, type, { type = it })
+            PixelButton("🗺 Buscar endereço no mapa", {}, Modifier.fillMaxWidth())
+            OutlinedTextField(name, { name = it }, label = { Text("Nome (opcional)") }, singleLine = true)
+            if (manual) OutlinedTextField(coords, { coords = it }, label = { Text("lat, lng") }, singleLine = true)
+            Text(
+                if (manual) "Usar minha localização atual" else "Ou digitar coordenadas",
+                color = HoodieColors.Blue, modifier = Modifier.clickable { manual = !manual }.padding(4.dp),
+            )
+        }
+    }
 }
 
 @Composable

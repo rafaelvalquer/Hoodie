@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.DayPeriod
+import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.pixel.animation.AnimGroup
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.animation.ClipTiming
@@ -88,13 +89,14 @@ fun PixelLabScreen(onBack: () -> Unit) {
             Text("PIXEL LAB", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             Text("✕", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(role = Role.Button, onClick = onBack).semantics { contentDescription = closeLabel }.padding(8.dp))
         }
-        ChipRow(listOf("Animação", "Cena", "Galeria", "Cenas", "Sprites"), tab, { tab = it })
+        ChipRow(listOf("Animação", "Cena", "Galeria", "Cenas", "Sprites", "Transportes"), tab, { tab = it })
         when (tab) {
             0 -> AnimationTool()
             1 -> SceneLab()
             2 -> AnimationGallery()
             3 -> SceneGallery()
-            else -> SpriteSources()
+            4 -> SpriteSources()
+            else -> TransportLab()
         }
     }
 }
@@ -199,6 +201,7 @@ private fun SceneLab() {
     var variant by remember { mutableIntStateOf(0) }
     // Modo atividade: o VisualDirector monta o estado real (cena, spot, microações, olhar).
     var byActivity by remember { mutableStateOf(false) }
+    var transportMode by remember { mutableStateOf(MovementMode.BUS) }
     var activity by remember { mutableStateOf(HoodieActivity.STUDYING) }
     var context by remember { mutableStateOf(UserContextType.STUDY) }
     var energy by remember { mutableIntStateOf(70) }
@@ -206,7 +209,7 @@ private fun SceneLab() {
     val s = SceneRegistry[scene]
     val chosenSpot = spot?.takeIf { it in s.spots } ?: s.defaultSpot
     val visual = if (byActivity) {
-        VisualDirector.resolve(activity, context, variant = variant, energy = energy, mood = mood)
+        VisualDirector.resolve(activity, context, mobilityMode = transportMode.takeIf { context == UserContextType.COMMUTING }, variant = variant, energy = energy, mood = mood)
             .let { v -> v.copy(expression = expression.takeIf { it != Expression.NORMAL } ?: v.expression) }
     } else VisualState(
         scene = scene,
@@ -229,6 +232,11 @@ private fun SceneLab() {
         ChipRow(HoodieActivity.entries.map { "${it.emoji} ${it.label}" }, activity.ordinal, { activity = HoodieActivity.entries[it] })
         SectionLabel("Contexto")
         ChipRow(UserContextType.entries.map { it.name.lowercase() }, context.ordinal, { context = UserContextType.entries[it] })
+        if (context == UserContextType.COMMUTING) {
+            SectionLabel("Transporte detectado")
+            ChipRow(MovementMode.entries.filter { it != MovementMode.NONE }.map { "${it.emoji} ${it.label}" }, MovementMode.entries.filter { it != MovementMode.NONE }.indexOf(transportMode), { transportMode = MovementMode.entries.filter { it != MovementMode.NONE }[it] })
+            Text("Perfil: ${visual.scene.label} · entrada ${visual.enter.joinToString { it.name }} · saída ${visual.exit.joinToString { it.name }}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+        }
         val levels = listOf(10, 40, 70, 95)
         SectionLabel("Energia")
         ChipRow(levels.map { "$it" }, levels.indexOf(energy), { energy = levels[it] })
@@ -262,6 +270,51 @@ private fun SceneLab() {
     ChipRow(Expression.entries.map { it.label }, expression.ordinal, { expression = Expression.entries[it] })
     SectionLabel("Velocidade")
     val speeds = listOf(0.25f, 0.5f, 1f, 2f)
+    ChipRow(speeds.map { "${it}x" }, speeds.indexOf(speed), { speed = speeds[it] })
+}
+
+/** Revisa um perfil completo e toca explicitamente ENTER, LOOP ou EXIT. */
+@Composable
+private fun TransportLab() {
+    val modes = MovementMode.entries.filter { it != MovementMode.NONE }
+    var mode by remember { mutableStateOf(MovementMode.CAR) }
+    var phase by remember { mutableStateOf("loop") }
+    var period by remember { mutableStateOf(DayPeriod.DAY) }
+    var direction by remember { mutableStateOf(Direction.FRONT) }
+    var energy by remember { mutableIntStateOf(70) }
+    var mood by remember { mutableIntStateOf(70) }
+    var speed by remember { mutableFloatStateOf(1f) }
+    val profile = com.hoodie.app.pixel.transport.TransportVisualRegistry.profileFor(mode, com.hoodie.app.core.model.CommuteStyle.WALK)
+    val visual = remember(mode, phase, energy, mood, direction) {
+        val base = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = mode, energy = energy, mood = mood)
+        val clip = when (phase) {
+            "enter" -> profile.animationSet.enter.firstOrNull()
+            "exit" -> profile.animationSet.exit.firstOrNull()
+            else -> profile.animationSet.primary.firstOrNull()
+        }
+        if (clip == null) base else base.copy(actions = listOf(MicroAction(clip, 1, 60_000, 60_000, direction = if (clip.clip.directional) direction else Direction.FRONT)))
+    }
+    SectionLabel("TRANSPORTES · ${profile.scene.label.uppercase()}")
+    Text("Perfil visual único · ${profile.journey.vehicle} · rota ${profile.journey.routeStyle}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+    Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
+        HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = period)
+    }
+    SectionLabel("Meio de transporte")
+    ChipRow(modes.map { "${it.emoji} ${it.label}" }, modes.indexOf(mode), { mode = modes[it] })
+    SectionLabel("Fase do clip")
+    ChipRow(listOf("PLAY ENTER", "PLAY LOOP", "PLAY EXIT"), listOf("enter", "loop", "exit").indexOf(phase), { phase = listOf("enter", "loop", "exit")[it] })
+    Text("Clip: ${when (phase) { "enter" -> profile.animationSet.enter.firstOrNull(); "exit" -> profile.animationSet.exit.firstOrNull(); else -> profile.animationSet.primary.firstOrNull() }?.name ?: "sem clip"} · cenas ${profile.scene.label}", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Gold)
+    SectionLabel("Horário")
+    ChipRow(DayPeriod.entries.map { it.label }, period.ordinal, { period = DayPeriod.entries[it] })
+    SectionLabel("Direção")
+    ChipRow(Direction.entries.map { it.name }, direction.ordinal, { direction = Direction.entries[it] })
+    val levels = listOf(10, 40, 70, 95)
+    SectionLabel("Energia")
+    ChipRow(levels.map { "$it" }, levels.indexOf(energy), { energy = levels[it] })
+    SectionLabel("Humor")
+    ChipRow(levels.map { "$it" }, levels.indexOf(mood), { mood = levels[it] })
+    SectionLabel("Velocidade")
+    val speeds = listOf(.25f, .5f, 1f, 2f)
     ChipRow(speeds.map { "${it}x" }, speeds.indexOf(speed), { speed = speeds[it] })
 }
 

@@ -64,10 +64,10 @@ object DiaryMapBuildings {
                 sign(b, type, 8, 4, roof)
             }
             else -> {
-                house(b, roof, roofShade, win, wide = type == PlaceType.MARKET || type == PlaceType.GYM)
+                house(b, roof, roofShade, win, wide = type == PlaceType.MARKET || type == PlaceType.STORE || type == PlaceType.GYM)
                 when (type) {
                     PlaceType.HOME -> { b.outlined(16, 0, 19, 5, 0xFFA05540.toInt(), P.OUTLINE) } // chaminé
-                    PlaceType.RESTAURANT, PlaceType.MARKET -> {
+                    PlaceType.RESTAURANT, PlaceType.MARKET, PlaceType.STORE -> {
                         // Toldo listrado.
                         for (x in 2..21) b.vline(x, 12, 13, if ((x / 2) % 2 == 0) roof else P.WALL)
                         b.hline(2, 21, 14, P.OUTLINE)

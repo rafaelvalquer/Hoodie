@@ -15,10 +15,7 @@ enum class UserContextType(val emoji: String, val label: String) {
     UNKNOWN("📍", "Lugar desconhecido");
 
     companion object {
-        /** Opções exibidas no modo manual "O que estou fazendo?". */
-        val manualOptions = listOf(
-            HOME, WORK, LUNCH, GYM, STUDY, SHOPPING,
-            COMMUTING, LEISURE, VISITING, TRAVEL, UNKNOWN,
-        )
+        /** Opções físicas; atividade/transporte têm fluxos próprios. */
+        val manualOptions = listOf(HOME, WORK, STUDY, SHOPPING, GYM, LEISURE, VISITING, LUNCH, UNKNOWN)
     }
 }

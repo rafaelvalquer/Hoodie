@@ -1,16 +1,18 @@
 package com.hoodie.app.pixel.diary.journey
 
 import com.hoodie.app.core.mobility.MovementMode
+import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.pixel.diary.DiaryHoodieMarker
 import com.hoodie.app.pixel.diary.MapPoint
 import com.hoodie.app.pixel.diary.MarkerDirection
 import com.hoodie.app.pixel.diary.MarkerState
 import com.hoodie.app.pixel.diary.journey.JourneyPalette as P
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.transport.TransportVisualRegistry
 import kotlin.math.roundToInt
 
 /** Como o Hoodie aparece no trecho (plano §9.4). Caminhada/corrida/desconhecido = a pé. */
-enum class JourneyVehicle { ON_FOOT, BICYCLE, CAR, BUS, TRAIN }
+enum class JourneyVehicle { ON_FOOT, BICYCLE, CAR, BUS, TRAIN, METRO, OTHER, GENERIC_TRANSIT }
 
 /** Onde e como o Hoodie está num instante. */
 data class JourneyMarkerState(
@@ -30,13 +32,8 @@ data class JourneyMarkerState(
  */
 object JourneyHoodieMarker {
 
-    fun vehicleFor(mode: MovementMode?): JourneyVehicle = when (mode) {
-        MovementMode.BICYCLE -> JourneyVehicle.BICYCLE
-        MovementMode.CAR, MovementMode.VEHICLE_UNKNOWN -> JourneyVehicle.CAR
-        MovementMode.BUS, MovementMode.PUBLIC_TRANSPORT -> JourneyVehicle.BUS
-        MovementMode.TRAIN, MovementMode.METRO -> JourneyVehicle.TRAIN
-        MovementMode.WALKING, MovementMode.RUNNING, MovementMode.OTHER, MovementMode.NONE, null -> JourneyVehicle.ON_FOOT
-    }
+    fun vehicleFor(mode: MovementMode?): JourneyVehicle =
+        TransportVisualRegistry.profileFor(mode, CommuteStyle.WALK).journey.vehicle
 
     /** No meio do trecho: posição pelo comprimento percorrido, direção pela rua daquele ponto. */
     fun onSegment(segment: JourneySegmentLayout, mode: MovementMode?, progress: Float): JourneyMarkerState {
@@ -62,7 +59,8 @@ object JourneyHoodieMarker {
         JourneyVehicle.ON_FOOT -> DiaryHoodieMarker.HEIGHT
         JourneyVehicle.BICYCLE -> DiaryHoodieMarker.HEIGHT + 5
         JourneyVehicle.CAR -> 16
-        JourneyVehicle.BUS, JourneyVehicle.TRAIN -> 17
+        JourneyVehicle.BUS, JourneyVehicle.TRAIN, JourneyVehicle.METRO, JourneyVehicle.GENERIC_TRANSIT -> 17
+        JourneyVehicle.OTHER -> 18
     }
 
     fun paint(b: PixelBuffer, s: JourneyMarkerState, timeMs: Long) {
@@ -75,6 +73,9 @@ object JourneyHoodieMarker {
             JourneyVehicle.CAR -> car(b, x, y, s, timeMs)
             JourneyVehicle.BUS -> bus(b, x, y, s, timeMs)
             JourneyVehicle.TRAIN -> train(b, x, y, s, timeMs)
+            JourneyVehicle.METRO -> metro(b, x, y, s, timeMs)
+            JourneyVehicle.OTHER -> otherRide(b, x, y, s, timeMs)
+            JourneyVehicle.GENERIC_TRANSIT -> genericTransit(b, x, y, s, timeMs)
         }
     }
 
@@ -136,6 +137,41 @@ object JourneyHoodieMarker {
         // Engates e rodas pequenas de trilho.
         b.set(if (s.facingRight) x + 15 else x - 15, by - 4, P.OUTLINE)
         listOf(-9, -3, 3, 9).forEach { wx -> b.disc(x + wx, by - 1, 1, P.TIRE) }
+    }
+
+    private fun metro(b: PixelBuffer, x: Int, y: Int, s: JourneyMarkerState, timeMs: Long) {
+        val by = y - bob(s, timeMs)
+        b.hline(x - 13, x + 13, y + 1, 0x55000000)
+        b.outlined(x - 13, by - 15, x + 13, by - 2, 0xFF353A53.toInt(), P.OUTLINE)
+        b.hline(x - 12, x + 12, by - 5, 0xFF9B70D6.toInt())
+        listOf(-10, -3, 4).forEach { wx -> b.outlined(x + wx, by - 12, x + wx + 5, by - 8, 0xFF2D3857.toInt(), P.OUTLINE) }
+        head(b, x - 5, by - 16, s.facingRight, timeMs, rows = 8)
+        b.box(x - 12, by - 7, x + 12, by - 6, 0xFF6FE0E8.toInt())
+        b.box(x - 10, by - 2, x + 10, by, P.TIRE)
+    }
+
+    private fun otherRide(b: PixelBuffer, x: Int, y: Int, s: JourneyMarkerState, timeMs: Long) {
+        val by = y - bob(s, timeMs)
+        b.hline(x - 11, x + 11, y + 1, 0x55000000)
+        val spin = if (s.moving) ((timeMs / 120) % 2).toInt() else 0
+        for (cx in intArrayOf(x - 7, x + 7)) {
+            b.disc(cx, by - 3, 3, P.OUTLINE); b.disc(cx, by - 3, 1, 0xFFB7B3A6.toInt()); b.set(cx + spin, by - 3, 0xFFB7B3A6.toInt())
+        }
+        b.outlined(x - 8, by - 8, x + 8, by - 5, 0xFFE6B84F.toInt(), P.OUTLINE)
+        b.vline(x, by - 5, by - 12, P.OUTLINE); b.hline(x - 4, x + 4, by - 12, P.OUTLINE)
+        head(b, x - 5, by - 20, s.facingRight, timeMs, rows = 8)
+        b.box(x - 4, by - 11, x + 4, by - 5, 0xFF42506D.toInt())
+    }
+
+    private fun genericTransit(b: PixelBuffer, x: Int, y: Int, s: JourneyMarkerState, timeMs: Long) {
+        val by = y - bob(s, timeMs)
+        b.hline(x - 12, x + 12, y + 1, 0x55000000)
+        b.outlined(x - 12, by - 15, x + 12, by - 2, 0xFF75869B.toInt(), P.OUTLINE)
+        b.hline(x - 11, x + 11, by - 5, 0xFFB5C4D1.toInt())
+        listOf(-9, -2, 5).forEach { wx -> b.outlined(x + wx, by - 12, x + wx + 5, by - 8, P.GLASS, P.OUTLINE) }
+        head(b, x - 5, by - 16, s.facingRight, timeMs, rows = 8)
+        b.box(x - 11, by - 7, x + 11, by - 6, 0xFF75869B.toInt())
+        b.disc(x - 7, by - 1, 1, P.TIRE); b.disc(x + 7, by - 1, 1, P.TIRE)
     }
 
     private fun bicycle(b: PixelBuffer, x: Int, y: Int, s: JourneyMarkerState, timeMs: Long) {

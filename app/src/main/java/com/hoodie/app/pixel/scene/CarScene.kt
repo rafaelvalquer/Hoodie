@@ -20,16 +20,17 @@ class CarScene : PixelScene(SceneId.CAR) {
     override fun props(): List<Prop> = listOf(
         // Cidade ao fundo, devagar; calçada e rua rápidas.
         Prop(0) { b, env, t ->
-            SceneArt.city(b, 0, 239, 205, env.period, offset = (t / 90).toInt(), seed = 7)
+            val motion = (t * (env.transportAmbient?.outsideSpeed ?: .8f) / .8f).toLong()
+            SceneArt.city(b, 0, 239, 205, env.period, offset = (motion / 90).toInt(), seed = 7)
             b.box(0, 205, 239, 214, 0xFFB7B2A8.toInt())
-            val tile = ((t / 12) % 20).toInt()
+            val tile = ((motion / 12) % 20).toInt()
             for (x in -tile until 240 step 20) b.vline(x, 205, 214, 0xFFA29D93.toInt())
             b.hline(0, 239, 214, P.OUTLINE)
             b.box(0, 215, 239, 319, 0xFF3D4150.toInt())
-            val dash = ((t / 8) % 48).toInt()
+            val dash = ((motion / 8) % 48).toInt()
             for (x in -dash until 240 step 48) b.box(x, 300, x + 24, 303, 0xFFE9E3C8.toInt())
             // Postes passando rápido (perto da câmera).
-            val pole = ((t / 10) % 200).toInt()
+            val pole = ((motion / 10) % 200).toInt()
             for (i in 0..1) {
                 val px = 239 - pole + i * 200 - 100
                 if (px in -4..243) {
@@ -41,7 +42,7 @@ class CarScene : PixelScene(SceneId.CAR) {
         },
         // Cabine por trás do Hoodie: teto, vidros e o encosto do banco.
         Prop(100) { b, env, t ->
-            val bounce = bounce(t)
+            val bounce = bounce(t, env)
             val body = CAR_BODY
             // Teto e colunas.
             b.outlined(54, 150 + bounce, 194, 160 + bounce, body, P.OUTLINE)
@@ -56,7 +57,7 @@ class CarScene : PixelScene(SceneId.CAR) {
         },
         // Porta e lateral na frente do Hoodie: ele "senta" dentro do carro.
         Prop(300) { b, env, t ->
-            val bounce = bounce(t)
+            val bounce = bounce(t, env)
             val body = CAR_BODY
             val shade = PixelBuffer.mix(body, P.OUTLINE, 0.25f)
             // Coluna do meio e moldura inferior das janelas (por cima do Hoodie).
@@ -71,7 +72,7 @@ class CarScene : PixelScene(SceneId.CAR) {
             b.outlined(30, 222 + bounce, 40, 232 + bounce, if (night) P.LAMP_LIGHT else P.CREAM, P.OUTLINE)
             b.outlined(208, 222 + bounce, 216, 232 + bounce, P.RED, P.OUTLINE)
             // Rodas girando.
-            for (wx in intArrayOf(76, 172)) wheel(b, wx, 266, t)
+            for (wx in intArrayOf(76, 172)) wheel(b, wx, 266, t, env)
         },
     )
 
@@ -80,14 +81,19 @@ class CarScene : PixelScene(SceneId.CAR) {
         Light.Emissive(56, 162, 192, 206),
     )
 
-    private fun bounce(t: Long) = if ((t / 320) % 4 == 0L) 1 else 0
+    private fun bounce(t: Long, env: SceneEnv) = when (env.transportAmbient?.vibration) {
+        com.hoodie.app.pixel.transport.TransportVibration.MEDIUM -> if ((t / 210) % 3 == 0L) 1 else 0
+        com.hoodie.app.pixel.transport.TransportVibration.LOW, null -> if ((t / 320) % 4 == 0L) 1 else 0
+        com.hoodie.app.pixel.transport.TransportVibration.NONE -> 0
+    }
 
-    private fun wheel(b: PixelBuffer, cx: Int, cy: Int, t: Long) {
+    private fun wheel(b: PixelBuffer, cx: Int, cy: Int, t: Long, env: SceneEnv) {
         b.disc(cx, cy, 15, P.OUTLINE)
         b.disc(cx, cy, 12, 0xFF2B2E3A.toInt())
         b.disc(cx, cy, 6, P.METAL)
         // Raios em 4 posições: a roda parece girar.
-        when (((t / 70) % 4).toInt()) {
+        val motion = (t * (env.transportAmbient?.outsideSpeed ?: .8f) / .8f).toLong()
+        when (((motion / 70) % 4).toInt()) {
             0 -> { b.hline(cx - 10, cx + 10, cy, P.METAL_DARK) }
             1 -> { b.line(cx - 7, cy - 7, cx + 7, cy + 7, P.METAL_DARK) }
             2 -> { b.vline(cx, cy - 10, cy + 10, P.METAL_DARK) }

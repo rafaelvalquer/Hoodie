@@ -37,18 +37,22 @@ class MobilityVisualIntegrationTest {
     fun `mapeamento modo para cena`() {
         assertEquals(SceneId.STREET, scene(MovementMode.WALKING, CommuteStyle.BUS))
         assertEquals(SceneId.STREET, scene(MovementMode.RUNNING, CommuteStyle.BUS))
-        assertEquals("BikeScene futura: rua", SceneId.STREET, scene(MovementMode.BICYCLE, CommuteStyle.BUS))
-        listOf(MovementMode.BUS, MovementMode.TRAIN, MovementMode.METRO, MovementMode.PUBLIC_TRANSPORT, MovementMode.VEHICLE_UNKNOWN)
+        assertEquals(SceneId.BICYCLE, scene(MovementMode.BICYCLE, CommuteStyle.BUS))
+        assertEquals(SceneId.BUS, scene(MovementMode.BUS, CommuteStyle.WALK))
+        assertEquals(SceneId.TRAIN, scene(MovementMode.TRAIN, CommuteStyle.WALK))
+        assertEquals(SceneId.METRO, scene(MovementMode.METRO, CommuteStyle.WALK))
+        listOf(MovementMode.PUBLIC_TRANSPORT, MovementMode.VEHICLE_UNKNOWN)
             .forEach { assertEquals(it.name, SceneId.TRANSIT, scene(it, CommuteStyle.WALK)) }
+        assertEquals(SceneId.GENERIC_RIDE, scene(MovementMode.OTHER, CommuteStyle.WALK))
         assertEquals(SceneId.CAR, scene(MovementMode.CAR))
     }
 
     @Test
     fun `sem sessao real a preferencia commuteStyle continua valendo`() {
         assertEquals(SceneId.STREET, scene(null, CommuteStyle.WALK))
-        assertEquals(SceneId.TRANSIT, scene(null, CommuteStyle.BUS))
+        assertEquals(SceneId.BUS, scene(null, CommuteStyle.BUS))
         assertEquals(SceneId.STREET, scene(null, CommuteStyle.RANDOM, variant = 0))
-        assertEquals(SceneId.TRANSIT, scene(null, CommuteStyle.RANDOM, variant = 1))
+        assertEquals(SceneId.BUS, scene(null, CommuteStyle.RANDOM, variant = 1))
         // Fora do deslocamento a mobilidade não muda nada.
         assertEquals(SceneId.OFFICE, VisualDirector.resolve(HoodieActivity.WORKING, UserContextType.WORK, mobilityMode = MovementMode.CAR).scene)
     }
@@ -56,7 +60,7 @@ class MobilityVisualIntegrationTest {
     @Test
     fun `CarScene registrada, sentado e desenhando com movimento`() {
         val v = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = MovementMode.CAR)
-        assertTrue(v.actions.any { it.anim == AnimationId.BUS_SIT })
+        assertTrue(v.actions.any { it.anim == AnimationId.CAR_IDLE })
         val car = SceneRegistry[SceneId.CAR]
         assertTrue(car.walkInPlace)
         fun frame(t: Long) = PixelBuffer(car.width, car.height).also { b ->

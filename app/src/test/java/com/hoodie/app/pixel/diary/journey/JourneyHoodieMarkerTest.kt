@@ -18,9 +18,11 @@ class JourneyHoodieMarkerTest {
         assertEquals(JourneyVehicle.ON_FOOT, JourneyHoodieMarker.vehicleFor(MovementMode.WALKING))
         assertEquals(JourneyVehicle.ON_FOOT, JourneyHoodieMarker.vehicleFor(null))
         assertEquals(JourneyVehicle.BICYCLE, JourneyHoodieMarker.vehicleFor(MovementMode.BICYCLE))
-        assertEquals(JourneyVehicle.CAR, JourneyHoodieMarker.vehicleFor(MovementMode.VEHICLE_UNKNOWN))
-        assertEquals(JourneyVehicle.BUS, JourneyHoodieMarker.vehicleFor(MovementMode.PUBLIC_TRANSPORT))
-        assertEquals(JourneyVehicle.TRAIN, JourneyHoodieMarker.vehicleFor(MovementMode.METRO))
+        assertEquals(JourneyVehicle.GENERIC_TRANSIT, JourneyHoodieMarker.vehicleFor(MovementMode.VEHICLE_UNKNOWN))
+        assertEquals(JourneyVehicle.GENERIC_TRANSIT, JourneyHoodieMarker.vehicleFor(MovementMode.PUBLIC_TRANSPORT))
+        assertEquals(JourneyVehicle.METRO, JourneyHoodieMarker.vehicleFor(MovementMode.METRO))
+        assertEquals(JourneyVehicle.TRAIN, JourneyHoodieMarker.vehicleFor(MovementMode.TRAIN))
+        assertEquals(JourneyVehicle.OTHER, JourneyHoodieMarker.vehicleFor(MovementMode.OTHER))
     }
 
     @Test

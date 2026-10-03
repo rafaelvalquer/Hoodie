@@ -1,5 +1,6 @@
 # Gradle / Kotlin
 .gradle/
+.gradle-workspace/
 .kotlin/
 build/
 **/build/

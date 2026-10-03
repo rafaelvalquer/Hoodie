@@ -1,10 +1,13 @@
 package com.hoodie.app.pixel.diary.journey
 
-import com.hoodie.app.domain.diary.model.JourneyMapData
 import com.hoodie.app.engine.diary.JourneyReplayAssembler
+import com.hoodie.app.domain.diary.model.JourneyMapData
+import com.hoodie.app.pixel.diary.MapPoint
+import com.hoodie.app.pixel.diary.MarkerDirection
 import com.hoodie.app.pixel.PreviewExport
 import com.hoodie.app.pixel.diary.journey.JourneyTestFixtures.t
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.diary.journey.JourneyHoodieMarker
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -71,5 +74,36 @@ class JourneyGoldenTest {
         val expected = stream!!.bufferedReader().useLines { lines -> lines.filter { it.isNotBlank() }.associate { it.split('\t').let { (k, v) -> k to v } } }
         assertEquals(expected.keys, actual.keys)
         actual.forEach { (name, hash) -> assertEquals("Jornada mudou visualmente: $name (veja build/pixel-preview/journey/$name.png)", expected[name], hash) }
+    }
+
+    @Test
+    fun `marcadores de todos os modais da jornada produzem imagens distintas`() {
+        val modes = listOf(
+            com.hoodie.app.core.mobility.MovementMode.WALKING,
+            com.hoodie.app.core.mobility.MovementMode.BICYCLE,
+            com.hoodie.app.core.mobility.MovementMode.CAR,
+            com.hoodie.app.core.mobility.MovementMode.BUS,
+            com.hoodie.app.core.mobility.MovementMode.TRAIN,
+            com.hoodie.app.core.mobility.MovementMode.METRO,
+            com.hoodie.app.core.mobility.MovementMode.OTHER,
+            com.hoodie.app.core.mobility.MovementMode.PUBLIC_TRANSPORT,
+        )
+        val shots = modes.map { mode ->
+            val marker = JourneyMarkerState(MapPoint(40f, 46f), MarkerDirection.RIGHT, moving = true,
+                vehicle = JourneyHoodieMarker.vehicleFor(mode), facingRight = true)
+            PixelBuffer(80, 60).also { JourneyHoodieMarker.paint(it, marker, 1_000) }
+        }
+        assertEquals(modes.size, shots.map(::digest).toSet().size)
+        PreviewExport.sheet("journey/transport_markers", shots, columns = 4, scale = 5)
+        val actual = modes.zip(shots).associate { (mode, image) -> mode.name to digest(image) }
+        if (System.getenv("RECORD_JOURNEY_TRANSPORT_GOLDENS") == "true") {
+            File("src/test/resources/journey-transport-markers-v1.sha256").writeText(actual.entries.joinToString("\n") { "${it.key}\t${it.value}" } + "\n")
+            return
+        }
+        val stream = javaClass.getResourceAsStream("/journey-transport-markers-v1.sha256")
+        assertTrue("Sem golden de marcadores; revise build/pixel-preview/journey/transport_markers.png", stream != null)
+        val expected = stream!!.bufferedReader().useLines { lines -> lines.filter { it.isNotBlank() }.associate { it.split('\t').let { (k, v) -> k to v } } }
+        assertEquals(actual.keys, expected.keys)
+        actual.forEach { (name, hash) -> assertEquals("Marcador de jornada mudou: $name", expected[name], hash) }
     }
 }

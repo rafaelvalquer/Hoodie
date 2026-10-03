@@ -20,6 +20,7 @@ object DiaryMapLayoutEngine {
         PlaceType.RESTAURANT to (2 to 1),
         PlaceType.GYM to (4 to 2),
         PlaceType.MARKET to (0 to 0),
+        PlaceType.STORE to (4 to 1),
         PlaceType.SCHOOL to (2 to 0),
         PlaceType.LEISURE to (3 to 1),
         PlaceType.FAMILY to (1 to 2),

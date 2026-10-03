@@ -52,7 +52,7 @@ object DiaryMapDecoration {
             val x = n.footprint.col * DiaryMapTiles.SIZE; val y = n.footprint.row * DiaryMapTiles.SIZE
             when (n.type) {
                 PlaceType.HOME -> smoke(b, x + 17, y - 1, timeMs)
-                PlaceType.RESTAURANT, PlaceType.MARKET, PlaceType.LEISURE -> {
+                PlaceType.RESTAURANT, PlaceType.MARKET, PlaceType.STORE, PlaceType.LEISURE -> {
                     // Placa piscando (mais visível à noite).
                     if ((timeMs / 700) % 2 == 0L || !lightsOn) return@forEach
                     b.set(x + 6, y + 2, P.LAMP_LIGHT); b.set(x + 16, y + 2, P.LAMP_LIGHT)

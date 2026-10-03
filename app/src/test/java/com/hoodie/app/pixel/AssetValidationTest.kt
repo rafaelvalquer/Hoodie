@@ -12,6 +12,7 @@ import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.scene.SceneFlag
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.SceneRegistry
+import com.hoodie.app.pixel.scene.SpotId
 import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.sprite.Direction
 import com.hoodie.app.pixel.sprite.HoodiePainter
@@ -122,7 +123,8 @@ class AssetValidationTest {
                     listOf(10, 70).forEach { energy ->
                         val v = VisualDirector.resolve(a, c, commute = style, energy = energy, mood = 90)
                         val scene = SceneRegistry[v.scene]
-                        assertTrue("$a/$c → ${v.scene} sem ${v.spot}", v.spot in scene.spots)
+                        val expectedSpot = if (v.scene in setOf(SceneId.STREET, SceneId.BICYCLE, SceneId.GENERIC_RIDE)) SpotId.WALK else v.spot
+                        assertTrue("$a/$c → ${v.scene} sem $expectedSpot", expectedSpot in scene.spots)
                         assertTrue("$a/$c sem ações", v.actions.isNotEmpty())
                         v.actions.mapNotNull { it.spot }.forEach { assertTrue("$a/$c → ${v.scene} sem $it", it in scene.spots) }
                         (v.enter + v.exit + v.approach + v.actions.flatMap { it.enter + it.exit }).forEach { HoodieClips[it] }

@@ -6,9 +6,10 @@ enum class PlaceType(val emoji: String, val label: String) {
     GYM("🏋", "Academia"),
     SCHOOL("🎓", "Escola"),
     RESTAURANT("🍽", "Restaurante"),
-    MARKET("🛒", "Compras"),
-    FAMILY("👪", "Família"),
-    LEISURE("🎉", "Passeio"),
+    MARKET("🛒", "Mercado"),
+    STORE("🏬", "Loja"),
+    FAMILY("👪", "Casa de amigos ou familiares"),
+    LEISURE("🎉", "Lazer"),
     OTHER("📍", "Outro");
 
     /** Contexto natural de um lugar conhecido. */
@@ -19,6 +20,7 @@ enum class PlaceType(val emoji: String, val label: String) {
         SCHOOL -> UserContextType.STUDY
         RESTAURANT -> UserContextType.LUNCH
         MARKET -> UserContextType.SHOPPING
+        STORE -> UserContextType.SHOPPING
         FAMILY -> UserContextType.VISITING
         LEISURE -> UserContextType.LEISURE
         // "Outro" pode ser médico, igreja, mecânico, pet shop… — não é passeio por padrão.
@@ -27,6 +29,6 @@ enum class PlaceType(val emoji: String, val label: String) {
 
     companion object {
         /** Opções para "Parece que você está em um lugar novo. O que é?" */
-        val newPlaceOptions = listOf(RESTAURANT, GYM, FAMILY, MARKET, LEISURE, OTHER)
+        val newPlaceOptions = entries.toList()
     }
 }

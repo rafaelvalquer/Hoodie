@@ -232,10 +232,11 @@ class HomeViewModel @Inject constructor(
         )
     }
 
-    fun setManual(type: UserContextType) = action {
-        contextEngine.setManual(type)
+    fun setManual(type: PlaceType) = action {
+        val context = type.toContext()
+        contextEngine.setManualPlace(type)
         // "Não estou no trabalho" logo após uma chegada automática: a mobilidade aprende a correção.
-        mobility.onManualContext(type, clock.nowMillis())
+        mobility.onManualContext(context, clock.nowMillis())
         _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 

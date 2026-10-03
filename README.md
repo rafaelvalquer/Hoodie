@@ -66,10 +66,10 @@ O plano e a evidência de implementação estão em
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
 | Orquestração | `engine.context.ContextEngine`, `ContextTransitionService`, `engine.hoodie.HoodieEngine`, `engine.memory`, `engine.dialogue` | Aplica regras ao banco (só por boundaries), perguntas, notificações |
 | Background | `worker` | Reconciliação a cada 15 min, checagem de almoço (+15 min) e de deslocamento longo (+40 min) |
-| Pixel engine | `pixel.*` | Sprite procedural ou sprite sheet, 100 animações, 14 cenas, iluminação, partículas, transições |
+| Pixel engine | `pixel.*` | Sprite procedural ou sprite sheet, 142 animações, 19 cenas, iluminação, partículas, transições |
 | UI | `presentation.*` | MVVM com Hilt, Navigation Compose, Material 3 |
 | Diário Digital | `core.deviceusage`, `engine.deviceusage`, `domain.phoneinsights`, `pixel.phoneinsights`, `presentation.screens.phoneinsights` | Uso do celular (UsageStatsManager) → sessões → agregados por dia, cruzados com os contextos |
-| Mobilidade | `core.mobility`, `engine.mobility`, `receiver.ActivityTransitionReceiver` | Activity Recognition (transições, sem GPS contínuo) → `MobilityEngine` (estado, score, no máx. ~1 pergunta por trajeto, aprendizado, chegada) → `ContextEngine` e cena (`CarScene`/`TRANSIT`/`STREET`) |
+| Mobilidade | `core.mobility`, `engine.mobility`, `receiver.ActivityTransitionReceiver` | Activity Recognition (transições, sem GPS contínuo) → `MobilityEngine` (estado, score, no máx. ~1 pergunta por trajeto, aprendizado, chegada) → `ContextEngine` e perfil visual (cena específica para carro, ônibus, trem, metrô, bicicleta, caminhada ou fallback genérico) |
 
 ### O princípio mais importante
 
@@ -119,7 +119,7 @@ HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Di
   o resto vem do pintor procedural. Pipeline, camadas do sprite master e exportação: [assets-source/hoodie/README.md](assets-source/hoodie/README.md).
 * **Direção**: frente, costas e lado (RIGHT = espelho de LEFT). Caminhada de 8 poses com tempo por frame,
   cabeça e mochila com 1 frame de atraso e cordões do moletom em follow-through.
-* **Clips** (`AnimationClip`): 100 animações com duração por frame, `InterruptPolicy`
+* **Clips** (`AnimationClip`): 142 animações com duração por frame, `InterruptPolicy`
   (IMMEDIATE / FINISH_FRAME / FINISH_CYCLE / PLAY_EXIT) e eventos (`SIT`, `MUG_PICKUP`, `FOOD_SERVED`, `FOOTSTEP`…)
   que sincronizam props: a caneca some da mesa quando ele a pega, a comida aparece depois do `WAIT_FOOD`,
   a cadeira mostra se está ocupada, a porta abre e fecha em 4 frames.
@@ -138,6 +138,7 @@ HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Di
   (parque, praça ou área verde conforme a variante do dia; banco, mirante e foto com enquadramento).
   As escolhas usam as necessidades: foco baixo distrai o estudo, fome puxa petiscos, social baixo vira conversa,
   cansaço leva ao banco. `GENERIC_INDOOR/OUTDOOR` ficam só como fallback (viagem).
+* **Transporte**: perfis únicos para caminhada, carro, ônibus, trem, metrô, bicicleta, outro veículo e transporte público não identificado; cada perfil liga cena, entrada/saída, animações, balanço/paralaxe e visual da rota/Jornada. Modais identificados têm cenas próprias e alternativas desconhecidas usam apresentação neutra.
 * Iluminação por overlay (manhã, dia, entardecer, noite) com áreas emissivas e halos de lâmpada em degraus.
 * **Pixel Lab**: ferramenta de animação com animação × direção × postura × expressão × velocidade,
   avanço frame a frame, onion-skin, âncoras, bounding box e linha dos pés; laboratório de cena com transições,

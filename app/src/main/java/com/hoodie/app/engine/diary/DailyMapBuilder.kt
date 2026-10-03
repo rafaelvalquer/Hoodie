@@ -38,7 +38,7 @@ object DailyMapBuilder {
         PlaceType.GYM -> DiaryMapNodeType.GYM
         PlaceType.SCHOOL -> DiaryMapNodeType.SCHOOL
         PlaceType.RESTAURANT -> DiaryMapNodeType.RESTAURANT
-        PlaceType.MARKET -> DiaryMapNodeType.MARKET
+        PlaceType.MARKET, PlaceType.STORE -> DiaryMapNodeType.MARKET
         PlaceType.FAMILY -> DiaryMapNodeType.FAMILY
         PlaceType.LEISURE -> DiaryMapNodeType.LEISURE
         PlaceType.OTHER -> DiaryMapNodeType.OTHER
