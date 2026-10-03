@@ -92,6 +92,20 @@ class DiaryViewModel @Inject constructor(
     }
 
     fun pause() { replayJob?.cancel(); replayJob = null; _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.PAUSED)) }
+
+    /**
+     * Pula o replay para [timestamp] (⏮ / ⏭ / barra temporal). Tocando, continua
+     * tocando de lá; parado, fica pausado naquele instante.
+     */
+    fun seekTo(timestamp: Long) {
+        val diary = _state.value.diary ?: return
+        if (diary.replay.endAt <= diary.replay.startAt) return
+        val wasPlaying = _state.value.replay.state == ReplayState.PLAYING
+        stopReplay()
+        val at = timestamp.coerceIn(diary.replay.startAt, diary.replay.endAt)
+        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PAUSED), diary, at, zone))
+        if (wasPlaying && at < diary.replay.endAt) play()
+    }
     fun reset() { stopReplay(); _state.value = _state.value.copy(replay = ReplayUiState(speed = _state.value.replay.speed)) }
     fun setSpeed(speed: ReplaySpeed) { _state.value = _state.value.copy(replay = _state.value.replay.copy(speed = speed)) }
     private fun stopReplay() { replayJob?.cancel(); replayJob = null }

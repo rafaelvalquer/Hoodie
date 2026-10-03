@@ -94,4 +94,8 @@ object HoodieConfig {
     const val CONTEXT_TOP_APPS = 5
     const val PHONE_INSIGHTS_REFRESH_HOURS = 3L
     const val PHONE_SESSION_RETENTION_DAYS = 365L
+
+    // ── Diário: Mapa do Dia 2.0 ──
+    /** Jornada Pixel como mapa padrão do Diário. false = volta ao mapa clássico (que segue disponível no seletor). */
+    const val DIARY_JOURNEY_MAP_V2 = true
 }

@@ -111,6 +111,7 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             play = vm::play,
             reset = vm::reset,
             setSpeed = vm::setSpeed,
+            seek = vm::seekTo,
         ),
     )
 }
@@ -123,6 +124,7 @@ internal data class DiaryActions(
     val play: () -> Unit = {},
     val reset: () -> Unit = {},
     val setSpeed: (ReplaySpeed) -> Unit = {},
+    val seek: (Long) -> Unit = {},
 )
 
 @Composable
@@ -139,6 +141,10 @@ internal fun DiaryContent(
     val context = LocalContext.current
     var tab by rememberSaveable { mutableStateOf(DiaryTab.GENERAL) }
     var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
+    var mapMode by rememberSaveable { mutableStateOf(if (com.hoodie.app.core.config.HoodieConfig.DIARY_JOURNEY_MAP_V2) DiaryMapMode.JOURNEY else DiaryMapMode.CLASSIC) }
+    var selectedJourneyNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
+    // Jornada do dia: montada uma vez por dia carregado (layout e cache não mudam a cada quadro).
+    val journey = remember(state.diary) { state.diary?.let { JourneyMapModel.from(it, nowMillis) } }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("diary_scroll").padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -173,17 +179,25 @@ internal fun DiaryContent(
                     }
                 }
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
-                val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
-                DiaryMapView(layout, state.replay, onNode = { actions.openPlace(it.id) })
-                DiaryReplayHud(state.replay.visual, zone)
-                ReplayControls(
-                    state.replay,
-                    onToggle = { if (state.replay.state == ReplayState.PLAYING) actions.pause() else actions.play() },
-                    onReset = actions.reset,
-                    onSpeed = actions.setSpeed,
-                )
-                if (state.replay.currentTimestamp != null) {
-                    LinearProgressIndicator(progress = { state.replay.progress }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.Mint, trackColor = HoodieColors.PanelLight)
+                DiaryMapModeToggle(mapMode, onSelect = { mapMode = it })
+                val toggleReplay = { if (state.replay.state == ReplayState.PLAYING) actions.pause() else actions.play() }
+                if (mapMode == DiaryMapMode.JOURNEY && journey != null) {
+                    JourneyMapView(journey, state.replay, zone, selectedJourneyNodeId, onNode = { selectedJourneyNodeId = it.id })
+                    DiaryReplayHud(state.replay.visual, zone)
+                    JourneyReplayControls(state.replay, journey.data, zone, onToggle = toggleReplay, onSeek = actions.seek, onReset = actions.reset, onSpeed = actions.setSpeed)
+                } else {
+                    val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
+                    DiaryMapView(layout, state.replay, onNode = { actions.openPlace(it.id) })
+                    DiaryReplayHud(state.replay.visual, zone)
+                    ReplayControls(
+                        state.replay,
+                        onToggle = toggleReplay,
+                        onReset = actions.reset,
+                        onSpeed = actions.setSpeed,
+                    )
+                    if (state.replay.currentTimestamp != null) {
+                        LinearProgressIndicator(progress = { state.replay.progress }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.Mint, trackColor = HoodieColors.PanelLight)
+                    }
                 }
                 TimelineSection(diary.timeline, state.replay.currentTimestamp, zone, state.replay.highlightedTimelineItemIds)
             }
@@ -197,6 +211,25 @@ internal fun DiaryContent(
         }
     }
     selectedContext?.let { ctx -> ContextPhoneSheet(ctx, state.diary?.phoneInsights) { selectedContext = null } }
+    // Detalhe de uma parada da jornada; "ver detalhes do lugar" abre o detalhe completo (todas as visitas).
+    val journeyNode = journey?.data?.node(selectedJourneyNodeId)
+    val diaryForJourney = state.diary
+    if (journeyNode != null && diaryForJourney != null) {
+        val details = remember(diaryForJourney, nowMillis) { com.hoodie.app.engine.diary.ReplayHudAssembler.visitDetails(diaryForJourney, nowMillis) }
+        JourneyNodeDetailsSheet(
+            node = journeyNode,
+            arrivedBy = journey.data.segments.firstOrNull { it.index == journeyNode.visitIndex - 1 },
+            details = details.firstOrNull { it.index == journeyNode.visitIndex },
+            zone = zone,
+            onSeeAll = {
+                selectedJourneyNodeId = null
+                DiaryMapLayoutEngine.layout(diaryForJourney.visits).nodes
+                    .firstOrNull { journeyNode.visitIndex in it.visitIndices }
+                    ?.let { onSelectedNodeChange(it.id) }
+            },
+            onDismiss = { selectedJourneyNodeId = null },
+        )
+    }
 }
 
 @Composable

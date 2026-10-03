@@ -129,4 +129,15 @@ data class DailyDiary(
     val phoneInsights: com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights? = null,
     /** Tempo por meio de deslocamento no dia (🚶 16 min, 🚌 31 min), sem trajeto. */
     val mobilityTotals: Map<com.hoodie.app.core.mobility.MovementMode, Long> = emptyMap(),
+    /** Cada trecho de deslocamento com modo e horários (já recortado no dia), em ordem. */
+    val movements: List<DiaryMovement> = emptyList(),
 )
+
+/** Um trecho de deslocamento: só modo e horários — nunca posição ou rota. */
+data class DiaryMovement(
+    val mode: com.hoodie.app.core.mobility.MovementMode,
+    val startedAt: Long,
+    val endedAt: Long,
+) {
+    val durationMs: Long get() = endedAt - startedAt
+}

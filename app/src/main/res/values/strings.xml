@@ -381,4 +381,50 @@
     <string name="diary_visit_now">agora</string>
     <string name="phone_usage_context_title">📱 USO DO CELULAR · %1$s</string>
     <string name="mobility_automatic">Automático</string>
+
+    <!-- Mapa do Dia 2.0 — Jornada Pixel -->
+    <string name="journey_title">JORNADA DO DIA · SEM ROTA GPS</string>
+    <string name="journey_mode_journey">Jornada</string>
+    <string name="journey_mode_classic">Mapa antigo</string>
+    <string name="journey_mode_label">Visualização do mapa</string>
+    <plurals name="journey_stops">
+        <item quantity="one">%1$d parada</item>
+        <item quantity="other">%1$d paradas</item>
+    </plurals>
+    <plurals name="journey_returns">
+        <item quantity="one">%1$d retorno</item>
+        <item quantity="other">%1$d retornos</item>
+    </plurals>
+    <string name="journey_travel_total">%1$s em trânsito</string>
+    <string name="journey_return_badge">Retorno #%1$d</string>
+    <string name="journey_node_times">%1$s–%2$s</string>
+    <string name="journey_node_now">%1$s–agora</string>
+    <string name="journey_node_description">Parada %1$d: %2$s, %3$s, %4$s</string>
+    <string name="journey_segment_description">%1$s, %2$s, de %3$s a %4$s</string>
+    <string name="journey_segment_unknown">Deslocamento</string>
+    <string name="journey_empty">Ainda não há paradas neste dia. Quando você passar por lugares conhecidos, a jornada aparece aqui.</string>
+    <string name="journey_footer">Ordem do dia, não geografia: cada parada é uma visita · toque para detalhes</string>
+    <string name="journey_state_active">Hoodie está aqui</string>
+    <string name="journey_state_upcoming">Ainda não alcançada no replay</string>
+    <string name="journey_state_visited">Visitada</string>
+    <string name="journey_replay_previous">Evento anterior</string>
+    <string name="journey_replay_next">Próximo evento</string>
+    <string name="journey_replay_play">Reproduzir jornada</string>
+    <string name="journey_replay_pause">Pausar</string>
+    <string name="journey_replay_again">Rever jornada</string>
+    <string name="journey_replay_reset">Voltar ao início</string>
+    <string name="journey_replay_timeline">Linha do tempo do replay</string>
+    <string name="journey_replay_speed">VELOCIDADE</string>
+    <string name="journey_details_arrival">Chegada</string>
+    <string name="journey_details_departure">Saída</string>
+    <string name="journey_details_ongoing">Em andamento</string>
+    <string name="journey_details_duration">Tempo nesta visita</string>
+    <string name="journey_details_appearances">Vezes no dia</string>
+    <string name="journey_details_place_total">Total no dia neste lugar</string>
+    <string name="journey_details_hoodie">Hoodie</string>
+    <string name="journey_details_phone">Celular nesta visita</string>
+    <string name="journey_details_phone_none">Celular parado</string>
+    <string name="journey_details_arrived_by">Chegou de</string>
+    <string name="journey_details_see_all">Ver detalhes do lugar</string>
+    <string name="journey_details_note">A jornada mostra a ordem dos lugares, não o caminho real.</string>
 </resources>

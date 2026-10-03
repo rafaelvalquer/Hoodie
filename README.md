@@ -144,6 +144,28 @@ HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Di
   filtro por grupo, variante do cenário e modo atividade × contexto × energia × humor;
   galerias de animações e cenas; e a fonte de cada sprite (sheet ou procedural).
 
+## Mapa do Dia 2.0 — Jornada Pixel
+
+O mapa do Diário mostra **a ordem do dia, não a geografia**: cada visita é uma parada própria (lugares repetidos
+aparecem repetidos, com "Retorno #2"), em zigue-zague, e cada deslocamento é um trecho de rua que o Hoodie percorre
+de verdade no replay — a pé, de bicicleta, de carro, de ônibus ou de trem/metrô.
+
+```
+DailyDiary (+ movements) ─► JourneyMapAssembler ─► JourneyMapData (nós + trechos com meio dominante)
+                         ─► JourneyLayoutEngine + JourneyPathBuilder ─► JourneyLayout (240 × altura do dia)
+ReplayUiState ─► JourneyReplayAssembler ─► JourneyScene ─► JourneyMapRenderer (7 camadas) ─► JourneyMapView
+```
+
+* **Camadas**: céu do horário · chão/ruas em cache · vida (árvores balançando, sombras de nuvem, água, fumaça, carros,
+  passarinhos, folhas) · traço por meio (🚶 pontilhado verde, 🚗 dupla cinza, 🚌 azul, 🚇 trilho roxo/ciano, 🚲 amarelo)
+  · paradas (visitada / atual pulsando / ainda não / selecionada) · luz contínua por minuto + postes, janelas e vaga-lumes · Hoodie.
+* **Replay 2.0**: ⏮ / ⏭ entre chegadas e saídas, barra temporal arrastável, velocidade; o rastro já percorrido fica dourado.
+* **Detalhe da parada**: chegada/saída, tempo, vezes no dia, total no lugar, atividade do Hoodie, como chegou e celular na visita.
+* **Compatibilidade**: `HoodieConfig.DIARY_JOURNEY_MAP_V2` define o padrão; o seletor [JORNADA] [MAPA ANTIGO] mantém o mapa clássico.
+* **Desempenho**: layout e camada estática uma vez por dia; ~2,5 FPS parado, ~10 FPS no replay, pausado fora da tela.
+* **Golden**: `JourneyGoldenTest` exporta 8 estados para `app/build/pixel-preview/journey/` e compara com
+  `journey-map-v1.sha256` (regravar com `JOURNEY_GOLDEN_RECORD=1` depois de revisar os PNGs).
+
 ## Diário Digital (Phone Insights)
 
 O Diário passa a contar três camadas do mesmo dia: **vida real** (contextos e lugares) + **vida digital** (celular) + **vida do Hoodie**.

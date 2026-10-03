@@ -6,6 +6,7 @@ import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.data.repository.MobilityTrip
 import com.hoodie.app.domain.diary.model.DailyDiary
 import com.hoodie.app.domain.diary.model.DiaryActor
+import com.hoodie.app.domain.diary.model.DiaryMovement
 import com.hoodie.app.domain.diary.model.DiaryTimelineItem
 import com.hoodie.app.domain.diary.model.DiaryTimelineType
 import java.time.ZoneId
@@ -26,6 +27,7 @@ object DiaryMobilityMerger {
         if (trips.isEmpty()) return diary
         val items = mutableListOf<DiaryTimelineItem>()
         val totals = LinkedHashMap<MovementMode, Long>()
+        val movements = mutableListOf<DiaryMovement>()
         trips.forEach { trip ->
             trip.segments.forEach { seg ->
                 val start = maxOf(seg.startedAt, dayStart)
@@ -33,6 +35,7 @@ object DiaryMobilityMerger {
                 if (end <= start || seg.mode == MovementMode.NONE) return@forEach
                 val ms = end - start
                 totals[seg.mode] = (totals[seg.mode] ?: 0L) + ms
+                movements += DiaryMovement(seg.mode, start, end)
                 items += DiaryTimelineItem(
                     id = "mobility-${seg.id}",
                     timestamp = start,
@@ -45,7 +48,11 @@ object DiaryMobilityMerger {
             }
         }
         if (items.isEmpty()) return diary
-        return diary.copy(timeline = (diary.timeline + items).sortedBy { it.timestamp }, mobilityTotals = totals)
+        return diary.copy(
+            timeline = (diary.timeline + items).sortedBy { it.timestamp },
+            mobilityTotals = totals,
+            movements = movements.sortedBy { it.startedAt },
+        )
     }
 
     /** "🚶 16 min caminhando · 🚌 31 min de ônibus". */
