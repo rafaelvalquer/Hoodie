@@ -28,7 +28,10 @@ enum class PlaceType(val emoji: String, val label: String) {
     }
 
     companion object {
-        /** Opções para "Parece que você está em um lugar novo. O que é?" */
-        val newPlaceOptions = entries.toList()
+        /** Catálogo físico canônico compartilhado por "O que estou fazendo?" e "Novo lugar". */
+        val physicalPlaceOptions: List<PlaceType> = entries.toList()
+
+        /** Compatibilidade semântica para as perguntas de descoberta de um lugar novo. */
+        val newPlaceOptions: List<PlaceType> get() = physicalPlaceOptions
     }
 }

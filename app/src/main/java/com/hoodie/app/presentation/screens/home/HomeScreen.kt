@@ -256,14 +256,21 @@ internal fun HomeContent(
             Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.ui_home_screen_5), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.home_routine_learning, state.catName), color = HoodieColors.Muted)
-                PlaceType.entries.forEach { t ->
-                    PixelButton("${t.emoji} ${t.label}", {
-                        actions.setManual(t); manualOpen = false
-                    }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
-                }
+                ManualPlaceOptions(onSelect = { type -> actions.setManual(type); manualOpen = false })
                 Spacer(Modifier.padding(12.dp))
             }
         }
+    }
+}
+
+/** Opções do seletor "O que estou fazendo?", compartilhando o catálogo de Novo Lugar. */
+@Composable
+internal fun ManualPlaceOptions(onSelect: (PlaceType) -> Unit) {
+    PlaceType.physicalPlaceOptions.forEach { type ->
+        PixelButton(
+            "${type.emoji} ${type.label}", { onSelect(type) }, Modifier.fillMaxWidth(),
+            color = HoodieColors.PanelLight, textColor = HoodieColors.Ink,
+        )
     }
 }
 
@@ -299,7 +306,7 @@ private fun QuestionCard(q: ContextQuestion, actions: HomeActions) {
                 PixelButton(stringResource(R.string.ui_home_screen_7), { actions.answerYesNo(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
             }
             QuestionKind.NEW_PLACE -> {
-                val options = PlaceType.newPlaceOptions
+                val options = PlaceType.physicalPlaceOptions
                 ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { actions.answerNewPlace(q.id, options[it]) })
                 Spacer(Modifier.padding(4.dp))
                 PixelButton(stringResource(R.string.ui_home_screen_8), { actions.dismissQuestion(q.id) }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.PanelLight)

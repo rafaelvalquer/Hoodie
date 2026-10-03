@@ -94,7 +94,7 @@ class TransitScene : PixelScene(SceneId.TRANSIT) {
 
     override fun props(): List<Prop> = listOf(
         Prop(0) { b, env, t ->
-            val speed = env.transportAmbient?.outsideSpeed ?: .7f
+            val speed = TransportMotion.speed(env.transportAmbient, .7f)
             for (wx in intArrayOf(10, 86, 162)) {
                 b.box(wx - 2, 38, wx + 70, 122, P.OUTLINE)
                 b.box(wx - 1, 39, wx + 69, 121, 0xFFCDD3DB.toInt())
@@ -117,11 +117,12 @@ class TransitScene : PixelScene(SceneId.TRANSIT) {
             b.outlined(88, 244, 152, 262, 0xFF3C6FB0.toInt(), P.OUTLINE)
             b.hline(90, 150, 246, 0xFF5D8ED0.toInt())
         },
-        Prop(318) { b, _, _ ->
+        Prop(318) { b, env, t ->
             val seat = 0xFF2F5E9E.toInt()
             b.outlined(4, 248, 70, 318, seat, P.OUTLINE); b.box(7, 251, 67, 256, 0xFF4C7EC2.toInt())
             b.outlined(170, 248, 236, 318, seat, P.OUTLINE); b.box(173, 251, 233, 256, 0xFF4C7EC2.toInt())
-            b.box(34, 236, 38, 248, P.METAL); b.box(200, 236, 204, 248, P.METAL)
+            val sway = TransportMotion.offset(t, env.transportAmbient?.vibration)
+            b.box(34 + sway, 236, 38 + sway, 248, P.METAL); b.box(200 + sway, 236, 204 + sway, 248, P.METAL)
         },
     )
 

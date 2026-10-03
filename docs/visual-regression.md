@@ -30,6 +30,8 @@ Ambiente de referência atual: Hoodie_API34, Google APIs Android 14/API 34 r14 x
 
 ## Estado atual
 
-As 222 referências foram inspecionadas e aceitas, incluindo a recaptura de Ajustes após corrigir a quebra de palavras nos botões. Estão em `app/src/androidTest/assets/goldens/screens`. O manifesto `docs/golden-reference-manifest.json` registra dimensões, SHA-256 e ambiente. A comparação automática completa pixel a pixel está em preparação e ainda não foi aprovada.
+As 222 referências revisadas continuam em `app/src/androidTest/assets/goldens/screens`. O manifesto `docs/golden-reference-manifest.json` registra dimensões, SHA-256 e ambiente. As capturas foram revistas e aceitas quando gravadas; isso não garante que correspondam à UI atual.
 
-Gravação original: 180 casos/222 imagens. Recaptura de Ajustes: 30 casos, todos aprovados; as 198 imagens restantes conservaram hashes idênticos. Os testes Android de interação passaram nos 72 casos, incluindo teclado real, sem ignorados, antes desse último ajuste de layout. A validação final posterior permanece necessária.
+Execução estrita API 34 em 03/10/2026 (`verifyGoldens=true`): 180 casos executados, 18 aprovados e 162 falharam; nenhum foi ignorado. Distribuição: Home 6/30 aprovados, Diário 0/30, Digital 12/30, Onboarding 0/30, Ajustes 0/30 e PlacePicker 0/30. Os PNGs `actual/diff` ficam no armazenamento externo do AVD; amostras da Home e Digital também foram copiadas para `app/build`. As referências não foram substituídas automaticamente. A matriz geral precisa de análise e revisão visual antes de atualizar qualquer baseline.
+
+Os dois testes instrumentados novos do catálogo físico passaram na API 34: “O que estou fazendo?” e o diálogo real “Novo lugar” expõem os mesmos dez nomes. O teste de teclado passou isoladamente depois de recolher a shade de notificações que tinha tomado o foco da janela. A rodada Android anterior (261 casos) teve apenas esse timeout de foco; a repetição isolada passou.

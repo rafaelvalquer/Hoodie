@@ -12,6 +12,7 @@ import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.renderer.SceneRenderer
 import com.hoodie.app.pixel.transport.TransportLighting
+import com.hoodie.app.pixel.transport.TransportVibration
 import com.hoodie.app.pixel.transport.TransportVisualRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -19,6 +20,41 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TransportVisualRegistryTest {
+    @Test fun `vibracao ambiental altera quadros nos transportes em movimento`() {
+        val renderer = SceneRenderer()
+        val cases = listOf(
+            MovementMode.CAR, MovementMode.BUS, MovementMode.TRAIN, MovementMode.METRO,
+            MovementMode.BICYCLE, MovementMode.OTHER, MovementMode.PUBLIC_TRANSPORT,
+        )
+        cases.forEach { mode ->
+            val profile = TransportVisualRegistry.profileFor(mode, CommuteStyle.WALK)
+            val vibration = profile.ambient.vibration
+            val time = if (vibration == TransportVibration.LOW) 620L else 220L
+            val vibrating = profile.ambient
+            val still = vibrating.copy(vibration = TransportVibration.NONE)
+            val scene = SceneRegistry[profile.scene]
+            fun render(ambient: com.hoodie.app.pixel.transport.TransportAmbientProfile) =
+                renderer.renderEmpty(scene, SceneEnv(DayPeriod.DAY, 10 * 60, transportAmbient = ambient), time).pixels.copyOf()
+            assertNotEquals("$mode precisa refletir sua vibração no cenário", render(vibrating).toList(), render(still).toList())
+        }
+    }
+
+    @Test fun `paralaxe habilitada altera pixels renderizados em todos os transportes`() {
+        val renderer = SceneRenderer()
+        listOf(MovementMode.CAR, MovementMode.BUS, MovementMode.TRAIN, MovementMode.METRO,
+            MovementMode.BICYCLE, MovementMode.OTHER, MovementMode.PUBLIC_TRANSPORT).forEach { mode ->
+            val profile = TransportVisualRegistry.profileFor(mode, CommuteStyle.WALK)
+            val enabled = profile.ambient.copy(parallax = true, vibration = TransportVibration.NONE)
+            val disabled = enabled.copy(parallax = false)
+            val scene = SceneRegistry[profile.scene]
+            // Metro alternates station and tunnel. Sample the tunnel so its outside lights can pass.
+            val sampleTime = if (mode == MovementMode.METRO) 10_000L else 1_000L
+            fun render(ambient: com.hoodie.app.pixel.transport.TransportAmbientProfile) =
+                renderer.renderEmpty(scene, SceneEnv(DayPeriod.DAY, 10 * 60, transportAmbient = ambient), sampleTime).pixels.copyOf()
+            assertNotEquals("$mode precisa aplicar o perfil de parallax aos pixels", render(enabled).toList(), render(disabled).toList())
+        }
+    }
+
     @Test fun `perfil de iluminacao altera render da cabine e do tunel`() {
         val renderer = SceneRenderer()
         val scene = SceneRegistry[SceneId.TRANSIT]

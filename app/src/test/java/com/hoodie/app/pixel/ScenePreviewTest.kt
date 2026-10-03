@@ -9,6 +9,7 @@ import com.hoodie.app.pixel.animation.AnimationStateMachine
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.renderer.SceneRenderer
+import com.hoodie.app.pixel.transport.TransportVisualRegistry
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -66,6 +67,8 @@ class ScenePreviewTest {
             var t = 1L
             var frame = sm.frame(t, if (period == DayPeriod.NIGHT) 22 * 60 else 10 * 60, period)!!
             while (t < 4_000L) { t += 33; frame = sm.frame(t, if (period == DayPeriod.NIGHT) 22 * 60 else 10 * 60, period)!! }
+            val profile = TransportVisualRegistry.profileFor(mode, CommuteStyle.WALK)
+            frame = frame.copy(env = frame.env.copy(transportAmbient = profile.ambient))
             val image = PixelBuffer(240, 320).also { it.copyFrom(SceneRenderer().render(frame, t)) }
             val name = "${mode.name.lowercase()}_${period.name.lowercase()}"
             PreviewExport.save("transport/$name", image, scale = 2)

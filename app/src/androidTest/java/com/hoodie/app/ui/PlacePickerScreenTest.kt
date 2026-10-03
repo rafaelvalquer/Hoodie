@@ -52,6 +52,7 @@ import com.hoodie.app.presentation.theme.HoodieTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.test.assertIsFocused
 import org.junit.Rule
 import org.junit.Test
@@ -366,6 +367,8 @@ class PlacePickerScreenTest {
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
         rule.onNodeWithTag(PlacePickerTags.NAME).performClick().assertIsFocused()
         rule.runOnUiThread {
+            val inputMethod = rule.activity.getSystemService(InputMethodManager::class.java)
+            inputMethod.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
             WindowCompat.getInsetsController(rule.activity.window, view).show(WindowInsetsCompat.Type.ime())
         }
         fun imeBottom() = ViewCompat.getRootWindowInsets(view)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0

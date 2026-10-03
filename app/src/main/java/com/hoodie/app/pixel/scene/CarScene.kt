@@ -20,7 +20,8 @@ class CarScene : PixelScene(SceneId.CAR) {
     override fun props(): List<Prop> = listOf(
         // Cidade ao fundo, devagar; calçada e rua rápidas.
         Prop(0) { b, env, t ->
-            val motion = (t * (env.transportAmbient?.outsideSpeed ?: .8f) / .8f).toLong()
+            val speed = TransportMotion.speed(env.transportAmbient, .8f)
+            val motion = (t * speed / .8f).toLong()
             SceneArt.city(b, 0, 239, 205, env.period, offset = (motion / 90).toInt(), seed = 7)
             b.box(0, 205, 239, 214, 0xFFB7B2A8.toInt())
             val tile = ((motion / 12) % 20).toInt()
@@ -82,8 +83,9 @@ class CarScene : PixelScene(SceneId.CAR) {
     )
 
     private fun bounce(t: Long, env: SceneEnv) = when (env.transportAmbient?.vibration) {
-        com.hoodie.app.pixel.transport.TransportVibration.MEDIUM -> if ((t / 210) % 3 == 0L) 1 else 0
-        com.hoodie.app.pixel.transport.TransportVibration.LOW, null -> if ((t / 320) % 4 == 0L) 1 else 0
+        com.hoodie.app.pixel.transport.TransportVibration.MEDIUM -> if ((t / 210) % 2 == 0L) 1 else 0
+        com.hoodie.app.pixel.transport.TransportVibration.LOW -> if ((t / 320) % 4 == 1L) 1 else 0
+        null -> if ((t / 320) % 4 == 0L) 1 else 0
         com.hoodie.app.pixel.transport.TransportVibration.NONE -> 0
     }
 
@@ -92,7 +94,7 @@ class CarScene : PixelScene(SceneId.CAR) {
         b.disc(cx, cy, 12, 0xFF2B2E3A.toInt())
         b.disc(cx, cy, 6, P.METAL)
         // Raios em 4 posições: a roda parece girar.
-        val motion = (t * (env.transportAmbient?.outsideSpeed ?: .8f) / .8f).toLong()
+        val motion = (t * TransportMotion.speed(env.transportAmbient, .8f) / .8f).toLong()
         when (((motion / 70) % 4).toInt()) {
             0 -> { b.hline(cx - 10, cx + 10, cy, P.METAL_DARK) }
             1 -> { b.line(cx - 7, cy - 7, cx + 7, cy + 7, P.METAL_DARK) }

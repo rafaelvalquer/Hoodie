@@ -1567,8 +1567,9 @@
       "review": "accepted"
     }
   ],
-  "reviewedAt": "2026-10-02T20:41:58.3926871-03:00",
-  "comparisonStatus": "passed",
-  "comparisonEvidence": "app/build/api34-golden-matrix-compare-1.log",
-  "comparisonPassedCases": 180
+  "reviewedAt": "2026-10-03T17:10:00-03:00",
+  "comparisonStatus": "failed",
+  "comparisonEvidence": "app/build/outputs/androidTest-results/connected/debug/TEST-Hoodie_API34(AVD) - 14-_app-.xml",
+  "comparisonPassedCases": 18,
+  "comparisonFailedCases": 162
 }

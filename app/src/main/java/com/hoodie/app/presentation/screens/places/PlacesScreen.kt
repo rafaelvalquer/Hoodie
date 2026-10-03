@@ -137,7 +137,7 @@ fun PlacesScreen(onOpen: (String) -> Unit, vm: PlacesViewModel = hiltViewModel()
     }
 }
 
-private val placeTypes = PlaceType.entries
+private val placeTypes = PlaceType.physicalPlaceOptions
 
 @Composable
 internal fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -> Unit, onManual: (PlaceType, String, String) -> Unit, onMap: (PlaceType) -> Unit) {

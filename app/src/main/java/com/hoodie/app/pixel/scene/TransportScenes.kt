@@ -2,6 +2,23 @@ package com.hoodie.app.pixel.scene
 
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.transport.TransportAmbientProfile
+import com.hoodie.app.pixel.transport.TransportVibration
+
+/** Small, deterministic body/prop offsets driven by each transport's ambient profile. */
+internal object TransportMotion {
+    fun speed(ambient: TransportAmbientProfile?, fallback: Float): Float = when {
+        ambient == null -> fallback
+        ambient.parallax -> ambient.outsideSpeed
+        else -> 0f
+    }
+
+    fun offset(timeMs: Long, vibration: TransportVibration?): Int = when (vibration) {
+        null, TransportVibration.NONE -> 0
+        TransportVibration.LOW -> if ((timeMs / 520) % 2L == 0L) 0 else 1
+        TransportVibration.MEDIUM -> when ((timeMs / 190) % 4L) { 0L -> 0; 1L -> 1; 2L -> 0; else -> -1 }
+    }
+}
 
 /** Interior transport scenes share rendering primitives but have distinct silhouettes and motion cues. */
 enum class InteriorKind { BUS, TRAIN, METRO }
@@ -42,10 +59,9 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
             when (kind) {
                 InteriorKind.BUS -> {
                     for (x in intArrayOf(8, 88, 168)) {
-                        window(b, x, 42, 64, 94, env, time, env.transportAmbient?.outsideSpeed ?: .55f, 0xFF78AFA4.toInt())
+                        window(b, x, 42, 64, 94, env, time, TransportMotion.speed(env.transportAmbient, .55f), 0xFF78AFA4.toInt())
                         b.vline(x + 67, 38, 164, 0xFF6C727D.toInt())
-                        b.vline(x + 3, 30, 40, 0xFF34394A.toInt())
-                        val sway = if ((time / 430 + x) % 2 == 0L) 0 else 1
+                        val sway = TransportMotion.offset(time + x * 73L, env.transportAmbient?.vibration)
                         b.vline(x + 3 + sway, 30, 39, 0xFF34394A.toInt())
                         b.disc(x + 3 + sway, 42, 3, 0xFF34394A.toInt())
                     }
@@ -55,11 +71,12 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
                     b.box(166, 173, 226, 244, 0xFF35709B.toInt())
                 }
                 InteriorKind.TRAIN -> {
-                    window(b, 12, 38, 216, 105, env, time, env.transportAmbient?.outsideSpeed ?: .9f, 0xFF8BA9AD.toInt())
+                    window(b, 12, 38, 216, 105, env, time, TransportMotion.speed(env.transportAmbient, .9f), 0xFF8BA9AD.toInt())
                     b.outlined(8, 30, 231, 35, 0xFFB8C6D1.toInt(), 0xFF34394A.toInt()) // rack superior
                     for (x in 28..210 step 36) {
-                        b.vline(x, 144, 168, 0xFF363E4E.toInt())
-                        b.box(x - 1, 163, x + 2, 167, 0xFFB58CF0.toInt())
+                        val sway = TransportMotion.offset(time + x * 47L, env.transportAmbient?.vibration)
+                        b.vline(x + sway, 144, 168, 0xFF363E4E.toInt())
+                        b.box(x - 1 + sway, 163, x + 2 + sway, 167, 0xFFB58CF0.toInt())
                     }
                     b.box(20, 176, 94, 244, 0xFF526E9A.toInt())
                     b.box(146, 176, 220, 244, 0xFF526E9A.toInt())
@@ -71,7 +88,7 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
                     for (x in intArrayOf(10, 89, 168)) {
                         b.outlined(x, 42, x + 63, 132, 0xFF171B2D.toInt(), 0xFF111526.toInt())
                         b.box(x + 2, 44, x + 61, 130, if (station) 0xFF4F6172.toInt() else 0xFF090C16.toInt())
-                        val speed = env.transportAmbient?.outsideSpeed ?: 1f
+                        val speed = TransportMotion.speed(env.transportAmbient, 1f)
                         val flash = ((time * speed / 120f).toLong()) % 80
                         if (!station) for (i in 0..2) {
                             val lx = x + ((flash + i * 27) % 66).toInt()
@@ -83,8 +100,9 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
                     }
                     b.outlined(83, 12, 157, 31, 0xFF30364C.toInt(), 0xFF101425.toInt())
                     b.box(89, 18, 151, 23, 0xFF9FE6EA.toInt()) // linha/estação
-                    b.vline(33, 31, 169, 0xFFB9BFD0.toInt()); b.vline(207, 31, 169, 0xFFB9BFD0.toInt())
-                    for (x in 20..220 step 40) b.vline(x, 31, 38, 0xFFB9BFD0.toInt())
+                    val sway = TransportMotion.offset(time, env.transportAmbient?.vibration)
+                    b.vline(33 + sway, 31, 169, 0xFFB9BFD0.toInt()); b.vline(207 + sway, 31, 169, 0xFFB9BFD0.toInt())
+                    for (x in 20..220 step 40) b.vline(x + sway, 31, 38, 0xFFB9BFD0.toInt())
                     b.box(26, 177, 87, 243, 0xFF46516D.toInt()); b.box(153, 177, 214, 243, 0xFF46516D.toInt())
                 }
             }
@@ -125,20 +143,21 @@ class BicycleScene : PixelScene(SceneId.BICYCLE) {
 
     override fun props() = listOf(
         Prop(0) { b, env, t ->
-            val speed = env.transportAmbient?.outsideSpeed ?: .65f
+            val speed = TransportMotion.speed(env.transportAmbient, .65f)
             val motion = (t * speed / .65f).toLong()
+            val vibration = TransportMotion.offset(t, env.transportAmbient?.vibration)
             SceneArt.city(b, 0, 239, 202, env.period, (motion / 100).toInt(), seed = 17)
-            b.box(0, 203, 239, 226, 0xFF92908A.toInt()); b.hline(0, 239, 203, 0xFF5F5D5A.toInt())
+            b.box(0, 203 + vibration, 239, 226 + vibration, 0xFF92908A.toInt()); b.hline(0, 239, 203 + vibration, 0xFF5F5D5A.toInt())
             val dash = ((motion / 28) % 36).toInt()
-            for (x in -dash until 240 step 36) b.box(x, 212, x + 16, 214, 0xFFE9D75B.toInt())
-            b.box(0, 227, 239, 319, 0xFF3D4150.toInt())
+            for (x in -dash until 240 step 36) b.box(x, 212 + vibration, x + 16, 214 + vibration, 0xFFE9D75B.toInt())
+            b.box(0, 227 + vibration, 239, 319 + vibration, 0xFF3D4150.toInt())
             val line = ((motion / 18) % 54).toInt()
-            for (x in -line until 240 step 54) b.box(x, 275, x + 24, 277, 0xFFF4F1EA.toInt())
+            for (x in -line until 240 step 54) b.box(x, 275 + vibration, x + 24, 277 + vibration, 0xFFF4F1EA.toInt())
             if (env.period == DayPeriod.NIGHT || env.period == DayPeriod.EVENING) {
                 b.disc(34, 149, 2, 0xFFFFE59A.toInt()); b.disc(199, 177, 2, 0xFFFFE59A.toInt())
             }
         },
-        Prop(290) { b, _, t ->
+        Prop(290) { b, env, t ->
             // Frame and spinning wheels stay visible under the rider's pedal loop.
             for (cx in intArrayOf(98, 142)) {
                 b.disc(cx, 280, 16, 0xFF242738.toInt()); b.disc(cx, 280, 13, 0xFFB9C7D2.toInt()); b.disc(cx, 280, 2, 0xFF242738.toInt())
@@ -160,7 +179,7 @@ class GenericRideScene : PixelScene(SceneId.GENERIC_RIDE) {
     override fun drawBackground(b: PixelBuffer, env: SceneEnv) = SceneArt.skyBands(b, 0, 0, 239, 205, env.period)
     override fun props() = listOf(
         Prop(0) { b, env, t ->
-            val speed = env.transportAmbient?.outsideSpeed ?: .6f
+            val speed = TransportMotion.speed(env.transportAmbient, .6f)
             val motion = (t * speed / .6f).toLong()
             SceneArt.city(b, 0, 239, 205, env.period, (motion / 120).toInt(), seed = 23)
             b.box(0, 206, 239, 232, 0xFFB7B2A8.toInt()); b.box(0, 233, 239, 319, 0xFF3D4150.toInt())
@@ -168,10 +187,10 @@ class GenericRideScene : PixelScene(SceneId.GENERIC_RIDE) {
             for (x in -dash until 240 step 42) b.box(x, 285, x + 18, 287, 0xFFE9E3C8.toInt())
             if (env.period == DayPeriod.NIGHT) for (x in 22..220 step 66) b.box(x, 138, x + 3, 142, 0xFFFFE59A.toInt())
         },
-        Prop(290) { b, _, t ->
-            val bob = if ((t / 250) % 2 == 0L) 0 else 1
-            b.hline(97, 143, 281, 0xFF242738.toInt())
-            for (x in intArrayOf(103, 137)) { b.disc(x, 278, 5, 0xFF242738.toInt()); b.disc(x, 278, 2, 0xFFB9C7D2.toInt()) }
+        Prop(290) { b, env, t ->
+            val bob = TransportMotion.offset(t, env.transportAmbient?.vibration)
+            b.hline(97, 143, 281 + bob, 0xFF242738.toInt())
+            for (x in intArrayOf(103, 137)) { b.disc(x, 278 + bob, 5, 0xFF242738.toInt()); b.disc(x, 278 + bob, 2, 0xFFB9C7D2.toInt()) }
             b.outlined(102, 265 + bob, 138, 271 + bob, 0xFFE6B84F.toInt(), 0xFF242738.toInt())
             b.vline(119, 258 + bob, 265 + bob, 0xFF242738.toInt()); b.hline(112, 126, 258 + bob, 0xFF242738.toInt())
         },

@@ -81,7 +81,7 @@ data class ScreenGoldenCase(val screen: String, val state: String, val width: In
     override fun toString() = name
 }
 
-/** Six production screens × five states × three viewports × two font scales + focused place-choice dialogs. */
+/** Six production screens × five states × three viewports × two font scales. */
 @RunWith(Parameterized::class)
 class ScreenGoldenMatrixTest(private val case: ScreenGoldenCase) {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
@@ -107,15 +107,7 @@ class ScreenGoldenMatrixTest(private val case: ScreenGoldenCase) {
         }
         rule.mainClock.advanceTimeBy(1_000)
         rule.waitForIdle()
-        if (case.state == "manual_places") {
-            ScreenGoldenCapture.verify(case.name, rule.onNodeWithTag("golden_viewport"))
-            rule.onNodeWithText("LOJA", substring = true, ignoreCase = true).assertExists()
-        } else if (case.state == "add_place") {
-            ScreenGoldenCapture.verify(case.name, rule.onNodeWithTag("golden_viewport"))
-            rule.onNodeWithText("🏬 Loja", substring = true).assertExists()
-        } else {
-            ScreenGoldenCapture.verify(case.name, rule.onNodeWithTag("golden_viewport"))
-        }
+        ScreenGoldenCapture.verify(case.name, rule.onNodeWithTag("golden_viewport"))
         if (case.screen == "diary" && case.state == "full") {
             // performScrollTo may perform animated scroll; let it consume frames.
             rule.mainClock.autoAdvance = true
@@ -140,8 +132,6 @@ class ScreenGoldenMatrixTest(private val case: ScreenGoldenCase) {
                 for (state in listOf("normal", "loading", "error", "empty", "full"))
                     for ((width, height) in listOf(360 to 640, 360 to 800, 411 to 891))
                         for (font in listOf(1f, 1.3f)) add(arrayOf(ScreenGoldenCase(screen, state, width, height, font)))
-            add(arrayOf(ScreenGoldenCase("home", "manual_places", 360, 800, 1f)))
-            add(arrayOf(ScreenGoldenCase("places", "add_place", 360, 800, 1f)))
         }.filter { (it[0] as ScreenGoldenCase).name.matches(Regex(androidx.test.platform.app.InstrumentationRegistry.getArguments().getString("goldenCasesRegex") ?: ".*")) }
     }
 }
@@ -149,43 +139,6 @@ class ScreenGoldenMatrixTest(private val case: ScreenGoldenCase) {
 private val date = LocalDate.of(2026, 10, 2)
 private val zone = ZoneId.of("America/Sao_Paulo")
 private fun at(hour: Int, minute: Int = 0) = date.atTime(hour, minute).atZone(zone).toInstant().toEpochMilli()
-
-@Composable
-private fun PlaceCreationGolden(addPlace: Boolean) {
-    if (addPlace) {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 24.dp).background(HoodieColors.Panel, RoundedCornerShape(24.dp))
-                    .padding(24.dp).heightIn(max = 680.dp),
-            ) {
-                com.hoodie.app.presentation.screens.places.AddPlaceDialogContent()
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.TextButton(onClick = {}) { Text("Cancelar") }
-                    androidx.compose.material3.TextButton(onClick = {}) { Text("Estou aqui agora") }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ManualPlacesGolden() {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.BottomCenter) {
-        Column(
-            Modifier.fillMaxWidth().background(HoodieColors.Panel, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                .verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Text("O que estou fazendo?", style = MaterialTheme.typography.titleMedium)
-            Text("Isso também ensina o Hoodie sobre a sua rotina.", color = HoodieColors.Muted)
-            PlaceType.entries.forEach { type ->
-                com.hoodie.app.presentation.components.PixelButton(
-                    "${type.emoji} ${type.label}", {}, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink,
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun GoldenScreen(case: ScreenGoldenCase) {
@@ -213,10 +166,8 @@ private fun GoldenScreen(case: ScreenGoldenCase) {
                 ), busy = false, zone = zone, onOpen = {}, snackbar = snackbar,
                 actions = com.hoodie.app.presentation.screens.home.HomeActions(setManual = {}),
             )
-            if (case.state == "manual_places") ManualPlacesGolden()
             }
         }
-        "places" -> PlaceCreationGolden(case.state == "add_place")
         "diary" -> DiaryContent(
             DiaryUiState(date, diary = if (empty || loading || error) null else diary(full), isLoading = loading,
                 error = if (error) DatabaseError.ReadFailed else null), zone, at(22),
