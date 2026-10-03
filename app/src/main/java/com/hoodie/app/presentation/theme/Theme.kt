@@ -2,20 +2,16 @@ package com.hoodie.app.presentation.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import com.hoodie.app.R
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 /** Paleta retrô derivada do Hoodie (mesmos tons do sprite). */
 object HoodieColors {
@@ -53,15 +49,6 @@ private val scheme = darkColorScheme(
 /** Press Start 2P, SIL OFL 1.1; license is bundled in assets/licenses. */
 val PixelFont = FontFamily(Font(R.font.hoodie_pixel))
 
-private val typography = Typography(
-    displaySmall = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 22.sp, lineHeight = 33.sp, letterSpacing = 0.sp),
-    headlineSmall = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp, letterSpacing = 0.sp),
-    titleLarge = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 21.sp),
-    titleMedium = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 18.sp, letterSpacing = 0.sp),
-    labelLarge = TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = 11.sp, lineHeight = 17.sp, letterSpacing = 0.sp),
-    labelSmall = TextStyle(fontFamily = PixelFont, fontSize = 9.sp, lineHeight = 14.sp, letterSpacing = 0.sp),
-)
-
 private val shapes = Shapes(
     extraSmall = CutCornerShape(2.dp),
     small = CutCornerShape(3.dp),
@@ -72,7 +59,7 @@ private val shapes = Shapes(
 
 @Composable
 fun HoodieTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
+    MaterialTheme(colorScheme = scheme, typography = HoodieTypography, shapes = shapes) {
         CompositionLocalProvider(LocalContentColor provides scheme.onBackground, content = content)
     }
 }

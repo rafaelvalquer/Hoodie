@@ -86,7 +86,7 @@ fun PixelButton(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text.uppercase(), style = MaterialTheme.typography.labelLarge, color = if (enabled) textColor else HoodieColors.Muted, textAlign = TextAlign.Center)
+        Text(text.uppercase(), style = MaterialTheme.typography.labelLarge, color = if (enabled) textColor else HoodieColors.Muted, textAlign = TextAlign.Center, maxLines = 2)
     }
 }
 

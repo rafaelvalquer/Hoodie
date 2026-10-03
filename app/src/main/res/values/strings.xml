@@ -344,6 +344,7 @@
     <string name="weekday_sunday">Domingo</string>
     <string name="nav_home">Hoje</string>
     <string name="nav_timeline">Histórico</string>
+    <string name="nav_timeline_short">Hist.</string>
     <string name="nav_places">Lugares</string>
     <string name="nav_diary">Diário</string>
     <string name="nav_settings">Ajustes</string>

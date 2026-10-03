@@ -4,6 +4,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.res.stringResource
 import com.hoodie.app.R
 import com.hoodie.app.presentation.common.GeofenceFeedbackHost
@@ -106,11 +107,12 @@ fun SplashScreen() {
     }
 }
 
-private data class Tab(val route: String, val emoji: String, @androidx.annotation.StringRes val label: Int)
+/** [shortLabel] é o texto visível (cabe na aba de 72 dp); [label] vai para a descrição de acessibilidade. */
+private data class Tab(val route: String, val emoji: String, @androidx.annotation.StringRes val label: Int, @androidx.annotation.StringRes val shortLabel: Int = label)
 
 private val tabs = listOf(
     Tab(Routes.HOME, "🐱", R.string.nav_home),
-    Tab(Routes.TIMELINE, "📅", R.string.nav_timeline),
+    Tab(Routes.TIMELINE, "📅", R.string.nav_timeline, R.string.nav_timeline_short),
     Tab(Routes.PLACES, "📍", R.string.nav_places),
     Tab(Routes.DIARY, "🗺️", R.string.nav_diary),
     Tab(Routes.SETTINGS, "⚙️", R.string.nav_settings),
@@ -152,7 +154,7 @@ internal fun HoodieBottomNavigation(route: String?, onNavigate: (String) -> Unit
                 selected = selected,
                 onClick = { onNavigate(tab.route) },
                 icon = { Text(tab.emoji, style = MaterialTheme.typography.titleLarge) },
-                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                label = { Text(stringResource(tab.shortLabel), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false, modifier = Modifier.wrapContentWidth(unbounded = true)) },
                 colors = NavigationBarItemDefaults.colors(indicatorColor = HoodieColors.PanelLight, selectedTextColor = HoodieColors.Hood, unselectedTextColor = HoodieColors.Muted),
             )
         }
