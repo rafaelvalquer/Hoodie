@@ -126,7 +126,8 @@ class ContextTransitionService @Inject constructor(
             val from = previous?.placeId?.let { places.byId(it)?.name } ?: previous?.type?.label
             if (from != null) "Saiu de: $from" else "Deslocamento"
         }
-        UserContextType.UNKNOWN -> "Lugar novo"
+        // Lugar "Outro" já cadastrado (médico, pet shop…) mostra o nome; sem lugar, é novo mesmo.
+        UserContextType.UNKNOWN -> placeId?.let { places.byId(it)?.name } ?: "Lugar novo"
         else -> placeId?.let { places.byId(it)?.name }?.takeIf { it != type.label }?.let { "${type.label} · $it" } ?: type.label
     }
 }

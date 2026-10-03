@@ -336,6 +336,7 @@ object SceneRegistry {
     private val scenes: Map<SceneId, PixelScene> by lazy {
         listOf(
             HomeScene(), OfficeScene(), StreetScene(), TransitScene(), CarScene(), RestaurantScene(), GymScene(),
+            SchoolScene(), ShoppingScene(), FamilyScene(), LeisureScene(),
             UnknownScene(), GenericIndoorScene(), GenericOutdoorScene(),
         ).associateBy { it.id }
     }

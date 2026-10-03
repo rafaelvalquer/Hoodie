@@ -11,13 +11,35 @@ enum class SceneId(val label: String) {
     CAR("Carro"),
     RESTAURANT("Restaurante"),
     GYM("Academia"),
+
+    // Lugares com identidade própria.
+    SCHOOL("Escola"),
+    SHOPPING("Compras"),
+    FAMILY("Família"),
+    LEISURE("Passeio"),
+
+    // Só fallbacks.
     UNKNOWN("Desconhecido"),
     GENERIC_INDOOR("Interior genérico"),
-    GENERIC_OUTDOOR("Parque"),
+    GENERIC_OUTDOOR("Exterior genérico"),
 }
 
 /** Zonas/âncoras de cena (BED_ZONE, WORK_DESK...). */
-enum class SpotId { BED, DESK, SOFA, KITCHEN, WINDOW, CENTER, DOOR, COFFEE, TABLE, TREADMILL, WEIGHTS, WATER, MAT, SEAT, WALK, PATH_A, PATH_B }
+enum class SpotId {
+    BED, DESK, SOFA, KITCHEN, WINDOW, CENTER, DOOR, COFFEE, TABLE, TREADMILL, WEIGHTS, WATER, MAT, SEAT, WALK, PATH_A, PATH_B,
+
+    // Escola
+    BOOKS, BOARD,
+
+    // Compras
+    AISLE_A, AISLE_B, CART, CHECKOUT,
+
+    // Família
+    FAMILY_SOFA, FAMILY_TABLE,
+
+    // Passeio
+    BENCH, VIEWPOINT,
+}
 
 /** Âncora com a posição dos pés do Hoodie (x central, y do chão). */
 data class Spot(val x: Int, val y: Int)
@@ -42,7 +64,21 @@ data class SceneEnv(
 }
 
 /** Props que mudam conforme o Hoodie interage (caneca na mão, comida servida, cadeira ocupada…). */
-enum class SceneFlag { MUG_IN_HAND, PHONE_IN_HAND, FOOD_SERVED, FOOD_DONE, CHAIR_OCCUPIED, DUMBBELL_TAKEN, IN_BED }
+enum class SceneFlag {
+    MUG_IN_HAND, PHONE_IN_HAND, FOOD_SERVED, FOOD_DONE, CHAIR_OCCUPIED, DUMBBELL_TAKEN, IN_BED,
+
+    /** Livro aberto na mesa da escola (evento BOOK_OPEN); [PAGE_TURNED] alterna a página. */
+    BOOK_OPEN, PAGE_TURNED,
+
+    /** Produto na mão (ITEM_PICKED) → no carrinho (ITEM_IN_CART) → na esteira do caixa (ITEM_AT_CHECKOUT). */
+    ITEM_HELD, ITEM_IN_CART, CHECKOUT_ACTIVE,
+
+    /** Petisco saiu do prato da família (SNACK_PICKED → SNACK_FINISHED). */
+    SNACK_IN_HAND,
+
+    /** Celular erguido como câmera no passeio (CAMERA_READY → PHOTO_TAKEN). */
+    CAMERA_ACTIVE,
+}
 
 /** Objeto ordenado por Y: desenhado antes do Hoodie se [baseline] <= pés dele, depois caso contrário. */
 class Prop(val baseline: Int, val draw: (PixelBuffer, SceneEnv, Long) -> Unit)
@@ -67,6 +103,12 @@ abstract class PixelScene(val id: SceneId) {
 
     /** Desenha a porta como prop animável (senão a porta, se houver, é estática). */
     open val hasAnimatedDoor: Boolean = false
+
+    /**
+     * Quantas versões do fundo existem (parque/praça/área verde…). O fundo é cacheado
+     * por cena + período + `variant % backgroundVariants`.
+     */
+    open val backgroundVariants: Int = 1
 
     /** Cenas já escuras/estilizadas podem dispensar o overlay de período. */
     open val usesLighting: Boolean = true

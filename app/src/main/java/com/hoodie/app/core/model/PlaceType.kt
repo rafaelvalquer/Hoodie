@@ -21,7 +21,8 @@ enum class PlaceType(val emoji: String, val label: String) {
         MARKET -> UserContextType.SHOPPING
         FAMILY -> UserContextType.VISITING
         LEISURE -> UserContextType.LEISURE
-        OTHER -> UserContextType.LEISURE
+        // "Outro" pode ser médico, igreja, mecânico, pet shop… — não é passeio por padrão.
+        OTHER -> UserContextType.UNKNOWN
     }
 
     companion object {

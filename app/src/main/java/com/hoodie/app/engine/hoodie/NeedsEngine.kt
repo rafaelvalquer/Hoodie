@@ -33,6 +33,10 @@ object NeedsEngine {
         PHONE to Rate(-3, +6, +4, +20, -5),
         CLEANING to Rate(-8, +8, +6, 0, +2),
         COMMUTING to Rate(-6, +7, -1, +2, -1),
+        STUDYING to Rate(-6, +7, -2, +1, -6),
+        SHOPPING to Rate(-7, +9, +8, +4, -1),
+        SOCIALIZING to Rate(-3, +5, +14, +25, +2),
+        SIGHTSEEING to Rate(-7, +8, +16, +4, +5),
         IDLE to awake,
     )
 

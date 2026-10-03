@@ -14,6 +14,12 @@ enum class AnimationEvent {
     FOOD_SERVED, FOOD_DONE,
     ITEM_PICK, ITEM_PUT,
     SPARKLE,
+
+    // Só eventos que mudam o estado visual da cena (props), nunca cada movimento.
+    BOOK_OPEN, PAGE_TURN,
+    ITEM_PICKED, ITEM_IN_CART, ITEM_AT_CHECKOUT, PAYMENT_DONE,
+    SNACK_PICKED, SNACK_FINISHED,
+    CAMERA_READY, PHOTO_TAKEN,
 }
 
 /** Como uma animação reage quando o estado muda no meio dela. */

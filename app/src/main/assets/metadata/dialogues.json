@@ -31,5 +31,14 @@
   { "id": "unknown_01", "context": "UNKNOWN", "text": "Onde estamos?" },
   { "id": "unknown_02", "context": "UNKNOWN", "text": "Lugar novo! Que cheiro diferente." },
   { "id": "leisure_01", "context": "LEISURE", "text": "Que passeio bom." },
-  { "id": "visiting_01", "context": "VISITING", "text": "Adoro visitas." }
+  { "id": "visiting_01", "context": "VISITING", "text": "Adoro visitas." },
+  { "id": "visiting_chat_01", "context": "VISITING", "activity": "SOCIALIZING", "text": "E aí, me conta tudo!" },
+  { "id": "visiting_snack_01", "context": "VISITING", "activity": "EATING", "text": "Esses biscoitos são os melhores." },
+  { "id": "study_01", "context": "STUDY", "activity": "STUDYING", "text": "Mais um capítulo e eu paro." },
+  { "id": "study_02", "context": "STUDY", "activity": "STUDYING", "text": "Hmm... como era essa fórmula?" },
+  { "id": "study_coffee_01", "context": "STUDY", "activity": "COFFEE", "text": "Café para o cérebro." },
+  { "id": "shopping_01", "context": "SHOPPING", "activity": "SHOPPING", "text": "Isso estava na lista?" },
+  { "id": "shopping_02", "context": "SHOPPING", "activity": "SHOPPING", "text": "Olha, promoção!" },
+  { "id": "leisure_sightseeing_01", "context": "LEISURE", "activity": "SIGHTSEEING", "text": "Que vista! Vou tirar uma foto." },
+  { "id": "leisure_rest_01", "context": "LEISURE", "activity": "RESTING", "text": "Um banquinho na sombra..." }
 ]

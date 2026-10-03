@@ -69,6 +69,25 @@ internal object HoodieAccessoryPainter {
                 b.outlined(rx - 7, ry - 3, rx - 4, ry + 3, 0xFF3A3D4A.toInt(), o)
                 b.outlined(rx + 4, ry - 3, rx + 7, ry + 3, 0xFF3A3D4A.toInt(), o)
             }
+            Item.PENCIL -> {
+                // Lápis inclinado: corpo amarelo, ponta de grafite apoiada no caderno.
+                b.line(rx + 4, ry - 7, rx + 1, ry - 1, 0xFFF2CF5B.toInt())
+                b.line(rx + 5, ry - 7, rx + 2, ry - 1, 0xFFD9A83A.toInt())
+                b.set(rx + 5, ry - 8, 0xFFE07A93.toInt())
+                b.set(rx + 1, ry, o)
+            }
+            Item.PRODUCT -> {
+                // Caixinha de produto com rótulo.
+                b.outlined(rx - 1, ry - 9, rx + 5, ry + 1, 0xFF4F7FC9.toInt(), o)
+                b.box(rx, ry - 6, rx + 4, ry - 4, 0xFFF6F3EA.toInt())
+                b.set(rx + 2, ry - 8, 0xFFF2CF5B.toInt())
+            }
+            Item.SNACK -> {
+                // Biscoito com gotas.
+                b.disc(rx + 2, ry - 3, 3, o)
+                b.disc(rx + 2, ry - 3, 2, 0xFFD9A15A.toInt())
+                b.set(rx + 1, ry - 4, 0xFF6B3E26.toInt()); b.set(rx + 3, ry - 2, 0xFF6B3E26.toInt())
+            }
             else -> Unit
         }
     }

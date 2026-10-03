@@ -136,7 +136,8 @@ class IdleDirector(private val random: Random) {
  *     55% continua o que está fazendo     15% olha para o usuário
  *     10% acena                            8% sorri
  *      5% olha e volta                     4% mexe a orelha
- *      3% reação do contexto (trabalho: olha + acena; jogo: olhada rápida)
+ *      3% reação do contexto (trabalho: olha + acena; jogo: olhada rápida; estudo, compras,
+ *         visita e passeio têm a sua)
  */
 object ReactionDirector {
     val WEIGHTS = listOf(55, 15, 10, 8, 5, 4, 3)
@@ -161,6 +162,14 @@ object ReactionDirector {
         AnimGroup.WORK -> listOf(AnimationId.NOTICE, AnimationId.WAVE)
         AnimGroup.GAME -> listOf(AnimationId.GLANCE)
         AnimGroup.FOOD -> listOf(AnimationId.SMILE)
+        // Estudando: tira os olhos do livro e concorda de leve.
+        AnimGroup.STUDY -> listOf(AnimationId.GLANCE, AnimationId.NOD)
+        // Compras: percebe o usuário entre as prateleiras.
+        AnimGroup.SHOPPING -> listOf(AnimationId.NOTICE, AnimationId.SMILE)
+        // Visita: não larga a conversa, só acena.
+        AnimGroup.VISIT -> listOf(AnimationId.WAVE)
+        // Passeio: chama para ver a paisagem.
+        AnimGroup.LEISURE -> listOf(AnimationId.WAVE, AnimationId.HAPPY)
         else -> listOf(AnimationId.HAPPY)
     }
 }

@@ -34,7 +34,7 @@ class ProceduralPainterRegressionTest {
                 }
             }
         }
-        assertEquals(1017, checked)
+        assertEquals(1335, checked)
         assertEquals(expected.size, checked)
     }
 }

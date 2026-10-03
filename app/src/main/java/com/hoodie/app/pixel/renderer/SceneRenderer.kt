@@ -14,10 +14,10 @@ import com.hoodie.app.pixel.sprite.HoodiePainter
 class SceneRenderer {
     val buffer = PixelBuffer(PixelScene.SCENE_W, PixelScene.SCENE_H)
 
-    private data class BgKey(val scene: SceneId, val period: DayPeriod)
+    private data class BgKey(val scene: SceneId, val period: DayPeriod, val variant: Int)
     private val backgrounds = HashMap<BgKey, PixelBuffer>()
 
-    private fun background(scene: PixelScene, env: SceneEnv) = backgrounds.getOrPut(BgKey(scene.id, env.period)) {
+    private fun background(scene: PixelScene, env: SceneEnv) = backgrounds.getOrPut(BgKey(scene.id, env.period, env.variant.mod(scene.backgroundVariants))) {
         PixelBuffer(scene.width, scene.height).also { scene.drawBackground(it, env) }
     }
 

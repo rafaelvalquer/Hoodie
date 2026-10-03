@@ -24,6 +24,8 @@ object RequiredAnchors {
             AnimationId.PHONE_SIT, AnimationId.PHONE_STAND, AnimationId.IDLE_PHONE,
             AnimationId.EAT, AnimationId.WATER, AnimationId.COOK, AnimationId.CLEAN, AnimationId.WORK_NOTES,
             AnimationId.REACH_MOUSE, AnimationId.WORK_MOUSE,
+            // Lápis, produto, celular no caixa, petisco e celular-câmera.
+            AnimationId.STUDY_WRITE, AnimationId.SHOP_PICK, AnimationId.SHOP_PAY, AnimationId.VISIT_SNACK, AnimationId.LEISURE_PHOTO,
         ).forEach { put(it, setOf(Anchor.FEET) + HAND) }
         // Halteres nas duas mãos.
         listOf(AnimationId.LIFT_PICK, AnimationId.LIFT, AnimationId.LIFT_PUT).forEach { put(it, setOf(Anchor.FEET) + BOTH_HANDS) }

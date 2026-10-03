@@ -11,7 +11,7 @@ import com.hoodie.app.pixel.sprite.Legs
 import com.hoodie.app.pixel.sprite.Mouth
 
 /** Grupos só para organizar o Pixel Lab. */
-enum class AnimGroup { LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION }
+enum class AnimGroup { LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION, STUDY, SHOPPING, VISIT, LEISURE }
 
 /**
  * Identificador estável de animação. É o contrato entre o motor (VisualDirector,
@@ -115,6 +115,30 @@ enum class AnimationId(val label: String, val group: AnimGroup) {
     COOK("Cozinhar", AnimGroup.HOME),
     CLEAN("Varrer", AnimGroup.HOME),
     BUS_SIT("Sentado no ônibus", AnimGroup.HOME),
+
+    // Escola
+    STUDY_READ("Estudar lendo", AnimGroup.STUDY),
+    STUDY_WRITE("Escrever no caderno", AnimGroup.STUDY),
+    STUDY_THINK("Pensar no exercício", AnimGroup.STUDY),
+    STUDY_PAGE_TURN("Virar a página", AnimGroup.STUDY),
+
+    // Compras
+    SHOP_LOOK("Olhar a prateleira", AnimGroup.SHOPPING),
+    SHOP_PICK("Pegar um produto", AnimGroup.SHOPPING),
+    SHOP_CART("Empurrar o carrinho", AnimGroup.SHOPPING),
+    SHOP_PAY("Pagar no caixa", AnimGroup.SHOPPING),
+
+    // Família
+    VISIT_CHAT("Conversar", AnimGroup.VISIT),
+    VISIT_LISTEN("Escutar", AnimGroup.VISIT),
+    VISIT_LAUGH("Rir junto", AnimGroup.VISIT),
+    VISIT_SNACK("Beliscar um petisco", AnimGroup.VISIT),
+
+    // Passeio
+    LEISURE_WALK("Passear devagar", AnimGroup.LEISURE),
+    LEISURE_BENCH("Sentar no banco", AnimGroup.LEISURE),
+    LEISURE_PHOTO("Tirar foto", AnimGroup.LEISURE),
+    LEISURE_LOOK("Admirar a paisagem", AnimGroup.LEISURE),
 
     // Reações
     WAVE("Acenar", AnimGroup.REACTION),

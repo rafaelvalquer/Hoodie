@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
+import com.hoodie.app.core.model.HoodieActivity
+import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.animation.AnimGroup
 import com.hoodie.app.pixel.animation.AnimationId
@@ -48,6 +50,7 @@ import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.SceneRegistry
 import com.hoodie.app.pixel.scene.SpotId
+import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.pixel.sprite.AndroidSpriteSheets
 import com.hoodie.app.pixel.sprite.CompositeSpriteProvider
@@ -187,31 +190,72 @@ private fun AnimationTool() {
 private fun SceneLab() {
     var scene by remember { mutableStateOf(SceneId.HOME) }
     var anim by remember { mutableStateOf(AnimationId.WORK_TYPING) }
+    var group by remember { mutableStateOf<AnimGroup?>(null) }
+    var direction by remember { mutableStateOf(Direction.FRONT) }
     var period by remember { mutableStateOf(DayPeriod.DAY) }
     var expression by remember { mutableStateOf(Expression.NORMAL) }
     var speed by remember { mutableFloatStateOf(1f) }
     var spot by remember { mutableStateOf<SpotId?>(null) }
+    var variant by remember { mutableIntStateOf(0) }
+    // Modo atividade: o VisualDirector monta o estado real (cena, spot, microações, olhar).
+    var byActivity by remember { mutableStateOf(false) }
+    var activity by remember { mutableStateOf(HoodieActivity.STUDYING) }
+    var context by remember { mutableStateOf(UserContextType.STUDY) }
+    var energy by remember { mutableIntStateOf(70) }
+    var mood by remember { mutableIntStateOf(70) }
     val s = SceneRegistry[scene]
     val chosenSpot = spot?.takeIf { it in s.spots } ?: s.defaultSpot
-    val visual = VisualState(
+    val visual = if (byActivity) {
+        VisualDirector.resolve(activity, context, variant = variant, energy = energy, mood = mood)
+            .let { v -> v.copy(expression = expression.takeIf { it != Expression.NORMAL } ?: v.expression) }
+    } else VisualState(
         scene = scene,
         spot = chosenSpot,
-        actions = listOf(MicroAction(anim, 1, 60_000, 60_000)),
+        actions = listOf(MicroAction(anim, 1, 60_000, 60_000, direction = if (anim.clip.directional) direction else Direction.FRONT)),
         expression = expression.takeIf { it != Expression.NORMAL },
         tvOn = true,
+        variant = variant,
         backpackWalk = anim == AnimationId.WALK_BACKPACK,
     )
     Text("Trocar de cena/spot toca a transição completa (levantar, andar, porta, fade).", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
         HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = period)
     }
-    SectionLabel("Cena")
-    ChipRow(SceneId.entries.map { it.label }, scene.ordinal, { scene = SceneId.entries[it] })
-    SectionLabel("Spot")
-    val spots = s.spots.keys.toList()
-    ChipRow(spots.map { it.name }, spots.indexOf(chosenSpot), { spot = spots[it] })
-    SectionLabel("Animação")
-    ChipRow(AnimationId.entries.map { it.label }, anim.ordinal, { anim = AnimationId.entries[it] })
+    SectionLabel("Modo")
+    ChipRow(listOf("Animação", "Atividade"), if (byActivity) 1 else 0, { byActivity = it == 1 })
+    if (byActivity) {
+        Text("Cena: ${visual.scene.label} · spot ${visual.spot.name}", style = MaterialTheme.typography.labelLarge)
+        SectionLabel("Atividade")
+        ChipRow(HoodieActivity.entries.map { "${it.emoji} ${it.label}" }, activity.ordinal, { activity = HoodieActivity.entries[it] })
+        SectionLabel("Contexto")
+        ChipRow(UserContextType.entries.map { it.name.lowercase() }, context.ordinal, { context = UserContextType.entries[it] })
+        val levels = listOf(10, 40, 70, 95)
+        SectionLabel("Energia")
+        ChipRow(levels.map { "$it" }, levels.indexOf(energy), { energy = levels[it] })
+        SectionLabel("Humor")
+        ChipRow(levels.map { "$it" }, levels.indexOf(mood), { mood = levels[it] })
+    } else {
+        SectionLabel("Cena")
+        ChipRow(SceneId.entries.map { it.label }, scene.ordinal, { scene = SceneId.entries[it] })
+        SectionLabel("Spot")
+        val spots = s.spots.keys.toList()
+        ChipRow(spots.map { it.name }, spots.indexOf(chosenSpot), { spot = spots[it] })
+        SectionLabel("Grupo")
+        val groups = listOf<AnimGroup?>(null) + AnimGroup.entries
+        ChipRow(groups.map { it?.name?.lowercase() ?: "todos" }, groups.indexOf(group), { group = groups[it] })
+        SectionLabel("Animação")
+        val anims = AnimationId.entries.filter { group == null || it.group == group }
+        ChipRow(anims.map { it.label }, anims.indexOf(anim), { anim = anims[it] })
+        if (anim.clip.directional) {
+            SectionLabel("Direção")
+            ChipRow(Direction.entries.map { it.name }, direction.ordinal, { direction = Direction.entries[it] })
+        }
+    }
+    if (SceneRegistry[visual.scene].backgroundVariants > 1) {
+        SectionLabel("Variante do cenário")
+        val n = SceneRegistry[visual.scene].backgroundVariants
+        ChipRow((0 until n).map { "${it + 1}" }, variant.mod(n), { variant = it })
+    }
     SectionLabel("Horário")
     ChipRow(DayPeriod.entries.map { it.label }, period.ordinal, { period = DayPeriod.entries[it] })
     SectionLabel("Expressão")

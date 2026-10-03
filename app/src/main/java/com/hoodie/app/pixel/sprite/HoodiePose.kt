@@ -21,7 +21,7 @@ enum class Ears { NORMAL, ALERT, RELAXED, TWITCH_LEFT, TWITCH_RIGHT, DOWN }
 enum class Facing { FRONT, BACK, SIDE }
 
 /** Pontos de encaixe: o item é desenhado na âncora da mão, não em um sprite por combinação. */
-enum class Item { NONE, MUG, PHONE, BOOK, CONTROLLER, DUMBBELL, BROOM, PAN, BOTTLE, FORK, MENU }
+enum class Item { NONE, MUG, PHONE, BOOK, CONTROLLER, DUMBBELL, BROOM, PAN, BOTTLE, FORK, MENU, PENCIL, PRODUCT, SNACK }
 
 /** Expressões aplicáveis por cima de qualquer animação. */
 enum class Expression(val label: String, val eyes: Eyes?, val ears: Ears?) {

@@ -185,6 +185,9 @@ class HomeViewModel @Inject constructor(
             variant = variant,
             energy = snap.liveNeeds.energy,
             mood = snap.liveNeeds.mood,
+            social = snap.liveNeeds.social,
+            hunger = snap.liveNeeds.hunger,
+            focus = snap.liveNeeds.focus,
         )
         val userType = ctx?.type ?: UserContextType.HOME
         val next = RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)

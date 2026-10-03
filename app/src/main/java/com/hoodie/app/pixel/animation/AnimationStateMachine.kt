@@ -10,6 +10,7 @@ import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.SceneRegistry
 import com.hoodie.app.pixel.scene.Spot
 import com.hoodie.app.pixel.scene.SpotId
+import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.pixel.sprite.Direction
 import com.hoodie.app.pixel.sprite.Eyes
@@ -164,6 +165,8 @@ class AnimationStateMachine(
         doorOpenAt = -1; doorCloseAt = -1; fade = 1f
         idle.reset(now); idle.setGaze(v.gaze, now)
         action = loopSelector.pick(v, null)
+        // Microação com spot próprio (banco do passeio, esteira da academia): já aparece lá.
+        action?.spot?.takeIf { it in scene!!.spots }?.let { scene!!.spot(it) }?.let { x = it.x.toFloat(); y = it.y.toFloat() }
         posture = if (action?.anim?.posture == Legs.SIT) Posture.SITTING else Posture.STANDING
         startAction(now)
     }
@@ -352,7 +355,7 @@ class AnimationStateMachine(
 
     // ───────────────────────── Movimento e porta ─────────────────────────
 
-    private fun walkAnim() = if (visual?.backpackWalk == true || scene?.id == SceneId.STREET) AnimationId.WALK_BACKPACK else AnimationId.WALK
+    private fun walkAnim() = VisualDirector.locomotion(scene?.id, visual?.backpackWalk == true)
 
     /** Move em direção ao alvo; true quando chegou. Um eixo por vez (estilo RPG). */
     private fun move(t: Spot, dt: Float): Boolean {
@@ -435,8 +438,22 @@ class AnimationStateMachine(
             AnimationEvent.FOOD_DONE -> flags += SceneFlag.FOOD_DONE
             AnimationEvent.ITEM_PICK -> flags += SceneFlag.DUMBBELL_TAKEN
             AnimationEvent.ITEM_PUT -> flags -= SceneFlag.DUMBBELL_TAKEN
+            AnimationEvent.BOOK_OPEN -> flags += SceneFlag.BOOK_OPEN
+            AnimationEvent.PAGE_TURN -> if (SceneFlag.PAGE_TURNED in flags) flags -= SceneFlag.PAGE_TURNED else flags += SceneFlag.PAGE_TURNED
+            AnimationEvent.ITEM_PICKED -> flags += SceneFlag.ITEM_HELD
+            AnimationEvent.ITEM_IN_CART -> { flags -= SceneFlag.ITEM_HELD; flags += SceneFlag.ITEM_IN_CART }
+            AnimationEvent.ITEM_AT_CHECKOUT -> { flags -= SceneFlag.ITEM_IN_CART; flags += SceneFlag.CHECKOUT_ACTIVE }
+            AnimationEvent.PAYMENT_DONE -> flags -= SceneFlag.CHECKOUT_ACTIVE
+            AnimationEvent.SNACK_PICKED -> flags += SceneFlag.SNACK_IN_HAND
+            AnimationEvent.SNACK_FINISHED -> flags -= SceneFlag.SNACK_IN_HAND
+            AnimationEvent.CAMERA_READY -> flags += SceneFlag.CAMERA_ACTIVE
+            AnimationEvent.PHOTO_TAKEN -> {
+                flags -= SceneFlag.CAMERA_ACTIVE
+                // Flash curto na mão que segura o celular.
+                transients += Transient(EffectKind.SPARKLE, left + sprite.anchors.rightHand.x, top + sprite.anchors.rightHand.y - 6, now + 400)
+            }
             AnimationEvent.SPARKLE -> transients += Transient(EffectKind.SPARKLE, left + sprite.anchors.head.x, top + sprite.anchors.head.y - 6, now + 700)
-            AnimationEvent.FOOTSTEP -> if (scene?.id == SceneId.STREET || scene?.id == SceneId.GENERIC_OUTDOOR) {
+            AnimationEvent.FOOTSTEP -> if (scene?.id == SceneId.STREET || scene?.id == SceneId.GENERIC_OUTDOOR || scene?.id == SceneId.LEISURE) {
                 transients += Transient(EffectKind.DUST, left + sprite.anchors.feet.x, top + sprite.anchors.feet.y, now + 300)
             }
         }

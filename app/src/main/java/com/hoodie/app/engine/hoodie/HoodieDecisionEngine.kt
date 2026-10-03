@@ -92,8 +92,30 @@ object HoodieDecisionEngine {
             UserContextType.LUNCH -> { w[EATING] = if (needs.hunger > 20) 70 else 20; w[COFFEE] = 15; w[PHONE] = 15 }
             UserContextType.COMMUTING -> w[COMMUTING] = 100
             UserContextType.GYM -> { w[TRAINING] = 75; w[RESTING] = 15; w[IDLE] = 10 }
-            UserContextType.STUDY -> { w[READING] = 60; w[WORKING] = 20; w[COFFEE] = 20 }
-            UserContextType.SHOPPING, UserContextType.LEISURE, UserContextType.VISITING, UserContextType.TRAVEL -> {
+            UserContextType.STUDY -> {
+                w[STUDYING] = 65; w[READING] = 15; w[COFFEE] = 8; w[PHONE] = 5; w[RESTING] = 7
+                // Foco baixo: estuda menos, distrai no celular e descansa.
+                if (needs.focus < 30) { w[STUDYING] = 35; w[PHONE] = 15; w[RESTING] = 15 }
+                // Energia baixa: café e descanso.
+                if (needs.energy < 30) { w[COFFEE] = 20; w[RESTING] = (w[RESTING] ?: 0) + 10 }
+            }
+            UserContextType.SHOPPING -> {
+                w[SHOPPING] = 65; w[WALKING] = 15; w[PHONE] = 10; w[EATING] = if (needs.hunger > 60) 10 else 3; w[IDLE] = 5
+                if (needs.hunger > 75) w[EATING] = 25
+                if (needs.energy < 25) { w[SHOPPING] = 35; w[RESTING] = 15 }
+            }
+            UserContextType.VISITING -> {
+                w[SOCIALIZING] = 55; w[EATING] = 12; w[COFFEE] = 12; w[WATCHING_TV] = 8; w[PHONE] = 5; w[RESTING] = 8
+                // Social baixo: a visita vira conversa.
+                if (needs.social < 35) w[SOCIALIZING] = 75
+                if (needs.hunger > 65) w[EATING] = 25
+            }
+            UserContextType.LEISURE -> {
+                w[SIGHTSEEING] = 50; w[WALKING] = 20; w[PHONE] = 8; w[COFFEE] = 8; w[EATING] = 6; w[RESTING] = 8
+                if (needs.energy < 30) { w[WALKING] = 5; w[RESTING] = 20 }
+                if (needs.hunger > 65) w[EATING] = 20
+            }
+            UserContextType.TRAVEL -> {
                 w[WALKING] = 45; w[IDLE] = 20; w[PHONE] = 15; w[COFFEE] = 10; w[EATING] = if (needs.hunger > 60) 30 else 10
             }
         }
@@ -146,6 +168,10 @@ object HoodieDecisionEngine {
             TRAINING -> 20 to 45
             COMMUTING -> 20 to 20
             SLEEPING -> 40 to 40
+            STUDYING -> 20 to 60
+            SHOPPING -> 15 to 50
+            SOCIALIZING -> 15 to 45
+            SIGHTSEEING -> 15 to 45
         }
         var minutes = random.nextInt(min, max + 1).toLong()
         if (input.needs.energy <= 10) minutes = minutes.coerceAtMost(20)
