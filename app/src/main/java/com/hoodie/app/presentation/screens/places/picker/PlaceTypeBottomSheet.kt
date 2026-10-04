@@ -37,7 +37,7 @@ fun PlaceTypeBottomSheet(selected: PlaceType, onSelect: (PlaceType) -> Unit, onD
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = HoodieColors.Panel) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp).testTag(PlacePickerTags.TYPE_SHEET)) {
             SectionLabel(stringResource(R.string.ui_place_type_bottom_sheet_1), Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-            PlaceType.entries.forEach { t ->
+            PlaceType.physicalPlaceOptions.forEach { t ->
                 val isSelected = t == selected
                 Row(
                     Modifier

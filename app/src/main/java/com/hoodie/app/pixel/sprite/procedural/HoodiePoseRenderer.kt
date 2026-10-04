@@ -1,11 +1,10 @@
 package com.hoodie.app.pixel.sprite.procedural
 
+import com.hoodie.app.pixel.character.CharacterCanvas
+import com.hoodie.app.pixel.character.CharacterGeometry
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.sprite.*
 import com.hoodie.app.pixel.sprite.HoodiePainter.Part
-import com.hoodie.app.pixel.sprite.HoodiePainter.WIDTH
-import com.hoodie.app.pixel.sprite.HoodiePainter.HEIGHT
-import com.hoodie.app.pixel.sprite.HoodiePainter.FEET
 import com.hoodie.app.pixel.sprite.procedural.HoodieBodyPainter.drawBodyFront
 import com.hoodie.app.pixel.sprite.procedural.HoodieBodyPainter.drawBodyBack
 import com.hoodie.app.pixel.sprite.procedural.HoodieBodyPainter.drawBodySide
@@ -27,20 +26,25 @@ import com.hoodie.app.pixel.sprite.procedural.HoodieTailPainter.drawTailSide
 
 /** Procedural HoodiePoseRenderer; preserves drawing order and semantic part ownership. */
 internal object HoodiePoseRenderer {
+    private const val WIDTH = CharacterCanvas.WIDTH
+    private const val HEIGHT = CharacterCanvas.HEIGHT
+    private val FEET = CharacterCanvas.FEET
+
     fun paint(p: HoodiePose): PaintedSprite {
         val b = PixelBuffer(WIDTH, HEIGHT)
+        val geometry = CharacterGeometry.resolveHoodie(p)
         val sit = p.legs == Legs.SIT
-        val up = (if (sit) 5 else 0) + p.bob
+        val up = geometry.torsoOffsetY
         val anchors = when {
             p.headOnly -> { drawHeadFront(b, p, up); headOnlyAnchors(p, up) }
             p.facing == Facing.SIDE -> paintSide(b, p, up)
             p.facing == Facing.BACK -> paintBack(b, p, up)
             else -> paintFront(b, p, up)
         }
-        if (p.lift <= 0) return PaintedSprite(b, anchors)
+        if (geometry.lift <= 0) return PaintedSprite(b, anchors)
         // Pulo: todo o desenho sobe; o ponto dos pés continua no chão.
-        val lifted = PixelBuffer(WIDTH, HEIGHT).also { it.blit(b, 0, -p.lift) }
-        fun Point.up() = Point(x, y - p.lift)
+        val lifted = PixelBuffer(WIDTH, HEIGHT).also { it.blit(b, 0, -geometry.lift) }
+        fun Point.up() = Point(x, y - geometry.lift)
         return PaintedSprite(
             lifted,
             anchors.copy(rightHand = anchors.rightHand.up(), leftHand = anchors.leftHand.up(), head = anchors.head.up(), back = anchors.back.up()),

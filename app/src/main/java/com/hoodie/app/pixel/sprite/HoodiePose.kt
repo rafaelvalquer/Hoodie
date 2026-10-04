@@ -1,5 +1,7 @@
 package com.hoodie.app.pixel.sprite
 
+import com.hoodie.app.pixel.character.CharacterPose
+
 enum class Eyes { OPEN, HALF, CLOSED, HAPPY, WIDE, FOCUSED, SLEEPY, LOOK_LEFT, LOOK_RIGHT, LOOK_UP, LOOK_DOWN }
 
 enum class Mouth { SMILE, OPEN, FLAT, CHEW }
@@ -38,32 +40,4 @@ enum class Expression(val label: String, val eyes: Eyes?, val ears: Ears?) {
  * Uma pose completa do Hoodie. O sprite procedural é gerado a partir dela, então
  * proporção, rosto e moletom são idênticos em todos os frames por construção.
  */
-data class HoodiePose(
-    val eyes: Eyes = Eyes.OPEN,
-    val mouth: Mouth = Mouth.SMILE,
-    val leftArm: Arm = Arm.DOWN,
-    val rightArm: Arm = Arm.DOWN,
-    val legs: Legs = Legs.STAND,
-    val facing: Facing = Facing.FRONT,
-    /** Fase da caminhada (0..7) quando [legs] = WALK. */
-    val stride: Int = 0,
-    /** Deslocamento vertical do tronco (respiração, passos, squash). Positivo = desce. */
-    val bob: Int = 0,
-    /** Atraso extra só da cabeça em relação ao tronco (movimento secundário). */
-    val headDy: Int = 0,
-    /** Pulo: o sprite inteiro sobe, os pés saem do chão. */
-    val lift: Int = 0,
-    val ears: Ears = Ears.NORMAL,
-    /** Balanço dos cordões do moletom (-2..2): follow-through. */
-    val stringSwing: Int = 0,
-    val backpack: Boolean = false,
-    /** A mochila "alcança" o corpo com 1 frame de atraso. */
-    val backpackDy: Int = 0,
-    val item: Item = Item.NONE,
-    val itemInBothHands: Boolean = false,
-    /** Só a cabeça (deitado na cama, coberto). */
-    val headOnly: Boolean = false,
-    /** Cabeça deitada virada para um lado (-1/0/1) — virar no sono. */
-    val headTilt: Int = 0,
-    val blush: Boolean = false,
-)
+typealias HoodiePose = CharacterPose

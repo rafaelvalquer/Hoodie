@@ -322,6 +322,9 @@ class NewPlaceScenesTest {
         // Folha para revisão visual (build/pixel-preview/new_place_scenes.png).
         PreviewExport.sheet("new_place_scenes", actual.values.toList(), columns = 4, scale = 2)
         val lines = actual.map { (name, buf) -> "$name\t${digest(buf)}" }
+        val candidate = File(PreviewExport.dir, "npc-art-review/scene-goldens-v1-candidate.sha256")
+        candidate.parentFile?.mkdirs()
+        candidate.writeText(lines.joinToString("\n", postfix = "\n"))
         if (System.getenv("RECORD_SCENE_GOLDENS") == "true") {
             File("src/test/resources/scene-goldens-v1.sha256").writeText(lines.joinToString("\n", postfix = "\n"))
             return

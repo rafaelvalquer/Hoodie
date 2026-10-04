@@ -1,6 +1,7 @@
 package com.hoodie.app.pixel.sprite.procedural
 
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.character.CharacterLimbPainter
 import com.hoodie.app.pixel.sprite.*
 import com.hoodie.app.pixel.sprite.HoodiePainter.Part
 import com.hoodie.app.pixel.sprite.procedural.ProceduralDrawing.part
@@ -28,30 +29,30 @@ internal object HoodieArmsPainter {
         part(b, if (mirror) Part.ARM_RIGHT else Part.ARM_LEFT) {
             arm.parts.forEach { seg ->
                 val r = seg.dy(up).let { if (mirror) it.mirror() else it }
-                shape(b, r, sleeve)
-                recolor(b, r.x0, r.y1 - 1, r.x1, r.y1 - 1, sleeve, HoodiePalette.HOOD_SHADE)
+                CharacterLimbPainter.drawShape(b, r, sleeve, HoodiePalette.OUTLINE)
+                CharacterLimbPainter.recolor(b, r.x0, r.y1 - 1, r.x1, r.y1 - 1, sleeve, HoodiePalette.HOOD_SHADE)
             }
         }
         val paw = arm.paw.dy(up).let { if (mirror) it.mirror() else it }
-        part(b, if (mirror) Part.HAND_RIGHT else Part.HAND_LEFT) { shape(b, paw, fur) }
+        part(b, if (mirror) Part.HAND_RIGHT else Part.HAND_LEFT) { CharacterLimbPainter.drawShape(b, paw, fur, HoodiePalette.OUTLINE) }
     }
 
     fun redrawPaws(b: PixelBuffer, left: ArmShape, right: ArmShape, up: Int) {
-        part(b, Part.HAND_LEFT) { shape(b, left.paw.dy(up), HoodiePalette.FUR) }
-        part(b, Part.HAND_RIGHT) { shape(b, right.paw.dy(up).mirror(), HoodiePalette.FUR) }
+        part(b, Part.HAND_LEFT) { CharacterLimbPainter.drawShape(b, left.paw.dy(up), HoodiePalette.FUR, HoodiePalette.OUTLINE) }
+        part(b, Part.HAND_RIGHT) { CharacterLimbPainter.drawShape(b, right.paw.dy(up).mirror(), HoodiePalette.FUR, HoodiePalette.OUTLINE) }
     }
 
     fun sideArm(b: PixelBuffer, swing: Int, up: Int, sleeve: Int, fur: Int, far: Boolean): Point = part(b, if (far) Part.ARM_RIGHT else Part.ARM_LEFT) {
         // Balanço amplo: a pata sai da silhueta do corpo para a frente e para trás.
         val ex = 20 + swing
         val px = 19 + swing * 2
-        shapeUnion(b, listOf(R(19, 35, 24, 42, 2), R(ex, 40, ex + 4, 46, 1), R(px, 45, px + 4, 49, 1)).map { it.dy(up) }, sleeve)
+        CharacterLimbPainter.drawShapes(b, listOf(R(19, 35, 24, 42, 2), R(ex, 40, ex + 4, 46, 1), R(px, 45, px + 4, 49, 1)).map { it.dy(up) }, sleeve, HoodiePalette.OUTLINE)
         // Borda de trás da manga mais escura: separa o braço do corpo.
         val back = if (sleeve == HoodiePalette.HOOD_LIGHT) HoodiePalette.HOOD else HoodiePalette.HOOD_DARK
-        recolor(b, 23, 36 + up, 24, 42 + up, sleeve, back)
-        recolor(b, ex + 3, 41 + up, ex + 4, 46 + up, sleeve, back)
-        recolor(b, px, 48 + up, px + 4, 49 + up, sleeve, HoodiePalette.HOOD_SHADE)
-        part(b, if (far) Part.HAND_RIGHT else Part.HAND_LEFT) { shape(b, R(px - 1, 49, px + 4, 53, 2).dy(up), fur) }
+        CharacterLimbPainter.recolor(b, 23, 36 + up, 24, 42 + up, sleeve, back)
+        CharacterLimbPainter.recolor(b, ex + 3, 41 + up, ex + 4, 46 + up, sleeve, back)
+        CharacterLimbPainter.recolor(b, px, 48 + up, px + 4, 49 + up, sleeve, HoodiePalette.HOOD_SHADE)
+        part(b, if (far) Part.HAND_RIGHT else Part.HAND_LEFT) { CharacterLimbPainter.drawShape(b, R(px - 1, 49, px + 4, 53, 2).dy(up), fur, HoodiePalette.OUTLINE) }
         Point(px + 1, 51 + up)
     }
 }

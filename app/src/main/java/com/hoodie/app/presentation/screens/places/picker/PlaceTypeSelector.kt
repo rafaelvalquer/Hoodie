@@ -48,7 +48,7 @@ fun placeTypeSelectorMode(allowTypeChange: Boolean, editing: Boolean) = when {
 
 /**
  * Edição:  Tipo / 🏠 Casa ................ ALTERAR  (abre [PlaceTypeBottomSheet])
- * Novo:    grade 3 colunas com os 9 tipos.
+ * Novo:    grade 2 colunas que acomoda todos os tipos físicos com rótulos legíveis.
  */
 @Composable
 fun PlaceTypeSelector(type: PlaceType, mode: PlaceTypeSelectorMode, onChange: (PlaceType) -> Unit, modifier: Modifier = Modifier) {
@@ -72,10 +72,10 @@ fun PlaceTypeSelector(type: PlaceType, mode: PlaceTypeSelectorMode, onChange: (P
         }
         PlaceTypeSelectorMode.GRID -> Column(modifier.fillMaxWidth().testTag(PlacePickerTags.TYPE_GRID), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionLabel(stringResource(R.string.ui_place_type_selector_3))
-            PlaceType.entries.chunked(3).forEach { row ->
+            PlaceType.physicalPlaceOptions.chunked(2).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     row.forEach { t -> PlaceTypeCell(t, t == type, { onChange(t) }, Modifier.weight(1f)) }
-                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                    repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }

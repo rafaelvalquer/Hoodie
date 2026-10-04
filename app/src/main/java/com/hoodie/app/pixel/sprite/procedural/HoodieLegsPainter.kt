@@ -1,6 +1,7 @@
 package com.hoodie.app.pixel.sprite.procedural
 
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.character.CharacterLimbPainter
 import com.hoodie.app.pixel.sprite.*
 import com.hoodie.app.pixel.sprite.HoodiePainter.Part
 import com.hoodie.app.pixel.sprite.procedural.ProceduralDrawing.part
@@ -28,20 +29,20 @@ internal object HoodieLegsPainter {
             }
             else -> leg(0) to leg(0)
         }
-        part(b, Part.LEG_LEFT) { shape(b, l.first, HoodiePalette.FUR); foot(b, l.second) }
-        part(b, Part.LEG_RIGHT) { shape(b, r.first.mirror(), HoodiePalette.FUR); foot(b, r.second.mirror()) }
+        part(b, Part.LEG_LEFT) { CharacterLimbPainter.drawShape(b, l.first, HoodiePalette.FUR, HoodiePalette.OUTLINE); foot(b, l.second) }
+        part(b, Part.LEG_RIGHT) { CharacterLimbPainter.drawShape(b, r.first.mirror(), HoodiePalette.FUR, HoodiePalette.OUTLINE); foot(b, r.second.mirror()) }
     }
 
     fun foot(b: PixelBuffer, f: R, color: Int = HoodiePalette.FUR) {
-        shape(b, f, color)
-        recolor(b, f.x0, f.y1 - 1, f.x1, f.y1 - 1, color, HoodiePalette.FUR_SHADE)
+        CharacterLimbPainter.drawShape(b, f, color, HoodiePalette.OUTLINE)
+        CharacterLimbPainter.recolor(b, f.x0, f.y1 - 1, f.x1, f.y1 - 1, color, HoodiePalette.FUR_SHADE)
         val mid = (f.x0 + f.x1) / 2
         b.set(mid - 1, f.y1 - 1, HoodiePalette.OUTLINE); b.set(mid + 1, f.y1 - 1, HoodiePalette.OUTLINE)
     }
 
     fun sideLeg(b: PixelBuffer, offset: Int, lift: Int, color: Int) {
         val hx = 21 + offset / 2
-        shapeUnion(b, listOf(R(hx, 50, hx + 5, 60 - lift / 2, 1), R(21 + offset, 58 - lift, 26 + offset, 67 - lift, 1)), color)
+        CharacterLimbPainter.drawShapes(b, listOf(R(hx, 50, hx + 5, 60 - lift / 2, 1), R(21 + offset, 58 - lift, 26 + offset, 67 - lift, 1)), color, HoodiePalette.OUTLINE)
         foot(b, R(17 + offset, 65 - lift, 26 + offset, 70 - lift, 2), color)
     }
 }

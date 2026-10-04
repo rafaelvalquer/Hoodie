@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
-import android.graphics.Bitmap
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +34,8 @@ import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.createBitmap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
@@ -43,6 +44,16 @@ import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.pixel.animation.AnimGroup
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.animation.ClipTiming
+import com.hoodie.app.pixel.character.CharacterPainter
+import com.hoodie.app.pixel.character.CharacterComparisonRenderer
+import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.character.CharacterStyle
+import com.hoodie.app.pixel.character.outfit.OutfitStyle
+import com.hoodie.app.pixel.character.mirrored
+import com.hoodie.app.pixel.npc.NpcAnimation
+import com.hoodie.app.pixel.npc.NpcCharacterRegistry
+import com.hoodie.app.pixel.npc.NpcMotionController
+import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.debug.CompareMode
 import com.hoodie.app.pixel.debug.DebugOptions
 import com.hoodie.app.pixel.debug.SourceCompare
@@ -56,8 +67,10 @@ import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.pixel.sprite.AndroidSpriteSheets
 import com.hoodie.app.pixel.sprite.CompositeSpriteProvider
 import com.hoodie.app.pixel.sprite.Direction
+import com.hoodie.app.pixel.sprite.Eyes
 import com.hoodie.app.pixel.sprite.Expression
 import com.hoodie.app.pixel.sprite.HoodieSprites
+import com.hoodie.app.pixel.sprite.Mouth
 import com.hoodie.app.pixel.sprite.PoseOverlay
 import com.hoodie.app.pixel.sprite.Posture
 import com.hoodie.app.pixel.sprite.RequiredShippedAnimations
@@ -89,13 +102,14 @@ fun PixelLabScreen(onBack: () -> Unit) {
             Text("PIXEL LAB", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             Text("✕", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(role = Role.Button, onClick = onBack).semantics { contentDescription = closeLabel }.padding(8.dp))
         }
-        ChipRow(listOf("Animação", "Cena", "Galeria", "Cenas", "Sprites", "Transportes"), tab, { tab = it })
+        ChipRow(listOf("Animação", "NPC", "Cena", "Galeria", "Cenas", "Sprites", "Transportes"), tab, { tab = it })
         when (tab) {
             0 -> AnimationTool()
-            1 -> SceneLab()
-            2 -> AnimationGallery()
-            3 -> SceneGallery()
-            4 -> SpriteSources()
+            1 -> NpcLab()
+            2 -> SceneLab()
+            3 -> AnimationGallery()
+            4 -> SceneGallery()
+            5 -> SpriteSources()
             else -> TransportLab()
         }
     }
@@ -132,7 +146,7 @@ private fun AnimationTool() {
     val request = SpriteRequest(anim, direction, frameIndex, posture, PoseOverlay(expression = expression.takeIf { it != Expression.NORMAL }))
     val image = remember(request, options, provider) {
         val buf = SpriteDebugRenderer.render(provider, request, options)
-        Bitmap.createBitmap(buf.width, buf.height, Bitmap.Config.ARGB_8888).also { it.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height) }.asImageBitmap()
+        createBitmap(buf.width, buf.height, android.graphics.Bitmap.Config.ARGB_8888).also { it.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height) }.asImageBitmap()
     }
     val frame = remember(request, provider) { provider.frame(request) }
     val source = when (compare) {
@@ -271,6 +285,113 @@ private fun SceneLab() {
     SectionLabel("Velocidade")
     val speeds = listOf(0.25f, 0.5f, 1f, 2f)
     ChipRow(speeds.map { "${it}x" }, speeds.indexOf(speed), { speed = speeds[it] })
+}
+
+@Composable
+private fun NpcLab() {
+    var styleIndex by remember { mutableIntStateOf(0) }
+    var animation by remember { mutableStateOf(NpcAnimation.IDLE) }
+    var facing by remember { mutableIntStateOf(0) }
+    var posture by remember { mutableIntStateOf(0) }
+    // O primeiro personagem é o Bulldog executivo; abra no terno que define sua identidade.
+    var outfitIndex by remember { mutableIntStateOf(1) }
+    var paletteIndex by remember { mutableIntStateOf(0) }
+    var eyesIndex by remember { mutableIntStateOf(Eyes.OPEN.ordinal) }
+    var mouthIndex by remember { mutableIntStateOf(Mouth.SMILE.ordinal) }
+    var elapsed by remember { mutableLongStateOf(0L) }
+    var playing by remember { mutableStateOf(true) }
+    var overlays by remember { mutableStateOf(true) }
+    val styles = NpcCharacterRegistry.all
+    val registeredStyle = styles[styleIndex.coerceIn(styles.indices)]
+    val outfits = listOf(OutfitStyle.Hoodie, OutfitStyle.Suit, OutfitStyle.Casual, OutfitStyle.Student, OutfitStyle.Sport, OutfitStyle.Commuter)
+    val outfitLabels = listOf("Hoodie", "Terno", "Casual", "Estudante", "Esporte", "Comutante")
+    val style = remember(registeredStyle, outfitIndex, paletteIndex) {
+        val outfit = outfits[outfitIndex.mod(outfits.size)]
+        val base = registeredStyle.copy(outfit = outfit)
+        val palette = when (paletteIndex) {
+            1 -> base.palette.copy(furLight = 0xFFFFF5DC.toInt(), fur = 0xFFD7B98D.toInt(), furDark = 0xFF8D6B4F.toInt(), outfitLight = 0xFFDDD2C2.toInt(), shirt = 0xFFFFF5DC.toInt())
+            2 -> base.palette.copy(furLight = 0xFFB6D8FF.toInt(), fur = 0xFF6C91C2.toInt(), furDark = 0xFF354B73.toInt(), outfitLight = 0xFF8298BB.toInt(), outfit = 0xFF303B58.toInt(), outfitDark = 0xFF1A2239.toInt(), shirt = 0xFFDAE5F2.toInt())
+            else -> base.palette
+        }
+        base.copy(palette = palette)
+    }
+    val renderMotion = remember(style) { SpeciesMotionProfiles.forCharacter(style).renderMotion() }
+    LaunchedEffect(playing) {
+        var last = -1L
+        while (playing) withFrameMillis { frameTime ->
+            if (last >= 0L) elapsed += frameTime - last
+            last = frameTime
+        }
+    }
+    val directions = listOf(com.hoodie.app.pixel.sprite.Facing.FRONT, com.hoodie.app.pixel.sprite.Facing.SIDE, com.hoodie.app.pixel.sprite.Facing.BACK)
+    val pose = remember(style, animation, facing, posture, elapsed, eyesIndex, mouthIndex) {
+        val motion = SpeciesMotionProfiles.forCharacter(style)
+        NpcMotionController.pose(animation, elapsed, style.id.hashCode(), motion)
+            .copy(facing = directions[facing], eyes = Eyes.entries[eyesIndex], mouth = Mouth.entries[mouthIndex])
+            .let { base -> when (posture) { 1 -> base.withPosture(Posture.STANDING); 2 -> base.withPosture(Posture.SITTING); else -> base } }
+    }
+    val npc = remember(style, pose, facing, renderMotion) { CharacterComparisonRenderer.character(style, pose, facingRight = facing == 1, motion = renderMotion) }
+    val hoodie = remember(pose, facing) { CharacterComparisonRenderer.hoodie(pose, facingRight = facing == 1) }
+    SectionLabel("PERSONAGEM")
+    ChipRow(styles.map { it.id.replace('_', ' ') }, styleIndex, { styleIndex = it })
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        CharacterPreview("HOODIE", hoodie.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, hoodie.anchors, overlays, Modifier.weight(1f))
+        CharacterPreview(style.id.uppercase(), npc.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, npc.anchors, overlays, Modifier.weight(1f))
+    }
+    SectionLabel("ROUPA")
+    ChipRow(outfitLabels, outfitIndex, { outfitIndex = it })
+    SectionLabel("PALETA")
+    ChipRow(listOf("Original", "Quente", "Noturna"), paletteIndex, { paletteIndex = it })
+    SectionLabel("ANIMAÇÃO")
+    ChipRow(NpcAnimation.entries.map { it.name }, animation.ordinal, { animation = NpcAnimation.entries[it]; elapsed = 0L })
+    SectionLabel("POSE · POSTURA")
+    ChipRow(listOf("Automática", "Em pé", "Sentado"), posture, { posture = it })
+    SectionLabel("DIREÇÃO")
+    ChipRow(listOf("FRONT", "SIDE", "BACK"), facing, { facing = it })
+    SectionLabel("EXPRESSÃO · OLHOS")
+    ChipRow(Eyes.entries.map { it.name }, eyesIndex, { eyesIndex = it })
+    SectionLabel("EXPRESSÃO · BOCA")
+    ChipRow(Mouth.entries.map { it.name }, mouthIndex, { mouthIndex = it })
+    ChipRow(listOf(if (playing) "⏸ Pausar" else "▶ Tocar", if (overlays) "☑ Overlays" else "☐ Overlays"), null, {
+        if (it == 0) playing = !playing else overlays = !overlays
+    })
+    Text("Canvas 48×72 · escala ${style.scale} · roupa ${style.outfit}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+}
+
+@Composable
+private fun CharacterPreview(
+    title: String, pixels: IntArray, width: Int, height: Int,
+    anchors: com.hoodie.app.pixel.character.CharacterAnchors, overlays: Boolean, modifier: Modifier = Modifier,
+) {
+    val image = remember(pixels, overlays, anchors) {
+        val buffer = PixelBuffer(width, height).also { it.pixels.indices.forEach { index -> it.pixels[index] = pixels[index] } }
+        if (overlays) {
+            val occupied = pixels.indices.filter { pixels[it] ushr 24 != 0 }
+            if (occupied.isNotEmpty()) {
+                val minX = occupied.minOf { it % width }; val maxX = occupied.maxOf { it % width }
+                val minY = occupied.minOf { it / width }; val maxY = occupied.maxOf { it / width }
+                val bounds = 0xFFFF66C4.toInt(); val feet = 0xFF62D3CF.toInt(); val head = 0xFFE8B84A.toInt()
+                buffer.hline(minX, maxX, minY, bounds); buffer.hline(minX, maxX, maxY, bounds)
+                buffer.vline(minX, minY, maxY, bounds); buffer.vline(maxX, minY, maxY, bounds)
+                buffer.hline(0, width - 1, anchors.feet.y, feet)
+                listOf(anchors.leftHand, anchors.rightHand).forEach { buffer.box(it.x - 1, it.y - 1, it.x + 1, it.y + 1, 0xFF62D3CF.toInt()) }
+                buffer.box(anchors.head.x - 1, anchors.head.y - 1, anchors.head.x + 1, anchors.head.y + 1, head)
+                buffer.box(anchors.mouth.x, anchors.mouth.y, anchors.mouth.x, anchors.mouth.y, 0xFFFF8B72.toInt())
+            }
+        }
+        createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888).also { it.setPixels(buffer.pixels, 0, width, 0, 0, width, height) }.asImageBitmap()
+    }
+    PixelPanel(modifier.testTag("npc-preview-$title")) {
+        Text(title, style = MaterialTheme.typography.labelSmall, color = HoodieColors.Gold)
+        Box(Modifier.fillMaxWidth().aspectRatio(width.toFloat() / height), contentAlignment = Alignment.Center) {
+            PixelImage(image, width, height, Modifier.fillMaxSize())
+        }
+        if (overlays) {
+            Text("feet ${anchors.feet} · head ${anchors.head}", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+            Text("hands ${anchors.leftHand} / ${anchors.rightHand}", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+            Text("mouth ${anchors.mouth}", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+        }
+    }
 }
 
 /** Revisa um perfil completo e toca explicitamente ENTER, LOOP ou EXIT. */

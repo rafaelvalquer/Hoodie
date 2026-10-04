@@ -8,6 +8,7 @@ import com.hoodie.app.pixel.sprite.procedural.ProceduralDrawing.part
 import com.hoodie.app.pixel.sprite.procedural.ProceduralDrawing.shape
 import com.hoodie.app.pixel.sprite.procedural.ProceduralDrawing.shapeUnion
 import com.hoodie.app.pixel.sprite.procedural.ProceduralDrawing.recolor
+import com.hoodie.app.pixel.character.CharacterEyePainter
 
 /** Procedural HoodieHeadPainter; preserves drawing order and semantic part ownership. */
 internal object HoodieHeadPainter {
@@ -85,51 +86,7 @@ internal object HoodieHeadPainter {
     }
 
     fun drawEyes(b: PixelBuffer, eyes: Eyes, up: Int, xs: IntArray) {
-        for (baseX in xs) {
-            var x0 = baseX; var y0 = 18 + up
-            when (eyes) {
-                Eyes.LOOK_LEFT -> x0 -= 1
-                Eyes.LOOK_RIGHT -> x0 += 1
-                Eyes.LOOK_UP -> y0 -= 1
-                Eyes.LOOK_DOWN -> y0 += 1
-                else -> Unit
-            }
-            when (eyes) {
-                Eyes.OPEN, Eyes.LOOK_LEFT, Eyes.LOOK_RIGHT, Eyes.LOOK_UP -> {
-                    b.box(x0, y0, x0 + 2, y0 + 3, HoodiePalette.EYE)
-                    b.set(x0, y0, HoodiePalette.WHITE)
-                }
-                Eyes.LOOK_DOWN -> {
-                    b.box(x0, y0, x0 + 2, y0 + 2, HoodiePalette.EYE)
-                    b.set(x0, y0, HoodiePalette.WHITE)
-                }
-                Eyes.HALF -> {
-                    b.box(x0, y0 + 2, x0 + 2, y0 + 3, HoodiePalette.EYE)
-                    b.hline(x0 - 1, x0 + 3, y0 + 1, HoodiePalette.FUR_SHADE)
-                }
-                Eyes.CLOSED -> {
-                    b.hline(x0 - 1, x0 + 3, y0 + 2, HoodiePalette.EYE)
-                    b.set(x0 - 1, y0 + 1, HoodiePalette.EYE); b.set(x0 + 3, y0 + 1, HoodiePalette.EYE)
-                }
-                Eyes.HAPPY -> {
-                    b.set(x0 - 1, y0 + 3, HoodiePalette.EYE); b.set(x0, y0 + 2, HoodiePalette.EYE)
-                    b.set(x0 + 1, y0 + 1, HoodiePalette.EYE); b.set(x0 + 2, y0 + 2, HoodiePalette.EYE)
-                    b.set(x0 + 3, y0 + 3, HoodiePalette.EYE)
-                }
-                Eyes.WIDE -> {
-                    b.box(x0 - 1, y0 - 1, x0 + 3, y0 + 3, HoodiePalette.EYE)
-                    b.box(x0 - 1, y0 - 1, x0, y0, HoodiePalette.WHITE)
-                }
-                Eyes.FOCUSED -> {
-                    b.box(x0, y0 + 1, x0 + 2, y0 + 3, HoodiePalette.EYE)
-                    b.hline(x0 - 1, x0 + 3, y0, HoodiePalette.FUR_SHADE)
-                }
-                Eyes.SLEEPY -> {
-                    b.box(x0, y0 + 2, x0 + 2, y0 + 3, HoodiePalette.EYE)
-                    b.hline(x0 - 1, x0 + 3, y0 + 1, HoodiePalette.EYE)
-                }
-            }
-        }
+        CharacterEyePainter.drawLegacyHoodie(b, eyes, up, xs, HoodiePalette.EYE, HoodiePalette.WHITE, HoodiePalette.FUR_SHADE)
     }
 
     fun drawHeadBack(b: PixelBuffer, p: HoodiePose, up: Int): Int {

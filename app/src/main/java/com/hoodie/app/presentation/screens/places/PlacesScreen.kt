@@ -3,6 +3,7 @@ package com.hoodie.app.presentation.screens.places
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,7 +40,6 @@ import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.util.Geo
 import com.hoodie.app.data.repository.PlaceRepository
 import com.hoodie.app.engine.context.ContextEngine
-import com.hoodie.app.presentation.components.ChipRow
 import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
@@ -140,6 +140,22 @@ fun PlacesScreen(onOpen: (String) -> Unit, vm: PlacesViewModel = hiltViewModel()
 private val placeTypes = PlaceType.physicalPlaceOptions
 
 @Composable
+private fun PlaceTypeChips(selected: Int, onSelect: (Int) -> Unit) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        placeTypes.forEachIndexed { index, placeType ->
+            androidx.compose.material3.FilterChip(
+                selected = selected == index,
+                onClick = { onSelect(index) },
+                label = { Text("${placeType.emoji} ${placeType.label}") },
+            )
+        }
+    }
+}
+
+@Composable
 internal fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -> Unit, onManual: (PlaceType, String, String) -> Unit, onMap: (PlaceType) -> Unit) {
     var type by remember { mutableIntStateOf(0) }
     var name by remember { mutableStateOf("") }
@@ -150,7 +166,7 @@ internal fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -
         title = { Text("Novo lugar") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                ChipRow(placeTypes.map { "${it.emoji} ${it.label}" }, type, { type = it })
+                PlaceTypeChips(type, { type = it })
                 PixelButton("🗺 Buscar endereço no mapa", { onMap(placeTypes[type]) }, Modifier.fillMaxWidth())
                 OutlinedTextField(name, { name = it }, label = { Text("Nome (opcional)") }, singleLine = true)
                 if (manual) OutlinedTextField(coords, { coords = it }, label = { Text("lat, lng") }, singleLine = true)
@@ -178,7 +194,7 @@ internal fun AddPlaceDialogContent() {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("Novo lugar", style = MaterialTheme.typography.titleLarge)
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            ChipRow(placeTypes.map { "${it.emoji} ${it.label}" }, type, { type = it })
+            PlaceTypeChips(type, { type = it })
             PixelButton("🗺 Buscar endereço no mapa", {}, Modifier.fillMaxWidth())
             OutlinedTextField(name, { name = it }, label = { Text("Nome (opcional)") }, singleLine = true)
             if (manual) OutlinedTextField(coords, { coords = it }, label = { Text("lat, lng") }, singleLine = true)
@@ -202,7 +218,7 @@ private fun EditPlaceDialog(place: Place, onDismiss: () -> Unit, onSave: (Place)
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(name, { name = it }, label = { Text("Nome") }, singleLine = true)
-                ChipRow(placeTypes.map { "${it.emoji} ${it.label}" }, type, { type = it })
+                PlaceTypeChips(type, { type = it })
                 SectionLabel("Raio: ${radius.toInt()} m")
                 Slider(radius, { radius = it }, valueRange = 75f..400f)
                 PixelButton("🗺 Mudar local no mapa", onMap, Modifier.fillMaxWidth(), color = HoodieColors.Hood)

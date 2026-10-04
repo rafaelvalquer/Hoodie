@@ -77,6 +77,9 @@ class ScenePreviewTest {
         } }
         PreviewExport.sheet("transport/gallery", shots, columns = 4, scale = 2)
         assertEquals(16, actual.size)
+        val candidate = File(PreviewExport.dir, "npc-art-review/transport-scenes-v1-candidate.sha256")
+        candidate.parentFile?.mkdirs()
+        candidate.writeText(actual.entries.joinToString("\n", postfix = "\n") { (name, hash) -> "$name\t$hash" })
         if (System.getenv("RECORD_TRANSPORT_GOLDENS") == "true") {
             File("src/test/resources/transport-scenes-v1.sha256").writeText(actual.entries.joinToString("\n") { "${it.key}\t${it.value}" } + "\n")
             return

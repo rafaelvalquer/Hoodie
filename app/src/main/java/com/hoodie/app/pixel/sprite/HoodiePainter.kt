@@ -1,6 +1,7 @@
 package com.hoodie.app.pixel.sprite
 
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.character.CharacterCanvas
 import com.hoodie.app.pixel.sprite.procedural.HoodiePoseRenderer
 import com.hoodie.app.pixel.sprite.procedural.HoodieAccessoryPainter
 import com.hoodie.app.pixel.sprite.procedural.ProceduralDrawing.recorder
@@ -37,10 +38,10 @@ data class PaintedSprite(val image: PixelBuffer, val anchors: SpriteAnchors)
  * parte é uma forma com contorno próprio de 1px, desenhada de trás para frente.
  */
 object HoodiePainter {
-    const val WIDTH = 48
-    const val HEIGHT = 72
+    const val WIDTH = CharacterCanvas.WIDTH
+    const val HEIGHT = CharacterCanvas.HEIGHT
     /** Os pés tocam o chão sempre neste ponto (o que evita "pé deslizando"). */
-    val FEET = Point(24, 71)
+    val FEET = CharacterCanvas.FEET
 
     private val cache = HashMap<HoodiePose, PaintedSprite>()
 
