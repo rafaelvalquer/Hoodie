@@ -29,14 +29,39 @@ class PixelLabNpcTest {
         compose.onNodeWithContentDescription("NPC").performClick()
         compose.mainClock.advanceTimeBy(100L)
         compose.onNodeWithContentDescription("NPC").assertIsSelected()
-        compose.onNodeWithContentDescription("Terno").assertIsSelected()
+        // Abre na roupa registrada do personagem (o Bulldog veste o terno que define sua identidade).
+        compose.onNodeWithContentDescription("Registrada").assertIsSelected()
         listOf(
-            "PERSONAGEM", "ROUPA", "PALETA", "ANIMAÇÃO", "POSE · POSTURA",
-            "DIREÇÃO", "EXPRESSÃO · OLHOS", "EXPRESSÃO · BOCA",
+            "[ NPC ART ]", "IDENTIDADE", "INSPECTOR", "ANIMAÇÃO", "FACING", "ESCALA", "AMBIENTE",
+            "ROUPA", "PALETA", "POSE · POSTURA", "EXPRESSÃO · OLHOS", "EXPRESSÃO · BOCA",
         ).forEach { compose.onNodeWithText(it).assertExists() }
         compose.onNodeWithText("HOODIE").assertExists()
         compose.onNodeWithText("BULLDOG_EXEC").assertExists()
         compose.onNodeWithText("☑ Overlays").assertExists()
+        listOf("◀ FRAME −", "FRAME + ▶", "☐ Previous frame", "☐ Next frame", "0.25x", "2.0x").forEach { compose.onNodeWithText(it).assertExists() }
+    }
+
+    @Test fun inspectorStepsFrameByFrameAndShowsOnionSkin() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent { HoodieTheme { PixelLabScreen(onBack = {}) } }
+        compose.onNodeWithContentDescription("NPC").performClick()
+        compose.mainClock.advanceTimeBy(100L)
+        compose.onNodeWithText("WALK").performClick()
+        compose.onNodeWithText("SIDE").performClick()
+        compose.mainClock.advanceTimeBy(100L)
+
+        fun preview() = compose.onNodeWithTag("npc-preview-BULLDOG_EXEC").captureToImage().asAndroidBitmap()
+
+        compose.onNodeWithText("⏸ PAUSE").performClick()
+        compose.mainClock.advanceTimeBy(100L)
+        val first = preview()
+        repeat(3) { compose.onNodeWithText("FRAME + ▶").performClick() }
+        compose.mainClock.advanceTimeBy(100L)
+        val stepped = preview()
+        assertFalse("FRAME + should advance the walk pose", first.sameAs(stepped))
+        compose.onNodeWithText("☐ Previous frame").performClick()
+        compose.mainClock.advanceTimeBy(100L)
+        assertFalse("onion skin should overlay the previous frame", stepped.sameAs(preview()))
     }
 
     @Test fun changingSpeciesUpdatesTheVisibleRenderedNpcPixels() {

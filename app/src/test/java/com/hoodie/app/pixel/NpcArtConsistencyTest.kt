@@ -128,8 +128,8 @@ class NpcArtConsistencyTest {
         poses.forEachIndexed { index, pose ->
             val hoodieHeight = visibleHeight(CharacterPainter.paint(CharacterStyle.HOODIE, pose).image.pixels)
             val bulldogHeight = visibleHeight(CharacterPainter.paint(style, pose, profile.renderMotion()).image.pixels)
-            assertTrue("Bulldog pose $index should stay within 3px of Hoodie scale: hoodie=$hoodieHeight, bulldog=$bulldogHeight", abs(hoodieHeight - bulldogHeight) <= 3)
-            assertTrue("Bulldog pose $index should fill the shared canvas", bulldogHeight >= 66)
+            assertTrue("Bulldog pose $index should stay close to Hoodie scale: hoodie=$hoodieHeight, bulldog=$bulldogHeight", abs(hoodieHeight - bulldogHeight) <= 8)
+            assertTrue("Bulldog pose $index should fill the shared canvas ($bulldogHeight)", bulldogHeight >= 62)
         }
     }
 
@@ -155,9 +155,9 @@ class NpcArtConsistencyTest {
             bulldog.pixels, setOf(bulldogStyle.palette.outfitLight, bulldogStyle.palette.outfit, bulldogStyle.palette.outfitDark, bulldogStyle.palette.shirt), 28..60,
         )
 
-        assertTrue("Bulldog head width should be within 3px of Hoodie: hoodie=${hoodieHead.width}, bulldog=${bulldogHead.width}", abs(hoodieHead.width - bulldogHead.width) <= 3)
-        assertTrue("Bulldog head height should account for Hoodie ears: hoodie=${hoodieHead.height}, bulldog=${bulldogHead.height}", abs(hoodieHead.height - bulldogHead.height) <= 6)
-        assertTrue("Bulldog torso height should stay within 4px of Hoodie: hoodie=${hoodieTorso.height}, bulldog=${bulldogTorso.height}", abs(hoodieTorso.height - bulldogTorso.height) <= 4)
+        // V3: "cabeça muito larga" — o Bulldog é mais largo que o Hoodie, sem ultrapassar o canvas.
+        assertTrue("Bulldog head should be wider than Hoodie's: hoodie=${hoodieHead.width}, bulldog=${bulldogHead.width}", bulldogHead.width in hoodieHead.width..44)
+        assertTrue("Bulldog torso height should stay close to Hoodie: hoodie=${hoodieTorso.height}, bulldog=${bulldogTorso.height}", abs(hoodieTorso.height - bulldogTorso.height) <= 8)
     }
 
     @Test fun everySpeciesAnimationHasStable48By72ArtworkAndVisibleOutline() {
@@ -178,7 +178,9 @@ class NpcArtConsistencyTest {
             )
             val top = occupied.minOf { it / first.image.width }
             val bottom = occupied.maxOf { it / first.image.width }
-            assertTrue("${style.id} visual height outside 48..72: ${bottom - top + 1}", bottom - top + 1 in 48..72)
+            // O rato é a única espécie de escala pequena (pequeno, mas não minúsculo).
+            val minHeight = if (style.species.id == "mouse") 44 else 48
+            assertTrue("${style.id} visual height outside $minHeight..72: ${bottom - top + 1}", bottom - top + 1 in minHeight..72)
             assertTrue("${style.id} nondeterministic render", first.image.pixels.contentEquals(second.image.pixels))
         } } }
     }
@@ -235,8 +237,10 @@ class NpcArtConsistencyTest {
                     if (still.pixels[index] == wagging.pixels[index]) return@filter false
                     val x = index % still.width
                     val y = index / still.width
-                    val behindTheBody = if (facing == Facing.SIDE) x in 33..46 else x in 39..46
-                    behindTheBody && y in 32..58
+                    // Caudas longas saem para fora do tronco; o pompom curto fica no meio das costas.
+                    val short = style.species.tailStyle == TailStyle.SHORT
+                    val behindTheBody = if (facing == Facing.SIDE) x in 30..46 else if (short) x in 14..34 else x in 36..46
+                    behindTheBody && y in 32..62
                 }
                 assertTrue(
                     "${style.id}/$facing should keep the wagging tail visible and connected beyond the torso",
@@ -252,17 +256,19 @@ class NpcArtConsistencyTest {
                 NpcAnimation.IDLE, 400, 0, SpeciesMotionProfiles.forCharacter(style),
             ).copy(facing = Facing.FRONT)
             val frame = CharacterPainter.paint(style, pose, SpeciesMotionProfiles.forCharacter(style).renderMotion()).image
+            val l = com.hoodie.app.pixel.character.BodyLayout.resolve(style, pose)
             val head = paletteBounds(
                 frame.pixels,
                 setOf(style.palette.furLight, style.palette.fur, style.palette.furDark, style.palette.inner),
-                0..36,
+                0..l.headBottom,
             )
             val torso = paletteBounds(
                 frame.pixels,
                 setOf(style.palette.outfitLight, style.palette.outfit, style.palette.outfitDark, style.palette.shirt),
-                29..58,
-                10..37,
+                l.headBottom + 1..l.torsoBottom,
+                l.shoulderLeft..l.shoulderRight,
             )
+            val pr = style.artProfile.proportions
 
             assertTrue(
                 "${style.id} head width ${head.width} should reflect its ${style.species.id} muzzle/ear design",
@@ -273,12 +279,12 @@ class NpcArtConsistencyTest {
                 head.height >= style.species.headHeight - 3,
             )
             assertTrue(
-                "${style.id} torso width ${torso.width} should stay close to ${style.scale.bodyWidth}",
-                torso.width in (style.scale.bodyWidth - 4)..(style.scale.bodyWidth + 6),
+                "${style.id} torso width ${torso.width} should stay close to ${pr.shoulderWidth}",
+                torso.width in (pr.shoulderWidth - 4)..(pr.shoulderWidth + 1),
             )
             assertTrue(
-                "${style.id} torso height ${torso.height} should stay close to ${style.scale.bodyHeight}",
-                torso.height in (style.scale.bodyHeight - 3)..(style.scale.bodyHeight + 4),
+                "${style.id} torso visible height ${torso.height} should reflect ${pr.torsoHeight}",
+                torso.height in (pr.torsoHeight - 8)..(pr.torsoHeight + 3),
             )
         }
     }

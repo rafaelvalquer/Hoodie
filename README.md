@@ -140,9 +140,20 @@ HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Di
   cansaço leva ao banco. `GENERIC_INDOOR/OUTDOOR` ficam só como fallback (viagem).
 * **Transporte**: perfis únicos para caminhada, carro, ônibus, trem, metrô, bicicleta, outro veículo e transporte público não identificado; cada perfil liga cena, entrada/saída, animações, balanço/paralaxe e visual da rota/Jornada. Modais identificados têm cenas próprias e alternativas desconhecidas usam apresentação neutra.
 * Iluminação por overlay (manhã, dia, entardecer, noite) com áreas emissivas e halos de lâmpada em degraus.
+* **Personagens ambientais (NPC Art System V3)**: Bulldog executivo, cachorros, coelhos, rato, pato, guaxinim
+  e gatos no mesmo canvas 48×72 do Hoodie, com até 10 cores cada. `CharacterArtProfile` (silhueta, rosto,
+  proporções, sombreado, nível de detalhe) define cada espécie; o corpo é montado como silhueta
+  (pescoço → ombros → tronco → quadril → pernas → pés) com luz no alto à esquerda e sombra embaixo à direita.
+  Roupas em arquivos próprios (terno, casual, estudante, esporte, comutante, moletom) com frente, perfil e
+  costas, mais mochila ou bolsa transversal. Animações calculadas: idle com respiração, passada de 8 fases
+  sincronizada com o deslocamento (pé plantado não desliza), olhar, fala com gesto, sentar em transição,
+  celular, refeição, sono, virar, entrar/sair e reações raras. Comportamentos determinísticos por cena,
+  seed e tempo (ex.: Bulldog entra, olha o Hoodie, fala, espera e sai). Escala por profundidade
+  (0,75–1,0) e sombra no chão. O Hoodie continua no renderer legado, idêntico pixel a pixel.
 * **Pixel Lab**: ferramenta de animação com animação × direção × postura × expressão × velocidade,
   avanço frame a frame, onion-skin, âncoras, bounding box e linha dos pés; laboratório de cena com transições,
-  filtro por grupo, variante do cenário e modo atividade × contexto × energia × humor;
+  filtro por grupo, variante do cenário e modo atividade × contexto × energia × humor; aba NPC com
+  inspector (play/pause, quadro a quadro, 0,25×–2×), onion skin, escala, ambiente e Hoodie lado a lado;
   galerias de animações e cenas; e a fonte de cada sprite (sheet ou procedural).
 
 ## Mapa do Dia 2.0 — Jornada Pixel

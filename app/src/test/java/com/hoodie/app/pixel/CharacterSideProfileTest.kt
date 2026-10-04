@@ -9,6 +9,7 @@ import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.sprite.Facing
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CharacterSideProfileTest {
@@ -26,8 +27,12 @@ class CharacterSideProfileTest {
         val sideDuckFrame = CharacterPainter.paint(duck, NpcMotionController.pose(
             NpcAnimation.IDLE, 0, 0, SpeciesMotionProfiles.forCharacter(duck),
         ).copy(facing = Facing.SIDE), duckMotion.renderMotion())
-        assertEquals("canonical side beak reaches the left of the head", duck.palette.accent, sideDuckFrame.image[4, 20])
-        assertEquals("right-facing movement mirrors the canonical side", duck.palette.accent, sideDuckFrame.mirrored().image[43, 20])
+        val img = sideDuckFrame.image
+        val leftmostAccent = (0 until img.width).first { x -> (0 until img.height).any { y -> img[x, y] == duck.palette.accent && y < 45 } }
+        val leftmostHead = (0 until img.width).first { x -> (0 until 40).any { y -> img[x, y] == duck.palette.fur } }
+        assertTrue("canonical side beak reaches the left of the head ($leftmostAccent < $leftmostHead)", leftmostAccent < leftmostHead)
+        val mirrored = sideDuckFrame.mirrored().image
+        assertEquals("right-facing movement mirrors the canonical side", duck.palette.accent, mirrored[img.width - 1 - leftmostAccent, (0 until 45).first { img[leftmostAccent, it] == duck.palette.accent }])
     }
 
     @Test fun bulldogWalkProfileUsesTheSideSilhouetteAndProjectsItsNoseForward() {
@@ -38,7 +43,11 @@ class CharacterSideProfileTest {
         val side = CharacterPainter.paint(style, pose.copy(facing = Facing.SIDE), motion.renderMotion()).image
 
         assertFalse("Bulldog's profile must replace the frontal head silhouette", front.pixels.contentEquals(side.pixels))
-        assertEquals("the Bulldog's nose should lead the canonical left-facing profile", style.palette.outline, side[2, 19])
-        assertEquals("the muzzle should stay within the top half of the head", 0, side[2, 40])
+        val l = com.hoodie.app.pixel.character.BodyLayout.resolve(style, pose.copy(facing = Facing.SIDE))
+        val headRows = l.headTop..l.headBottom
+        val leftmost = (0 until side.width).first { x -> headRows.any { y -> side[x, y] ushr 24 != 0 } }
+        val noseRow = headRows.first { y -> side[leftmost, y] ushr 24 != 0 }
+        assertTrue("the Bulldog's nose should lead the canonical left-facing profile (x=$leftmost)", leftmost <= 6)
+        assertTrue("the muzzle should sit in the lower half of the head", noseRow >= (l.headTop + l.headBottom) / 2 - 4)
     }
 }

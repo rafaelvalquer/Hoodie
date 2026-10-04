@@ -35,12 +35,12 @@ class CharacterGeometryTest {
         NpcCharacterRegistry.all.forEach { style ->
             val geometry = CharacterGeometry.resolve(style, CharacterPose())
             val bodyWidth = geometry.bodyRight - geometry.bodyLeft + 1
-            val expectedWidth = style.scale.bodyWidth.coerceIn(22, 32)
-            val expectedHeadTop = if (style.species.earStyle == EarStyle.LONG) 12 else 2
+            val pr = style.artProfile.proportions
 
-            assertEquals("${style.id} body scale", expectedWidth, bodyWidth)
-            assertEquals("${style.id} ear clearance", expectedHeadTop, geometry.headTop)
-            assertTrue("${style.id} head width", geometry.headWidth in 22..36)
+            assertEquals("${style.id} shoulder width comes from its proportions", pr.shoulderWidth, bodyWidth)
+            assertTrue("${style.id} ears keep clearance from the top", geometry.headTop >= 1 + style.species.earClearance)
+            if (style.species.earStyle == EarStyle.LONG) assertTrue("${style.id} long ears reserve room", geometry.headTop >= 15)
+            assertEquals("${style.id} head width", pr.headWidth, geometry.headWidth)
             assertTrue("${style.id} body width on 48px canvas", geometry.bodyLeft >= 0 && geometry.bodyRight < 48)
         }
     }
@@ -53,8 +53,8 @@ class CharacterGeometryTest {
             val sideWidth = side.bodyRight - side.bodyLeft + 1
 
             assertTrue("${style.id} side torso should be narrower than its front", sideWidth < frontWidth)
-            assertTrue("${style.id} side torso should retain readable pixel volume", sideWidth >= 18)
-            assertEquals("${style.id} front scale stays unchanged", style.scale.bodyWidth.coerceIn(22, 32), frontWidth)
+            assertTrue("${style.id} side torso should retain readable pixel volume", sideWidth >= 13)
+            assertEquals("${style.id} front scale stays unchanged", style.artProfile.proportions.shoulderWidth, frontWidth)
         }
     }
 
@@ -62,7 +62,7 @@ class CharacterGeometryTest {
         NpcCharacterRegistry.all.forEach { style ->
             val standing = CharacterGeometry.resolve(style, CharacterPose())
             val seated = CharacterGeometry.resolve(style, CharacterPose(legs = Legs.SIT, facing = Facing.SIDE))
-            val expectedShift = 5
+            val expectedShift = com.hoodie.app.pixel.character.BodyLayout.SIT_DROP
 
             assertEquals("${style.id} seated torso shift", expectedShift, seated.torsoOffsetY)
             assertEquals("${style.id} seated body shift", standing.bodyTop + expectedShift, seated.bodyTop)

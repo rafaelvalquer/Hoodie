@@ -202,6 +202,7 @@ class NpcMovementTest {
         val changedRows = still.pixels.indices.filter { still.pixels[it] != lagged.pixels[it] }.map { it / still.width }.toSet()
 
         assertTrue("head lag should visibly change rendered pixels", changedRows.isNotEmpty())
-        assertTrue("head lag should stay in the head area, changed rows=$changedRows", changedRows.all { it < 36 })
+        val headBottom = com.hoodie.app.pixel.character.BodyLayout.resolve(style, sample.third).headBottom
+        assertTrue("head lag should stay in the head area, changed rows=$changedRows", changedRows.all { it <= headBottom + 1 })
     }
 }
