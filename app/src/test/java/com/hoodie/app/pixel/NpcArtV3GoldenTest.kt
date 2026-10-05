@@ -16,6 +16,7 @@ import java.io.File
 import java.security.MessageDigest
 import java.util.HexFormat
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.json.JSONObject
@@ -106,20 +107,51 @@ class NpcArtV3GoldenTest {
     private fun manualReviewApproved(): Boolean {
         val stream = javaClass.getResourceAsStream("/npc-art-v3-review-manifest.json") ?: return false
         val manifest = stream.bufferedReader().use { JSONObject(it.readText()) }
-        if (manifest.optString("approval_state") != "APPROVED") return false
-        val required = listOf(
+        return NpcArtV3ApprovalGate.isApproved(manifest)
+    }
+}
+
+class NpcArtV3ApprovalGateTest {
+    @Test fun acceptsOnlyCompleteReviewedV3Manifest() {
+        val manifest = completeManifest()
+        assertTrue(NpcArtV3ApprovalGate.isApproved(manifest))
+    }
+
+    @Test fun rejectsPendingManifestAndStaleScaleGate() {
+        val pending = completeManifest().put("approval_state", "PENDING")
+        assertFalse(NpcArtV3ApprovalGate.isApproved(pending))
+
+        val staleScaleKey = completeManifest()
+            .put("scale_legibility_090_to_100", "APPROVED")
+            .put("scale_legibility_075_to_100", "PENDING")
+        assertFalse(NpcArtV3ApprovalGate.isApproved(staleScaleKey))
+    }
+
+    @Test fun rejectsMissingCharacterOrReviewAttribution() {
+        val missingCharacter = completeManifest()
+        missingCharacter.getJSONObject("characters").remove("duck_sleepy")
+        assertFalse(NpcArtV3ApprovalGate.isApproved(missingCharacter))
+
+        val missingReviewer = completeManifest().put("reviewed_by", " ")
+        assertFalse(NpcArtV3ApprovalGate.isApproved(missingReviewer))
+    }
+
+    private fun completeManifest(): JSONObject {
+        val sections = listOf(
             "matrices", "walk_all_species", "turn_sit_talk_sheets", "expressions_and_head_crops",
-            "outfits", "props", "scale_legibility_090_to_100", "public_scenes", "day_night_contrast",
+            "outfits", "props", "scale_legibility_075_to_100", "public_scenes", "day_night_contrast",
             "hoodie_bulldog_gate", "hoodie_cat_gate",
         )
-        if (required.any { manifest.optString(it) != "APPROVED" }) return false
-        val characters = manifest.optJSONObject("characters") ?: return false
-        val gates = listOf("idle", "walk", "talk", "sit")
-        val keys = characters.keys()
-        while (keys.hasNext()) {
-            val character = characters.optJSONObject(keys.next()) ?: return false
-            if (gates.any { character.optString(it) != "APPROVED" }) return false
-        }
-        return true
+        val characters = listOf(
+            "bulldog_exec", "dog_worker", "rabbit_analyst", "mouse_commuter", "duck_sleepy",
+            "raccoon_window", "cat_colleague",
+        ).associateWith { JSONObject().put("idle", "APPROVED").put("walk", "APPROVED").put("talk", "APPROVED").put("sit", "APPROVED") }
+        return JSONObject()
+            .put("version", "npc-art-v3")
+            .put("approval_state", "APPROVED")
+            .put("reviewed_by", "Rafael")
+            .put("reviewed_at", "2026-10-05")
+            .put("characters", JSONObject().also { objectValue -> characters.forEach(objectValue::put) })
+            .also { manifest -> sections.forEach { manifest.put(it, "APPROVED") } }
     }
 }
