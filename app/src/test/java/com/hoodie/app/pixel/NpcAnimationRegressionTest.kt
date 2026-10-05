@@ -9,6 +9,7 @@ import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.NpcMotionController
 import com.hoodie.app.pixel.npc.NpcPoseLibrary
+import com.hoodie.app.pixel.npc.NpcRenderer
 import com.hoodie.app.pixel.npc.SpeciesMotionProfile
 import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.sprite.Eyes
@@ -165,5 +166,23 @@ class NpcAnimationRegressionTest {
         assertTrue("STAND→BEND→LOWER→CONTACT→SIT passes through intermediate heights: $distinct", distinct.size >= 4)
         drops.zipWithNext().forEach { (a, b) -> assertTrue("no jump larger than 4px ($a→$b)", kotlin.math.abs(b - a) <= 4) }
         assertEquals(0, drops.first()); assertEquals(BodyLayout.SIT_DROP, drops.last())
+    }
+
+    @Test fun turnForeshorteningKeepsSilhouetteWidthContinuousAtBothOrientationChanges() {
+        NpcCharacterRegistry.all.forEach { style ->
+            val sideBefore = CharacterPainter.paint(style, NpcPoseLibrary.turn(119))
+            val frontEntry = NpcRenderer.turnPerspective(CharacterPainter.paint(style, NpcPoseLibrary.turn(120)), style, 120)
+            val frontExit = NpcRenderer.turnPerspective(CharacterPainter.paint(style, NpcPoseLibrary.turn(239)), style, 239)
+            val sideAfter = CharacterPainter.paint(style, NpcPoseLibrary.turn(240))
+            fun visibleWidth(frame: com.hoodie.app.pixel.character.CharacterFrame): Int {
+                val xs = frame.image.pixels.indices.filter { frame.image.pixels[it] ushr 24 != 0 }.map { it % frame.image.width }
+                return xs.maxOrNull()!! - xs.minOrNull()!! + 1
+            }
+            assertTrue("${style.id}: side→front width pop ≤2 px", kotlin.math.abs(visibleWidth(sideBefore) - visibleWidth(frontEntry)) <= 2)
+            assertTrue("${style.id}: front→side width pop ≤2 px", kotlin.math.abs(visibleWidth(frontExit) - visibleWidth(sideAfter)) <= 2)
+            assertEquals(Eyes.CLOSED, NpcPoseLibrary.turn(120).eyes)
+            assertEquals(Eyes.CLOSED, NpcPoseLibrary.turn(240).eyes)
+            assertEquals(Eyes.OPEN, NpcPoseLibrary.turn(180).eyes)
+        }
     }
 }

@@ -287,8 +287,19 @@ object NpcPoseLibrary {
         )
     }
 
-    /** Virar: perfil → frente → perfil (o controlador espelha o último quadro). */
-    fun turn(t: Long): CharacterPose = CharacterPose(facing = if (t in TURN_MS / 3..TURN_MS * 2 / 3) Facing.FRONT else Facing.SIDE)
+    /** Virar: perfil → frente comprimida nas bordas → perfil; pisca durante a troca de face. */
+    fun turn(t: Long): CharacterPose {
+        val front = t in TURN_MS / 3..TURN_MS * 2 / 3
+        val edge = TURN_MS / 3
+        val returnEdge = TURN_MS * 2 / 3
+        val turning = t in (edge - 20)..(edge + 20) || t in (returnEdge - 20)..(returnEdge + 20)
+        return CharacterPose(
+            facing = if (front) Facing.FRONT else Facing.SIDE,
+            eyes = if (turning) Eyes.CLOSED else Eyes.OPEN,
+            headTilt = if (turning) 1 else 0,
+            bob = if (turning) -1 else 0,
+        )
+    }
 
     fun reaction(r: NpcReaction, t: Long, seated: Boolean = false): CharacterPose {
         val base = seatedBase(seated).copy(facing = Facing.FRONT)

@@ -7,6 +7,7 @@ import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.NpcGait
 import com.hoodie.app.pixel.npc.NpcPoseLibrary
+import com.hoodie.app.pixel.npc.NpcRenderer
 import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.review.VisualReviewPose
@@ -42,9 +43,9 @@ object NpcAnimationContactSheet {
     }
 
     fun turn(style: CharacterStyle): PixelBuffer {
-        // Os pares 119/120 e 239/240 expõem exatamente os limites onde a orientação vira.
-        val times = listOf(0L, 119L, 120L, 180L, 239L, 240L, 359L)
-        val labels = listOf("SIDE", "BEFORE", "AFTER", "FRONT", "BEFORE", "AFTER", "SIDE")
+        // Amostra a aproximação, o limite, o centro frontal e o retorno comprimido.
+        val times = listOf(0L, 80L, 119L, 120L, 180L, 239L, 240L, 280L, 359L)
+        val labels = listOf("SIDE", "TURN IN", "BEFORE", "FRONT IN", "FRONT", "BEFORE", "SIDE IN", "TURN OUT", "SIDE")
         return timeline(style, NpcAnimation.TURN_LEFT, times, labels)
     }
 
@@ -68,7 +69,10 @@ object NpcAnimationContactSheet {
                 NpcAnimation.TURN_LEFT, NpcAnimation.TURN_RIGHT -> data.pose.facing
                 else -> Facing.FRONT
             }
-            val frame = CharacterPainter.paint(style, data.pose.copy(facing = facing), data.motion)
+            val painted = CharacterPainter.paint(style, data.pose.copy(facing = facing), data.motion)
+            val frame = if (animation == NpcAnimation.TURN_LEFT || animation == NpcAnimation.TURN_RIGHT) {
+                NpcRenderer.turnPerspective(painted, style, time)
+            } else painted
             out.blit(frame.image, 2 + i * 52, 9)
             out.hline(2 + i * 52, 49 + i * 52, 82, ReviewRaster.CYAN)
         }

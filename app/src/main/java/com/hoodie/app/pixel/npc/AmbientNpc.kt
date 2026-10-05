@@ -10,6 +10,9 @@ import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Point
 import kotlin.math.roundToInt
+import kotlin.math.PI
+import kotlin.math.sin
+import java.util.concurrent.ConcurrentHashMap
 
 /** Definição de cena seleciona identidade registrada, comportamento e fala — nunca anatomia. */
 data class AmbientNpcDefinition(
@@ -197,6 +200,8 @@ object NpcDirector {
 object NpcRenderer {
     const val AMBIENT_SCALE = AmbientScale.DEFAULT
     private const val SHADOW = 0xFF1A1C33.toInt()
+    private data class TurnWidthRatios(val intoFront: Float, val outOfFront: Float)
+    private val turnSideFrontRatios = ConcurrentHashMap<String, TurnWidthRatios>()
 
     fun draw(b: PixelBuffer, slot: AmbientNpcSlot, timeMs: Long) {
         val movement = NpcMotionController.movement(slot, timeMs)
@@ -215,7 +220,10 @@ object NpcRenderer {
         val paintedFrame = CharacterPainter.paint(slot.definition.characterStyle, pose, frameData.motion).let {
             if (movement.facingRight && pose.facing == Facing.SIDE) it.mirrored() else it
         }
-        val frame = scaleFrameForAmbient(paintedFrame, slot.scale)
+        val turnedFrame = if (movement.animation == NpcAnimation.TURN_LEFT || movement.animation == NpcAnimation.TURN_RIGHT) {
+            turnPerspective(paintedFrame, slot.definition.characterStyle, movement.localTimeMs)
+        } else paintedFrame
+        val frame = scaleFrameForAmbient(turnedFrame, slot.scale)
         val left = movement.x - frame.anchors.feet.x
         val top = movement.floorY - frame.anchors.feet.y
         drawGroundShadow(b, movement.x, movement.floorY, slot.definition.characterStyle, slot.scale)
@@ -244,6 +252,68 @@ object NpcRenderer {
         }
         return Math.floorMod(cycleIndex, eligibleCycles.toLong()) ==
             Math.floorMod(slot.seed.toLong(), eligibleCycles.toLong())
+    }
+
+    /**
+     * Foreshortens the frontal pose during the middle of a 180° turn. At the side/front
+     * boundaries its opaque width matches the authored side silhouette, avoiding a one-frame
+     * body-width pop while the face changes orientation.
+     */
+    internal fun turnPerspective(frame: CharacterFrame, style: CharacterStyle, localTimeMs: Long): CharacterFrame {
+        val start = NpcPoseLibrary.TURN_MS / 3
+        val end = NpcPoseLibrary.TURN_MS * 2 / 3
+        if (localTimeMs !in start..end) return frame
+        val ratios = turnSideFrontRatios.computeIfAbsent(style.id) {
+            fun matchingRatio(sideTime: Long, frontTime: Long): Float {
+                val side = CharacterPainter.paint(style, NpcPoseLibrary.turn(sideTime))
+                val front = CharacterPainter.paint(style, NpcPoseLibrary.turn(frontTime))
+                return (visibleWidth(side).toFloat() / visibleWidth(front).coerceAtLeast(1)).coerceIn(0.55f, 1f)
+            }
+            TurnWidthRatios(
+                intoFront = matchingRatio(start - 1, start),
+                outOfFront = matchingRatio(end, end + 1),
+            )
+        }
+        val ratio = if (localTimeMs <= NpcPoseLibrary.TURN_MS / 2) ratios.intoFront else ratios.outOfFront
+        val progress = (localTimeMs - start).toFloat() / (end - start).coerceAtLeast(1)
+        val openness = sin(PI * progress).toFloat().coerceIn(0f, 1f)
+        val scaleX = ratio + (1f - ratio) * openness
+        if (scaleX >= 0.999f) return frame
+        val source = frame.image
+        val image = PixelBuffer(source.width, source.height)
+        val pivot = frame.anchors.feet.x
+        for (y in 0 until source.height) for (x in 0 until source.width) {
+            val sourceX = (pivot + (x - pivot) / scaleX).roundToInt()
+            if (sourceX in 0 until source.width) {
+                val color = source[sourceX, y]
+                if (color ushr 24 != 0) image.set(x, y, color)
+            }
+        }
+        fun Point.turnScaled() = Point(
+            (pivot + (x - pivot) * scaleX).roundToInt().coerceIn(0, image.width - 1), y,
+        )
+        val anchors = frame.anchors
+        return CharacterFrame(
+            image,
+            anchors.copy(
+                head = anchors.head.turnScaled(), leftHand = anchors.leftHand.turnScaled(),
+                rightHand = anchors.rightHand.turnScaled(), mouth = anchors.mouth.turnScaled(),
+                back = anchors.back.turnScaled(),
+            ),
+        )
+    }
+
+    private fun visibleWidth(frame: CharacterFrame): Int {
+        var minX = frame.image.width
+        var maxX = -1
+        frame.image.pixels.forEachIndexed { index, color ->
+            if (color ushr 24 != 0) {
+                val x = index % frame.image.width
+                minX = minOf(minX, x)
+                maxX = maxOf(maxX, x)
+            }
+        }
+        return if (maxX < minX) 1 else maxX - minX + 1
     }
 
     /** Sombra suave sob os pés: escurece o cenário (não acrescenta cor ao personagem). */
