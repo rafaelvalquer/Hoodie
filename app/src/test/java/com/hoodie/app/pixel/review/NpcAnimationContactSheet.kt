@@ -49,8 +49,8 @@ object NpcAnimationContactSheet {
     }
 
     fun sit(style: CharacterStyle): PixelBuffer = timeline(
-        style, NpcAnimation.SIT, listOf(0, 160, 320, 480, 560, 640).map(Int::toLong),
-        listOf("STAND", "BEND", "LOWER", "CONTACT", "CONTACT", "SIT"),
+        style, NpcAnimation.SIT, listOf(0, 160, 320, 480, 640).map(Int::toLong),
+        listOf("STAND", "BEND", "LOWER", "CONTACT", "SIT"),
     )
 
     fun talk(style: CharacterStyle): PixelBuffer = timeline(
