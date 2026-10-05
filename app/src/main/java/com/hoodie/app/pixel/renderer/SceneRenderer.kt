@@ -57,10 +57,13 @@ class SceneRenderer {
     }
 
     /** Cena sem personagem (galeria de cenas / thumbnails). */
-    fun renderEmpty(scene: PixelScene, env: SceneEnv, timeMs: Long): PixelBuffer {
+    fun renderEmpty(scene: PixelScene, env: SceneEnv, timeMs: Long, includeAmbientNpcs: Boolean = true): PixelBuffer {
         buffer.copyFrom(background(scene, env))
-        (scene.sortedProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
-            scene.ambientNpcs(env).map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } })
+        val props = scene.sortedProps.map { it.baseline to { it.draw(buffer, env, timeMs) } }
+        val npcs = if (includeAmbientNpcs) {
+            scene.ambientNpcs(env).map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } }
+        } else emptyList()
+        (props + npcs)
             .sortedBy { it.first }.forEach { it.second() }
         Lighting.apply(buffer, Lighting.map(scene, env))
         applyTransportLighting(buffer, env.transportAmbient?.lighting)

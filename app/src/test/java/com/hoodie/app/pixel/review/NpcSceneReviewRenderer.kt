@@ -84,7 +84,14 @@ object NpcSceneReviewRenderer {
             moments.getValue(scene).forEach { (moment, time) ->
                 put("scene-$slug-day-$moment", render(scene, DayPeriod.DAY, time))
             }
-            if (scene in nightScenes) put("scene-$slug-night", render(scene, DayPeriod.NIGHT))
+            if (scene in nightScenes) {
+                val nightTime = when (scene) {
+                    SceneId.OFFICE, SceneId.METRO, SceneId.RESTAURANT -> firstMoment(scene, NpcAnimation.TALK)
+                    SceneId.BUS -> firstMoment(scene, NpcAnimation.SIT_HEAD_DROP)
+                    else -> 2_400L
+                }
+                put("scene-$slug-night", render(scene, DayPeriod.NIGHT, nightTime))
+            }
         }
     }
 
@@ -116,7 +123,7 @@ object NpcSceneReviewRenderer {
     ): PixelBuffer {
         val scene = SceneRegistry[sceneId]
         val env = SceneEnv(period = DayPeriod.DAY, clockMinute = 600, variant = 0)
-        val rendered = SceneRenderer().renderEmpty(scene, env, timeMs = 2_400)
+        val rendered = SceneRenderer().renderEmpty(scene, env, timeMs = 2_400, includeAmbientNpcs = false)
         val frame = NpcRenderer.scaleFrameForAmbient(
             CharacterPainter.paint(style, pose), NpcScalePolicy.scale(style, NpcDepth.SCENE),
         )
