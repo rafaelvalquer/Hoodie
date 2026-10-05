@@ -52,7 +52,6 @@ import com.hoodie.app.pixel.character.outfit.OutfitStyle
 import com.hoodie.app.pixel.character.mirrored
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
-import com.hoodie.app.pixel.npc.NpcMotionController
 import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.debug.CompareMode
 import com.hoodie.app.pixel.debug.DebugOptions
@@ -95,7 +94,7 @@ fun PixelLabScreen(onBack: () -> Unit) {
     val closeLabel = stringResource(R.string.pixel_lab_close)
     var tab by remember { mutableIntStateOf(0) }
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp),
+        Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp).testTag("pixel-lab-scroll"),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -293,21 +292,25 @@ private fun NpcLab() {
     var animation by remember { mutableStateOf(NpcAnimation.IDLE) }
     var facing by remember { mutableIntStateOf(0) }
     var posture by remember { mutableIntStateOf(0) }
-    // O primeiro personagem é o Bulldog executivo; abra no terno que define sua identidade.
-    var outfitIndex by remember { mutableIntStateOf(1) }
+    // -1 = roupa registrada do personagem (o Bulldog abre no terno que define sua identidade).
+    var outfitIndex by remember { mutableIntStateOf(-1) }
     var paletteIndex by remember { mutableIntStateOf(0) }
-    var eyesIndex by remember { mutableIntStateOf(Eyes.OPEN.ordinal) }
-    var mouthIndex by remember { mutableIntStateOf(Mouth.SMILE.ordinal) }
+    var eyesIndex by remember { mutableIntStateOf(-1) }
+    var mouthIndex by remember { mutableIntStateOf(-1) }
     var elapsed by remember { mutableLongStateOf(0L) }
     var playing by remember { mutableStateOf(true) }
+    var speed by remember { mutableFloatStateOf(1f) }
     var overlays by remember { mutableStateOf(true) }
+    var onionPrev by remember { mutableStateOf(false) }
+    var onionNext by remember { mutableStateOf(false) }
+    var scaleIndex by remember { mutableIntStateOf(4) }
+    var environment by remember { mutableIntStateOf(0) }
     val styles = NpcCharacterRegistry.all
     val registeredStyle = styles[styleIndex.coerceIn(styles.indices)]
     val outfits = listOf(OutfitStyle.Hoodie, OutfitStyle.Suit, OutfitStyle.Casual, OutfitStyle.Student, OutfitStyle.Sport, OutfitStyle.Commuter)
-    val outfitLabels = listOf("Hoodie", "Terno", "Casual", "Estudante", "Esporte", "Comutante")
+    val outfitLabels = listOf("Registrada", "Hoodie", "Terno", "Casual", "Estudante", "Esporte", "Comutante")
     val style = remember(registeredStyle, outfitIndex, paletteIndex) {
-        val outfit = outfits[outfitIndex.mod(outfits.size)]
-        val base = registeredStyle.copy(outfit = outfit)
+        val base = if (outfitIndex < 0) registeredStyle else registeredStyle.copy(outfit = outfits[outfitIndex.mod(outfits.size)])
         val palette = when (paletteIndex) {
             1 -> base.palette.copy(furLight = 0xFFFFF5DC.toInt(), fur = 0xFFD7B98D.toInt(), furDark = 0xFF8D6B4F.toInt(), outfitLight = 0xFFDDD2C2.toInt(), shirt = 0xFFFFF5DC.toInt())
             2 -> base.palette.copy(furLight = 0xFFB6D8FF.toInt(), fur = 0xFF6C91C2.toInt(), furDark = 0xFF354B73.toInt(), outfitLight = 0xFF8298BB.toInt(), outfit = 0xFF303B58.toInt(), outfitDark = 0xFF1A2239.toInt(), shirt = 0xFFDAE5F2.toInt())
@@ -315,56 +318,124 @@ private fun NpcLab() {
         }
         base.copy(palette = palette)
     }
-    val renderMotion = remember(style) { SpeciesMotionProfiles.forCharacter(style).renderMotion() }
-    LaunchedEffect(playing) {
+    val motionProfile = remember(style) { SpeciesMotionProfiles.forCharacter(style) }
+    LaunchedEffect(playing, speed) {
         var last = -1L
         while (playing) withFrameMillis { frameTime ->
-            if (last >= 0L) elapsed += frameTime - last
+            if (last >= 0L) elapsed += ((frameTime - last) * speed).toLong()
             last = frameTime
         }
     }
     val directions = listOf(com.hoodie.app.pixel.sprite.Facing.FRONT, com.hoodie.app.pixel.sprite.Facing.SIDE, com.hoodie.app.pixel.sprite.Facing.BACK)
-    val pose = remember(style, animation, facing, posture, elapsed, eyesIndex, mouthIndex) {
-        val motion = SpeciesMotionProfiles.forCharacter(style)
-        NpcMotionController.pose(animation, elapsed, style.id.hashCode(), motion)
-            .copy(facing = directions[facing], eyes = Eyes.entries[eyesIndex], mouth = Mouth.entries[mouthIndex])
-            .let { base -> when (posture) { 1 -> base.withPosture(Posture.STANDING); 2 -> base.withPosture(Posture.SITTING); else -> base } }
+    val scales = com.hoodie.app.pixel.npc.AmbientScale.allowed
+    val scale = scales[scaleIndex.coerceIn(scales.indices)]
+    /** Quadro calculado igual à cena (pose + passada + movimento secundário). */
+    fun frameAt(t: Long): com.hoodie.app.pixel.npc.NpcFrame {
+        val f = com.hoodie.app.pixel.npc.NpcPoseLibrary.frame(animation, t, style.id.hashCode(), motionProfile, scale = scale)
+        val pose = f.pose.let { base ->
+            val auto = animation == NpcAnimation.TURN_LEFT || animation == NpcAnimation.TURN_RIGHT
+            base.copy(
+                facing = if (auto) base.facing else directions[facing],
+                eyes = if (eyesIndex >= 0) Eyes.entries[eyesIndex] else base.eyes,
+                mouth = if (mouthIndex >= 0) Mouth.entries[mouthIndex] else base.mouth,
+            )
+        }.let { base -> when (posture) { 1 -> base.withPosture(Posture.STANDING); 2 -> base.withPosture(Posture.SITTING); else -> base } }
+        return f.copy(pose = pose)
     }
-    val npc = remember(style, pose, facing, renderMotion) { CharacterComparisonRenderer.character(style, pose, facingRight = facing == 1, motion = renderMotion) }
-    val hoodie = remember(pose, facing) { CharacterComparisonRenderer.hoodie(pose, facingRight = facing == 1) }
-    SectionLabel("PERSONAGEM")
+    fun scaled(frame: com.hoodie.app.pixel.character.CharacterFrame) =
+        com.hoodie.app.pixel.npc.NpcRenderer.scaleFrameForAmbient(frame, scale)
+    val current = frameAt(elapsed)
+    val npc = scaled(CharacterComparisonRenderer.character(style, current.pose, facingRight = facing == 1, motion = current.motion))
+    val hoodie = scaled(CharacterComparisonRenderer.hoodie(current.pose, facingRight = facing == 1))
+    val onion = buildList {
+        if (onionPrev) add(scaled(CharacterComparisonRenderer.character(style, frameAt(elapsed - FRAME_STEP_MS).pose, facing == 1, frameAt(elapsed - FRAME_STEP_MS).motion)).image.pixels to ONION_PREV)
+        if (onionNext) add(scaled(CharacterComparisonRenderer.character(style, frameAt(elapsed + FRAME_STEP_MS).pose, facing == 1, frameAt(elapsed + FRAME_STEP_MS).motion)).image.pixels to ONION_NEXT)
+    }
+    // Overlays de esqueleto: caixas de cabeça e corpo + trajetória dos pés na passada.
+    val layout = com.hoodie.app.pixel.character.BodyLayout.resolve(style, current.pose)
+    val mirror = current.pose.facing == com.hoodie.app.pixel.sprite.Facing.SIDE && facing != 1
+    fun mx(x: Int) = if (mirror) CharacterPainter.WIDTH - 1 - x else x
+    val skeleton = LabSkeleton(
+        head = intArrayOf(mx(layout.headLeft), layout.headTop, mx(layout.headRight), layout.headBottom),
+        body = intArrayOf(mx(layout.shoulderLeft), layout.shoulderY, mx(layout.shoulderRight), layout.torsoBottom),
+        motionPath = if (animation == NpcAnimation.WALK) (0 until 24).map { i ->
+            val g = com.hoodie.app.pixel.npc.NpcGait.sample(i * motionProfile.stepLength * scale / 6f, motionProfile, scale).gait
+            com.hoodie.app.pixel.sprite.Point(mx(CharacterPainter.WIDTH / 2 + g.nearX), CharacterPainter.HEIGHT - 1 - g.nearLift)
+        } else emptyList(),
+    )
+    val backgrounds = listOf(0xFF2B2E4A.toInt(), 0xFFE8DCC4.toInt(), 0xFF5E7FA8.toInt(), 0xFF7CC46B.toInt())
+    val bg = backgrounds[environment.coerceIn(backgrounds.indices)]
+    SectionLabel("[ NPC ART ]")
+    SectionLabel("IDENTIDADE")
     ChipRow(styles.map { it.id.replace('_', ' ') }, styleIndex, { styleIndex = it })
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        CharacterPreview("HOODIE", hoodie.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, hoodie.anchors, overlays, Modifier.weight(1f))
-        CharacterPreview(style.id.uppercase(), npc.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, npc.anchors, overlays, Modifier.weight(1f))
+        CharacterPreview("HOODIE", hoodie.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, hoodie.anchors, overlays, Modifier.weight(1f), background = bg)
+        CharacterPreview(
+            style.id.uppercase(), npc.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, npc.anchors, overlays, Modifier.weight(1f),
+            background = bg, onion = onion, skeleton = skeleton.takeIf { scale >= 0.999f },
+        )
     }
-    SectionLabel("ROUPA")
-    ChipRow(outfitLabels, outfitIndex, { outfitIndex = it })
-    SectionLabel("PALETA")
-    ChipRow(listOf("Original", "Quente", "Noturna"), paletteIndex, { paletteIndex = it })
+    Text(
+        "${animation.name} · ${style.species.id} · ${current.contact} · frame ${elapsed / FRAME_STEP_MS} · ${elapsed} ms · escala ${scale}",
+        modifier = Modifier.testTag("npc-inspector-status"),
+        color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall,
+    )
+    SectionLabel("INSPECTOR")
+    ChipRow(listOf(if (playing) "⏸ PAUSE" else "▶ PLAY", "◀ FRAME −", "FRAME + ▶", "⟲ 0"), null, {
+        when (it) {
+            0 -> playing = !playing
+            1 -> { playing = false; elapsed = (elapsed - FRAME_STEP_MS).coerceAtLeast(0) }
+            2 -> { playing = false; elapsed += FRAME_STEP_MS }
+            else -> elapsed = 0L
+        }
+    })
+    val speeds = listOf(0.25f, 0.5f, 1f, 2f)
+    ChipRow(speeds.map { "${it}x" }, speeds.indexOf(speed), { speed = speeds[it] })
+    ChipRow(
+        listOf(if (onionPrev) "☑ Previous frame" else "☐ Previous frame", if (onionNext) "☑ Next frame" else "☐ Next frame", if (overlays) "☑ Overlays" else "☐ Overlays"),
+        null, { when (it) { 0 -> onionPrev = !onionPrev; 1 -> onionNext = !onionNext; else -> overlays = !overlays } },
+    )
     SectionLabel("ANIMAÇÃO")
     ChipRow(NpcAnimation.entries.map { it.name }, animation.ordinal, { animation = NpcAnimation.entries[it]; elapsed = 0L })
+    SectionLabel("FACING")
+    ChipRow(listOf("FRONT", "SIDE", "BACK"), facing, { facing = it })
+    SectionLabel("ESCALA")
+    ChipRow(scales.map { "$it" }, scaleIndex, { scaleIndex = it })
+    SectionLabel("AMBIENTE")
+    ChipRow(listOf("Escuro", "Escritório", "Transporte", "Parque"), environment, { environment = it })
+    SectionLabel("ROUPA")
+    ChipRow(outfitLabels, outfitIndex + 1, { outfitIndex = it - 1 })
+    SectionLabel("PALETA")
+    ChipRow(listOf("Original", "Quente", "Noturna"), paletteIndex, { paletteIndex = it })
     SectionLabel("POSE · POSTURA")
     ChipRow(listOf("Automática", "Em pé", "Sentado"), posture, { posture = it })
-    SectionLabel("DIREÇÃO")
-    ChipRow(listOf("FRONT", "SIDE", "BACK"), facing, { facing = it })
     SectionLabel("EXPRESSÃO · OLHOS")
-    ChipRow(Eyes.entries.map { it.name }, eyesIndex, { eyesIndex = it })
+    ChipRow(listOf("Auto") + Eyes.entries.map { it.name }, eyesIndex + 1, { eyesIndex = it - 1 })
     SectionLabel("EXPRESSÃO · BOCA")
-    ChipRow(Mouth.entries.map { it.name }, mouthIndex, { mouthIndex = it })
-    ChipRow(listOf(if (playing) "⏸ Pausar" else "▶ Tocar", if (overlays) "☑ Overlays" else "☐ Overlays"), null, {
-        if (it == 0) playing = !playing else overlays = !overlays
-    })
-    Text("Canvas 48×72 · escala ${style.scale} · roupa ${style.outfit}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+    ChipRow(listOf("Auto") + Mouth.entries.map { it.name }, mouthIndex + 1, { mouthIndex = it - 1 })
+    Text("Canvas 48×72 · ${style.artProfile.proportions} · roupa ${style.outfit}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
 }
+
+private const val FRAME_STEP_MS = 100L
+private const val ONION_PREV = 0xFFE86A6A.toInt()
+private const val ONION_NEXT = 0xFF6AD0E8.toInt()
+
+/** Caixas de cabeça/corpo e trajetória dos pés para o overlay do Pixel Lab. */
+private class LabSkeleton(val head: IntArray, val body: IntArray, val motionPath: List<com.hoodie.app.pixel.sprite.Point>)
 
 @Composable
 private fun CharacterPreview(
     title: String, pixels: IntArray, width: Int, height: Int,
     anchors: com.hoodie.app.pixel.character.CharacterAnchors, overlays: Boolean, modifier: Modifier = Modifier,
+    background: Int = 0, onion: List<Pair<IntArray, Int>> = emptyList(), skeleton: LabSkeleton? = null,
 ) {
-    val image = remember(pixels, overlays, anchors) {
-        val buffer = PixelBuffer(width, height).also { it.pixels.indices.forEach { index -> it.pixels[index] = pixels[index] } }
+    val image = remember(pixels, overlays, anchors, background, onion, skeleton) {
+        val buffer = PixelBuffer(width, height).also { it.fill(background) }
+        // Onion skin: silhuetas vizinhas tingidas e translúcidas por baixo do quadro atual.
+        onion.forEach { (ghost, tint) ->
+            ghost.indices.forEach { i -> if (ghost[i] ushr 24 != 0) buffer.pixels[i] = PixelBuffer.mix(buffer.pixels[i], tint, 0.45f) }
+        }
+        pixels.indices.forEach { i -> if (pixels[i] ushr 24 != 0) buffer.pixels[i] = pixels[i] }
         if (overlays) {
             val occupied = pixels.indices.filter { pixels[it] ushr 24 != 0 }
             if (occupied.isNotEmpty()) {
@@ -377,6 +448,15 @@ private fun CharacterPreview(
                 listOf(anchors.leftHand, anchors.rightHand).forEach { buffer.box(it.x - 1, it.y - 1, it.x + 1, it.y + 1, 0xFF62D3CF.toInt()) }
                 buffer.box(anchors.head.x - 1, anchors.head.y - 1, anchors.head.x + 1, anchors.head.y + 1, head)
                 buffer.box(anchors.mouth.x, anchors.mouth.y, anchors.mouth.x, anchors.mouth.y, 0xFFFF8B72.toInt())
+            }
+            skeleton?.let { sk ->
+                fun rect(r: IntArray, c: Int) {
+                    val x0 = minOf(r[0], r[2]); val x1 = maxOf(r[0], r[2])
+                    buffer.hline(x0, x1, r[1], c); buffer.hline(x0, x1, r[3], c); buffer.vline(x0, r[1], r[3], c); buffer.vline(x1, r[1], r[3], c)
+                }
+                rect(sk.head, 0xFFE8B84A.toInt())
+                rect(sk.body, 0xFF8BE88B.toInt())
+                sk.motionPath.forEach { buffer.set(it.x, it.y, 0xFFFFFFFF.toInt()) }
             }
         }
         createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888).also { it.setPixels(buffer.pixels, 0, width, 0, 0, width, height) }.asImageBitmap()

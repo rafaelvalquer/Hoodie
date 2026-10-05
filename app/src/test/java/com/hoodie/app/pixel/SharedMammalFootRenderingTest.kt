@@ -22,8 +22,8 @@ class SharedMammalFootRenderingTest {
     @Test fun mammalPawsHaveAReadableRoundedSilhouetteToeSeparationsAndFarSideShade() {
         val near = PixelBuffer(24, 18)
         val far = PixelBuffer(24, 18)
-        CatSpecies.drawFoot(near, palette, x = 8, y = 12, farSide = false)
-        CatSpecies.drawFoot(far, palette, x = 8, y = 12, farSide = true)
+        CatSpecies.drawFoot(near, palette, x = 8, y = 12, width = 11, farSide = false, facing = com.hoodie.app.pixel.sprite.Facing.FRONT)
+        CatSpecies.drawFoot(far, palette, x = 8, y = 12, width = 11, farSide = true, facing = com.hoodie.app.pixel.sprite.Facing.FRONT)
 
         val occupiedRows = near.pixels.indices.filter { near.pixels[it] != 0 }.map { it / near.width }.distinct()
         assertTrue("paw should have a shaped 6px profile, not a flat sole", occupiedRows.size >= 5)
@@ -36,7 +36,7 @@ class SharedMammalFootRenderingTest {
         val hoodie = PixelBuffer(40, 24)
         val npc = PixelBuffer(40, 24)
         HoodieLegsPainter.foot(hoodie, R(13, 6, 21, 11, 2))
-        CatSpecies.drawFoot(npc, palette, x = 17, y = 11, farSide = false)
+        CatSpecies.drawFoot(npc, palette, x = 17, y = 11, width = 11, farSide = false, facing = com.hoodie.app.pixel.sprite.Facing.FRONT)
 
         val hoodieBounds = occupiedBounds(hoodie)
         val npcBounds = occupiedBounds(npc)

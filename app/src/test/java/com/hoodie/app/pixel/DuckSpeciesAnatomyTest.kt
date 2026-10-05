@@ -17,8 +17,8 @@ class DuckSpeciesAnatomyTest {
 
     @Test fun duckHasDistinctWebbedFeetAndWingTips() {
         val feet = PixelBuffer(24, 12)
-        DuckSpecies.drawFoot(feet, palette, 8, 7, farSide = false)
-        DuckSpecies.drawFoot(feet, palette, 16, 7, farSide = true)
+        DuckSpecies.drawFoot(feet, palette, 8, 7, 11, farSide = false, facing = com.hoodie.app.pixel.sprite.Facing.FRONT)
+        DuckSpecies.drawFoot(feet, palette, 16, 7, 11, farSide = true, facing = com.hoodie.app.pixel.sprite.Facing.FRONT)
         assertTrue("webbed feet use duck-orange palette", feet.pixels.count { it == palette.accent } >= 18)
         assertTrue("webbed feet keep an outline", feet.pixels.count { it == palette.outline } >= 12)
 

@@ -29,8 +29,8 @@ class NpcArtGoldenTest {
         report.parentFile?.mkdirs()
         report.writeText(actual.entries.joinToString("\n", postfix = "\n") { (key, hash) -> "$key\t$hash" })
 
-        if (System.getProperty("updateNpcArtGoldens") == "true") {
-            val output = java.io.File("app/src/test/resources/npc-art-v2.sha256")
+        if (System.getenv("RECORD_SCENE_GOLDENS") == "true") {
+            val output = java.io.File("src/test/resources/npc-art-v2.sha256")
             output.parentFile?.mkdirs()
             output.writeText(report.readText())
         } else {
