@@ -103,3 +103,29 @@ Relatório de render: [transport-scenes-v1-candidate.sha256](npc-art-review/tran
 ## Digests da arte NPC
 
 `npc-art-review/npc-art-v2-candidate.sha256` registra os pixels exibidos acima. Os mesmos digests estão em `app/src/test/resources/npc-art-v2.sha256` e são verificados por `NpcArtGoldenTest`.
+
+## Evidências integradas — NPC Art System V3
+
+O sistema V3 foi integrado usando os personagens já produzidos. Hoodie continua no renderer legado, pixel a pixel; as sete espécies-base e as identidades derivadas usam o painter procedural V3 em 48×72, com escala ambiente nearest-neighbor. A galeria consolidada, os recortes principais e os renders das sete cenas públicas estão em [`npc-art-review/v3`](npc-art-review/v3/). `sha256.txt` registra os arquivos de evidência exportados.
+
+### Folha geral e cenas
+
+![Folha geral das espécies, identidades e animações NPC V3](npc-art-review/v3/review-sheet.png)
+
+![NPCs V3 nas cenas públicas de escritório, ônibus, trem, metrô, restaurante, compras e passeio](npc-art-review/v3/scenes.png)
+
+### Caminhada por espécie
+
+![Passada do Bulldog](npc-art-review/v3/bulldog-walk-sheet.png)
+
+![Passada do Coelho](npc-art-review/v3/rabbit-walk-sheet.png)
+
+![Passada do Rato](npc-art-review/v3/mouse-walk-sheet.png)
+
+![Passada do Pato](npc-art-review/v3/duck-walk-sheet.png)
+
+### Comparativos principais
+
+Bulldog IDLE, WALK e TALK, e um render IDLE para cada uma das demais espécies, estão disponíveis nesta pasta: [Bulldog IDLE](npc-art-review/v3/bulldog_idle.png), [Bulldog WALK](npc-art-review/v3/bulldog_walk.png), [Bulldog TALK](npc-art-review/v3/bulldog_talk.png), [Dog](npc-art-review/v3/dog_idle.png), [Rabbit](npc-art-review/v3/rabbit_idle.png), [Mouse](npc-art-review/v3/mouse_idle.png), [Duck](npc-art-review/v3/duck_idle.png), [Raccoon](npc-art-review/v3/raccoon_idle.png) e [Cat](npc-art-review/v3/cat_idle.png). Os renders individuais das cenas também estão separados por arquivo. A revisão manual dos grupos walk, idle, sleep e work foi aprovada por Rafael.
+
+Estes arquivos documentam o resultado V3; os goldens automatizados oficiais continuam sendo os manifests em `app/src/test/resources`, verificados pela suíte de regressão visual.
