@@ -45,6 +45,9 @@ android {
             it.systemProperty("exportIcons", project.findProperty("exportIcons") ?: "false")
             it.systemProperty("exportArt", project.findProperty("exportArt") ?: "false")
             it.systemProperty("artBootstrap", project.findProperty("artBootstrap") ?: "")
+            it.systemProperty("npcVisualReview", project.findProperty("npcVisualReview") ?: "false")
+            it.systemProperty("npcVisualReviewOutput", project.findProperty("npcVisualReviewOutput") ?: "build/pixel-preview/npc-v3-review")
+            it.systemProperty("approveNpcV3Goldens", project.findProperty("approveNpcV3Goldens") ?: "false")
             // Robolectric + JDK 17/21: acesso a internals de FileDescriptor (SQLite nativo).
             it.jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
         }

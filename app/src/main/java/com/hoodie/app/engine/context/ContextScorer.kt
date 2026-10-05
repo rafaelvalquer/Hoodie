@@ -85,7 +85,7 @@ object ContextScorer {
         val minute = input.now.minuteOfDay()
         val type = when (place.type) {
             PlaceType.RESTAURANT ->
-                if (RoutineEngine.isLunchWindow(minute, input.routine)) UserContextType.LUNCH else UserContextType.LEISURE
+                if (RoutineEngine.isLunchWindow(minute, input.routine)) UserContextType.LUNCH else UserContextType.DINING
             else -> place.type.toContext()
         }
         if (type == UserContextType.WORK) {

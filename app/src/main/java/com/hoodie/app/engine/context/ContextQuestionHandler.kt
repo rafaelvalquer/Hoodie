@@ -41,7 +41,7 @@ internal class ContextQuestionHandler(private val processor: ContextSignalProces
         val now = clock.nowMillis()
         questionDao.update(q.copy(answeredAt = now, answer = type.name, chosenPlaceType = type))
         notifier.cancelQuestion(questionId)
-        val ctx = contextFor(type, now)
+        val ctx = inferredContextFor(type, now)
         recordConfirmation(ctx, null, now, accepted = true)
         memory.unlock(Milestone.FIRST_NEW_PLACE)
         val asked = q.contextEventId?.let { contextDao.getById(it) }

@@ -90,6 +90,10 @@ object HoodieDecisionEngine {
                 if (needs.hunger > 70) w[EATING] = 15
             }
             UserContextType.LUNCH -> { w[EATING] = if (needs.hunger > 20) 70 else 20; w[COFFEE] = 15; w[PHONE] = 15 }
+            UserContextType.DINING -> {
+                w[EATING] = if (needs.hunger > 20) 70 else 45
+                w[PHONE] = 12; w[COFFEE] = 8; w[RESTING] = 6; w[IDLE] = 4
+            }
             UserContextType.COMMUTING -> w[COMMUTING] = 100
             UserContextType.GYM -> { w[TRAINING] = 75; w[RESTING] = 15; w[IDLE] = 10 }
             UserContextType.STUDY -> {

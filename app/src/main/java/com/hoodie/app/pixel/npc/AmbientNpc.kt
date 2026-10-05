@@ -27,12 +27,12 @@ data class AmbientNpcSlot(
     val baseline: Int,
     val seed: Int,
     val path: NpcPath? = null,
-    /** Escala por profundidade (fundo .75, meio .80/.85, frente .90). */
-    val scale: Float = AmbientScale.DEFAULT,
+    /** Profundidade semântica; a política resolve escala e mínimo por espécie. */
+    val depth: NpcDepth = NpcDepth.SCENE,
     /** Para NPCs parados de perfil: olhando para a direita. */
     val facingRight: Boolean = false,
 ) {
-    init { require(scale in AmbientScale.allowed) { "escala $scale fora de ${AmbientScale.allowed}" } }
+    val scale: Float get() = NpcScalePolicy.scale(definition.characterStyle, depth)
 }
 
 object NpcDirector {
@@ -71,8 +71,10 @@ object NpcDirector {
         NpcCharacterRegistry.DOG_WORKER, NpcAnimation.STAND,
         NpcBehaviorSequence.of(
             NpcStep(NpcAnimation.STAND, 3_000), NpcStep(NpcAnimation.LOOK, 2_000),
-            NpcStep(NpcAnimation.REACTION, 900, reaction = NpcReaction.SURPRISED), NpcStep(NpcAnimation.STAND, 2_000),
+            NpcStep(NpcAnimation.REACTION, 900, reaction = NpcReaction.SURPRISED),
+            NpcStep(NpcAnimation.TALK, 1_500), NpcStep(NpcAnimation.STAND, 500),
         ),
+        lines = listOf("Trânsito de novo.", "Chego já.", "Quase perdi o ponto."),
     )
     private val bunny = definition(
         NpcCharacterRegistry.RABBIT_READER, NpcAnimation.SIT_PHONE,
@@ -89,7 +91,11 @@ object NpcDirector {
     /** Restaurante: come, comenta algo, volta a comer. */
     private val guest = definition(
         NpcCharacterRegistry.CAT_GUEST, NpcAnimation.SIT_EAT,
-        NpcBehaviorSequence.of(NpcStep(NpcAnimation.SIT_EAT, 6_000), NpcStep(NpcAnimation.TALK, 1_800, seated = true, facing = Facing.SIDE)),
+        NpcBehaviorSequence.of(
+            NpcStep(NpcAnimation.SIT_EAT, 6_000),
+            NpcStep(NpcAnimation.TALK, 1_800, seated = true, facing = Facing.SIDE),
+        ),
+        lines = listOf("Cheiro bom.", "Vou pedir o de sempre."),
     )
     private val shopper = definition(NpcCharacterRegistry.DOG_SHOPPER, NpcAnimation.WALK)
     private val walker = definition(NpcCharacterRegistry.RABBIT_WALKER, NpcAnimation.WALK)
@@ -105,7 +111,7 @@ object NpcDirector {
             SceneId.BUS -> listOf(
                 AmbientNpcSlot(mouse, 38, 237, 240, 41, facingRight = true),
                 AmbientNpcSlot(duck, 202, 237, 240, 42),
-                AmbientNpcSlot(dog, 119, 221, 222, 43, scale = AmbientScale.BACKGROUND),
+                AmbientNpcSlot(dog, 119, 221, 222, 43, depth = NpcDepth.BACKGROUND),
             )
             SceneId.TRAIN -> listOf(
                 AmbientNpcSlot(bunny, 43, 240, 242, 51, facingRight = true),
@@ -113,14 +119,14 @@ object NpcDirector {
             )
             SceneId.METRO -> listOf(
                 AmbientNpcSlot(mouse, 44, 240, 242, 61, facingRight = true),
-                AmbientNpcSlot(dog, 194, 222, 224, 62, scale = AmbientScale.BACKGROUND),
+                AmbientNpcSlot(dog, 194, 222, 224, 62, depth = NpcDepth.BACKGROUND),
                 AmbientNpcSlot(duck, 119, 240, 242, 63),
             )
             SceneId.RESTAURANT -> listOf(AmbientNpcSlot(guest, 207, 251, 252, 71))
-            SceneId.SHOPPING -> listOf(AmbientNpcSlot(shopper, 207, 212, 214, 81, shopperPath(), scale = AmbientScale.BACKGROUND))
+            SceneId.SHOPPING -> listOf(AmbientNpcSlot(shopper, 207, 212, 214, 81, shopperPath(), depth = NpcDepth.BACKGROUND))
             SceneId.LEISURE -> listOf(
-                AmbientNpcSlot(walker, 204, 252, 254, 91, walkerPath(), scale = AmbientScale.MIDGROUND),
-                AmbientNpcSlot(cat, 38, 252, 254, 92, strollPath(), scale = AmbientScale.MIDGROUND),
+                AmbientNpcSlot(walker, 204, 252, 254, 91, walkerPath()),
+                AmbientNpcSlot(cat, 38, 252, 254, 92, strollPath()),
             )
             else -> emptyList()
         }
@@ -195,7 +201,17 @@ object NpcRenderer {
     fun draw(b: PixelBuffer, slot: AmbientNpcSlot, timeMs: Long) {
         val movement = NpcMotionController.movement(slot, timeMs)
         val frameData = NpcMotionController.frame(slot, timeMs, movement)
-        val pose = frameData.pose
+        val speechAllowed = shouldSpeak(slot, timeMs)
+        val animation = if (
+            movement.animation == NpcAnimation.TALK && slot.definition.speechProfile != null && !speechAllowed
+        ) {
+            slot.definition.behaviorProfile.sequence?.steps?.lastOrNull { it.animation != NpcAnimation.TALK }?.animation
+                ?: slot.path?.points?.mapNotNull { it.stop }?.lastOrNull { it != NpcAnimation.TALK }
+                ?: NpcAnimation.IDLE
+        } else movement.animation
+        val pose = if (animation == movement.animation) frameData.pose else NpcMotionController.frame(
+            slot, timeMs, movement.copy(animation = animation),
+        ).pose
         val paintedFrame = CharacterPainter.paint(slot.definition.characterStyle, pose, frameData.motion).let {
             if (movement.facingRight && pose.facing == Facing.SIDE) it.mirrored() else it
         }
@@ -204,7 +220,7 @@ object NpcRenderer {
         val top = movement.floorY - frame.anchors.feet.y
         drawGroundShadow(b, movement.x, movement.floorY, slot.definition.characterStyle, slot.scale)
         b.blit(frame.image, left, top)
-        if (movement.animation == NpcAnimation.TALK) slot.definition.speechProfile?.let { speech ->
+        if (movement.animation == NpcAnimation.TALK && speechAllowed) slot.definition.speechProfile?.let { speech ->
             NpcSpeechBubbleRenderer.draw(
                 b, speech, movement.x, movement.floorY, slot.seed, timeMs,
                 movement.localTimeMs, frame.anchors.head.y,
@@ -213,9 +229,26 @@ object NpcRenderer {
         }
     }
 
+    /** Um ciclo elegível respeita o intervalo do perfil sem alterar a coreografia do NPC. */
+    internal fun shouldSpeak(slot: AmbientNpcSlot, timeMs: Long): Boolean {
+        val speech = slot.definition.speechProfile ?: return false
+        val behavior = slot.definition.behaviorProfile
+        val cycleMs = slot.path?.let(NpcMotionController::pathCycleMs)
+            ?: behavior.sequence?.cycleMs
+            ?: return true
+        val eligibleCycles = (speech.cycleMs.toDouble() / cycleMs).roundToInt().coerceAtLeast(1)
+        val cycleIndex = if (slot.path != null) {
+            Math.floorDiv(timeMs + slot.seed * 977L, cycleMs)
+        } else {
+            Math.floorDiv(timeMs + slot.seed * 1_291L, cycleMs)
+        }
+        return Math.floorMod(cycleIndex, eligibleCycles.toLong()) ==
+            Math.floorMod(slot.seed.toLong(), eligibleCycles.toLong())
+    }
+
     /** Sombra suave sob os pés: escurece o cenário (não acrescenta cor ao personagem). */
     internal fun drawGroundShadow(b: PixelBuffer, x: Int, floorY: Int, style: CharacterStyle, scale: Float) {
-        val half = ((style.artProfile.proportions.hipWidth + 6) * scale / 2f).roundToInt()
+        val half = (((style.artProfile.proportions.hipWidth + 6) * scale / 2f).roundToInt()).coerceAtLeast(2)
         for (dy in -1..1) {
             val w = if (dy == 0) half else half - 2
             for (dx in -w..w) {

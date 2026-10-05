@@ -37,7 +37,7 @@ object NpcCharacterRegistry {
         id = "dog_worker", species = DogSpecies, outfit = OutfitStyle.Casual,
         palette = palette(
             fur = 0xFFC27A45, light = 0xFFF1D6A8, dark = 0xFF8C4E2A, inner = 0xFFD98C8C,
-            outfitLight = 0xFF8FAA7E, outfit = 0xFF6B8A5E, outfitDark = 0xFF3B3F4E, accent = 0xFFE8B84A,
+            outfitLight = 0xFF8FAA7E, outfit = 0xFF49643B, outfitDark = 0xFF3B3F4E, accent = 0xFFE8B84A,
         ),
         eyeStyle = EyeStyle.ROUND, mouthStyle = MouthStyle.MUZZLE,
     )

@@ -53,6 +53,8 @@ import com.hoodie.app.pixel.character.mirrored
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
+import com.hoodie.app.pixel.review.NpcVisualReviewFrames
+import com.hoodie.app.pixel.review.VisualReviewPose
 import com.hoodie.app.pixel.debug.CompareMode
 import com.hoodie.app.pixel.debug.DebugOptions
 import com.hoodie.app.pixel.debug.SourceCompare
@@ -303,8 +305,11 @@ private fun NpcLab() {
     var overlays by remember { mutableStateOf(true) }
     var onionPrev by remember { mutableStateOf(false) }
     var onionNext by remember { mutableStateOf(false) }
-    var scaleIndex by remember { mutableIntStateOf(4) }
+    var scaleIndex by remember { mutableIntStateOf(2) }
+    var compareScale by remember { mutableStateOf(false) }
+    var legacyScaleComparison by remember { mutableStateOf(false) }
     var environment by remember { mutableIntStateOf(0) }
+    var reviewPose by remember { mutableStateOf<VisualReviewPose?>(null) }
     val styles = NpcCharacterRegistry.all
     val registeredStyle = styles[styleIndex.coerceIn(styles.indices)]
     val outfits = listOf(OutfitStyle.Hoodie, OutfitStyle.Suit, OutfitStyle.Casual, OutfitStyle.Student, OutfitStyle.Sport, OutfitStyle.Commuter)
@@ -318,6 +323,23 @@ private fun NpcLab() {
         }
         base.copy(palette = palette)
     }
+    fun setReviewPreset(debug: Boolean) {
+        reviewPose = VisualReviewPose.IDLE_NEUTRAL
+        animation = VisualReviewPose.IDLE_NEUTRAL.animation
+        elapsed = VisualReviewPose.IDLE_NEUTRAL.elapsedMs
+        playing = false
+        facing = 0
+        posture = 0
+        outfitIndex = -1
+        paletteIndex = 0
+        eyesIndex = -1
+        mouthIndex = -1
+        scaleIndex = com.hoodie.app.pixel.npc.AmbientScale.allowed.indexOf(1f).coerceAtLeast(0)
+        environment = 0
+        onionPrev = debug
+        onionNext = debug
+        overlays = debug
+    }
     val motionProfile = remember(style) { SpeciesMotionProfiles.forCharacter(style) }
     LaunchedEffect(playing, speed) {
         var last = -1L
@@ -327,11 +349,14 @@ private fun NpcLab() {
         }
     }
     val directions = listOf(com.hoodie.app.pixel.sprite.Facing.FRONT, com.hoodie.app.pixel.sprite.Facing.SIDE, com.hoodie.app.pixel.sprite.Facing.BACK)
-    val scales = com.hoodie.app.pixel.npc.AmbientScale.allowed
+    val scales = if (legacyScaleComparison) listOf(0.75f, 0.80f, 0.85f, 0.90f, 0.95f, 1.00f)
+    else com.hoodie.app.pixel.npc.AmbientScale.allowed
     val scale = scales[scaleIndex.coerceIn(scales.indices)]
     /** Quadro calculado igual à cena (pose + passada + movimento secundário). */
     fun frameAt(t: Long): com.hoodie.app.pixel.npc.NpcFrame {
-        val f = com.hoodie.app.pixel.npc.NpcPoseLibrary.frame(animation, t, style.id.hashCode(), motionProfile, scale = scale)
+        val checkpoint = reviewPose
+        val f = if (checkpoint != null) NpcVisualReviewFrames.resolve(style, checkpoint, directions[facing.coerceIn(directions.indices)])
+        else com.hoodie.app.pixel.npc.NpcPoseLibrary.frame(animation, t, style.id.hashCode(), motionProfile, scale = scale)
         val pose = f.pose.let { base ->
             val auto = animation == NpcAnimation.TURN_LEFT || animation == NpcAnimation.TURN_RIGHT
             base.copy(
@@ -368,12 +393,39 @@ private fun NpcLab() {
     SectionLabel("[ NPC ART ]")
     SectionLabel("IDENTIDADE")
     ChipRow(styles.map { it.id.replace('_', ' ') }, styleIndex, { styleIndex = it })
+    SectionLabel("PRESETS DE REVISÃO")
+    ChipRow(listOf("ART REVIEW", "DEBUG REVIEW"), null, { setReviewPreset(debug = it == 1) })
+    SectionLabel("REVIEW POSES")
+    ChipRow(VisualReviewPose.entries.map { it.name.replace('_', ' ') }, reviewPose?.ordinal, {
+        reviewPose = VisualReviewPose.entries[it]
+        animation = reviewPose!!.animation
+        elapsed = reviewPose!!.elapsedMs
+        playing = false
+        posture = 0
+        eyesIndex = -1
+        mouthIndex = -1
+    })
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         CharacterPreview("HOODIE", hoodie.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, hoodie.anchors, overlays, Modifier.weight(1f), background = bg)
         CharacterPreview(
             style.id.uppercase(), npc.image.pixels, CharacterPainter.WIDTH, CharacterPainter.HEIGHT, npc.anchors, overlays, Modifier.weight(1f),
             background = bg, onion = onion, skeleton = skeleton.takeIf { scale >= 0.999f },
         )
+    }
+    if (compareScale) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+            scales.forEach { comparisonScale ->
+                val comparisonFrame = com.hoodie.app.pixel.npc.NpcRenderer.scaleFrameForAmbient(
+                    CharacterComparisonRenderer.character(style, current.pose, facingRight = facing == 1, motion = current.motion),
+                    comparisonScale,
+                )
+                CharacterPreview(
+                    "${(comparisonScale * 100).toInt()}%", comparisonFrame.image.pixels,
+                    CharacterPainter.WIDTH, CharacterPainter.HEIGHT, comparisonFrame.anchors, false,
+                    Modifier.weight(1f), background = bg,
+                )
+            }
+        }
     }
     Text(
         "${animation.name} · ${style.species.id} · ${current.contact} · frame ${elapsed / FRAME_STEP_MS} · ${elapsed} ms · escala ${scale}",
@@ -396,11 +448,16 @@ private fun NpcLab() {
         null, { when (it) { 0 -> onionPrev = !onionPrev; 1 -> onionNext = !onionNext; else -> overlays = !overlays } },
     )
     SectionLabel("ANIMAÇÃO")
-    ChipRow(NpcAnimation.entries.map { it.name }, animation.ordinal, { animation = NpcAnimation.entries[it]; elapsed = 0L })
+    ChipRow(NpcAnimation.entries.map { it.name }, animation.ordinal, { reviewPose = null; animation = NpcAnimation.entries[it]; elapsed = 0L })
     SectionLabel("FACING")
     ChipRow(listOf("FRONT", "SIDE", "BACK"), facing, { facing = it })
     SectionLabel("ESCALA")
-    ChipRow(scales.map { "$it" }, scaleIndex, { scaleIndex = it })
+    ChipRow(scales.map { "${(it * 100).toInt()}%" }, scaleIndex, { scaleIndex = it })
+    ChipRow(listOf(if (compareScale) "☑ COMPARE SCALE" else "□ COMPARE SCALE"), null, { compareScale = !compareScale })
+    ChipRow(listOf(if (legacyScaleComparison) "☑ LEGACY SCALE COMPARISON" else "□ LEGACY SCALE COMPARISON"), null, {
+        legacyScaleComparison = !legacyScaleComparison
+        scaleIndex = if (legacyScaleComparison) 5 else com.hoodie.app.pixel.npc.AmbientScale.allowed.lastIndex
+    })
     SectionLabel("AMBIENTE")
     ChipRow(listOf("Escuro", "Escritório", "Transporte", "Parque"), environment, { environment = it })
     SectionLabel("ROUPA")

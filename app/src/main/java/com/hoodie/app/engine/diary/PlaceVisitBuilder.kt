@@ -23,6 +23,7 @@ object PlaceVisitBuilder {
                     com.hoodie.app.core.model.UserContextType.HOME -> PlaceType.HOME
                     com.hoodie.app.core.model.UserContextType.WORK -> PlaceType.WORK
                     com.hoodie.app.core.model.UserContextType.LUNCH -> PlaceType.RESTAURANT
+                    com.hoodie.app.core.model.UserContextType.DINING -> PlaceType.RESTAURANT
                     com.hoodie.app.core.model.UserContextType.GYM -> PlaceType.GYM
                     com.hoodie.app.core.model.UserContextType.STUDY -> PlaceType.SCHOOL
                     com.hoodie.app.core.model.UserContextType.SHOPPING -> PlaceType.MARKET
@@ -31,7 +32,11 @@ object PlaceVisitBuilder {
                     com.hoodie.app.core.model.UserContextType.UNKNOWN, com.hoodie.app.core.model.UserContextType.TRAVEL -> PlaceType.OTHER
                     else -> PlaceType.OTHER
                 }
-                val name = place?.name ?: if (type == PlaceType.OTHER) "Outro lugar" else type.label
+                val name = place?.name ?: when (event.type) {
+                    com.hoodie.app.core.model.UserContextType.LUNCH -> "Almoço"
+                    com.hoodie.app.core.model.UserContextType.DINING -> "Restaurante"
+                    else -> if (type == PlaceType.OTHER) "Outro lugar" else type.label
+                }
                 val related = timeline.filter { it.timestamp in start..end && (it.relatedPlaceId == event.placeId || it.relatedContext == event.type) }
                 val dominant = activities.filter { it.startedAt < end && it.endedAt > start }
                     .groupBy { it.activity }

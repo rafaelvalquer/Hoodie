@@ -11,7 +11,7 @@ internal class PlaceLearningHandler(private val processor: ContextSignalProcesso
         val now = clock.nowMillis()
         val place = places.add(name, type, lat, lng, HoodieConfig.DEFAULT_GEOFENCE_RADIUS_M, now)
         geofences.registerAll()
-        switchTo(contextFor(type, now), now, 1f, place.id, ContextSource.ONBOARDING, TransitionReason.PLACE_SAVED)
+        switchTo(inferredContextFor(type, now), now, 1f, place.id, ContextSource.ONBOARDING, TransitionReason.PLACE_SAVED)
         place
     }
 

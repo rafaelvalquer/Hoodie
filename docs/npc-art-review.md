@@ -74,13 +74,13 @@ As folhas das outras animações: [WALK](npc-art-review/identities-walk.png), [L
 
 ## NPCs dentro das cenas
 
-Prévia composta pelo renderer de produção com fundo, objetos, iluminação, camadas e NPCs em escala ambiente de 80%. Inclui escritório nas duas variantes, ônibus, trem, metrô, restaurante, compras e passeio de dia; escritório, ônibus, metrô e restaurante também à noite.
+Prévia composta pelo renderer de produção com fundo, objetos, iluminação, camadas e NPCs em escalas ambientais discretas de 95% ou 100%, aplicadas por profundidade semântica e mínimo da espécie. Inclui escritório nas duas variantes, ônibus, trem, metrô, restaurante, compras e passeio de dia; escritório, ônibus, metrô e restaurante também à noite.
 
 ![Galeria dos NPCs renderizados nas cenas reais](npc-art-review/scenes-with-npcs.png)
 
 ## Regressão das cenas com NPCs
 
-As cenas de compras e passeio, além de ônibus, trem e metrô, foram renderizadas novamente para refletir a escala menor dos NPCs. Os arquivos de hash em `app/src/test/resources` agora correspondem a estes renders e protegem a nova composição.
+As cenas públicas estão sendo revisadas novamente para a política de escala 90% / 95% / 100%. Os candidatos devem ser inspecionados quanto a clipping, sobreposição e densidade antes de qualquer atualização de golden.
 
 Os pares Hoodie/NPC também foram revisados; as identidades ambientais mudaram de forma intencional e os digests correspondentes foram atualizados.
 
@@ -126,6 +126,20 @@ O sistema V3 foi integrado usando os personagens já produzidos. Hoodie continua
 
 ### Comparativos principais
 
-Bulldog IDLE, WALK e TALK, e um render IDLE para cada uma das demais espécies, estão disponíveis nesta pasta: [Bulldog IDLE](npc-art-review/v3/bulldog_idle.png), [Bulldog WALK](npc-art-review/v3/bulldog_walk.png), [Bulldog TALK](npc-art-review/v3/bulldog_talk.png), [Dog](npc-art-review/v3/dog_idle.png), [Rabbit](npc-art-review/v3/rabbit_idle.png), [Mouse](npc-art-review/v3/mouse_idle.png), [Duck](npc-art-review/v3/duck_idle.png), [Raccoon](npc-art-review/v3/raccoon_idle.png) e [Cat](npc-art-review/v3/cat_idle.png). Os renders individuais das cenas também estão separados por arquivo. A revisão manual dos grupos walk, idle, sleep e work foi aprovada por Rafael.
+Bulldog IDLE, WALK e TALK, e um render IDLE para cada uma das demais espécies, estão disponíveis nesta pasta: [Bulldog IDLE](npc-art-review/v3/bulldog_idle.png), [Bulldog WALK](npc-art-review/v3/bulldog_walk.png), [Bulldog TALK](npc-art-review/v3/bulldog_talk.png), [Dog](npc-art-review/v3/dog_idle.png), [Rabbit](npc-art-review/v3/rabbit_idle.png), [Mouse](npc-art-review/v3/mouse_idle.png), [Duck](npc-art-review/v3/duck_idle.png), [Raccoon](npc-art-review/v3/raccoon_idle.png) e [Cat](npc-art-review/v3/cat_idle.png). Os renders individuais das cenas também estão separados por arquivo. A aprovação manual anterior de Rafael cobre somente os grupos walk, idle, sleep e work então revisados; ela não se estende às matrizes e folhas novas descritas abaixo.
 
 Estes arquivos documentam o resultado V3; os goldens automatizados oficiais continuam sendo os manifests em `app/src/test/resources`, verificados pela suíte de regressão visual.
+
+## Gate de qualidade visual NPC V3
+
+O renderer semântico compartilhado pelo Pixel Lab e pelos testes gera candidatos reproduzíveis com seed fixo. Execute:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest --tests "com.hoodie.app.pixel.review.NpcVisualReviewExportTest" -PnpcVisualReview=true
+```
+
+Os candidatos versionados em [`npc-art-review/v3/index.html`](npc-art-review/v3/index.html) contêm sete matrizes principais com Hoodie ao lado, folhas WALK limpas e de depuração, TURN/SIT/TALK, expressões, recortes de cabeça 8×, roupas, props, e a matriz SCALE LEGIBILITY de 75% / 80% / 85% / 90% / 95% / 100%. As imagens de escala mostram o valor solicitado sem aplicar o piso ambiental; o relatório por espécie registra separadamente `productionScale`, o piso que a política usaria em produção. As folhas individuais ficam em [`npc-scale-v3`](npc-art-review/v3/npc-scale-v3/). O pacote também inclui métricas de retenção de pixels, cenas públicas em vários momentos de comportamento, versões noturnas aplicáveis, BOOK no trem e PRODUCT no mercado, relatório de regras e índice HTML. [`performance-report.json`](npc-art-review/v3/performance-report.json) registra os tempos por frame no Office, Bus, Metro e Journey sem aplicar limiar automático.
+
+O relatório separa regras HARD (canvas/clipping, âncoras, cores não autorizadas, contato da passada e conexão de props) de avisos SOFT (contorno, silhueta, tamanho e contraste de pelo/roupa). `paletteSize` informa quantas cores da paleta da espécie aparecem no frame, `declaredPaletteSize` registra a paleta da identidade (limite de 10), e `renderedPaletteSize` inclui também cores de face e props compartilhadas. A aprovação anterior continua registrada com escopo explícito; o `review-manifest.json` deste conjunto permanece `PENDING` até Rafael aprovar estas evidências completas.
+
+O SHA técnico não é aprovação artística. A gravação dos goldens V3 por `-PapproveNpcV3Goldens=true` exige aprovação humana e todos os gates do manifesto em `APPROVED`. A suíte nunca atualiza hashes automaticamente após uma mudança visual.

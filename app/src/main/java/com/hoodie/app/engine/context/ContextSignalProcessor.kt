@@ -61,12 +61,11 @@ internal class ContextSignalProcessor(
         return ContextInput(signal, now, routines.get(), routines.isDayOff(now.toLocalDate()), previous, confirmations)
     }
 
-    suspend fun contextFor(type: PlaceType, now: Long): UserContextType =
-        if (type == PlaceType.RESTAURANT && !RoutineEngine.isLunchWindow(now.atZone(clock.zone()).minuteOfDay(), routines.get())) {
-            UserContextType.LEISURE
-        } else {
-            type.toContext()
-        }
+    suspend fun inferredContextFor(type: PlaceType, now: Long): UserContextType = when {
+        type != PlaceType.RESTAURANT -> type.toContext()
+        RoutineEngine.isLunchWindow(now.atZone(clock.zone()).minuteOfDay(), routines.get()) -> UserContextType.LUNCH
+        else -> UserContextType.DINING
+    }
 
     suspend fun recordConfirmation(type: UserContextType, placeId: Long?, at: Long, accepted: Boolean) {
         val z = at.atZone(clock.zone())

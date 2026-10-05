@@ -4,6 +4,7 @@ import com.hoodie.app.pixel.npc.AmbientScale
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcDirector
 import com.hoodie.app.pixel.npc.NpcMotionController
+import com.hoodie.app.pixel.npc.NpcRenderer
 import com.hoodie.app.pixel.npc.NpcReactions
 import com.hoodie.app.pixel.npc.PathPhase
 import com.hoodie.app.pixel.scene.SceneId
@@ -51,8 +52,31 @@ class NpcBehaviorTest {
         val duckAnims = (0L..20_000L step 100L).map { NpcMotionController.movement(bus.getValue("duck_sleepy"), it).animation }.toSet()
         assertTrue("duck: sleep, head drop, small wake, $duckAnims",
             duckAnims.containsAll(listOf(NpcAnimation.SIT_SLEEP, NpcAnimation.SIT_HEAD_DROP, NpcAnimation.SIT_WAKE)))
-        val dogAnims = (0L..20_000L step 100L).map { NpcMotionController.movement(bus.getValue("dog_worker"), it).animation }.toSet()
+        val dogAnims = (0L..60_000L step 100L).map { NpcMotionController.movement(bus.getValue("dog_worker"), it).animation }.toSet()
         assertTrue("dog: holds, looks, bump reaction, $dogAnims", dogAnims.containsAll(listOf(NpcAnimation.STAND, NpcAnimation.LOOK, NpcAnimation.REACTION)))
+    }
+
+    @Test fun dialogueIsSparseAndNeverCompetesBetweenNpcs() {
+        scenes.forEach { scene ->
+            val speakers = NpcDirector.plan(scene, 0).filter { it.definition.speechProfile != null }
+            assertTrue("$scene must have at most one speaking NPC", speakers.size <= 1)
+        }
+
+        listOf(SceneId.OFFICE, SceneId.BUS, SceneId.RESTAURANT).forEach { scene ->
+            val speaker = NpcDirector.plan(scene, 0).single { it.definition.speechProfile != null }
+            val talkStarts = mutableListOf<Long>()
+            var wasTalking = false
+            for (time in 0L..150_000L step 100L) {
+                val talking = NpcMotionController.movement(speaker, time).animation == NpcAnimation.TALK &&
+                    NpcRenderer.shouldSpeak(speaker, time)
+                if (talking && !wasTalking) talkStarts += time
+                wasTalking = talking
+            }
+            assertTrue("$scene should have several short conversations", talkStarts.size >= 2)
+            talkStarts.zipWithNext().forEach { (first, next) ->
+                assertTrue("$scene speech cooldown was only ${next - first}ms", next - first >= 40_000L)
+            }
+        }
     }
 
     @Test fun executiveEntersWalksLooksTalksWaitsAndExits() {
@@ -88,6 +112,7 @@ class NpcBehaviorTest {
 
     @Test fun depthScalesAreFromTheAllowedSet() {
         scenes.forEach { scene -> (0..1).forEach { v -> NpcDirector.plan(scene, v).forEach { assertTrue(it.scale in AmbientScale.allowed) } } }
-        assertEquals(listOf(0.75f, 0.80f, 0.85f, 0.90f, 1.00f), AmbientScale.allowed)
+        assertEquals(listOf(0.90f, 0.95f, 1.00f), AmbientScale.allowed)
     }
+
 }

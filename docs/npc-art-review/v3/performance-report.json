@@ -1,0 +1,6 @@
+[
+  {"scene":"office-max-npcs","npcCount":2,"frames":12,"nanosPerFrame":2641399},
+  {"scene":"bus-max-npcs","npcCount":3,"frames":12,"nanosPerFrame":4134833},
+  {"scene":"metro-max-npcs","npcCount":3,"frames":12,"nanosPerFrame":3310408},
+  {"scene":"journey-longest-day-14-stops","npcCount":1,"frames":12,"nanosPerFrame":4798800}
+]

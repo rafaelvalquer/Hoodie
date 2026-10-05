@@ -15,8 +15,7 @@ object NpcMotionController {
         val profile = slot.definition.behaviorProfile
         val path = slot.path ?: return stationary(slot, timeMs)
         val turns = turnFlags(path)
-        val duration = path.points.first().holdMs + path.points.zipWithNext().withIndex()
-            .fold(0L) { total, (i, pair) -> total + segmentTime(pair.first, pair.second, path.millisPerPixel, turns[i]) + pair.second.holdMs }
+        val duration = pathCycleMs(path)
         val cycle = duration.coerceAtLeast(1L)
         var elapsed = if (path.repeat) Math.floorMod(timeMs + slot.seed * 977L, cycle) else timeMs.coerceIn(0, cycle - 1)
         var walked = 0f
@@ -134,4 +133,12 @@ object NpcMotionController {
 
     /** Largura útil para checar se o NPC está visível (pés dentro da cena). */
     fun visible(movement: NpcMovement) = movement.x in -CharacterCanvas.WIDTH..SCENE_WIDTH + CharacterCanvas.WIDTH
+
+    /** Duração determinística de uma volta completa, incluindo pausas e viradas. */
+    internal fun pathCycleMs(path: NpcPath): Long {
+        val turns = turnFlags(path)
+        return path.points.first().holdMs + path.points.zipWithNext().withIndex()
+            .fold(0L) { total, (i, pair) -> total + segmentTime(pair.first, pair.second, path.millisPerPixel, turns[i]) + pair.second.holdMs }
+            .coerceAtLeast(1L)
+    }
 }

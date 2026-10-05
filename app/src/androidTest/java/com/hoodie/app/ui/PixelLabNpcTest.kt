@@ -8,12 +8,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.assertCountEquals
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.hoodie.app.presentation.screens.pixellab.PixelLabScreen
 import com.hoodie.app.presentation.theme.HoodieTheme
@@ -45,7 +47,28 @@ class PixelLabNpcTest {
         compose.onNodeWithText("HOODIE").assertExists()
         compose.onNodeWithText("BULLDOG_EXEC").assertExists()
         compose.onNodeWithText("☑ Overlays").assertExists()
+        listOf("90%", "95%", "100%", "□ COMPARE SCALE", "□ LEGACY SCALE COMPARISON").forEach {
+            compose.onNodeWithText(it).assertExists()
+        }
         listOf("◀ FRAME −", "FRAME + ▶", "☐ Previous frame", "☐ Next frame", "0.25x", "2.0x").forEach { compose.onNodeWithText(it).assertExists() }
+    }
+
+    @Test fun scaleComparisonShowsProductionScalesAndKeepsLegacyValuesDiagnostic() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent { HoodieTheme { PixelLabScreen(onBack = {}) } }
+        compose.onNodeWithContentDescription("NPC").performClick()
+        compose.mainClock.advanceTimeBy(100L)
+        val scroller = compose.onNodeWithTag("pixel-lab-scroll")
+        scroller.performTouchInput { swipeUp(durationMillis = 1_000) }
+        compose.mainClock.advanceTimeBy(1_200L)
+        compose.onNodeWithText("□ COMPARE SCALE").performClick()
+        compose.mainClock.advanceTimeBy(100L)
+        listOf("90%", "95%", "100%").forEach { compose.onAllNodesWithText(it).assertCountEquals(2) }
+        scroller.performTouchInput { swipeUp(durationMillis = 600) }
+        compose.mainClock.advanceTimeBy(500L)
+        compose.onNodeWithText("□ LEGACY SCALE COMPARISON").performClick()
+        compose.mainClock.advanceTimeBy(100L)
+        listOf("75%", "80%", "85%").forEach { compose.onAllNodesWithText(it).assertCountEquals(2) }
     }
 
     @Test fun inspectorStepsFrameByFrameAndShowsOnionSkin() {

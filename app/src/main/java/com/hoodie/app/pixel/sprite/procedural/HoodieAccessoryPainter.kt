@@ -47,6 +47,12 @@ internal object HoodieAccessoryPainter {
                 b.outlined(rx - 2, ry - 7, rx + 2, ry + 1, 0xFF2E3350.toInt(), o)
                 b.box(rx - 1, ry - 6, rx + 1, ry - 1, 0xFF9FE3F0.toInt())
             }
+            Item.BOOK -> {
+                // Livro pequeno ancorado na mão para NPCs leitores; usa o mesmo contorno e papel do Hoodie.
+                b.outlined(rx - 6, ry - 7, rx + 5, ry + 1, 0xFFC8484A.toInt(), o)
+                b.box(rx - 4, ry - 6, rx + 4, ry - 5, 0xFFF4EBD8.toInt())
+                b.vline(rx, ry - 6, ry, 0xFF8E2E33.toInt())
+            }
             Item.BOTTLE -> {
                 b.outlined(rx, ry - 8, rx + 4, ry + 1, 0xFF8AD6F2.toInt(), o)
                 b.box(rx + 1, ry - 9, rx + 3, ry - 8, 0xFF2F6FD0.toInt())

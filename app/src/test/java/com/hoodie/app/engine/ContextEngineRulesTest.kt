@@ -79,6 +79,20 @@ class ContextEngineRulesTest {
     }
 
     @Test
+    fun `restaurante inferido e almoco somente dentro da rotina`() {
+        val restaurant = WORK_PLACE.copy(id = 90, type = com.hoodie.app.core.model.PlaceType.RESTAURANT, name = "Restaurante")
+        listOf(
+            Triple(12, 0, UserContextType.LUNCH),
+            Triple(12, 45, UserContextType.LUNCH),
+            Triple(16, 0, UserContextType.DINING),
+            Triple(20, 0, UserContextType.DINING),
+        ).forEach { (hour, minute, expected) ->
+            val actual = ContextScorer.score(input(ContextSignal.Enter(restaurant), at(MONDAY, hour, minute))).type
+            assertEquals("restaurant at $hour:$minute", expected, actual)
+        }
+    }
+
+    @Test
     fun `cooldown limita perguntas por dia e por contexto`() {
         val now = at(MONDAY, 15).ms()
         val one = listOf(AskedQuestion(QuestionKind.CONFIRM_CONTEXT, UserContextType.LUNCH, now - 30 * MINUTE_MS))

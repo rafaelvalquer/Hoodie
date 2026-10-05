@@ -132,7 +132,7 @@ class TransportVisualRegistryTest {
         assertEquals(expected, PlaceType.newPlaceOptions.map { it.label })
         assertEquals("STORE", PlaceType.STORE.name) // nome persistido é aditivo e estável
         assertEquals(
-            listOf(UserContextType.HOME, UserContextType.WORK, UserContextType.STUDY, UserContextType.SHOPPING, UserContextType.GYM, UserContextType.LEISURE, UserContextType.VISITING, UserContextType.LUNCH, UserContextType.UNKNOWN),
+            listOf(UserContextType.HOME, UserContextType.WORK, UserContextType.STUDY, UserContextType.SHOPPING, UserContextType.GYM, UserContextType.LEISURE, UserContextType.VISITING, UserContextType.LUNCH, UserContextType.DINING, UserContextType.UNKNOWN),
             UserContextType.manualOptions,
         )
     }

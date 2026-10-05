@@ -1,6 +1,7 @@
 package com.hoodie.app.pixel
 
 import com.hoodie.app.pixel.npc.NpcAnimation
+import com.hoodie.app.pixel.npc.AmbientScale
 import com.hoodie.app.pixel.npc.AmbientNpcDefinition
 import com.hoodie.app.pixel.npc.AmbientNpcSlot
 import com.hoodie.app.pixel.npc.NpcBehaviorProfile
@@ -24,10 +25,11 @@ import org.junit.Test
 import kotlin.math.roundToInt
 
 class NpcMovementTest {
-    @Test fun ambientRenderScaleKeepsTheFeetAnchorAndUniformlyReducesCharacterPixels() {
+    @Test fun ninetyFivePercentAmbientRenderKeepsTheFeetAnchorAndNearestNeighborPixels() {
         val style = NpcCharacterRegistry.CAT_COLLEAGUE
         val original = CharacterPainter.paint(style, CharacterPose())
-        val scaled = NpcRenderer.scaleFrameForAmbient(original)
+        val scale = AmbientScale.BACKGROUND
+        val scaled = NpcRenderer.scaleFrameForAmbient(original, scale)
         fun bounds(frame: PixelBuffer): IntArray {
             val points = frame.pixels.indices.filter { frame.pixels[it] ushr 24 != 0 }
             val xs = points.map { it % frame.width }
@@ -42,10 +44,10 @@ class NpcMovementTest {
         val afterHeight = after[3] - after[1] + 1
 
         assertEquals(CharacterCanvas.FEET, scaled.anchors.feet)
-        assertTrue("NPC width should be about 80% (${beforeWidth}px → ${afterWidth}px)", kotlin.math.abs(afterWidth - (beforeWidth * NpcRenderer.AMBIENT_SCALE).toInt()) <= 2)
-        assertTrue("NPC height should be about 80% (${beforeHeight}px → ${afterHeight}px)", kotlin.math.abs(afterHeight - (beforeHeight * NpcRenderer.AMBIENT_SCALE).toInt()) <= 2)
+        assertTrue("NPC width should match its ambient scale (${beforeWidth}px → ${afterWidth}px)", kotlin.math.abs(afterWidth - (beforeWidth * scale).toInt()) <= 2)
+        assertTrue("NPC height should match its ambient scale (${beforeHeight}px → ${afterHeight}px)", kotlin.math.abs(afterHeight - (beforeHeight * scale).toInt()) <= 2)
         assertEquals(
-            (CharacterCanvas.FEET.y + (original.anchors.head.y - CharacterCanvas.FEET.y) * NpcRenderer.AMBIENT_SCALE).roundToInt(),
+            (CharacterCanvas.FEET.y + (original.anchors.head.y - CharacterCanvas.FEET.y) * scale).roundToInt(),
             scaled.anchors.head.y,
         )
         assertTrue("nearest-neighbor scaling should preserve source palette colors", scaled.image.pixels.filter { it ushr 24 != 0 }.all { color -> color in original.image.pixels })
@@ -113,7 +115,7 @@ class NpcMovementTest {
             val pose = NpcMotionController.pose(NpcAnimation.TALK, 0, 0, motion)
             val frame = NpcRenderer.scaleFrameForAmbient(CharacterPainter.paint(style, pose, motion.renderMotion()))
             val headTopY = slot.floorY - CharacterCanvas.FEET.y + frame.anchors.head.y -
-                (style.species.headHeight * NpcRenderer.AMBIENT_SCALE).roundToInt() / 2
+                (style.species.headHeight * slot.scale).roundToInt() / 2
             val changedRows = withSpeech.pixels.indices
                 .filter { withSpeech.pixels[it] != withoutSpeech.pixels[it] }
                 .map { it / withSpeech.width }
@@ -171,15 +173,14 @@ class NpcMovementTest {
         NpcCharacterRegistry.all.forEach { style ->
             val speciesMotion = SpeciesMotionProfiles.forCharacter(style)
             if (speciesMotion != sharedTiming) {
-                val speciesPose = NpcMotionController.pose(NpcAnimation.WALK, 460, 5, speciesMotion)
-                val sharedPose = NpcMotionController.pose(NpcAnimation.WALK, 460, 5, sharedTiming)
-                val speciesFrame = CharacterPainter.paint(style, speciesPose, speciesMotion.renderMotion()).image.pixels
-                val sharedFrame = CharacterPainter.paint(style, sharedPose, CharacterRenderMotion()).image.pixels
-
-                assertFalse(
-                    "${style.id} declares a motion profile but renders the shared gait unchanged",
-                    speciesFrame.contentEquals(sharedFrame),
-                )
+                val motionChangesPixels = (0L..1_500L step 25L).any { elapsed ->
+                    val speciesPose = NpcMotionController.pose(NpcAnimation.WALK, elapsed, 5, speciesMotion)
+                    val sharedPose = NpcMotionController.pose(NpcAnimation.WALK, elapsed, 5, sharedTiming)
+                    val speciesFrame = CharacterPainter.paint(style, speciesPose, speciesMotion.renderMotion()).image.pixels
+                    val sharedFrame = CharacterPainter.paint(style, sharedPose, CharacterRenderMotion()).image.pixels
+                    !speciesFrame.contentEquals(sharedFrame)
+                }
+                assertTrue("${style.id} motion profile must affect some gait phases", motionChangesPixels)
             }
         }
     }

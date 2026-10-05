@@ -2,7 +2,12 @@ package com.hoodie.app.integration.mobility
 
 import com.hoodie.app.core.datastore.MobilitySettings
 import com.hoodie.app.core.mobility.DetectedMovement
+import com.hoodie.app.core.mobility.MobilitySource
+import com.hoodie.app.core.mobility.MobilityState
+import com.hoodie.app.core.mobility.MovementMode
+import com.hoodie.app.core.database.MobilitySessionEntity
 import com.hoodie.app.core.model.ContextSource
+import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.QuestionKind
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.engine.MONDAY
@@ -58,6 +63,33 @@ class MobilityContextIntegrationTest {
         assertEquals(UserContextType.WORK, m.context()!!.type)
         assertTrue("sem movimento não há deslocamento registrado", m.sessions().isEmpty())
         assertNull(m.open())
+    }
+
+    @Test
+    fun `correcao manual em restaurante concorda com contexto automatico DINING`() = runBlocking {
+        m.at(MONDAY, 20, 0)
+        val endedAt = m.now()
+        m.repo.insert(
+            MobilitySessionEntity(
+                startedAt = endedAt - 10 * 60_000,
+                endedAt = endedAt - 60_000,
+                destinationPlaceId = m.restaurant.id,
+                initialMode = MovementMode.WALKING,
+                currentMode = MovementMode.WALKING,
+                state = MobilityState.ARRIVED,
+                confidence = 1f,
+                confirmed = true,
+                source = MobilitySource.GEOFENCE,
+                arrivalConfirmed = true,
+                arrivalAutoConfirmed = true,
+            ),
+        )
+        m.g.engine.setManualPlace(PlaceType.RESTAURANT)
+        m.engine.onManualContext(PlaceType.RESTAURANT.toContext(), m.now())
+
+        assertEquals(UserContextType.DINING, m.context()!!.type)
+        assertEquals(UserContextType.DINING, m.g.db.hoodieStateDao().get()!!.userContext)
+        assertEquals(true, m.sessions().single().arrivalConfirmed)
     }
 
     @Test

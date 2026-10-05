@@ -1,0 +1,34 @@
+{
+  "version": "npc-art-v3",
+  "approval_state": "PENDING",
+  "golden_state": "TECHNICAL_REGRESSION_ONLY",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "prior_review": {
+    "reviewer": "Rafael",
+    "groups": ["walk", "idle", "sleep", "work"],
+    "state": "APPROVED",
+    "scope_note": "Aprovação anterior preservada; não cobre os novos contact sheets e matrizes completos deste plano."
+  },
+  "characters": {
+    "bulldog_exec": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
+    "dog_worker": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
+    "rabbit_analyst": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
+    "mouse_commuter": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
+    "duck_sleepy": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
+    "raccoon_window": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
+    "cat_colleague": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"}
+  },
+  "matrices": "PENDING",
+  "walk_all_species": "PENDING",
+  "turn_sit_talk_sheets": "PENDING",
+  "expressions_and_head_crops": "PENDING",
+  "outfits": "PENDING",
+  "props": "PENDING",
+  "scale_legibility_090_to_100": "PENDING",
+  "public_scenes": "PENDING",
+  "day_night_contrast": "PENDING",
+  "hoodie_bulldog_gate": "PENDING",
+  "hoodie_cat_gate": "PENDING",
+  "notes": "Os PNGs são candidatos técnicos. A arte só pode receber APPROVED após revisão humana explícita."
+}

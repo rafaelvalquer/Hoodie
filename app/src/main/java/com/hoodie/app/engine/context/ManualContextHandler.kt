@@ -21,7 +21,8 @@ internal class ManualContextHandler(private val processor: ContextSignalProcesso
 
     suspend fun setManualPlace(placeType: PlaceType): Unit = with(processor) {
         val now = clock.nowMillis()
-        val type = contextFor(placeType, now)
+        // A escolha manual é explícita: horário e rotina nunca a reinterpretam.
+        val type = placeType.toContext()
         val placeId = places.firstOfType(placeType)?.id
         scheduler.cancelChecks()
         switchTo(type, now, 1f, placeId, ContextSource.MANUAL, TransitionReason.MANUAL)

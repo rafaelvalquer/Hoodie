@@ -92,6 +92,7 @@ object VisualDirector {
             UserContextType.WORK -> if (homeOffice) SceneId.HOME else SceneId.OFFICE
             UserContextType.COMMUTING -> commuteScene(mobilityMode, commute, variant)
             UserContextType.LUNCH -> SceneId.RESTAURANT
+            UserContextType.DINING -> SceneId.RESTAURANT
             UserContextType.GYM -> SceneId.GYM
             UserContextType.STUDY -> SceneId.SCHOOL
             UserContextType.SHOPPING -> SceneId.SHOPPING

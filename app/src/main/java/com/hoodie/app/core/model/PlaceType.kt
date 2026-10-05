@@ -18,7 +18,7 @@ enum class PlaceType(val emoji: String, val label: String) {
         WORK -> UserContextType.WORK
         GYM -> UserContextType.GYM
         SCHOOL -> UserContextType.STUDY
-        RESTAURANT -> UserContextType.LUNCH
+        RESTAURANT -> UserContextType.DINING
         MARKET -> UserContextType.SHOPPING
         STORE -> UserContextType.SHOPPING
         FAMILY -> UserContextType.VISITING

@@ -84,6 +84,22 @@ class ContextEngineIntegrationTest {
     }
 
     @Test
+    fun `restaurante por geofence separa almoco de refeicao fora da rotina`() {
+        val restaurantId = runBlocking { g.addPlace(PlaceType.RESTAURANT, -23.62).id }
+        listOf(
+            Triple(12, 0, UserContextType.LUNCH),
+            Triple(12, 45, UserContextType.LUNCH),
+            Triple(16, 0, UserContextType.DINING),
+            Triple(20, 0, UserContextType.DINING),
+        ).forEach { (hour, minute, expected) ->
+            // Simula um novo evento de entrada depois de sair do geofence entre as amostras.
+            step(MONDAY, hour, minute) { g.engine.setManual(UserContextType.HOME) }
+            step(MONDAY, hour, minute) { g.engine.onGeofence(restaurantId, GeofenceTransition.ENTER) }
+            assertHoodieFollows(expected)
+        }
+    }
+
+    @Test
     fun `CT-001 a CT-008 dia de referencia`() {
         step(MONDAY, 7, 0) { g.hoodie.resolve() }
         assertHoodieFollows(UserContextType.HOME) // CT-001

@@ -11,6 +11,8 @@ import com.hoodie.app.engine.dialogue.DialogueEngine
 import com.hoodie.app.engine.dialogue.DialogueInput
 import com.hoodie.app.engine.hoodie.DecisionInput
 import com.hoodie.app.engine.hoodie.HoodieDecisionEngine
+import com.hoodie.app.pixel.scene.SceneId
+import com.hoodie.app.pixel.scene.VisualDirector
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -45,6 +47,7 @@ class PlaceActivityCoverageTest {
     @Test
     fun `cada tipo de local mapeia para o contexto esperado`() {
         assertEquals(UserContextType.STUDY, PlaceType.SCHOOL.toContext())
+        assertEquals(UserContextType.DINING, PlaceType.RESTAURANT.toContext())
         assertEquals(UserContextType.SHOPPING, PlaceType.MARKET.toContext())
         assertEquals(UserContextType.VISITING, PlaceType.FAMILY.toContext())
         assertEquals(UserContextType.LEISURE, PlaceType.LEISURE.toContext())
@@ -60,6 +63,21 @@ class PlaceActivityCoverageTest {
             // Mas não é 100%: o Hoodie mantém vida própria.
             assertTrue("$ctx -> $w", w.size >= 4)
         }
+    }
+
+    @Test
+    fun `DINING prioriza refeicao sem comportamento de passeio`() {
+        val w = weights(UserContextType.DINING)
+        assertEquals(HoodieActivity.EATING, w.maxBy { it.value }.key)
+        assertFalse(HoodieActivity.SIGHTSEEING in w)
+        assertFalse(HoodieActivity.WALKING in w)
+        assertTrue(HoodieActivity.PHONE in w && HoodieActivity.COFFEE in w && HoodieActivity.RESTING in w)
+    }
+
+    @Test
+    fun `LUNCH e DINING compartilham a cena de restaurante`() {
+        assertEquals(SceneId.RESTAURANT, VisualDirector.resolve(HoodieActivity.EATING, UserContextType.LUNCH).scene)
+        assertEquals(SceneId.RESTAURANT, VisualDirector.resolve(HoodieActivity.EATING, UserContextType.DINING).scene)
     }
 
     @Test

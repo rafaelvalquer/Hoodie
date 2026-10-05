@@ -11,8 +11,9 @@ object DailySummaryCalculator {
         fun duration(span: ContextSpan) = (minOf(span.endedAt ?: now, end) - maxOf(span.startedAt, dayStart)).coerceAtLeast(0)
         val totals = contexts.groupBy { it.type }.mapValues { (_, spans) -> spans.sumOf(::duration) }
         fun total(vararg types: UserContextType) = types.sumOf { totals[it] ?: 0L }
-        val known = setOf(UserContextType.HOME, UserContextType.WORK, UserContextType.COMMUTING, UserContextType.LUNCH, UserContextType.GYM, UserContextType.LEISURE)
-        val other = totals.filterKeys { it !in known }.values.sum()
+        val recognized = setOf(UserContextType.HOME, UserContextType.WORK, UserContextType.COMMUTING, UserContextType.LUNCH, UserContextType.DINING, UserContextType.GYM, UserContextType.LEISURE)
+        // DINING remains part of the miscellaneous breakdown until it gets a dedicated summary row.
+        val other = (totals[UserContextType.DINING] ?: 0L) + totals.filterKeys { it !in recognized }.values.sum()
         return DailySummary(
             date = date,
             homeMs = total(UserContextType.HOME),

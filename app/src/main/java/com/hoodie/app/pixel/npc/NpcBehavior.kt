@@ -116,12 +116,26 @@ data class NpcMovement(
 
 /** Escalas permitidas por profundidade (sempre nearest-neighbor). */
 object AmbientScale {
-    const val BACKGROUND = 0.75f
-    const val DEFAULT = 0.80f
-    const val MIDGROUND = 0.85f
-    const val FOREGROUND = 0.90f
+    const val BACKGROUND_FAR = 0.90f
+    const val BACKGROUND = 0.95f
+    const val DEFAULT = 1.00f
+    const val MIDGROUND = 1.00f
+    const val FOREGROUND = 1.00f
     const val FULL = 1.00f
-    val allowed = listOf(BACKGROUND, DEFAULT, MIDGROUND, FOREGROUND, FULL)
+    val allowed = listOf(BACKGROUND_FAR, BACKGROUND, DEFAULT).distinct()
+}
+
+enum class NpcDepth { BACKGROUND_FAR, BACKGROUND, SCENE }
+
+object NpcScalePolicy {
+    fun scale(style: CharacterStyle, depth: NpcDepth): Float {
+        val desired = when (depth) {
+            NpcDepth.BACKGROUND_FAR -> AmbientScale.BACKGROUND_FAR
+            NpcDepth.BACKGROUND -> AmbientScale.BACKGROUND
+            NpcDepth.SCENE -> AmbientScale.FULL
+        }
+        return maxOf(desired, style.minimumAmbientScale)
+    }
 }
 
 object SpeciesMotionProfiles {
