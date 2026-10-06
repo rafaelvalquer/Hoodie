@@ -1,15 +1,72 @@
 {
-  "review_state": "PENDING_HUMAN_REVIEW",
-  "official_goldens_promoted": false,
+  "review_state": "APPROVED",
+  "official_goldens_promoted": true,
   "captures": {
-    "sit": {"day_seed": 0, "time_ms": 2000, "sha256": "5c49d48621b400c4c2a6bd9fc97a12c98b0305503526292ac1b51d7755b21f46"},
-    "eating": {"day_seed": 0, "time_ms": 49750, "sha256": "c9a517971e4b56b97ac5c24c9dcf0bcec30fb0e46674e4ffcbf1c516ed4e4339"},
-    "drinking": {"day_seed": 0, "time_ms": 62750, "sha256": "c0de45db2997eff53272299700bb429f5baf3ae8dd8ec0d5e260a2e7c9360bb1"},
-    "phone": {"day_seed": 0, "time_ms": 2500, "sha256": "2994bfc4ba0c90ba38cf32fa180a66f6a49b1912cc56d9080479c541a20841e8"},
-    "talking": {"day_seed": 0, "time_ms": 76250, "sha256": "0b6a5bb15820e137c26c0afb7716ef557dea5c77c3fea49c0118306a71f31ba6"},
-    "looking": {"day_seed": 0, "time_ms": 16500, "sha256": "64f1a2a82d505c1e1f75be7f895eace381e0fc5caa68c86a65e609999759ff23"},
-    "menu": {"day_seed": 0, "time_ms": 9500, "sha256": "683c1a459a79e24f05e9e3d7b219aa396a772c1e8bd4e9225fefb5dbc57736e5"},
-    "finished": {"day_seed": 0, "time_ms": 472250, "sha256": "4dda68ebcc939216f7004c6c824caaf7bb297b7c055b0ed492bff48d225f7a0f"},
-    "night": {"day_seed": 0, "time_ms": 49750, "sha256": "3e6c24df80dd974b18e7241e45541c51969e5cc4b910ce783926cd60279c972c"}
-  }
+    "sit": {
+      "day_seed": 0,
+      "time_ms": 2000,
+      "sha256": "5c49d48621b400c4c2a6bd9fc97a12c98b0305503526292ac1b51d7755b21f46",
+      "file": "sit.png",
+      "png_sha256": "261deda934eadbc02aec11c0f42afd211e0eac8596000ce723a3ec702cc438a3"
+    },
+    "eating": {
+      "day_seed": 0,
+      "time_ms": 49750,
+      "sha256": "c9a517971e4b56b97ac5c24c9dcf0bcec30fb0e46674e4ffcbf1c516ed4e4339",
+      "file": "eating.png",
+      "png_sha256": "2b5276596088f365836030188321cf5794c6429e8dbccf67f34ebe8d5156a673"
+    },
+    "drinking": {
+      "day_seed": 0,
+      "time_ms": 62750,
+      "sha256": "c0de45db2997eff53272299700bb429f5baf3ae8dd8ec0d5e260a2e7c9360bb1",
+      "file": "drinking.png",
+      "png_sha256": "a84b0d7ff8c8fccf4d01f47b02cfedc7fd360876bf658a47a0a9f8b204432336"
+    },
+    "phone": {
+      "day_seed": 0,
+      "time_ms": 2500,
+      "sha256": "2994bfc4ba0c90ba38cf32fa180a66f6a49b1912cc56d9080479c541a20841e8",
+      "file": "phone.png",
+      "png_sha256": "ea0fef6de4303768edd38d153b95981b0f1151988d6413eadf94846020889a5e"
+    },
+    "talking": {
+      "day_seed": 0,
+      "time_ms": 76250,
+      "sha256": "0b6a5bb15820e137c26c0afb7716ef557dea5c77c3fea49c0118306a71f31ba6",
+      "file": "talking.png",
+      "png_sha256": "17d789e7e189564e8b81f1f6840f1e1867a6ec6e076e7a0dd2eeca9a57f55e60"
+    },
+    "looking": {
+      "day_seed": 0,
+      "time_ms": 16500,
+      "sha256": "64f1a2a82d505c1e1f75be7f895eace381e0fc5caa68c86a65e609999759ff23",
+      "file": "looking.png",
+      "png_sha256": "55ce28ad4922f54c1fcedcfad9646e7d85c38d40a7189f67288764f694159fc8"
+    },
+    "menu": {
+      "day_seed": 0,
+      "time_ms": 9500,
+      "sha256": "683c1a459a79e24f05e9e3d7b219aa396a772c1e8bd4e9225fefb5dbc57736e5",
+      "file": "menu.png",
+      "png_sha256": "3eef5ede367b5d2cc0a45bd17de0f17903ed741d93e06977b19970b2a8b0ea80"
+    },
+    "finished": {
+      "day_seed": 0,
+      "time_ms": 472250,
+      "sha256": "4dda68ebcc939216f7004c6c824caaf7bb297b7c055b0ed492bff48d225f7a0f",
+      "file": "finished.png",
+      "png_sha256": "9cecff9c9dc183fb3c0604e60004877bd00f5aeee12725d20e61cfb471082f94"
+    },
+    "night": {
+      "day_seed": 0,
+      "time_ms": 49750,
+      "sha256": "3e6c24df80dd974b18e7241e45541c51969e5cc4b910ce783926cd60279c972c",
+      "file": "night.png",
+      "png_sha256": "d9a4f30c0c14ea5209bf37d102d29231ca2cb5fed246e91d1e25c93d45c558cd"
+    }
+  },
+  "reviewed_by": "usuário do projeto (aprovação explícita nesta conversa)",
+  "reviewed_at": "2026-10-06T09:00:40-03:00",
+  "approval": "Aprovado"
 }

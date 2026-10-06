@@ -100,6 +100,8 @@ Relatório de render: [transport-scenes-v1-candidate.sha256](npc-art-review/tran
 
 ![Gato convidado sentado comendo na cena de restaurante](npc-art-review/scene-restaurant-v0.png)
 
+Os novos goldens completos do restaurante foram aprovados e promovidos: [galeria, contact sheet, estados da refeição e cena noturna](npc-art-review/v3/restaurant-live/README.md). O manifesto registra os hashes aprovados.
+
 ## Digests da arte NPC
 
 `npc-art-review/npc-art-v2-candidate.sha256` registra os pixels exibidos acima. Os mesmos digests estão em `app/src/test/resources/npc-art-v2.sha256` e são verificados por `NpcArtGoldenTest`.

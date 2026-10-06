@@ -1,6 +1,6 @@
 # Revisão da cena viva do restaurante
 
-Estas capturas são candidatas geradas pelo teste de exportação da cena completa. Ainda não são goldens oficiais. Revisar composição, cadeira e oclusão do gato, mesa/prato/copo, balões de fala e legibilidade de dia/noite. O manifesto só deve sair de `PENDING_HUMAN_REVIEW` após aprovação visual humana.
+Estas capturas da cena completa foram aprovadas em revisão visual humana e promovidas a goldens oficiais em 2026-10-06. O manifesto registra a aprovação, os parâmetros de render e os hashes SHA-256 dos pixels e dos PNGs.
 
 ## Contact sheet dos estados sentados
 
