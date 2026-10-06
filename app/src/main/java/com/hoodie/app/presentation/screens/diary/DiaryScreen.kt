@@ -203,6 +203,7 @@ internal fun DiaryContent(
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
                 val toggleReplay = { if (state.replay.state == ReplayState.PLAYING) actions.pause() else actions.play() }
                 if (journey != null) {
+                    JourneySleepPrelude(diary.activityWindow, zone)
                     if (com.hoodie.app.core.config.HoodieConfig.DIARY_JOURNEY_MAP_V3 && overworld != null) {
                         // [JORNADA] [RELÓGIO]: mesmo replay, mesmo detalhe de parada.
                         DiaryMapModeSelector(state.mapMode, onSelect = actions.setMapMode)

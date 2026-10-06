@@ -9,7 +9,9 @@ import com.hoodie.app.core.model.TimelineActor
 import com.hoodie.app.core.model.TimelineSourceType
 import com.hoodie.app.core.model.UserContextType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import com.hoodie.app.domain.diary.model.DiaryTimelineType
 
 class DailyTimelineBuilderTest {
     @Test fun preservesPersistedEventsAndSortsChronologically() {
@@ -30,5 +32,12 @@ class DailyTimelineBuilderTest {
         )
         val result = DailyTimelineBuilder.build(listOf(context), events, listOf(activity), dayStart = 0, dayEnd = 1_000, now = 1_000)
         assertEquals(listOf("Chegou ao trabalho", "Hoodie começou a trabalhar", "Saiu de trabalho"), result.map { it.title })
+    }
+
+    @Test fun carryOverContextAndSleepingDoNotCreateFakeMidnightEvents() {
+        val home = ContextEventEntity(id = 31, type = UserContextType.HOME, startedAt = -3_600, endedAt = 28_800_000, confidence = 1f, placeId = 1, source = ContextSource.GEOFENCE)
+        val sleeping = HoodieActivityEntity(id = 32, activity = HoodieActivity.SLEEPING, startedAt = -3_000, endedAt = 28_700_000, userContext = UserContextType.HOME)
+        val result = DailyTimelineBuilder.build(listOf(home), emptyList(), listOf(sleeping), 0, 86_400_000, 86_400_000)
+        assertTrue(result.none { it.timestamp == 0L && (it.type == DiaryTimelineType.ARRIVED || it.title.contains("dormir", true)) })
     }
 }

@@ -36,6 +36,8 @@ data class ReplayUiState(
     val dayPeriod: DayPeriod = DayPeriod.DAY,
     val highlightedTimelineItemIds: Set<String> = emptySet(),
     val progress: Float = 0f,
+    /** Animação curta de apresentação; não altera o instante do replay. */
+    val wakeTransition: Boolean = false,
 ) {
     /** PLAYING/PAUSED: o mapa mostra o dia "até agora" (visitado / atual / ainda não visitado). */
     val replaying: Boolean get() = state == ReplayState.PLAYING || state == ReplayState.PAUSED

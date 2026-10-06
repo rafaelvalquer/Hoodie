@@ -4,6 +4,7 @@ import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.TimelineActor
 import com.hoodie.app.core.model.UserContextType
+import com.hoodie.app.domain.daycycle.DailyActivityWindow
 import java.time.LocalDate
 
 data class DailySummary(
@@ -32,6 +33,7 @@ data class DiaryTimelineItem(
     val emoji: String? = null,
     val relatedPlaceId: Long? = null,
     val relatedContext: UserContextType? = null,
+    val endsAt: Long? = null,
 )
 
 data class PlaceVisit(
@@ -131,6 +133,8 @@ data class DailyDiary(
     val mobilityTotals: Map<com.hoodie.app.core.mobility.MovementMode, Long> = emptyMap(),
     /** Cada trecho de deslocamento com modo e horários (já recortado no dia), em ordem. */
     val movements: List<DiaryMovement> = emptyList(),
+    /** Relógio civil para consultas e relógio ativo para Jornada/replay. */
+    val activityWindow: DailyActivityWindow = DailyActivityWindow.EMPTY,
 )
 
 /** Um trecho de deslocamento: só modo e horários — nunca posição ou rota. */

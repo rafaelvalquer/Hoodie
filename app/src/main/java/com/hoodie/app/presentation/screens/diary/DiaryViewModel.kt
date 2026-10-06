@@ -84,11 +84,17 @@ class DiaryViewModel @Inject constructor(
         if (diary.replay.endAt <= diary.replay.startAt) return
         val resume = _state.value.replay.state == ReplayState.PAUSED
         val start = if (resume) _state.value.replay.currentTimestamp ?: diary.replay.startAt else diary.replay.startAt
-        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PLAYING), diary, start, zone), manualChapter = null)
+        val showWake = !resume && start == diary.activityWindow.activeStartAt && diary.activityWindow.sleepBeforeStart != null
+        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PLAYING, wakeTransition = showWake), diary, start, zone), manualChapter = null)
         replayJob?.cancel()
         replayJob = viewModelScope.launch {
             var timestamp = start
             var last = android.os.SystemClock.elapsedRealtime()
+            if (showWake) {
+                delay(com.hoodie.app.core.config.HoodieConfig.WAKE_TRANSITION_REAL_MS)
+                _state.value = _state.value.copy(replay = _state.value.replay.copy(wakeTransition = false))
+                last = android.os.SystemClock.elapsedRealtime()
+            }
             while (timestamp < diary.replay.endAt) {
                 delay(80)
                 val nowElapsed = android.os.SystemClock.elapsedRealtime()
@@ -100,7 +106,7 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
-    fun pause() { replayJob?.cancel(); replayJob = null; _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.PAUSED)) }
+    fun pause() { replayJob?.cancel(); replayJob = null; _state.value = _state.value.copy(replay = _state.value.replay.copy(state = ReplayState.PAUSED, wakeTransition = false)) }
 
     /**
      * Pula o replay para [timestamp] (⏮ / ⏭ / barra temporal). Tocando, continua
@@ -112,7 +118,7 @@ class DiaryViewModel @Inject constructor(
         val wasPlaying = _state.value.replay.state == ReplayState.PLAYING
         stopReplay()
         val at = timestamp.coerceIn(diary.replay.startAt, diary.replay.endAt)
-        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PAUSED), diary, at, zone))
+        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PAUSED, wakeTransition = false), diary, at, zone))
         if (wasPlaying && at < diary.replay.endAt) play()
     }
     fun reset() { stopReplay(); _state.value = _state.value.copy(replay = ReplayUiState(speed = _state.value.replay.speed)) }
@@ -179,6 +185,7 @@ internal fun advanceReplay(timestamp: Long, elapsedMs: Long, speed: ReplaySpeed,
 internal fun replayAt(base: ReplayUiState, diary: com.hoodie.app.domain.diary.model.DailyDiary, timestamp: Long, zone: java.time.ZoneId): ReplayUiState {
     val visual = com.hoodie.app.engine.diary.ReplayHudAssembler.assemble(diary.replay, diary.phoneInsights, timestamp, zone)
     val span = (diary.replay.endAt - diary.replay.startAt).coerceAtLeast(1)
-    return base.withVisual(visual, diary.replay.frameAt(timestamp).highlightedTimelineItemIds)
+    val wakingVisual = if (base.wakeTransition) visual.copy(hoodieActivity = com.hoodie.app.core.model.HoodieActivity.WAKING_UP) else visual
+    return base.withVisual(wakingVisual, diary.replay.frameAt(timestamp).highlightedTimelineItemIds)
         .copy(progress = ((timestamp - diary.replay.startAt).toFloat() / span).coerceIn(0f, 1f))
 }

@@ -13,6 +13,9 @@ import com.hoodie.app.domain.diary.model.DiaryMapData
 import com.hoodie.app.domain.diary.model.DiaryTimelineItem
 import com.hoodie.app.domain.diary.model.DiaryTimelineType
 import com.hoodie.app.domain.diary.model.ReplaySequence
+import com.hoodie.app.domain.daycycle.DailyActivityWindow
+import com.hoodie.app.domain.daycycle.WakeConfidence
+import com.hoodie.app.domain.daycycle.WakeReason
 import com.hoodie.app.engine.MONDAY
 import com.hoodie.app.engine.ZONE
 import com.hoodie.app.engine.at
@@ -60,5 +63,23 @@ class DiaryMobilityMergerTest {
     @Test
     fun `sem deslocamentos o diario nao muda`() {
         assertSame(diary, DiaryMobilityMerger.merge(diary, emptyList(), day0, day1, t(23, 0), ZONE))
+    }
+
+    @Test
+    fun `mobilidade visual respeita dia ativo mas total continua civil`() {
+        val activeStart = t(8, 0)
+        val activeEnd = t(10, 0)
+        val window = DailyActivityWindow(day0, day1, activeStart, activeEnd, null, WakeReason.PHONE_SUSTAINED, WakeConfidence.MEDIUM, false)
+        val base = diary.copy(
+            activityWindow = window,
+            replay = ReplaySequence(activeStart, activeEnd, emptyList(), emptyList()),
+        )
+        val trip = MobilityTrip(session, listOf(seg(10, MovementMode.WALKING, t(7, 0), t(9, 0))))
+
+        val merged = DiaryMobilityMerger.merge(base, listOf(trip), day0, day1, t(23, 0), ZONE)
+
+        assertEquals(2 * 60 * 60_000L, merged.mobilityTotals[MovementMode.WALKING])
+        assertEquals(listOf(activeStart), merged.movements.map { it.startedAt })
+        assertTrue(merged.timeline.all { it.timestamp >= activeStart })
     }
 }

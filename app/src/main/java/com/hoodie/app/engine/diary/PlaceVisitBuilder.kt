@@ -11,11 +11,12 @@ object PlaceVisitBuilder {
     fun build(
         contexts: List<ContextEventEntity>, places: List<PlaceEntity>, dayStart: Long, dayEnd: Long, now: Long,
         timeline: List<DiaryTimelineItem> = emptyList(), activities: List<HoodieActivityEntity> = emptyList(),
+        activeStartAt: Long = dayStart,
     ): List<PlaceVisit> {
         val placeById = places.associateBy { it.id }
         val visits = contexts.asSequence().filter { it.type != com.hoodie.app.core.model.UserContextType.COMMUTING }
             .mapNotNull { event ->
-                val start = maxOf(event.startedAt, dayStart)
+                val start = maxOf(event.startedAt, dayStart, activeStartAt)
                 val end = minOf(event.endedAt ?: now, dayEnd, now)
                 if (end <= start) return@mapNotNull null
                 val place = event.placeId?.let(placeById::get)
@@ -38,7 +39,10 @@ object PlaceVisitBuilder {
                     else -> if (type == PlaceType.OTHER) "Outro lugar" else type.label
                 }
                 val related = timeline.filter { it.timestamp in start..end && (it.relatedPlaceId == event.placeId || it.relatedContext == event.type) }
-                val dominant = activities.filter { it.startedAt < end && it.endedAt > start }
+                val dominant = activities.filter {
+                    it.startedAt < end && it.endedAt > start &&
+                        (it.activity != com.hoodie.app.core.model.HoodieActivity.SLEEPING || it.startedAt >= activeStartAt)
+                }
                     .groupBy { it.activity }
                     .mapValues { (_, spans) -> spans.sumOf { (minOf(it.endedAt, end) - maxOf(it.startedAt, start)).coerceAtLeast(0) } }
                     .maxByOrNull { it.value }?.key

@@ -41,6 +41,15 @@ object HoodieConfig {
     // ── Retenção ──
     const val LOCATION_EVENT_RETENTION_MS = 30 * DAY_MS
 
+    // ── Dia ativo / despertar inferido ──
+    const val WAKE_PHONE_MIN_ACTIVE_MS = 2 * MINUTE_MS
+    const val WAKE_PHONE_WINDOW_MS = 5 * MINUTE_MS
+    const val WAKE_CORROBORATION_WINDOW_MS = 30 * MINUTE_MS
+    const val SLEEP_INACTIVITY_MIN_MS = 3 * HOUR_MS
+    const val SLEEP_ONSET_GRACE_MS = 8 * MINUTE_MS
+    const val WAKE_TRANSITION_REAL_MS = 1_200L
+    const val WAKE_PRESENTATION_MS = MINUTE_MS
+
     // ── Mobilidade (Activity Recognition + geofence) ──
     /** Caminhada só vale como deslocamento depois de sustentada por este tempo. */
     const val WALK_CONFIRM_MS = 2 * MINUTE_MS

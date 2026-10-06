@@ -9,6 +9,7 @@ import com.hoodie.app.domain.diary.model.DiaryActor
 import com.hoodie.app.domain.diary.model.DiaryMovement
 import com.hoodie.app.domain.diary.model.DiaryTimelineItem
 import com.hoodie.app.domain.diary.model.DiaryTimelineType
+import com.hoodie.app.domain.daycycle.DailyActivityWindow
 import java.time.ZoneId
 
 /**
@@ -25,16 +26,22 @@ object DiaryMobilityMerger {
 
     fun merge(diary: DailyDiary, trips: List<MobilityTrip>, dayStart: Long, dayEnd: Long, now: Long, zone: ZoneId): DailyDiary {
         if (trips.isEmpty()) return diary
+        val activeStart = if (diary.activityWindow == DailyActivityWindow.EMPTY) dayStart else diary.activityWindow.activeStartAt
+        val activeEnd = if (diary.activityWindow == DailyActivityWindow.EMPTY) minOf(dayEnd, now) else diary.activityWindow.activeEndAt
         val items = mutableListOf<DiaryTimelineItem>()
         val totals = LinkedHashMap<MovementMode, Long>()
         val movements = mutableListOf<DiaryMovement>()
         trips.forEach { trip ->
             trip.segments.forEach { seg ->
-                val start = maxOf(seg.startedAt, dayStart)
-                val end = minOf(seg.endedAt ?: trip.session.endedAt ?: now, dayEnd, now)
-                if (end <= start || seg.mode == MovementMode.NONE) return@forEach
+                if (seg.mode == MovementMode.NONE) return@forEach
+                val rawEnd = seg.endedAt ?: trip.session.endedAt ?: now
+                val civilStart = maxOf(seg.startedAt, dayStart)
+                val civilEnd = minOf(rawEnd, dayEnd, now)
+                if (civilEnd > civilStart) totals[seg.mode] = (totals[seg.mode] ?: 0L) + civilEnd - civilStart
+                val start = maxOf(civilStart, activeStart)
+                val end = minOf(civilEnd, activeEnd)
+                if (end <= start) return@forEach
                 val ms = end - start
-                totals[seg.mode] = (totals[seg.mode] ?: 0L) + ms
                 movements += DiaryMovement(seg.mode, start, end)
                 items += DiaryTimelineItem(
                     id = "mobility-${seg.id}",
@@ -47,9 +54,16 @@ object DiaryMobilityMerger {
                 )
             }
         }
-        if (items.isEmpty()) return diary
+        if (items.isEmpty()) return diary.copy(mobilityTotals = totals)
+        val mergedTimeline = (diary.timeline + items).filter { it.timestamp in activeStart..activeEnd }.sortedBy { it.timestamp }
+        val replayTimeline = if (diary.replay.startAt == diary.replay.endAt && diary.replay.timeline.isEmpty()) {
+            (diary.replay.timeline + items).sortedBy { it.timestamp }
+        } else {
+            (diary.replay.timeline + items).filter { it.timestamp in diary.replay.startAt..diary.replay.endAt }.sortedBy { it.timestamp }
+        }
         return diary.copy(
-            timeline = (diary.timeline + items).sortedBy { it.timestamp },
+            timeline = mergedTimeline,
+            replay = diary.replay.copy(timeline = replayTimeline),
             mobilityTotals = totals,
             movements = movements.sortedBy { it.startedAt },
         )
