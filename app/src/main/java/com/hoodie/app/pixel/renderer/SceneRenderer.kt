@@ -91,9 +91,11 @@ class SceneRenderer {
         val shopperState = shopper?.visualStateAt(timeMs)
         val restaurant = npcs.firstNotNullOfOrNull { it.restaurantBrain }
         val tableState = restaurant?.tableStateAt(timeMs)
+        val officeDoorFrame = npcs.firstNotNullOfOrNull { it.officeBrain?.officeDoorFrameAt(timeMs)?.takeIf { frame -> frame > 0 } }
         return env.copy(
             shoppingNpc = shopperState ?: env.shoppingNpc,
-            doorFrame = if (shopperState?.doorOpen == true) maxOf(env.doorFrame, SceneEnv.DOOR_OPEN) else env.doorFrame,
+            doorFrame = maxOf(env.doorFrame, officeDoorFrame ?: 0,
+                if (shopperState?.doorOpen == true) SceneEnv.DOOR_OPEN else 0),
             restaurantGuestTable = tableState ?: env.restaurantGuestTable,
         )
     }

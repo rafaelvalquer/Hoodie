@@ -51,6 +51,8 @@ android {
             it.systemProperty("shoppingNpcReviewOutput", project.findProperty("shoppingNpcReviewOutput") ?: rootProject.file("docs/npc-art-review/v3/shopping-live").absolutePath)
             it.systemProperty("approveNpcV3Goldens", project.findProperty("approveNpcV3Goldens") ?: "false")
             it.systemProperty("restaurantLiveReview", project.findProperty("restaurantLiveReview") ?: "false")
+            it.systemProperty("officeNpcReview", project.findProperty("officeNpcReview") ?: "false")
+            it.systemProperty("officeNpcReviewOutput", project.findProperty("officeNpcReviewOutput") ?: rootProject.file("docs/npc-art-review/v3/office-live").absolutePath)
             // Robolectric + JDK 17/21: acesso a internals de FileDescriptor (SQLite nativo).
             it.jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
         }
