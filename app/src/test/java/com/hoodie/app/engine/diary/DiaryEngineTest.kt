@@ -103,7 +103,7 @@ class DiaryEngineTest {
     @Test fun openContextTimelineIsClippedAtSelectedDayEnd() {
         val context = context(UserContextType.HOME, day - 60_000, null)
         val items = DailyTimelineBuilder.build(listOf(context), emptyList(), emptyList(), day, day + 4 * 60_000, day + 4 * 60_000)
-        assertEquals(day, items.first().timestamp)
+        assertTrue("contexto carry-over não gera chegada artificial à meia-noite", items.isEmpty())
         assertTrue(items.none { it.timestamp >= day + 4 * 60_000 })
     }
 

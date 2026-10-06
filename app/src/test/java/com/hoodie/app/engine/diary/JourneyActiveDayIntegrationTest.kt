@@ -2,6 +2,7 @@ package com.hoodie.app.engine.diary
 
 import com.hoodie.app.core.database.ContextEventEntity
 import com.hoodie.app.core.database.HoodieActivityEntity
+import com.hoodie.app.core.database.MobilitySegmentEntity
 import com.hoodie.app.core.database.MobilitySessionEntity
 import com.hoodie.app.core.database.PlaceEntity
 import com.hoodie.app.core.database.TimelineEventEntity
@@ -12,13 +13,15 @@ import com.hoodie.app.core.model.SleepSchedule
 import com.hoodie.app.core.model.TimelineActor
 import com.hoodie.app.core.model.TimelineSourceType
 import com.hoodie.app.core.model.UserContextType
+import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.mobility.MobilitySource
 import com.hoodie.app.core.mobility.MobilityState
-import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.domain.phoneinsights.model.AppSession
+import com.hoodie.app.data.repository.MobilityTrip
 import com.hoodie.app.engine.daycycle.DailyActivityWindowResolver
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import com.hoodie.app.domain.daycycle.WakeConfidence
 import org.junit.Test
 import java.time.LocalDate
@@ -41,10 +44,22 @@ class JourneyActiveDayIntegrationTest {
         val hoodieHome = PlaceEntity(1, "Casa", PlaceType.HOME, "", 100f, 1f, createdAt = day)
         val office = PlaceEntity(2, "Trabalho", PlaceType.WORK, "", 100f, 1f, createdAt = day)
         val diary = DiaryAssembler.build(date, listOf(home, work), rawTimeline, listOf(sleep, workActivity), listOf(hoodieHome, office), day, date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(), at(20), window)
+        val commute = DiaryMobilityMerger.merge(
+            diary,
+            listOf(MobilityTrip(walk, listOf(MobilitySegmentEntity(
+                id = 30, sessionId = walk.id, mode = MovementMode.WALKING,
+                startedAt = at(7, 10), endedAt = at(7, 28), confidence = 1f,
+                confirmed = true, source = MobilitySource.CONFIRMATION,
+            )))),
+            day, date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(), at(20), zone,
+        )
         assertEquals(at(6, 47), diary.activityWindow.activeStartAt)
         assertEquals(WakeConfidence.HIGH, diary.activityWindow.wakeConfidence)
         assertEquals(at(6, 47), diary.replay.startAt)
         assertEquals(at(6, 47), diary.visits.first().arrivalAt)
         assertFalse(diary.timeline.any { it.timestamp == day && (it.title.contains("Chegou") || it.title.contains("dormir")) })
+        assertEquals(at(7, 10), commute.replay.timeline.single { it.type == com.hoodie.app.domain.diary.model.DiaryTimelineType.MOVEMENT }.timestamp)
+        assertTrue(commute.replay.timeline.any { it.timestamp == at(8, 2) && it.title.contains("trabalho", ignoreCase = true) })
+        assertEquals(at(6, 47), commute.replay.startAt)
     }
 }

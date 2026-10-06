@@ -121,7 +121,17 @@ class DiaryViewModel @Inject constructor(
         _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PAUSED, wakeTransition = false), diary, at, zone))
         if (wasPlaying && at < diary.replay.endAt) play()
     }
-    fun reset() { stopReplay(); _state.value = _state.value.copy(replay = ReplayUiState(speed = _state.value.replay.speed)) }
+    fun reset() {
+        stopReplay()
+        val current = _state.value
+        val diary = current.diary
+        val replay = if (diary == null) {
+            ReplayUiState(speed = current.replay.speed)
+        } else {
+            resetReplayAt(diary, current.replay, zone)
+        }
+        _state.value = current.copy(replay = replay, manualChapter = null)
+    }
     /** Troca a visualização sem mexer no replay (hora, velocidade e play/pausa continuam). */
     fun setMapMode(mode: com.hoodie.app.domain.diary.journey.DiaryMapMode) {
         _state.value = _state.value.copy(mapMode = mode)
@@ -189,3 +199,15 @@ internal fun replayAt(base: ReplayUiState, diary: com.hoodie.app.domain.diary.mo
     return base.withVisual(wakingVisual, diary.replay.frameAt(timestamp).highlightedTimelineItemIds)
         .copy(progress = ((timestamp - diary.replay.startAt).toFloat() / span).coerceIn(0f, 1f))
 }
+
+/** Reset posiciona a interface no primeiro instante da Jornada sem iniciar a reprodução. */
+internal fun resetReplayAt(
+    diary: com.hoodie.app.domain.diary.model.DailyDiary,
+    current: ReplayUiState,
+    zone: java.time.ZoneId,
+): ReplayUiState = replayAt(
+    current.copy(state = ReplayState.IDLE, wakeTransition = false),
+    diary,
+    diary.replay.startAt,
+    zone,
+)

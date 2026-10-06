@@ -14,6 +14,7 @@ import com.hoodie.app.engine.diary.DiaryRegressionScenario.YOUTUBE
 import com.hoodie.app.pixel.diary.DiaryMapLayoutEngine
 import com.hoodie.app.pixel.diary.DiaryMapRenderer
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -78,5 +79,33 @@ class DiaryReplayRegressionTest {
         assertEquals(DayPeriod.NIGHT, finished.dayPeriod)
         assertEquals(DayPeriod.NIGHT, diaryMapScene(layout, finished, 0).period)
         assertEquals(1f, finished.progress)
+    }
+
+    @Test
+    fun `reset returns replay to the active journey start`() {
+        val reset = resetReplayAt(
+            diary,
+            ReplayUiState(state = ReplayState.FINISHED, currentTimestamp = at(22), wakeTransition = true),
+            zone,
+        )
+
+        assertEquals(ReplayState.IDLE, reset.state)
+        assertEquals(diary.replay.startAt, reset.currentTimestamp)
+        assertEquals(0f, reset.progress)
+        assertFalse(reset.wakeTransition)
+    }
+
+    @Test
+    fun `wake transition changes only the presentation while replay time stays fixed`() {
+        val timestamp = at(7, 10)
+        val waking = replayAt(
+            ReplayUiState(state = ReplayState.PLAYING, wakeTransition = true),
+            diary,
+            timestamp,
+            zone,
+        )
+
+        assertEquals(timestamp, waking.currentTimestamp)
+        assertEquals(HoodieActivity.WAKING_UP, waking.currentHoodieActivity)
     }
 }
