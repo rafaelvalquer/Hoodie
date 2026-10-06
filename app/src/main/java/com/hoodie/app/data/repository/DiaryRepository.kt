@@ -8,6 +8,7 @@ import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.startOfDay
 import com.hoodie.app.domain.diary.model.DailyDiary
+import com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights
 import com.hoodie.app.engine.diary.DiaryAssembler
 import com.hoodie.app.engine.diary.DiaryDigitalMerger
 import com.hoodie.app.engine.diary.DiaryMobilityMerger
@@ -49,23 +50,27 @@ class DiaryRepository @Inject constructor(
         val hoodieActivities: List<com.hoodie.app.core.database.HoodieActivityEntity>
         val knownPlaces: List<com.hoodie.app.core.database.PlaceEntity>
         val mobilityTrips: List<MobilityTrip>
+        val phone: DailyPhoneInsights?
         coroutineScope {
             val contextTask = async { contexts.overlapping(from, to) }
             val timelineTask = async { timeline.range(from, to) }
             val activityTask = async { activities.overlapping(from, to) }
             val placesTask = async { places.getAll() }
             val tripsTask = async { try { mobility?.tripsBetween(from, to).orEmpty() } catch (cancelled: CancellationException) { throw cancelled } catch (_: Exception) { emptyList() } }
+            val phoneTask = async {
+                if (deviceUsage != null && (digitalSettings?.analysisEnabled == true || digitalSettings?.showInDiary == true)) {
+                    try { deviceUsage.insightsFor(date) }
+                    catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) { null }
+                } else null
+            }
             contextEvents = contextTask.await()
             timelineEvents = timelineTask.await()
             hoodieActivities = activityTask.await()
             knownPlaces = placesTask.await()
             mobilityTrips = tripsTask.await()
+            phone = phoneTask.await()
         }
-        val phone = if (deviceUsage != null && (digitalSettings?.analysisEnabled == true || digitalSettings?.showInDiary == true)) {
-            try { deviceUsage.insightsFor(date) }
-            catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { null }
-        } else null
         val sessions = try { mobilityTrips.map { it.session } } catch (_: Exception) { emptyList() }
         val activityWindow = DailyActivityWindowResolver.resolve(
             date = date, civilStartAt = from, civilEndAt = to, now = now, zone = zone,
