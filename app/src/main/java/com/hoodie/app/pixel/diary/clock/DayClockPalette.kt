@@ -1,30 +1,62 @@
 package com.hoodie.app.pixel.diary.clock
 
-import com.hoodie.app.domain.diary.journey.BiomeType
+import com.hoodie.app.core.mobility.MovementMode
+import com.hoodie.app.core.time.DayPeriod
+import com.hoodie.app.domain.diary.clock.ClockCategory
+import com.hoodie.app.pixel.diary.journey.JourneyPalette
 import com.hoodie.app.pixel.diary.overworld.OverworldPalette
+import com.hoodie.app.pixel.sprite.HoodiePalette
 
-/** Cores do relógio do dia: a mesma família do overworld, uma cor por tipo de lugar. */
+/**
+ * Cores do Relógio do Dia 2.0. Paleta fechada e SEM cores novas: a base vem da
+ * paleta de 17 cores do Hoodie; as categorias usam as cores dos biomas da Jornada,
+ * os deslocamentos as cores de trilha da Jornada e o céu as cores de período da
+ * iluminação. `DayClockPaletteTest` garante as duas coisas.
+ */
 object DayClockPalette {
-    const val PLAZA = 0xFFD8C39A.toInt()
-    const val PLAZA_DARK = 0xFFB9A27A.toInt()
-    const val RING = OverworldPalette.STONE
-    const val RING_DARK = OverworldPalette.STONE_DARK
-    const val RING_LIGHT = OverworldPalette.STONE_LIGHT
-    const val HOUR = OverworldPalette.OUTLINE
-    const val POINTER = OverworldPalette.GOLD
-    const val GNOMON = OverworldPalette.WOOD_DARK
+    const val OUTLINE = HoodiePalette.OUTLINE
+    const val DEEP = HoodiePalette.EYE
+    const val TRACK = HoodiePalette.NOSE
+    const val TRACK_MARK = HoodiePalette.HOOD_DARK
+    const val PLATE = HoodiePalette.HOOD_LIGHT
+    const val PLATE_RING = HoodiePalette.HOOD
+    const val PLATE_EDGE = HoodiePalette.HOOD_SHADE
+    const val TICK = HoodiePalette.HOOD_SHADE
+    const val TICK_MAJOR = HoodiePalette.WHITE
+    const val NOW = HoodiePalette.WHITE
+    const val STAR = HoodiePalette.WHITE
+    const val STAR_DIM = HoodiePalette.STRING
+    const val DIGIT = HoodiePalette.WHITE
+    const val ICON_LIGHT = HoodiePalette.WHITE
+    const val SELECTION = OverworldPalette.GOLD
+    const val GLOW = OverworldPalette.GOLD
+    const val GLOW_DIM = OverworldPalette.GOLD_DARK
+    /** Leito dos deslocamentos (a trilha de terra da Jornada). */
+    const val PATH = OverworldPalette.DIRT
+    const val PATH_DARK = OverworldPalette.DIRT_DARK
 
-    fun biome(b: BiomeType?): Int = when (b) {
-        BiomeType.HOUSE -> 0xFFE05D5D.toInt()
-        BiomeType.OFFICE_CASTLE -> 0xFF5B86D8.toInt()
-        BiomeType.TEMPLE -> 0xFFF0A13E.toInt()
-        BiomeType.TAVERN -> 0xFFB07848.toInt()
-        BiomeType.CAFE -> 0xFFE58AAE.toInt()
-        BiomeType.WIZARD_TOWER -> 0xFF8E6BC4.toInt()
-        BiomeType.MARKET -> 0xFF3FC9A6.toInt()
-        BiomeType.PARK -> 0xFF4FB676.toInt()
-        BiomeType.FAMILY_LODGE -> 0xFFF2CF5B.toInt()
-        BiomeType.MILESTONE -> OverworldPalette.STONE_LIGHT
-        BiomeType.CAMP, null -> 0xFFC9B79A.toInt()
+    data class Fill(val fill: Int, val edge: Int)
+
+    fun category(c: ClockCategory): Fill = when (c) {
+        ClockCategory.HOME -> Fill(HoodiePalette.BACKPACK, HoodiePalette.BACKPACK_DARK)
+        ClockCategory.WORK -> Fill(HoodiePalette.FUR, HoodiePalette.INNER_EAR)
+        ClockCategory.COMMUTE -> Fill(PATH, PATH_DARK)
+        ClockCategory.MEAL -> Fill(HoodiePalette.BLUSH, HoodiePalette.TONGUE)
+        ClockCategory.GYM -> Fill(OverworldPalette.PURPLE, OverworldPalette.PURPLE_DARK)
+        ClockCategory.LEISURE -> Fill(OverworldPalette.GRASS, OverworldPalette.GRASS_TUFT)
+        ClockCategory.OTHER -> Fill(OverworldPalette.STONE_LIGHT, OverworldPalette.STONE)
+    }
+
+    /** Cor da trilha por meio — a mesma da Jornada. */
+    fun mode(m: MovementMode?): Int = OverworldPalette.trail(m).mark
+
+    fun sky(p: DayPeriod): Int = JourneyPalette.sky(p).first
+
+    val ALL: Set<Int> = buildSet {
+        addAll(listOf(OUTLINE, DEEP, TRACK, TRACK_MARK, PLATE, PLATE_RING, PLATE_EDGE, TICK, TICK_MAJOR, NOW, STAR, STAR_DIM, DIGIT, ICON_LIGHT, SELECTION, GLOW, GLOW_DIM, PATH, PATH_DARK))
+        ClockCategory.entries.forEach { add(category(it).fill); add(category(it).edge) }
+        (MovementMode.entries + listOf(null)).forEach { add(mode(it)) }
+        DayPeriod.entries.forEach { add(sky(it)) }
+        addAll(HoodiePalette.ALL)
     }
 }

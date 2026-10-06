@@ -461,4 +461,30 @@
     <string name="clock_description">Relógio do dia com %1$d permanências e %2$d deslocamentos</string>
     <string name="quick_stops_title">Paradas rápidas</string>
     <string name="journey_details_note">A jornada mostra a ordem dos lugares, não o caminho real.</string>
+    <!-- Relógio do Dia 2.0 -->
+    <string name="clock2_title">Relógio do dia</string>
+    <string name="clock2_label_now">AGORA</string>
+    <string name="clock2_label_replay">REPLAY</string>
+    <string name="clock2_label_day">O DIA</string>
+    <string name="clock2_label_stop">PARADA %1$d DE %2$d</string>
+    <string name="clock2_label_move">DESLOCAMENTO</string>
+    <string name="clock2_label_unknown">SEM REGISTRO</string>
+    <string name="clock2_unknown">Sem registro</string>
+    <string name="clock2_return">Retorno #%1$d</string>
+    <string name="clock2_move_to">até %1$s</string>
+    <string name="clock2_move_generic">Deslocamento</string>
+    <string name="clock2_since">há %1$s</string>
+    <string name="clock2_most">mais tempo</string>
+    <string name="clock2_back_now">AGORA</string>
+    <string name="clock2_back_now_description">Voltar ao momento atual</string>
+    <string name="clock2_time_by_place">Tempo por lugar</string>
+    <string name="clock2_where">Para onde o Hoodie foi</string>
+    <string name="clock2_empty">Nada registrado neste dia ainda.</string>
+    <string name="clock2_description">Relógio do dia: %1$s</string>
+    <string name="clock2_description_part">%1$s em %2$s</string>
+    <string name="clock2_description_now">agora em %1$s há %2$s</string>
+    <string name="clock2_item_stay">Hoodie, das %1$s às %2$s, em %3$s, %4$s, %5$s</string>
+    <string name="clock2_item_move">Hoodie, das %1$s às %2$s, %3$s, %4$s</string>
+    <string name="clock2_item_unknown">Das %1$s às %2$s, sem registro</string>
+    <string name="clock2_bar_description">Tempo por lugar: %1$s</string>
 </resources>

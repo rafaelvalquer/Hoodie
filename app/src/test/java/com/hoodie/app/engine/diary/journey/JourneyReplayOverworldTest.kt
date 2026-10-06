@@ -65,10 +65,10 @@ class JourneyReplayOverworldTest {
     }
 
     @Test fun sameTimestampMeansTheSamePlaceInBothViews() {
-        val clock = DayClockAssembler.build(data, zone)
-        val clockDay = DayClockAssembler.day(JourneyV3Fixtures.DATE, zone)
+        val clock = DayClockLegacyAssembler.build(data, zone)
+        val clockDay = DayClockLegacyAssembler.day(JourneyV3Fixtures.DATE, zone)
         listOf(at(6, 15), at(9, 20), at(13, 30), at(15, 45), at(19, 10), at(22)).forEach { t ->
-            val arc = DayClockAssembler.hit(clock, clockDay.deg(t), tickToleranceDeg = 0f) as? ClockArc
+            val arc = DayClockLegacyAssembler.hit(clock, clockDay.deg(t), tickToleranceDeg = 0f) as? ClockArc
             assertNotNull("arco às $t", arc)
             assertEquals(ClockArc.Kind.STAY, arc!!.kind)
             val chapter = JourneyChapterPlanner.chapterOf(t, JourneyChapterPlanner.windows(JourneyV3Fixtures.DATE, zone))

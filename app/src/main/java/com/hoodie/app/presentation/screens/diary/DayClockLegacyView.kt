@@ -43,12 +43,12 @@ import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.domain.diary.journey.ClockArc
 import com.hoodie.app.domain.diary.journey.ClockTick
-import com.hoodie.app.domain.diary.journey.DayClockData
+import com.hoodie.app.domain.diary.journey.DayClockLegacyData
 import com.hoodie.app.domain.diary.model.JourneyMapData
-import com.hoodie.app.engine.diary.journey.DayClockAssembler
+import com.hoodie.app.engine.diary.journey.DayClockLegacyAssembler
 import com.hoodie.app.pixel.diary.MapPoint
-import com.hoodie.app.pixel.diary.clock.DayClockRenderer
-import com.hoodie.app.pixel.diary.clock.DayClockScene
+import com.hoodie.app.pixel.diary.clock.DayClockLegacyRenderer
+import com.hoodie.app.pixel.diary.clock.DayClockLegacyScene
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
@@ -62,8 +62,8 @@ import kotlin.math.floor
  * da Jornada (ponteiro + Hoodie no anel, futuro dessaturado).
  */
 @Composable
-fun DayClockView(
-    data: DayClockData,
+fun DayClockLegacyView(
+    data: DayClockLegacyData,
     journey: JourneyMapData,
     replay: ReplayUiState,
     zone: ZoneId,
@@ -73,43 +73,43 @@ fun DayClockView(
     onTick: (ClockTick) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val day = remember(data) { DayClockAssembler.Day(data.dayStart, data.dayEnd) }
+    val day = remember(data) { DayClockLegacyAssembler.Day(data.dayStart, data.dayEnd) }
     val replayDeg = replay.currentTimestamp?.takeIf { replay.replaying || replay.state == ReplayState.FINISHED }?.let { day.deg(it) }
     val time = rememberDiaryMapClock(activeReplay = replay.state == ReplayState.PLAYING)
-    val static = remember(data, seed) { DayClockRenderer.staticLayer(data, seed) }
-    val buffer = remember { PixelBuffer(DayClockRenderer.SIZE, DayClockRenderer.SIZE) }
-    val bitmap = remember { Bitmap.createBitmap(DayClockRenderer.SIZE, DayClockRenderer.SIZE, Bitmap.Config.ARGB_8888) }
+    val static = remember(data, seed) { DayClockLegacyRenderer.staticLayer(data, seed) }
+    val buffer = remember { PixelBuffer(DayClockLegacyRenderer.SIZE, DayClockLegacyRenderer.SIZE) }
+    val bitmap = remember { Bitmap.createBitmap(DayClockLegacyRenderer.SIZE, DayClockLegacyRenderer.SIZE, Bitmap.Config.ARGB_8888) }
     val selectedArc = data.arcs.firstOrNull { it.stopId == selectedStopId }?.id
     val summary = stringResource(R.string.clock_description, data.arcs.count { it.kind == ClockArc.Kind.STAY }, data.arcs.count { it.kind == ClockArc.Kind.LEG })
-    PixelPanel(modifier.fillMaxWidth().testTag("day_clock")) {
+    PixelPanel(modifier.fillMaxWidth().testTag("day_clock_legacy")) {
         SectionLabel(stringResource(R.string.clock_title))
         BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 8.dp)) {
             val density = LocalDensity.current
             val widthPx = with(density) { maxWidth.toPx() }
-            val fit = widthPx / DayClockRenderer.SIZE
+            val fit = widthPx / DayClockLegacyRenderer.SIZE
             val scale = if (fit >= 1f) floor(fit) else fit
-            val offsetX = (widthPx - DayClockRenderer.SIZE * scale) / 2f
+            val offsetX = (widthPx - DayClockLegacyRenderer.SIZE * scale) / 2f
             fun toScreen(p: MapPoint) = IntOffset((offsetX + p.x * scale).toInt(), (p.y * scale).toInt())
-            Box(Modifier.fillMaxWidth().aspectRatio(widthPx / (DayClockRenderer.SIZE * scale)).semantics { contentDescription = summary }) {
+            Box(Modifier.fillMaxWidth().aspectRatio(widthPx / (DayClockLegacyRenderer.SIZE * scale)).semantics { contentDescription = summary }) {
                 Canvas(
-                    Modifier.fillMaxSize().testTag("day_clock_canvas").pointerInput(data) {
+                    Modifier.fillMaxSize().testTag("day_clock_legacy_canvas").pointerInput(data) {
                         detectTapGestures { o ->
                             val p = MapPoint((o.x - offsetX) / scale, o.y / scale)
-                            val r = DayClockRenderer.radiusAt(p)
-                            if (r < DayClockRenderer.R_INNER - 8 || r > DayClockRenderer.R_OUTER + 12) return@detectTapGestures
-                            when (val hit = DayClockAssembler.hit(data, DayClockRenderer.degAt(p))) {
+                            val r = DayClockLegacyRenderer.radiusAt(p)
+                            if (r < DayClockLegacyRenderer.R_INNER - 8 || r > DayClockLegacyRenderer.R_OUTER + 12) return@detectTapGestures
+                            when (val hit = DayClockLegacyAssembler.hit(data, DayClockLegacyRenderer.degAt(p))) {
                                 is ClockTick -> if (hit.grouped) onTick(hit) else onStop(hit.stopIds.first())
                                 is ClockArc -> hit.stopId?.let(onStop)
                             }
                         }
                     },
                 ) {
-                    DayClockRenderer.render(DayClockScene(data, replayDeg, selectedArc, time, seed), static, buffer)
+                    DayClockLegacyRenderer.render(DayClockLegacyScene(data, replayDeg, selectedArc, time, seed), static, buffer)
                     bitmap.setPixels(buffer.pixels, 0, buffer.width, 0, 0, buffer.width, buffer.height)
                     drawImage(
                         bitmap.asImageBitmap(),
                         dstOffset = IntOffset(offsetX.toInt(), 0),
-                        dstSize = IntSize((DayClockRenderer.SIZE * scale).toInt(), (DayClockRenderer.SIZE * scale).toInt()),
+                        dstSize = IntSize((DayClockLegacyRenderer.SIZE * scale).toInt(), (DayClockLegacyRenderer.SIZE * scale).toInt()),
                         filterQuality = FilterQuality.None,
                     )
                 }
@@ -117,16 +117,16 @@ fun DayClockView(
                 val date = java.time.Instant.ofEpochMilli(data.dayStart).atZone(zone).toLocalDate()
                 listOf(0, 6, 12, 18).forEach { h ->
                     val at = date.atTime(h, 0).atZone(zone).toInstant().toEpochMilli()
-                    CenteredLabel(toScreen(DayClockRenderer.point(day.deg(at), DayClockRenderer.R_OUTER + 13f)), "%02d".format(h), 6)
+                    CenteredLabel(toScreen(DayClockLegacyRenderer.point(day.deg(at), DayClockLegacyRenderer.R_OUTER + 13f)), "%02d".format(h), 6)
                 }
                 // Rótulos dos arcos longos (raio interno).
-                data.labels.forEach { l -> CenteredLabel(toScreen(DayClockRenderer.point(l.deg, 62f)), l.text, 5) }
+                data.labels.forEach { l -> CenteredLabel(toScreen(DayClockLegacyRenderer.point(l.deg, 62f)), l.text, 5) }
                 // Centro: lugar atual (ou "indo para X"), hora e "parada k de n".
-                ClockCenter(journey, replay, zone, toScreen(MapPoint(DayClockRenderer.CX.toFloat(), DayClockRenderer.CY + 26f)))
+                ClockCenter(journey, replay, zone, toScreen(MapPoint(DayClockLegacyRenderer.CX.toFloat(), DayClockLegacyRenderer.CY + 26f)))
                 // Nós de acessibilidade/toque na ordem do dia: arcos de permanência e tiques.
                 val items = data.arcs.filter { it.kind == ClockArc.Kind.STAY }.map { it.midDeg to (it as Any) } + data.ticks.map { it.deg to (it as Any) }
                 items.sortedBy { it.first }.forEach { (deg, item) ->
-                    val c = toScreen(DayClockRenderer.point(deg, DayClockRenderer.R_MID.toFloat()))
+                    val c = toScreen(DayClockLegacyRenderer.point(deg, DayClockLegacyRenderer.R_MID.toFloat()))
                     val description = when (item) {
                         is ClockArc -> stringResource(
                             R.string.clock_arc_description, journey.node(item.stopId)?.placeName.orEmpty(),

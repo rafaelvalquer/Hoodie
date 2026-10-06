@@ -28,6 +28,16 @@ Os PNGs são gravados em `/sdcard/Android/data/com.hoodie.app/files/goldens/scre
 
 Ambiente de referência atual: Hoodie_API34, Google APIs Android 14/API 34 r14 x86_64, resolução física 1080×2400, densidade física 420, GPU SwiftShader e renderer HWUI skiagl. O CI usa a mesma API, resolução, densidade e renderer. O enquadramento e a escala de fonte são definidos pelo teste. Barras do sistema ficam ocultas.
 
+## Relógio do Dia 2.0
+
+O mostrador tem regressão própria na JVM: `DayClockGoldenTest` renderiza 8 estados (dia vazio, manhã com uma parada,
+dia completo, parada antiga selecionada, deslocamento selecionado, dia passado, muitos trechos curtos e dia de horário
+de verão) e compara SHA-256 com `app/src/test/resources/day-clock-v1.sha256`. PNGs em `app/build/pixel-preview/day-clock/`;
+regravar com `DAY_CLOCK_GOLDEN_RECORD=1` só depois de inspecionar. O mesmo teste garante que todo pixel pertence à
+`DayClockPalette`. Na tela, `DayClockPanelUiTest` cobre toque no anel/lista, AGORA, troca JORNADA/RELÓGIO e fonte 1,3×
+sem estourar o centro; `exportReviewScreenshots` grava manhã, tarde, noite e fonte 1,3× em
+`files/day-clock-review/` do aparelho para revisão. Rodar com `am instrument` (não `connectedDebugAndroidTest`).
+
 ## Estado atual
 
 As 222 referências revisadas continuam em `app/src/androidTest/assets/goldens/screens`. O manifesto `docs/golden-reference-manifest.json` registra dimensões, SHA-256 e ambiente. As capturas foram revistas e aceitas quando gravadas; isso não garante que correspondam à UI atual.

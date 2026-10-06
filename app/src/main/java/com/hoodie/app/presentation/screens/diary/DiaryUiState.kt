@@ -70,4 +70,8 @@ data class DiaryUiState(
     val mapMode: com.hoodie.app.domain.diary.journey.DiaryMapMode = com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY,
     /** Capítulo que o usuário abriu (limpo ao trocar de data ou dar play). */
     val manualChapter: com.hoodie.app.domain.diary.journey.DayChapter? = null,
+    /** Relógio do Dia 2.0: montado junto com o Diário (Default) e a cada minuto hoje. */
+    val dayClock: com.hoodie.app.domain.diary.clock.DayClockData? = null,
+    /** Trecho escolhido no mostrador ou na lista (null = acompanha o agora). */
+    val clockSelectedId: String? = null,
 )

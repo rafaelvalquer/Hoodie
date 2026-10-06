@@ -3,7 +3,7 @@ package com.hoodie.app.domain.diary.journey
 import com.hoodie.app.core.mobility.MovementMode
 
 /** Relógio do dia: anel de 24 h com 00 h no topo, sentido horário. Ângulos em graus. */
-data class DayClockData(
+data class DayClockLegacyData(
     /** Permanências (grossas) e deslocamentos (finos). */
     val arcs: List<ClockArc>,
     /** Paradas curtas (individuais ou agrupadas "×k"). */
@@ -18,7 +18,7 @@ data class DayClockData(
     val isEmpty: Boolean get() = arcs.isEmpty() && ticks.isEmpty()
 
     companion object {
-        val EMPTY = DayClockData(emptyList(), emptyList(), emptyList())
+        val EMPTY = DayClockLegacyData(emptyList(), emptyList(), emptyList())
     }
 }
 

@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.domain.diary.journey.DayChapter
 import com.hoodie.app.domain.diary.model.JourneyNode
-import com.hoodie.app.engine.diary.journey.DayClockAssembler
+import com.hoodie.app.engine.diary.journey.DayClockLegacyAssembler
 import com.hoodie.app.engine.diary.journey.JourneyOverworldModel
 import com.hoodie.app.engine.diary.journey.JourneyPlanConfig
 import com.hoodie.app.engine.diary.journey.SyntheticJourneyDays
@@ -50,7 +50,7 @@ fun DiaryJourneyLab(zone: ZoneId, date: LocalDate, modifier: Modifier = Modifier
     }
     val config = JourneyPlanConfig(forceChapters = when (force) { 1 -> false; 2 -> true; else -> null })
     val model = remember(data, force) { JourneyOverworldModel.build(data, zone, config = config) }
-    val clock = remember(data) { DayClockAssembler.build(data, zone) }
+    val clock = remember(data) { DayClockLegacyAssembler.build(data, zone) }
 
     LaunchedEffect(replay.state, replay.speed, data) {
         if (replay.state != ReplayState.PLAYING) return@LaunchedEffect
@@ -95,7 +95,8 @@ fun DiaryJourneyLab(zone: ZoneId, date: LocalDate, modifier: Modifier = Modifier
                 else model.single?.let { JourneyOverworldMapView(model, it, replay, zone, selected, onStop) }
             }
             Column(Modifier.weight(1f)) {
-                DayClockView(clock, data, replay, zone, model.seed, selected, onStop = { selected = it }, onTick = { t -> quick = t.stopIds.mapNotNull { data.node(it) } })
+                SectionLabel("RELÓGIO LEGADO")
+                DayClockLegacyView(clock, data, replay, zone, model.seed, selected, onStop = { selected = it }, onTick = { t -> quick = t.stopIds.mapNotNull { data.node(it) } })
             }
         }
     }

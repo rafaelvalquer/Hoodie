@@ -209,6 +209,34 @@ JourneyMapData ─► DayClockAssembler ─► DayClockData ─► DayClockRende
 * **Golden**: `JourneyV3GoldenTest` e `DayClockGoldenTest` exportam para `app/build/pixel-preview/journey-v3/` e
   comparam com `journey-map-v3.sha256` / `day-clock-v3.sha256` (regravar com `JOURNEY_GOLDEN_RECORD=1`).
 
+## Relógio do Dia 2.0
+
+A aba **[RELÓGIO]** do Diário mostra o dia num mostrador pixel art de 24 horas: onde a pessoa esteve, como se
+deslocou e o que o Hoodie fez. Progresso e decisões em [docs/day-clock-progress.md](docs/day-clock-progress.md).
+
+```
+DailyDiary (+ movements, contexts, activities) ─► DayClockAssembler ─► DayClockData (Stay / Move / Unknown, minutos do dia)
+DayClockData + "agora" (ao vivo ou replay) + seleção ─► DayClockRenderer (104×104) ─► DayClockPanel (escala inteira, sem filtro)
+```
+
+* **Regras**: recorte na meia-noite local e no "agora"; visitas repetidas separadas (`journey-i`, os mesmos ids da
+  Jornada); deslocamentos com o meio dominante da Jornada; buracos sem dado viram *Unknown*, nunca suposição; dias de
+  23/25 h pelo fuso. O anel usa as categorias dos cards "Seu dia" (Casa, Trabalho, Transporte, Almoço, Academia,
+  Lazer, Outros), pelo contexto dominante de cada visita.
+* **Camadas**: estática (placa com anéis, anel de atividades com borda interna escura, trilha pontilhada a pé /
+  tracejada de veículo na cor da Jornada, futuro em xadrez, separadores, seleção dourada, marcações de hora, céu por
+  período com dithering e estrelas, linha do agora, plaquinhas 00/06/12/18 com dígitos 3×5, ícones 7×7) e dinâmica
+  (Hoodie mini 9×9/11×11 com respiração, piscada, andar e veículo, brilho pulsante).
+* **UI**: toque no anel seleciona o trecho (centro volta ao agora; futuro é ignorado), centro em Press Start 2P,
+  barra "Tempo por lugar" e lista "Para onde o Hoodie foi" com a mesma seleção; no replay o "agora" é o tempo do replay.
+* **Desempenho**: raio e minuto de cada pixel em tabelas pré-calculadas; camada estática refeita fora da main thread
+  só quando muda o minuto, a seleção ou o dia; ~8 FPS só com a tela visível.
+* **Paleta**: fechada e sem cores novas (17 cores do Hoodie + biomas/trilhas da Jornada + céu por período) — testada.
+* **Flag**: `HoodieConfig.DIARY_DAY_CLOCK_V2`; o relógio legado continua no Diary Lab, que também tem o
+  "RELÓGIO DO DIA 2.0 · LAB" (dias sintéticos e controle do "agora").
+* **Golden**: `DayClockGoldenTest` exporta 8 estados para `app/build/pixel-preview/day-clock/` e compara com
+  `day-clock-v1.sha256` (regravar com `DAY_CLOCK_GOLDEN_RECORD=1` depois de revisar os PNGs).
+
 ## Diário Digital (Phone Insights)
 
 O Diário passa a contar três camadas do mesmo dia: **vida real** (contextos e lugares) + **vida digital** (celular) + **vida do Hoodie**.

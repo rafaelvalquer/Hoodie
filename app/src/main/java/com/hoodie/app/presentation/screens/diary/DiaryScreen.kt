@@ -114,6 +114,8 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             seek = vm::seekTo,
             setMapMode = vm::setMapMode,
             openChapter = vm::openChapter,
+            selectClockSegment = vm::selectClockSegment,
+            refreshClock = vm::refreshClock,
         ),
     )
 }
@@ -129,6 +131,8 @@ internal data class DiaryActions(
     val seek: (Long) -> Unit = {},
     val setMapMode: (com.hoodie.app.domain.diary.journey.DiaryMapMode) -> Unit = {},
     val openChapter: (com.hoodie.app.domain.diary.journey.DayChapter?) -> Unit = {},
+    val selectClockSegment: (String?) -> Unit = {},
+    val refreshClock: () -> Unit = {},
 )
 
 @Composable
@@ -154,7 +158,15 @@ internal fun DiaryContent(
     val overworld = remember(journey, protectedKey) {
         journey?.let { com.hoodie.app.engine.diary.journey.JourneyOverworldModel.build(it.data, zone, protectedKey.orEmpty()) }
     }
-    val clock = remember(journey) { journey?.let { com.hoodie.app.engine.diary.journey.DayClockAssembler.build(it.data, zone) } }
+    val clock = remember(journey) {
+        if (com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2) null
+        else journey?.let { com.hoodie.app.engine.diary.journey.DayClockLegacyAssembler.build(it.data, zone) }
+    }
+    // Relógio do Dia 2.0: vem do ViewModel; fixtures sem ViewModel montam aqui.
+    val dayClock = state.dayClock ?: remember(state.diary) {
+        state.diary?.takeIf { com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2 }
+            ?.let { com.hoodie.app.engine.diary.DayClockAssembler.build(it, state.selectedDate, zone, nowMillis) }
+    }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("diary_scroll").padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -211,8 +223,14 @@ internal fun DiaryContent(
                                     Text(stringResource(R.string.journey_v3_footer), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
                                 }
                             }
-                            com.hoodie.app.domain.diary.journey.DiaryMapMode.CLOCK -> clock?.let { data ->
-                                DayClockView(
+                            com.hoodie.app.domain.diary.journey.DiaryMapMode.CLOCK -> if (dayClock != null) {
+                                com.hoodie.app.presentation.screens.diary.clock.DayClockPanel(
+                                    com.hoodie.app.presentation.screens.diary.clock.DayClockUiState.of(dayClock, state.clockSelectedId, state.replay),
+                                    onSelect = actions.selectClockSegment,
+                                    onMinuteTick = actions.refreshClock,
+                                )
+                            } else clock?.let { data ->
+                                DayClockLegacyView(
                                     data, journey.data, state.replay, zone, overworld.seed, selectedJourneyNodeId,
                                     onStop = { id -> selectedJourneyNodeId = id },
                                     onTick = { tick -> quickStops = tick.stopIds.mapNotNull { journey.data.node(it) } },

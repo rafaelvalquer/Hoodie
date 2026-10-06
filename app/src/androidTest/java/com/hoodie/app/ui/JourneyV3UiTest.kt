@@ -21,12 +21,12 @@ import com.hoodie.app.domain.diary.journey.ClockArc
 import com.hoodie.app.domain.diary.journey.DayChapter
 import com.hoodie.app.domain.diary.journey.JourneyPlan
 import com.hoodie.app.domain.diary.journey.JourneyStop
-import com.hoodie.app.engine.diary.journey.DayClockAssembler
+import com.hoodie.app.engine.diary.journey.DayClockLegacyAssembler
 import com.hoodie.app.engine.diary.journey.JourneyChapterPlanner
 import com.hoodie.app.engine.diary.journey.JourneyOverworldModel
 import com.hoodie.app.engine.diary.journey.SyntheticJourneyDays
 import com.hoodie.app.engine.diary.journey.SyntheticJourneyDays.Kind
-import com.hoodie.app.presentation.screens.diary.DayClockView
+import com.hoodie.app.presentation.screens.diary.DayClockLegacyView
 import com.hoodie.app.presentation.screens.diary.JourneyChaptersView
 import com.hoodie.app.presentation.screens.diary.JourneyOverworldMapView
 import com.hoodie.app.presentation.screens.diary.ReplayState
@@ -104,15 +104,15 @@ class JourneyV3UiTest {
 
     @Test fun tappingAClockArcOpensItsStop() {
         val data = SyntheticJourneyDays.build(Kind.NINE, date, zone)
-        val clock = DayClockAssembler.build(data, zone, date)
+        val clock = DayClockLegacyAssembler.build(data, zone, date)
         val arc = clock.arcs.first { it.kind == ClockArc.Kind.STAY && it.stopId != null }
         var tapped: String? = null
         rule.setContent {
             HoodieTheme {
-                DayClockView(clock, data, ReplayUiState(), zone, date.toEpochDay(), null, onStop = { tapped = it }, onTick = {})
+                DayClockLegacyView(clock, data, ReplayUiState(), zone, date.toEpochDay(), null, onStop = { tapped = it }, onTick = {})
             }
         }
-        rule.onNodeWithTag("day_clock").assertIsDisplayed()
+        rule.onNodeWithTag("day_clock_legacy").assertIsDisplayed()
         rule.onNodeWithTag("clock_arc_${arc.stopId}").assert(hasDescription).performClick()
         rule.waitForIdle()
         assertEquals(arc.stopId, tapped)

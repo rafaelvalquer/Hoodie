@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 @HiltViewModel
@@ -67,7 +69,7 @@ class DiaryViewModel @Inject constructor(
     fun selectDate(date: java.time.LocalDate) {
         if (date.isAfter(clock.today())) return
         stopReplay()
-        _state.value = _state.value.copy(selectedDate = date, diary = null, isLoading = true, error = null, replay = ReplayUiState(), manualChapter = null)
+        _state.value = _state.value.copy(selectedDate = date, diary = null, isLoading = true, error = null, replay = ReplayUiState(), manualChapter = null, dayClock = null, clockSelectedId = null)
         load(date)
     }
 
@@ -123,6 +125,23 @@ class DiaryViewModel @Inject constructor(
     /** Usuário abriu um capítulo (com o replay pausado ou parado). */
     fun openChapter(chapter: com.hoodie.app.domain.diary.journey.DayChapter?) { _state.value = _state.value.copy(manualChapter = chapter) }
 
+    /** Trecho escolhido no relógio ou na lista; null volta ao "agora". */
+    fun selectClockSegment(id: String?) { _state.value = _state.value.copy(clockSelectedId = id) }
+
+    /** Chamado a cada minuto pela aba RELÓGIO visível: refaz o dia de hoje até o novo "agora". */
+    fun refreshClock() {
+        val s = _state.value
+        val diary = s.diary ?: return
+        if (s.selectedDate != clock.today()) return
+        viewModelScope.launch {
+            val data = withContext(Dispatchers.Default) { assembleClock(diary, s.selectedDate) }
+            if (_state.value.diary === diary) _state.value = _state.value.copy(dayClock = data)
+        }
+    }
+
+    private fun assembleClock(diary: com.hoodie.app.domain.diary.model.DailyDiary, date: java.time.LocalDate) =
+        if (com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2) com.hoodie.app.engine.diary.DayClockAssembler.build(diary, date, zone, clock.nowMillis()) else null
+
     fun setSpeed(speed: ReplaySpeed) { _state.value = _state.value.copy(replay = _state.value.replay.copy(speed = speed)) }
     private fun stopReplay() { replayJob?.cancel(); replayJob = null }
 
@@ -135,7 +154,8 @@ class DiaryViewModel @Inject constructor(
                     dayCache[date] = diary
                     if (dayCache.size > 7) dayCache.remove(dayCache.keys.first())
                 }
-                if (_state.value.selectedDate == date) _state.value = _state.value.copy(diary = diary, isLoading = false, error = null, replay = ReplayUiState())
+                val dayClock = withContext(Dispatchers.Default) { assembleClock(diary, date) }
+                if (_state.value.selectedDate == date) _state.value = _state.value.copy(diary = diary, isLoading = false, error = null, replay = ReplayUiState(), dayClock = dayClock)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {

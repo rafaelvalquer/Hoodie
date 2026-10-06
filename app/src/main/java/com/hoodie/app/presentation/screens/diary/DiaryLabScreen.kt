@@ -80,6 +80,7 @@ fun DiaryLabScreen(modifier: Modifier = Modifier, vm: DiaryLabViewModel = hiltVi
         }
         SummarySection(diary.summary)
         DiaryJourneyLab(zone, LocalDate.now(zone))
+        com.hoodie.app.presentation.screens.diary.clock.DayClockLab(zone, LocalDate.now(zone))
         // Mapa clássico: só aqui durante a transição para a Jornada 3.0 (plano §12).
         SectionLabel("MAPA CLÁSSICO · TRANSIÇÃO")
         DiaryMapView(layout, replay, onNode = { selectedNodeId = it.id })

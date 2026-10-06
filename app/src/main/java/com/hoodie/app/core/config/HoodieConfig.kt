@@ -104,6 +104,9 @@ object HoodieConfig {
     const val DIARY_JOURNEY_MAP_V3 = true
     /** Botão [RELÓGIO] no seletor do mapa. */
     const val DIARY_CLOCK_VIEW = true
+
+    /** Relógio do Dia 2.0 (mostrador pixel 104×104). false = relógio legado (continua no Diary Lab). */
+    const val DIARY_DAY_CLOCK_V2 = true
     /** Até quantas paradas o dia cabe num mapa só (3 linhas de 3). Acima disso: capítulos. */
     const val JOURNEY_SINGLE_MAP_MAX_STOPS = 9
     /** Acima disto um capítulo agrupa paradas rápidas consecutivas (4 linhas de 3). */
