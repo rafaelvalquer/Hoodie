@@ -23,8 +23,10 @@ class DayClockAssetsTest {
     }
 
     @Test fun everyClockColorComesFromAnApprovedPalette() {
-        DayClockPalette.ALL.forEach { assertTrue("#%08X não é de uma paleta validada".format(it), it in approved) }
-        assertTrue("a base é a paleta de 17 cores do Hoodie", DayClockPalette.ALL.containsAll(HoodiePalette.ALL))
+        DayClockPalette.DIAL.forEach { assertTrue("#%08X não é de uma paleta validada".format(it), it in approved) }
+        assertTrue("a base é a paleta de 17 cores do Hoodie", DayClockPalette.DIAL.containsAll(HoodiePalette.ALL))
+        // O Hoodie do mostrador é o marcador da Jornada: suas cores entram, nada além disso.
+        assertEquals(DayClockPalette.DIAL + ClockHoodieMarker.COLORS, DayClockPalette.ALL)
     }
 
     @Test fun categoriesHaveDistinctFillsAndADarkerEdge() {
@@ -36,36 +38,34 @@ class DayClockAssetsTest {
         }
     }
 
-    @Test fun iconsAreExactly7x7AndCoverEveryCategory() {
+    @Test fun iconsAreExactly15x15AndCoverEveryCategory() {
         assertEquals(ClockCategory.entries.toSet(), ClockIcons.ICONS.keys)
         ClockIcons.ICONS.forEach { (c, rows) ->
             assertEquals("$c", ClockIcons.SIZE, rows.size)
             rows.forEach { assertEquals("$c", ClockIcons.SIZE, it.length) }
+            assertTrue("$c usa só O/W/S", rows.joinToString("").all { it in ".OWS" })
         }
+        assertEquals(15, ClockIcons.SIZE)
         assertEquals("ícones diferentes", ClockIcons.ICONS.size, ClockIcons.ICONS.values.toSet().size)
     }
 
-    @Test fun digitsAreExactly3x5() {
+    @Test fun digitsAreExactly5x7() {
         assertEquals(('0'..'9').toSet(), PixelDigits.GLYPHS.keys)
         PixelDigits.GLYPHS.values.forEach { rows ->
             assertEquals(PixelDigits.H, rows.size)
             rows.forEach { assertEquals(PixelDigits.W, it.length) }
         }
-        assertEquals(7, PixelDigits.width("06"))
+        assertEquals(7, PixelDigits.H)
+        assertEquals(11, PixelDigits.width("06"))
     }
 
-    @Test fun miniHoodieFitsTheRingAndUsesItsPalette() {
-        ClockHoodieMarker.Frame.entries.forEach { f ->
-            ClockHoodieMarker.Ride.entries.forEach { r ->
-                val s = ClockHoodieMarker.sprite(f, r, MovementMode.BUS)
-                assertTrue(s.width in 9..12 && s.height in 9..12)
-                s.pixels.filter { it ushr 24 != 0 }.forEach { assertTrue(it in DayClockPalette.ALL) }
+    @Test fun hoodieFitsTheThirtyPixelRingOnFootAndInEveryVehicle() {
+        (MovementMode.entries + listOf(null)).forEach { mode ->
+            listOf(true, false).forEach { moving ->
+                val (w, h) = ClockHoodieMarker.bounds(ClockHoodieMarker.state(300f, 1440, mode, moving), 400)
+                assertTrue("$mode/$moving: ${w}x$h", w in 8..30 && h in 8..30)
             }
         }
-        // Idle ≠ piscada ≠ andar.
-        val idle = ClockHoodieMarker.sprite(ClockHoodieMarker.Frame.IDLE, ClockHoodieMarker.Ride.FOOT, null).pixels
-        assertTrue(!idle.contentEquals(ClockHoodieMarker.sprite(ClockHoodieMarker.Frame.BLINK, ClockHoodieMarker.Ride.FOOT, null).pixels))
-        assertTrue(!idle.contentEquals(ClockHoodieMarker.sprite(ClockHoodieMarker.Frame.WALK_A, ClockHoodieMarker.Ride.FOOT, null).pixels))
     }
 
     private fun luma(c: Int) = 0.299 * (c shr 16 and 0xFF) + 0.587 * (c shr 8 and 0xFF) + 0.114 * (c and 0xFF)

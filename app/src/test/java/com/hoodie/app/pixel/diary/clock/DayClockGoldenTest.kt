@@ -57,7 +57,7 @@ class DayClockGoldenTest {
     }
 
     @Test fun dayClockGoldens() {
-        states.forEach { (name, img) -> PreviewExport.write(File(PreviewExport.dir, "day-clock/$name.png"), img, 6, 0xFF2B2E4A.toInt()) }
+        states.forEach { (name, img) -> PreviewExport.write(File(PreviewExport.dir, "day-clock/$name.png"), img, 2, 0xFF2B2E4A.toInt()) }
         val actual = states.mapValues { digest(it.value) }
         if (System.getenv("DAY_CLOCK_GOLDEN_RECORD") == "1") {
             File("src/test/resources/day-clock-v1.sha256").writeText(actual.entries.joinToString("\n") { "${it.key}\t${it.value}" } + "\n")
@@ -76,6 +76,19 @@ class DayClockGoldenTest {
                 assertTrue("$name usa cor fora da paleta: #%08X".format(c), c in DayClockPalette.ALL)
             }
         }
+    }
+
+    @Test fun staticLayerIsFastAndTheFrameDoesNotAllocate() {
+        val d = data(Kind.MANY_SHORT_MOVES, LocalTime.of(20, 0))
+        val static = DayClockRenderer.renderStatic(d, d.nowMinute, null)
+        val out = PixelBuffer(DayClockGeometry.SIZE, DayClockGeometry.SIZE)
+        repeat(3) { DayClockRenderer.renderStatic(d, d.nowMinute, null, static) }
+        val t0 = System.nanoTime()
+        repeat(5) { DayClockRenderer.renderStatic(d, d.nowMinute, null, static) }
+        val staticMs = (System.nanoTime() - t0) / 5 / 1_000_000.0
+        assertTrue("camada estática levou $staticMs ms", staticMs < 40.0)
+        // Quadro dinâmico: escreve no mesmo buffer de saída.
+        repeat(20) { k -> assertTrue(DayClockRenderer.render(DayClockScene(d, d.nowMinute, null, k * 125L), static, out) === out) }
     }
 
     @Test fun sameDayRendersTheSamePixels() {

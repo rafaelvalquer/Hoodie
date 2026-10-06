@@ -11,7 +11,7 @@ import com.hoodie.app.pixel.sprite.HoodiePalette
  * Cores do Relógio do Dia 2.0. Paleta fechada e SEM cores novas: a base vem da
  * paleta de 17 cores do Hoodie; as categorias usam as cores dos biomas da Jornada,
  * os deslocamentos as cores de trilha da Jornada e o céu as cores de período da
- * iluminação. `DayClockPaletteTest` garante as duas coisas.
+ * iluminação; o Hoodie é o marcador da Jornada. `DayClockAssetsTest` garante isso.
  */
 object DayClockPalette {
     const val OUTLINE = HoodiePalette.OUTLINE
@@ -28,6 +28,8 @@ object DayClockPalette {
     const val STAR_DIM = HoodiePalette.STRING
     const val DIGIT = HoodiePalette.WHITE
     const val ICON_LIGHT = HoodiePalette.WHITE
+    const val ICON_SHADE = HoodiePalette.HOOD_SHADE
+    const val PLAQUE_RIM = HoodiePalette.HOOD_DARK
     const val SELECTION = OverworldPalette.GOLD
     const val GLOW = OverworldPalette.GOLD
     const val GLOW_DIM = OverworldPalette.GOLD_DARK
@@ -52,11 +54,15 @@ object DayClockPalette {
 
     fun sky(p: DayPeriod): Int = JourneyPalette.sky(p).first
 
-    val ALL: Set<Int> = buildSet {
-        addAll(listOf(OUTLINE, DEEP, TRACK, TRACK_MARK, PLATE, PLATE_RING, PLATE_EDGE, TICK, TICK_MAJOR, NOW, STAR, STAR_DIM, DIGIT, ICON_LIGHT, SELECTION, GLOW, GLOW_DIM, PATH, PATH_DARK))
+    /** Sem o Hoodie: o que o mostrador pinta. */
+    val DIAL: Set<Int> = buildSet {
+        addAll(listOf(OUTLINE, DEEP, TRACK, TRACK_MARK, PLATE, PLATE_RING, PLATE_EDGE, TICK, TICK_MAJOR, NOW, STAR, STAR_DIM, DIGIT, ICON_LIGHT, ICON_SHADE, PLAQUE_RIM, SELECTION, GLOW, GLOW_DIM, PATH, PATH_DARK))
         ClockCategory.entries.forEach { add(category(it).fill); add(category(it).edge) }
         (MovementMode.entries + listOf(null)).forEach { add(mode(it)) }
         DayPeriod.entries.forEach { add(sky(it)) }
         addAll(HoodiePalette.ALL)
     }
+
+    /** Paleta fechada do relógio: mostrador + as cores do marcador da Jornada. */
+    val ALL: Set<Int> by lazy { DIAL + ClockHoodieMarker.COLORS }
 }

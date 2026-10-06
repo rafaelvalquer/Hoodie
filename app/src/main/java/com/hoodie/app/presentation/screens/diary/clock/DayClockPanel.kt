@@ -168,8 +168,11 @@ private fun DayClockDial(state: DayClockUiState, onSelect: (String?) -> Unit, mo
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val density = LocalDensity.current
         val widthPx = with(density) { maxWidth.toPx() }
-        val scale = floor(widthPx / DayClockGeometry.SIZE).toInt().coerceAtLeast(1)
-        val dialPx = DayClockGeometry.SIZE * scale
+        // Escala inteira sem filtro (×3 num Pixel 8). Só em telas mais estreitas que 312 px
+        // o mostrador é reduzido para caber, com filtro (não há escala inteira possível).
+        val fits = widthPx >= DayClockGeometry.SIZE
+        val scale = if (fits) floor(widthPx / DayClockGeometry.SIZE) else widthPx / DayClockGeometry.SIZE
+        val dialPx = (DayClockGeometry.SIZE * scale).toInt()
         val offX = ((widthPx - dialPx) / 2f).toInt()
         Box(Modifier.fillMaxWidth().height(with(density) { dialPx.toDp() })) {
             Canvas(
@@ -188,7 +191,7 @@ private fun DayClockDial(state: DayClockUiState, onSelect: (String?) -> Unit, mo
                 val s = static ?: return@Canvas
                 DayClockRenderer.render(DayClockScene(data, nowMinute, state.selectedId, time), s, out)
                 bitmap.setPixels(out.pixels, 0, out.width, 0, 0, out.width, out.height)
-                drawImage(bitmap.asImageBitmap(), dstOffset = IntOffset(offX, 0), dstSize = IntSize(dialPx, dialPx), filterQuality = FilterQuality.None)
+                drawImage(bitmap.asImageBitmap(), dstOffset = IntOffset(offX, 0), dstSize = IntSize(dialPx, dialPx), filterQuality = if (fits) FilterQuality.None else FilterQuality.Low)
             }
             // Texto do centro, limitado ao diâmetro da placa.
             val plate = (DayClockGeometry.CENTER_PLATE.endInclusive * 2 * scale * 0.80f).toInt()

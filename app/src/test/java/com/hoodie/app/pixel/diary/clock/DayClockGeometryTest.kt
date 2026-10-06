@@ -20,10 +20,13 @@ class DayClockGeometryTest {
         assertEquals(180f, g.minuteToAngle(12 * 60, 1440), 0.001f)
         assertEquals(270f, g.minuteToAngle(18 * 60, 1440), 0.001f)
         // 00h no topo, 06h à direita, 12h embaixo, 18h à esquerda.
-        assertEquals(ClockPx(52, 12), g.pointAt(0, 40f, 1440))
-        assertEquals(ClockPx(92, 52), g.pointAt(6 * 60, 40f, 1440))
-        assertEquals(ClockPx(52, 92), g.pointAt(12 * 60, 40f, 1440))
-        assertEquals(ClockPx(12, 52), g.pointAt(18 * 60, 40f, 1440))
+        val c = g.CENTER.toInt()
+        val r = 40 * g.K
+        assertEquals(ClockPx(c, c - r), g.pointAt(0, r.toFloat(), 1440))
+        assertEquals(ClockPx(c + r, c), g.pointAt(6 * 60, r.toFloat(), 1440))
+        assertEquals(ClockPx(c, c + r), g.pointAt(12 * 60, r.toFloat(), 1440))
+        assertEquals(ClockPx(c - r, c), g.pointAt(18 * 60, r.toFloat(), 1440))
+        assertEquals(312, g.SIZE)
     }
 
     @Test fun minuteToPointToMinuteRoundTrips() {
@@ -31,7 +34,7 @@ class DayClockGeometryTest {
             (0 until len step 7).forEach { m ->
                 val p = g.pointAt(m, g.ACTIVITY_MID, len)
                 val back = g.minuteAt(p.x + 0.5f, p.y + 0.5f, len)
-                // Um pixel no raio do anel cobre ~6 min.
+                // Um pixel no raio do anel cobre ~2 min (312 px).
                 val d = minOf(kotlin.math.abs(back - m), len - kotlin.math.abs(back - m))
                 assertTrue("$len: $m → $p → $back", d <= len / (2 * Math.PI * g.ACTIVITY_MID).toFloat() * 1.2f)
             }
@@ -39,9 +42,9 @@ class DayClockGeometryTest {
     }
 
     @Test fun tablesMatchTheMath() {
-        val i = 10 * g.SIZE + 70
-        assertEquals(hypot(70.5f - 52f, 10.5f - 52f), g.RADIUS[i], 0.0001f)
-        assertEquals(g.fractionAt(70.5f, 10.5f), g.FRACTION[i], 0.0001f)
+        val i = 30 * g.SIZE + 210
+        assertEquals(hypot(210.5f - g.CENTER, 30.5f - g.CENTER), g.RADIUS[i], 0.0001f)
+        assertEquals(g.fractionAt(210.5f, 30.5f), g.FRACTION[i], 0.0001f)
         assertTrue(g.FRACTION.all { it in 0f..1f })
     }
 
@@ -50,7 +53,7 @@ class DayClockGeometryTest {
         val data = DayClockAssembler.build(day.diary, day.date, day.zone, day.now)
         fun at(minute: Int, r: Float): Pair<Float, Float> {
             val a = minute / 1440.0 * 2 * Math.PI
-            return (52 + r * kotlin.math.sin(a)).toFloat() to (52 - r * kotlin.math.cos(a)).toFloat()
+            return (g.CENTER + r * g.K * kotlin.math.sin(a)).toFloat() to (g.CENTER - r * g.K * kotlin.math.cos(a)).toFloat()
         }
         val (cx, cy) = at(0, 10f)
         assertEquals(ClockHit.Center, g.hitTest(cx, cy, data))
@@ -69,10 +72,10 @@ class DayClockGeometryTest {
     @Test fun tinySegmentsGetTheirOwnTouchArea() {
         val day = SyntheticClockDays.build(SyntheticClockDays.Kind.MANY_SHORT_MOVES, LocalDate.of(2026, 10, 5), ZoneId.of("UTC"), LocalTime.of(20, 0))
         val data = DayClockAssembler.build(day.diary, day.date, day.zone, day.now)
-        val tiny = data.segments.first { it !is ClockSegment.Unknown && g.arcPx(it.minutes.toFloat(), 1440) < 2f }
+        val tiny = data.segments.first { it !is ClockSegment.Unknown && g.arcPx(it.minutes.toFloat(), 1440) < 2f * g.K }
         val mid = tiny.startMinute + tiny.minutes / 2f
         val a = mid / 1440.0 * 2 * Math.PI
-        val hit = g.hitTest((52 + 36.5 * kotlin.math.sin(a)).toFloat(), (52 - 36.5 * kotlin.math.cos(a)).toFloat(), data)
+        val hit = g.hitTest((g.CENTER + g.ACTIVITY_MID * kotlin.math.sin(a)).toFloat(), (g.CENTER - g.ACTIVITY_MID * kotlin.math.cos(a)).toFloat(), data)
         assertTrue(hit is ClockHit.Segment)
     }
 }

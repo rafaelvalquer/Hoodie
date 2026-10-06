@@ -4,7 +4,7 @@
 |---|---|---|
 | 0. Levantamento e flag | feito | `HoodieConfig.DIARY_DAY_CLOCK_V2`; relógio anterior renomeado para `DayClockLegacy*` e mantido no Diary Lab |
 | 1. Modelo e assembler | feito | `domain/diary/clock/DayClockData.kt`, `engine/diary/DayClockAssembler.kt` |
-| 2. Geometria | feito | `pixel/diary/clock/DayClockGeometry.kt` (tabelas 104×104 de raio e fração) |
+| 2. Geometria | feito | `pixel/diary/clock/DayClockGeometry.kt` (tabelas 312×312 de raio e fração, `K = 3`) |
 | 3. Renderer e assets | feito | `DayClockRenderer`, `DayClockPalette`, `ClockIcons`, `PixelDigits`, `ClockHoodieMarker` |
 | 4. UI Compose | feito | `presentation/screens/diary/clock/DayClockPanel.kt` |
 | 5. Estado e desempenho | feito | `DiaryViewModel` (`dayClock`, `clockSelectedId`, `refreshClock`), `DayClockUiState` |
@@ -19,8 +19,10 @@
 - **Paleta**: a base é a paleta de 17 cores do Hoodie; como ela não tem verde, roxo nem as cores do céu, o relógio
   também usa cores já validadas da Jornada (biomas, trilhas, dourado) e as cores de período da iluminação.
   `DayClockAssetsTest` proíbe qualquer cor fora dessas fontes.
-- **Hoodie mini**: marcador procedural próprio (como o da Jornada), com quadros em cache, em vez de um clipe do
-  AnimationRegistry — os clipes do catálogo são de 48×72.
+- **Hoodie**: o próprio marcador da Jornada (`JourneyHoodieMarker`) via `ClockHoodieMarker`, em vez de um clipe do
+  AnimationRegistry (os clipes do catálogo são de 48×72). Suas cores entram na paleta fechada.
+- **Resolução** (06/10/2026): o mostrador de 104 px ficava pixelado demais (×9 na tela). Passou a pixel art fina de
+  312 px (×3), com ícones 15×15, dígitos 5×7, estrelas em "+", plaquinhas com aro e espessuras revistas.
 - **Ids**: permanências e trechos entre visitas usam os ids da Jornada (`journey-i`, `journey-seg-i`).
 
 ## Para virar padrão definitivo

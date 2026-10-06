@@ -216,7 +216,7 @@ deslocou e o que o Hoodie fez. Progresso e decisões em [docs/day-clock-progress
 
 ```
 DailyDiary (+ movements, contexts, activities) ─► DayClockAssembler ─► DayClockData (Stay / Move / Unknown, minutos do dia)
-DayClockData + "agora" (ao vivo ou replay) + seleção ─► DayClockRenderer (104×104) ─► DayClockPanel (escala inteira, sem filtro)
+DayClockData + "agora" (ao vivo ou replay) + seleção ─► DayClockRenderer (312×312) ─► DayClockPanel (escala inteira, sem filtro)
 ```
 
 * **Regras**: recorte na meia-noite local e no "agora"; visitas repetidas separadas (`journey-i`, os mesmos ids da
@@ -225,8 +225,10 @@ DayClockData + "agora" (ao vivo ou replay) + seleção ─► DayClockRenderer (
   Lazer, Outros), pelo contexto dominante de cada visita.
 * **Camadas**: estática (placa com anéis, anel de atividades com borda interna escura, trilha pontilhada a pé /
   tracejada de veículo na cor da Jornada, futuro em xadrez, separadores, seleção dourada, marcações de hora, céu por
-  período com dithering e estrelas, linha do agora, plaquinhas 00/06/12/18 com dígitos 3×5, ícones 7×7) e dinâmica
-  (Hoodie mini 9×9/11×11 com respiração, piscada, andar e veículo, brilho pulsante).
+  período com dithering e estrelas, linha do agora, plaquinhas 00/06/12/18 com dígitos 5×7, ícones 15×15) e dinâmica
+  (o mesmo Hoodie da Jornada — a pé, bicicleta, carro, ônibus, trem, metrô — com respiração e brilho pulsante).
+* **Resolução**: pixel art fina — 312×312 px lógicos (base 104 × `DayClockGeometry.K` = 3), ×3 num Pixel 8 (~1 dp
+  por pixel). Telas com menos de 312 px de largura reduzem o mostrador com filtro.
 * **UI**: toque no anel seleciona o trecho (centro volta ao agora; futuro é ignorado), centro em Press Start 2P,
   barra "Tempo por lugar" e lista "Para onde o Hoodie foi" com a mesma seleção; no replay o "agora" é o tempo do replay.
 * **Desempenho**: raio e minuto de cada pixel em tabelas pré-calculadas; camada estática refeita fora da main thread
