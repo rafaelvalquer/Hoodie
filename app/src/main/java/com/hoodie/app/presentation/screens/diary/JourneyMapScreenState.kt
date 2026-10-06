@@ -16,9 +16,6 @@ import com.hoodie.app.pixel.diary.journey.NodeState
 import com.hoodie.app.pixel.diary.journey.JourneyMapRenderer
 import java.time.ZoneId
 
-/** Qual mapa o Diário mostra. A Jornada é o padrão; o clássico fica como alternativa (plano §16). */
-enum class DiaryMapMode { JOURNEY, CLASSIC }
-
 /** Dados + layout da jornada de um dia: calculados uma vez por dia carregado, não por quadro. */
 data class JourneyMapModel(val data: JourneyMapData, val layout: JourneyLayout) {
     companion object {

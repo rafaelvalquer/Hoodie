@@ -33,6 +33,8 @@ data class AppSettings(
     val lastGeofenceRegisterDay: Long = -1,
     val digital: DigitalSettings = DigitalSettings(),
     val mobility: MobilitySettings = MobilitySettings(),
+    /** Visualização do mapa do Diário (`JOURNEY` ou `CLOCK`); o Diário reabre nela. */
+    val diaryMapMode: String = "JOURNEY",
 )
 
 /**
@@ -91,6 +93,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val MOBILITY_PREFERRED = stringPreferencesKey("mobility_preferred_mode")
         val MOBILITY_APPROVED = stringSetPreferencesKey("mobility_approved_patterns")
         val MOBILITY_DECLINED = stringSetPreferencesKey("mobility_declined_patterns")
+        val DIARY_MAP_MODE = stringPreferencesKey("diary_map_mode")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -118,6 +121,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 approvedPatterns = p[Keys.MOBILITY_APPROVED] ?: emptySet(),
                 declinedPatterns = p[Keys.MOBILITY_DECLINED] ?: emptySet(),
             ),
+            diaryMapMode = p[Keys.DIARY_MAP_MODE] ?: "JOURNEY",
         )
     }
 
@@ -156,6 +160,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         it[Keys.MOBILITY_APPROVED] = m.approvedPatterns
         it[Keys.MOBILITY_DECLINED] = m.declinedPatterns
     }
+
+    suspend fun setDiaryMapMode(mode: String) = store.edit { it[Keys.DIARY_MAP_MODE] = mode }
 
     suspend fun clear() = store.edit { it.clear() }
 }

@@ -173,10 +173,41 @@ ReplayUiState ─► JourneyReplayAssembler ─► JourneyScene ─► JourneyMa
   · paradas (visitada / atual pulsando / ainda não / selecionada) · luz contínua por minuto + postes, janelas e vaga-lumes · Hoodie.
 * **Replay 2.0**: ⏮ / ⏭ entre chegadas e saídas, barra temporal arrastável, velocidade; o rastro já percorrido fica dourado.
 * **Detalhe da parada**: chegada/saída, tempo, vezes no dia, total no lugar, atividade do Hoodie, como chegou e celular na visita.
-* **Compatibilidade**: `HoodieConfig.DIARY_JOURNEY_MAP_V2` define o padrão; o seletor [JORNADA] [MAPA ANTIGO] mantém o mapa clássico.
+* **Compatibilidade**: substituído pelo Mapa do Dia 3.0 quando `HoodieConfig.DIARY_JOURNEY_MAP_V3` está ligado.
 * **Desempenho**: layout e camada estática uma vez por dia; ~2,5 FPS parado, ~10 FPS no replay, pausado fora da tela.
 * **Golden**: `JourneyGoldenTest` exporta 8 estados para `app/build/pixel-preview/journey/` e compara com
   `journey-map-v1.sha256` (regravar com `JOURNEY_GOLDEN_RECORD=1` depois de revisar os PNGs).
+
+## Mapa do Dia 3.0 — Overworld em capítulos + Relógio do dia
+
+O Diário tem duas vistas do mesmo dia, escolhidas no seletor **[JORNADA] [RELÓGIO]** (salvo no DataStore em
+`diary_map_mode`). Plano completo em [docs/journey-map-v3-plan.md](docs/journey-map-v3-plan.md).
+
+```
+JourneyMapData ─► JourneyChapterPlanner (+ QuickStopClusterer) ─► JourneyPlan (Single | Chapters)
+               ─► SerpentineLayoutEngine + JourneyPathBuilder ─► OverworldLayout (240 × até 3 linhas por capítulo)
+ReplayUiState  ─► JourneyReplayAssembler.overworld ─► OverworldJourneyRenderer ─► JourneyOverworldMapView / JourneyChaptersView
+JourneyMapData ─► DayClockAssembler ─► DayClockData ─► DayClockRenderer ─► DayClockView
+```
+
+* **Jornada**: até `JOURNEY_SINGLE_MAP_MAX_STOPS` (9) paradas é um mapa só; acima disso vira **Manhã / Tarde / Noite**
+  (12:00 e 18:00, no fuso do dia — dias de 23/25 h incluídos). A visita pertence ao capítulo da chegada; se continua no
+  seguinte, aparece lá como **fantasma**. Trechos que atravessam capítulos saem pela borda de baixo (portal) e entram
+  pela de cima. Acima de `JOURNEY_CHAPTER_MAX_STOPS` (12) paradas num capítulo, paradas rápidas seguidas (< 10 min)
+  viram um marco "×k" (a atual/selecionada nunca é agrupada). Só um capítulo fica aberto: o do replay, o escolhido,
+  o de agora (hoje) ou o de maior permanência.
+* **Overworld**: serpentina de 3 colunas com curvas em U nas bordas; cada tipo de lugar é um bioma 32×32 (casa,
+  castelo-escritório, templo, taverna, café, torre do mago, mercado, parque, chalé da família, acampamento, marco),
+  com estados futuro (dessaturado), visitado, atual (placa dourada) e fantasma; trilhas com cor **e** padrão por meio.
+* **Relógio**: 24 h num anel (meia-noite no topo, sentido horário); permanências são arcos grossos, trechos arcos
+  finos, paradas curtas viram tiques (agrupados quando colados). No replay a parte futura fica dessaturada e o
+  ponteiro leva o Hoodie. Desligável com `DIARY_CLOCK_VIEW`.
+* **Mesmo replay nas duas vistas**: trocar de vista mantém hora, velocidade e parada selecionada.
+* **Acessibilidade**: cada construção, capítulo, arco e tique tem alvo ≥ 48 dp e descrição completa para o TalkBack.
+* **Labs**: Diary Lab → "Jornada 3.0" (dias sintéticos de 0 a 20 paradas, slider de hora, forçar mapa único/capítulos,
+  Jornada e Relógio lado a lado); Pixel Lab → aba "Biomas".
+* **Golden**: `JourneyV3GoldenTest` e `DayClockGoldenTest` exportam para `app/build/pixel-preview/journey-v3/` e
+  comparam com `journey-map-v3.sha256` / `day-clock-v3.sha256` (regravar com `JOURNEY_GOLDEN_RECORD=1`).
 
 ## Diário Digital (Phone Insights)
 

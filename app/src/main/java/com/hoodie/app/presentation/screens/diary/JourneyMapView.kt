@@ -289,25 +289,3 @@ private fun AppBalloon(scene: com.hoodie.app.pixel.diary.journey.JourneyScene, r
         Text(app.appLabel.take(10), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Ink, maxLines = 1)
     }
 }
-
-/** [JORNADA] [MAPA ANTIGO]: a Jornada é o padrão; o clássico fica como alternativa enquanto a nova é validada. */
-@Composable
-fun DiaryMapModeToggle(selected: DiaryMapMode, onSelect: (DiaryMapMode) -> Unit, modifier: Modifier = Modifier) {
-    val label = stringResource(R.string.journey_mode_label)
-    Row(modifier.fillMaxWidth().border(2.dp, HoodieColors.Outline).semantics { contentDescription = label }) {
-        DiaryMapMode.entries.forEach { mode ->
-            val on = mode == selected
-            val text = stringResource(if (mode == DiaryMapMode.JOURNEY) R.string.journey_mode_journey else R.string.journey_mode_classic)
-            Box(
-                Modifier.weight(1f).heightIn(min = 48.dp)
-                    .background(if (on) HoodieColors.Gold else HoodieColors.Panel)
-                    .semantics { this.selected = on; role = Role.Tab }
-                    .clickable { onSelect(mode) }
-                    .testTag("map_mode_${mode.name.lowercase()}"),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(text.uppercase(), style = MaterialTheme.typography.labelLarge, color = if (on) HoodieColors.Outline else HoodieColors.Muted)
-            }
-        }
-    }
-}

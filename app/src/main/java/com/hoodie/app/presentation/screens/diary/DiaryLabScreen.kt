@@ -79,6 +79,9 @@ fun DiaryLabScreen(modifier: Modifier = Modifier, vm: DiaryLabViewModel = hiltVi
             Text(stringResource(R.string.ui_diary_lab_screen_3), color = HoodieColors.Muted)
         }
         SummarySection(diary.summary)
+        DiaryJourneyLab(zone, LocalDate.now(zone))
+        // Mapa clássico: só aqui durante a transição para a Jornada 3.0 (plano §12).
+        SectionLabel("MAPA CLÁSSICO · TRANSIÇÃO")
         DiaryMapView(layout, replay, onNode = { selectedNodeId = it.id })
         DiaryReplayHud(replay.visual, zone)
         ReplayControls(

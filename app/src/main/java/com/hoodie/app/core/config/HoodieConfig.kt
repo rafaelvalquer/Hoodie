@@ -98,4 +98,25 @@ object HoodieConfig {
     // ── Diário: Mapa do Dia 2.0 ──
     /** Jornada Pixel como mapa padrão do Diário. false = volta ao mapa clássico (que segue disponível no seletor). */
     const val DIARY_JOURNEY_MAP_V2 = true
+
+    // ── Diário: Jornada do Dia 3.0 (overworld em capítulos + relógio) ──
+    /** Overworld em serpentina com capítulos. false = Jornada 2.0 (zigue-zague) durante a transição. */
+    const val DIARY_JOURNEY_MAP_V3 = true
+    /** Botão [RELÓGIO] no seletor do mapa. */
+    const val DIARY_CLOCK_VIEW = true
+    /** Até quantas paradas o dia cabe num mapa só (3 linhas de 3). Acima disso: capítulos. */
+    const val JOURNEY_SINGLE_MAP_MAX_STOPS = 9
+    /** Acima disto um capítulo agrupa paradas rápidas consecutivas (4 linhas de 3). */
+    const val JOURNEY_CHAPTER_MAX_STOPS = 12
+    /** Visita mais curta que isto pode virar marco "×k". */
+    const val JOURNEY_QUICK_STOP_MS = 10 * MINUTE_MS
+    /** Início da Tarde e da Noite (hora local; Manhã inclui a madrugada). */
+    val JOURNEY_AFTERNOON_START: java.time.LocalTime = java.time.LocalTime.of(12, 0)
+    val JOURNEY_NIGHT_START: java.time.LocalTime = java.time.LocalTime.of(18, 0)
+    /** Arco menor que isto vira tique no relógio (~8 min). */
+    const val CLOCK_MIN_ARC_DEG = 2f
+    /** Só arcos a partir disto ganham rótulo (~1h40). */
+    const val CLOCK_MIN_LABEL_DEG = 25f
+    /** Tiques mais próximos que isto se juntam num "×k". */
+    const val CLOCK_TICK_MERGE_DEG = 3f
 }

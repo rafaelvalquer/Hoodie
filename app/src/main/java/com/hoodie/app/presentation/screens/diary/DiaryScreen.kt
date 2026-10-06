@@ -112,6 +112,8 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             reset = vm::reset,
             setSpeed = vm::setSpeed,
             seek = vm::seekTo,
+            setMapMode = vm::setMapMode,
+            openChapter = vm::openChapter,
         ),
     )
 }
@@ -125,6 +127,8 @@ internal data class DiaryActions(
     val reset: () -> Unit = {},
     val setSpeed: (ReplaySpeed) -> Unit = {},
     val seek: (Long) -> Unit = {},
+    val setMapMode: (com.hoodie.app.domain.diary.journey.DiaryMapMode) -> Unit = {},
+    val openChapter: (com.hoodie.app.domain.diary.journey.DayChapter?) -> Unit = {},
 )
 
 @Composable
@@ -141,10 +145,16 @@ internal fun DiaryContent(
     val context = LocalContext.current
     var tab by rememberSaveable { mutableStateOf(DiaryTab.GENERAL) }
     var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
-    var mapMode by rememberSaveable { mutableStateOf(if (com.hoodie.app.core.config.HoodieConfig.DIARY_JOURNEY_MAP_V2) DiaryMapMode.JOURNEY else DiaryMapMode.CLASSIC) }
     var selectedJourneyNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
+    var quickStops by remember(state.selectedDate) { mutableStateOf<List<com.hoodie.app.domain.diary.model.JourneyNode>>(emptyList()) }
     // Jornada do dia: montada uma vez por dia carregado (layout e cache não mudam a cada quadro).
     val journey = remember(state.diary) { state.diary?.let { JourneyMapModel.from(it, nowMillis) } }
+    // Jornada 3.0: plano + serpentina; a parada do replay e a selecionada nunca somem num "×k".
+    val protectedKey = journey?.let { protectedStops(null, it.data, state.replay, selectedJourneyNodeId) }
+    val overworld = remember(journey, protectedKey) {
+        journey?.let { com.hoodie.app.engine.diary.journey.JourneyOverworldModel.build(it.data, zone, protectedKey.orEmpty()) }
+    }
+    val clock = remember(journey) { journey?.let { com.hoodie.app.engine.diary.journey.DayClockAssembler.build(it.data, zone) } }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("diary_scroll").padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -179,25 +189,42 @@ internal fun DiaryContent(
                     }
                 }
                 diary.phoneInsights?.let { DiaryPhoneCard(it, onOpen = { tab = DiaryTab.DIGITAL }) }
-                DiaryMapModeToggle(mapMode, onSelect = { mapMode = it })
                 val toggleReplay = { if (state.replay.state == ReplayState.PLAYING) actions.pause() else actions.play() }
-                if (mapMode == DiaryMapMode.JOURNEY && journey != null) {
-                    JourneyMapView(journey, state.replay, zone, selectedJourneyNodeId, onNode = { selectedJourneyNodeId = it.id })
+                if (journey != null) {
+                    if (com.hoodie.app.core.config.HoodieConfig.DIARY_JOURNEY_MAP_V3 && overworld != null) {
+                        // [JORNADA] [RELÓGIO]: mesmo replay, mesmo detalhe de parada.
+                        DiaryMapModeSelector(state.mapMode, onSelect = actions.setMapMode)
+                        val onStop: (com.hoodie.app.domain.diary.journey.JourneyStop) -> Unit = { stop ->
+                            val cluster = overworld.clusterNodes(stop.id)
+                            if (cluster.isNotEmpty()) quickStops = cluster else overworld.nodeOf(stop.id)?.let { selectedJourneyNodeId = it.id }
+                        }
+                        when (state.mapMode) {
+                            com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY -> if (overworld.isChapters) {
+                                JourneyChaptersView(
+                                    overworld, state.replay, zone, state.manualChapter, state.selectedDate == today, nowMillis,
+                                    selectedJourneyNodeId, onOpenChapter = actions.openChapter, onStop = onStop,
+                                )
+                            } else overworld.single?.let { single ->
+                                PixelPanel(Modifier.fillMaxWidth().testTag("journey_map")) {
+                                    SectionLabel(stringResource(R.string.journey_title))
+                                    JourneyOverworldMapView(overworld, single, state.replay, zone, selectedJourneyNodeId, onStop, modifier = Modifier.padding(top = 8.dp))
+                                    Text(stringResource(R.string.journey_v3_footer), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
+                                }
+                            }
+                            com.hoodie.app.domain.diary.journey.DiaryMapMode.CLOCK -> clock?.let { data ->
+                                DayClockView(
+                                    data, journey.data, state.replay, zone, overworld.seed, selectedJourneyNodeId,
+                                    onStop = { id -> selectedJourneyNodeId = id },
+                                    onTick = { tick -> quickStops = tick.stopIds.mapNotNull { journey.data.node(it) } },
+                                )
+                            }
+                        }
+                    } else {
+                        // Jornada 2.0 (zigue-zague) enquanto DIARY_JOURNEY_MAP_V3 = false.
+                        JourneyMapView(journey, state.replay, zone, selectedJourneyNodeId, onNode = { selectedJourneyNodeId = it.id })
+                    }
                     DiaryReplayHud(state.replay.visual, zone)
                     JourneyReplayControls(state.replay, journey.data, zone, onToggle = toggleReplay, onSeek = actions.seek, onReset = actions.reset, onSpeed = actions.setSpeed)
-                } else {
-                    val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
-                    DiaryMapView(layout, state.replay, onNode = { actions.openPlace(it.id) })
-                    DiaryReplayHud(state.replay.visual, zone)
-                    ReplayControls(
-                        state.replay,
-                        onToggle = toggleReplay,
-                        onReset = actions.reset,
-                        onSpeed = actions.setSpeed,
-                    )
-                    if (state.replay.currentTimestamp != null) {
-                        LinearProgressIndicator(progress = { state.replay.progress }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.Mint, trackColor = HoodieColors.PanelLight)
-                    }
                 }
                 TimelineSection(diary.timeline, state.replay.currentTimestamp, zone, state.replay.highlightedTimelineItemIds)
             }
@@ -211,6 +238,9 @@ internal fun DiaryContent(
         }
     }
     selectedContext?.let { ctx -> ContextPhoneSheet(ctx, state.diary?.phoneInsights) { selectedContext = null } }
+    if (quickStops.isNotEmpty()) {
+        QuickStopsSheet(quickStops, zone, onNode = { quickStops = emptyList(); selectedJourneyNodeId = it.id }, onDismiss = { quickStops = emptyList() })
+    }
     // Detalhe de uma parada da jornada; "ver detalhes do lugar" abre o detalhe completo (todas as visitas).
     val journeyNode = journey?.data?.node(selectedJourneyNodeId)
     val diaryForJourney = state.diary

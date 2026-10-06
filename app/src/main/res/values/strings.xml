@@ -386,7 +386,6 @@
     <!-- Mapa do Dia 2.0 — Jornada Pixel -->
     <string name="journey_title">JORNADA DO DIA · SEM ROTA GPS</string>
     <string name="journey_mode_journey">Jornada</string>
-    <string name="journey_mode_classic">Mapa antigo</string>
     <string name="journey_mode_label">Visualização do mapa</string>
     <plurals name="journey_stops">
         <item quantity="one">%1$d parada</item>
@@ -427,5 +426,39 @@
     <string name="journey_details_phone_none">Celular parado</string>
     <string name="journey_details_arrived_by">Chegou de</string>
     <string name="journey_details_see_all">Ver detalhes do lugar</string>
+    <!-- Jornada do Dia 3.0: overworld em capítulos + relógio -->
+    <string name="journey_mode_clock">Relógio</string>
+    <string name="journey_chapter_morning">Manhã</string>
+    <string name="journey_chapter_afternoon">Tarde</string>
+    <string name="journey_chapter_night">Noite</string>
+    <plurals name="journey_chapter_stops">
+        <item quantity="one">%1$d parada</item>
+        <item quantity="other">%1$d paradas</item>
+    </plurals>
+    <string name="journey_chapter_empty">Sem paradas</string>
+    <string name="journey_chapter_whole">%1$s inteira: %2$s</string>
+    <string name="journey_chapter_open">toque para abrir</string>
+    <string name="journey_chapter_description">%1$s, %2$s, %3$s, toque para abrir</string>
+    <string name="journey_chapter_empty_description">%1$s, sem paradas</string>
+    <string name="journey_chapter_open_description">%1$s, aberto</string>
+    <string name="journey_ghost_label">continua: %1$s</string>
+    <string name="journey_cluster_label">×%1$d rápidas</string>
+    <string name="journey_cluster_description">%1$d paradas rápidas entre %2$s e %3$s</string>
+    <string name="journey_stop_description">%1$s, %2$s, chegada %3$s, %4$s</string>
+    <string name="journey_stop_return">retorno %1$d</string>
+    <string name="journey_ghost_description">%1$s continua desde o período anterior</string>
+    <string name="journey_portal_out">Segue no próximo período</string>
+    <string name="journey_portal_in">Vem do período anterior</string>
+    <string name="journey_v3_footer">Ordem do dia, não geografia · toque numa construção para detalhes</string>
+    <string name="clock_title">RELÓGIO DO DIA</string>
+    <string name="clock_center_going">indo para %1$s</string>
+    <string name="clock_center_stop">parada %1$d de %2$d</string>
+    <string name="clock_center_idle">toque num arco</string>
+    <string name="clock_arc_description">%1$s, de %2$s a %3$s, %4$s</string>
+    <string name="clock_leg_description">%1$s, de %2$s a %3$s</string>
+    <string name="clock_tick_description">%1$d paradas rápidas entre %2$s e %3$s</string>
+    <string name="clock_empty">Sem paradas neste dia.</string>
+    <string name="clock_description">Relógio do dia com %1$d permanências e %2$d deslocamentos</string>
+    <string name="quick_stops_title">Paradas rápidas</string>
     <string name="journey_details_note">A jornada mostra a ordem dos lugares, não o caminho real.</string>
 </resources>

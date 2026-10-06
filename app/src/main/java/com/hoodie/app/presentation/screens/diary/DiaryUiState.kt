@@ -66,4 +66,8 @@ data class DiaryUiState(
     val isLoading: Boolean = false,
     val error: com.hoodie.app.core.error.AppError? = null,
     val replay: ReplayUiState = ReplayUiState(),
+    /** [JORNADA] ou [RELÓGIO] (DataStore); o replay é o mesmo nas duas. */
+    val mapMode: com.hoodie.app.domain.diary.journey.DiaryMapMode = com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY,
+    /** Capítulo que o usuário abriu (limpo ao trocar de data ou dar play). */
+    val manualChapter: com.hoodie.app.domain.diary.journey.DayChapter? = null,
 )

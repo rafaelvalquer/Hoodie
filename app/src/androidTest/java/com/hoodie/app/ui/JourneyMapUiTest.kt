@@ -27,8 +27,8 @@ import com.hoodie.app.domain.diary.model.JourneyNode
 import com.hoodie.app.domain.diary.model.PlaceVisit
 import com.hoodie.app.domain.diary.model.ReplaySequence
 import com.hoodie.app.engine.diary.JourneyReplayAssembler
-import com.hoodie.app.presentation.screens.diary.DiaryMapMode
-import com.hoodie.app.presentation.screens.diary.DiaryMapModeToggle
+import com.hoodie.app.domain.diary.journey.DiaryMapMode
+import com.hoodie.app.presentation.screens.diary.DiaryMapModeSelector
 import com.hoodie.app.presentation.screens.diary.JourneyMapModel
 import com.hoodie.app.presentation.screens.diary.JourneyMapView
 import com.hoodie.app.presentation.screens.diary.JourneyNodeDetailsSheet
@@ -118,11 +118,13 @@ class JourneyMapUiTest {
         rule.runOnIdle { assertTrue(seeAll) }
     }
 
-    @Test fun mapModeToggleSwitchesBetweenJourneyAndClassic() {
+    @Test fun mapModeSelectorSwitchesBetweenJourneyAndClock() {
         var mode by mutableStateOf(DiaryMapMode.JOURNEY)
-        rule.setContent { HoodieTheme { DiaryMapModeToggle(mode, onSelect = { mode = it }) } }
+        rule.setContent { HoodieTheme { DiaryMapModeSelector(mode, onSelect = { mode = it }) } }
         rule.onNodeWithTag("map_mode_journey").assertIsSelected()
-        rule.onNodeWithTag("map_mode_classic").performClick().assertIsSelected()
-        rule.runOnIdle { assertEquals(DiaryMapMode.CLASSIC, mode) }
+        rule.onNodeWithTag("map_mode_clock").performClick().assertIsSelected()
+        rule.runOnIdle { assertEquals(DiaryMapMode.CLOCK, mode) }
+        // O mapa antigo saiu do seletor (fica só no Diary Lab).
+        rule.onNodeWithTag("map_mode_classic").assertDoesNotExist()
     }
 }

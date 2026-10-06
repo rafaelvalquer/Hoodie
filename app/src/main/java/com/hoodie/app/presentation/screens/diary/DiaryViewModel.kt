@@ -24,6 +24,7 @@ import javax.inject.Inject
 class DiaryViewModel @Inject constructor(
     private val loadDiary: LoadDiaryUseCase,
     private val clock: ClockProvider,
+    private val settings: com.hoodie.app.core.datastore.SettingsRepository,
 ) : ViewModel() {
     val nowMillis: Long get() = clock.nowMillis()
     val zone get() = clock.zone()
@@ -46,6 +47,12 @@ class DiaryViewModel @Inject constructor(
     init {
         load(_state.value.selectedDate)
         viewModelScope.launch {
+            settings.settings.collect { s ->
+                val mode = com.hoodie.app.domain.diary.journey.DiaryMapMode.parse(s.diaryMapMode)
+                if (mode != _state.value.mapMode) _state.value = _state.value.copy(mapMode = mode)
+            }
+        }
+        viewModelScope.launch {
             currentDateFlow(clock).collect { date ->
                 if (date != observedToday) {
                     val wasToday = _state.value.selectedDate == observedToday
@@ -60,7 +67,7 @@ class DiaryViewModel @Inject constructor(
     fun selectDate(date: java.time.LocalDate) {
         if (date.isAfter(clock.today())) return
         stopReplay()
-        _state.value = _state.value.copy(selectedDate = date, diary = null, isLoading = true, error = null, replay = ReplayUiState())
+        _state.value = _state.value.copy(selectedDate = date, diary = null, isLoading = true, error = null, replay = ReplayUiState(), manualChapter = null)
         load(date)
     }
 
@@ -75,7 +82,7 @@ class DiaryViewModel @Inject constructor(
         if (diary.replay.endAt <= diary.replay.startAt) return
         val resume = _state.value.replay.state == ReplayState.PAUSED
         val start = if (resume) _state.value.replay.currentTimestamp ?: diary.replay.startAt else diary.replay.startAt
-        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PLAYING), diary, start, zone))
+        _state.value = _state.value.copy(replay = replayAt(_state.value.replay.copy(state = ReplayState.PLAYING), diary, start, zone), manualChapter = null)
         replayJob?.cancel()
         replayJob = viewModelScope.launch {
             var timestamp = start
@@ -107,6 +114,15 @@ class DiaryViewModel @Inject constructor(
         if (wasPlaying && at < diary.replay.endAt) play()
     }
     fun reset() { stopReplay(); _state.value = _state.value.copy(replay = ReplayUiState(speed = _state.value.replay.speed)) }
+    /** Troca a visualização sem mexer no replay (hora, velocidade e play/pausa continuam). */
+    fun setMapMode(mode: com.hoodie.app.domain.diary.journey.DiaryMapMode) {
+        _state.value = _state.value.copy(mapMode = mode)
+        viewModelScope.launch { settings.setDiaryMapMode(mode.name) }
+    }
+
+    /** Usuário abriu um capítulo (com o replay pausado ou parado). */
+    fun openChapter(chapter: com.hoodie.app.domain.diary.journey.DayChapter?) { _state.value = _state.value.copy(manualChapter = chapter) }
+
     fun setSpeed(speed: ReplaySpeed) { _state.value = _state.value.copy(replay = _state.value.replay.copy(speed = speed)) }
     private fun stopReplay() { replayJob?.cancel(); replayJob = null }
 

@@ -39,9 +39,15 @@ data class JourneyPath(val segmentId: String, val points: List<MapPoint>) {
     /** Sentido horizontal do trecho como um todo (o veículo não "vira de frente" nas descidas). */
     val horizontalSign: Float get() = sign((points.lastOrNull()?.x ?: 0f) - (points.firstOrNull()?.x ?: 0f))
 
+    /** Busca binária no comprimento acumulado: O(log n) por quadro de replay. */
     private fun indexAt(distance: Float): Int {
-        for (i in 0 until points.size - 1) if (distance <= cumulative[i + 1]) return i
-        return points.size - 2
+        var lo = 0
+        var hi = points.size - 2
+        while (lo < hi) {
+            val mid = (lo + hi) ushr 1
+            if (distance <= cumulative[mid + 1]) hi = mid else lo = mid + 1
+        }
+        return lo.coerceIn(0, maxOf(0, points.size - 2))
     }
 
     private companion object {
@@ -78,4 +84,34 @@ object JourneyPathBuilder {
         }
         return JourneyPath(segmentId, points.zipWithNext().filter { (a, b) -> a != b }.map { it.first } + points.last())
     }
+
+    // ───── Jornada 3.0 (serpentina) ─────
+
+    /** Paradas na mesma linha: trecho reto horizontal. */
+    fun straight(id: String, from: MapPoint, to: MapPoint): JourneyPath = JourneyPath(id, listOf(from, to))
+
+    /**
+     * Virada de linha: curva em U pela borda (Bézier cúbica amostrada em pontos inteiros),
+     * com o bojo para fora ([bulge] px; [outward] +1 para a direita, -1 para a esquerda).
+     */
+    fun uTurn(id: String, from: MapPoint, to: MapPoint, bulge: Int, outward: Int, samples: Int = 18): JourneyPath {
+        val c1 = MapPoint(from.x + outward * bulge, from.y)
+        val c2 = MapPoint(to.x + outward * bulge, to.y)
+        val pts = (0..samples).map { i ->
+            val t = i / samples.toFloat()
+            val u = 1 - t
+            val x = u * u * u * from.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * to.x
+            val y = u * u * u * from.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * to.y
+            MapPoint(kotlin.math.round(x), kotlin.math.round(y))
+        }.distinct()
+        return JourneyPath(id, pts)
+    }
+
+    /** Saída de capítulo: da parada até a borda de baixo (portal). */
+    fun portalOut(id: String, from: MapPoint, bottomY: Int): JourneyPath =
+        JourneyPath(id, listOf(from, MapPoint(from.x, bottomY.toFloat())))
+
+    /** Entrada de capítulo: da borda de cima, ao lado do prédio, até a porta da primeira parada. */
+    fun portalIn(id: String, topX: Int, to: MapPoint): JourneyPath =
+        JourneyPath(id, listOf(MapPoint(topX.toFloat(), 0f), MapPoint(topX.toFloat(), to.y), to).distinct())
 }
