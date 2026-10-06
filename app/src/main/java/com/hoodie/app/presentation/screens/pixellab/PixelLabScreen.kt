@@ -65,6 +65,8 @@ import com.hoodie.app.pixel.scene.SceneRegistry
 import com.hoodie.app.pixel.scene.SpotId
 import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.scene.VisualState
+import com.hoodie.app.pixel.scene.SceneEnv
+import com.hoodie.app.pixel.npc.office.OfficeNpcDirector
 import com.hoodie.app.pixel.sprite.AndroidSpriteSheets
 import com.hoodie.app.pixel.sprite.CompositeSpriteProvider
 import com.hoodie.app.pixel.sprite.Direction
@@ -103,7 +105,7 @@ fun PixelLabScreen(onBack: () -> Unit) {
             Text("PIXEL LAB", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             Text("✕", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(role = Role.Button, onClick = onBack).semantics { contentDescription = closeLabel }.padding(8.dp))
         }
-        ChipRow(listOf("Animação", "NPC", "Cena", "Galeria", "Cenas", "Sprites", "Transportes"), tab, { tab = it })
+        ChipRow(listOf("Animação", "NPC", "Cena", "Galeria", "Cenas", "Sprites", "Transportes", "Office Live", "Shopping Live"), tab, { tab = it })
         when (tab) {
             0 -> AnimationTool()
             1 -> NpcLab()
@@ -111,8 +113,84 @@ fun PixelLabScreen(onBack: () -> Unit) {
             3 -> AnimationGallery()
             4 -> SceneGallery()
             5 -> SpriteSources()
-            else -> TransportLab()
+            6 -> TransportLab()
+            7 -> OfficeLiveLab()
+            else -> ShoppingLiveLab()
         }
+    }
+}
+
+@Composable
+private fun ShoppingLiveLab() {
+    var speed by remember { mutableFloatStateOf(1f) }
+    var seed by remember { mutableIntStateOf(42) }
+    var playing by remember { mutableStateOf(true) }
+    var elapsed by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(playing, speed) {
+        var last = -1L
+        while (playing) withFrameMillis { now ->
+            if (last >= 0) elapsed += ((now - last) * speed).toLong()
+            last = now
+        }
+    }
+    val env = remember(seed) { SceneEnv(DayPeriod.DAY, 9 * 60, variant = seed, daySeed = seed) }
+    val visual = remember(seed) {
+        VisualState(scene = SceneId.SHOPPING, spot = SpotId.AISLE_A,
+            actions = listOf(MicroAction(AnimationId.IDLE, 1, 60_000, 60_000)), variant = seed)
+    }
+    val slot = remember(env) { com.hoodie.app.pixel.npc.shopping.ShoppingNpcDirector.plan(env).single() }
+    val brain = slot.shoppingBrain!!
+    val state = brain.stateAt(elapsed)
+    Text("Simulação determinística do mercado · seed $seed · ${(elapsed / 1_000)}s", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+    Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
+        HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = DayPeriod.DAY)
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        PixelButton(if (playing) "Pausar" else "Play", { playing = !playing }, Modifier.weight(1f))
+        PixelButton("Seed −", { seed--; elapsed = 0 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+        PixelButton("Seed +", { seed++; elapsed = 0 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+    }
+    ChipRow(listOf("1x", "5x", "10x", "30x"), listOf(1f, 5f, 10f, 30f).indexOf(speed), { speed = listOf(1f, 5f, 10f, 30f)[it] })
+    SectionLabel("Estado da compra")
+    Text("DOG SHOPPER · ${state.tripState} · ${state.currentIntent} · ${state.currentSpot} → ${state.targetSpot ?: "—"}", color = HoodieColors.Gold, style = MaterialTheme.typography.labelSmall)
+    Text("Cesta ${state.basket.itemCount}/${state.basket.maxItems} · decisão #${state.decisionIndex} · próxima ação em ${((state.nextDecisionAt - elapsed).coerceAtLeast(0) / 1_000)}s · fala em ${((state.speechCooldownUntil - elapsed).coerceAtLeast(0) / 1_000)}s${state.speechLine?.let { " · fala: $it" } ?: ""}", color = HoodieColors.Muted, style = MaterialTheme.typography.labelSmall)
+}
+
+@Composable
+private fun OfficeLiveLab() {
+    var speed by remember { mutableFloatStateOf(1f) }
+    var seed by remember { mutableIntStateOf(42) }
+    var playing by remember { mutableStateOf(true) }
+    var elapsed by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(playing, speed) {
+        var last = -1L
+        while (playing) withFrameMillis { now ->
+            if (last >= 0) elapsed += ((now - last) * speed).toLong()
+            last = now
+        }
+    }
+    val env = remember(seed) { SceneEnv(DayPeriod.DAY, 9 * 60, variant = seed, daySeed = seed) }
+    val visual = remember(seed) {
+        VisualState(scene = SceneId.OFFICE, spot = SpotId.DESK,
+            actions = listOf(MicroAction(AnimationId.IDLE, 1, 60_000, 60_000)), variant = seed)
+    }
+    Text("Simulação determinística do escritório · seed $seed · ${(elapsed / 1_000)}s", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+    Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
+        HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = DayPeriod.DAY)
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        PixelButton(if (playing) "Pausar" else "Play", { playing = !playing }, Modifier.weight(1f))
+        PixelButton("Seed −", { seed--; elapsed = 0 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+        PixelButton("Seed +", { seed++; elapsed = 0 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+    }
+    ChipRow(listOf("1x", "5x", "10x", "30x"), listOf(1f, 5f, 10f, 30f).indexOf(speed), { speed = listOf(1f, 5f, 10f, 30f)[it] })
+    SectionLabel("Estado ao vivo")
+    OfficeNpcDirector.plan(env).forEach { slot ->
+        val brain = slot.officeBrain ?: return@forEach
+        val state = brain.stateAt(elapsed)
+        val movement = brain.movementAt(elapsed)
+        Text("${slot.definition.id.uppercase()} · ${state.currentIntent} · ${state.currentSpot} → ${state.targetSpot} · decisão #${state.decisionIndex} · próximo em ${((state.nextDecisionAt - elapsed).coerceAtLeast(0) / 1_000)}s · ${movement.phase}",
+            color = HoodieColors.Gold, style = MaterialTheme.typography.labelSmall)
     }
 }
 

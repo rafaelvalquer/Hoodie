@@ -1,8 +1,12 @@
 package com.hoodie.app.pixel.scene
 
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.npc.AmbientNpcSlot
+import com.hoodie.app.pixel.npc.office.OfficeNpcDirector
 
 class OfficeScene : PixelScene(SceneId.OFFICE) {
+
+    override fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> = OfficeNpcDirector.plan(env)
 
     override val spots = mapOf(
         SpotId.DESK to Spot(110, 270),
@@ -39,10 +43,26 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
     override fun props(): List<Prop> = listOf(
         Prop(0) { b, env, _ -> SceneArt.clock(b, 183, 40, 8, env.clockMinute) },
         Prop(0) { b, env, _ -> SceneArt.door(b, 200, 74, 230, 151, 0xFF6F7C96.toInt(), env.doorFrame) },
-        Prop(152) { b, _, _ ->
+        Prop(152) { b, _, t ->
             b.outlined(166, 100, 194, 152, P.METAL, P.OUTLINE)
             for (y in intArrayOf(117, 134)) b.hline(167, 193, y, P.OUTLINE)
             for (y in intArrayOf(108, 125, 142)) b.box(176, y, 184, y + 1, P.METAL_DARK)
+            // Impressora compacta sobre o armário; o LED pisca em ritmo lento.
+            b.outlined(169, 91, 191, 101, 0xFF566389.toInt(), P.OUTLINE)
+            b.hline(172, 187, 94, 0xFFBFC9D7.toInt())
+            b.box(173, 88, 184, 92, P.WHITE)
+            b.set(188, 95, if ((t / 1_300) % 2 == 0L) P.CODE_1 else P.RED)
+        },
+        // Mesas compactas dos colegas; o monitor e a cadeira dão contexto ao trabalho.
+        Prop(208) { b, _, t ->
+            b.outlined(5, 183, 55, 190, 0xFFB8AA90.toInt(), P.OUTLINE)
+            b.box(9, 190, 12, 201, 0xFF8B785F.toInt()); b.box(48, 190, 51, 201, 0xFF8B785F.toInt())
+            SceneArt.monitor(b, 17, 162, 42, 181, t, true, 1)
+        },
+        Prop(208) { b, _, t ->
+            b.outlined(187, 183, 237, 190, 0xFFB8AA90.toInt(), P.OUTLINE)
+            b.box(191, 190, 194, 201, 0xFF8B785F.toInt()); b.box(230, 190, 233, 201, 0xFF8B785F.toInt())
+            SceneArt.monitor(b, 199, 162, 224, 181, t, true, 2)
         },
         Prop(168) { b, _, _ -> SceneArt.plant(b, 26, 168, big = true) },
         Prop(198) { b, _, t ->

@@ -74,10 +74,12 @@ class ShoppingScene : PixelScene(SceneId.SHOPPING) {
         Prop(196) { b, env, _ ->
             val taken = SceneFlag.ITEM_HELD in env.flags || SceneFlag.ITEM_IN_CART in env.flags ||
                 SceneFlag.CHECKOUT_ACTIVE in env.flags
-            shelf(b, 52, 120, 0, if (taken) 1 else -1)
+            val npcTaken = env.shoppingNpc.productRemovedA
+            val gaps = buildSet { if (taken) add(1); if (npcTaken) add(0) }
+            shelf(b, 52, 120, 0, gaps)
         },
         // Gôndola B (caixas e garrafas).
-        Prop(196) { b, _, _ -> shelf(b, 138, 204, 1, -1) },
+        Prop(196) { b, env, _ -> shelf(b, 138, 204, 1, if (env.shoppingNpc.productRemovedB) setOf(0) else emptySet()) },
         // Carrinho: vazio ou com produtos.
         Prop(282) { b, env, _ ->
             val wire = P.METAL
@@ -98,7 +100,7 @@ class ShoppingScene : PixelScene(SceneId.SHOPPING) {
         },
         // Caixa: balcão, esteira, terminal e visor.
         Prop(304) { b, env, t ->
-            val active = SceneFlag.CHECKOUT_ACTIVE in env.flags
+            val active = SceneFlag.CHECKOUT_ACTIVE in env.flags || env.shoppingNpc.checkoutActive
             b.outlined(174, 262, 238, 272, 0xFF3A3F55.toInt(), P.OUTLINE)
             // Esteira com riscas que correm quando o caixa está ativo.
             val shift = if (active) ((t / 120) % 6).toInt() else 0
@@ -123,7 +125,7 @@ class ShoppingScene : PixelScene(SceneId.SHOPPING) {
     )
 
     /** Gôndola com 3 prateleiras; [gap] é o índice do produto que sumiu (−1 = nenhum). */
-    private fun shelf(b: PixelBuffer, x0: Int, x1: Int, kind: Int, gap: Int) {
+    private fun shelf(b: PixelBuffer, x0: Int, x1: Int, kind: Int, gaps: Set<Int>) {
         b.outlined(x0, 92, x1, 196, 0xFFDDE2EA.toInt(), P.OUTLINE)
         b.box(x0 + 2, 94, x1 - 2, 98, if (kind == 0) 0xFF4FA36A.toInt() else 0xFF4F7FC9.toInt())
         val colors = if (kind == 0) intArrayOf(0xFFC9544F.toInt(), 0xFFF2CF5B.toInt(), 0xFFE58A3A.toInt(), 0xFF4FA36A.toInt())
@@ -134,7 +136,7 @@ class ShoppingScene : PixelScene(SceneId.SHOPPING) {
             var x = x0 + 4
             while (x + 9 < x1) {
                 val idx = row * 10 + k
-                if (idx != gap) {
+                if (idx !in gaps) {
                     val c = colors[(idx + kind) % colors.size]
                     if (kind == 0 && row == 0) { b.disc(x + 4, base - 5, 4, P.OUTLINE); b.disc(x + 4, base - 5, 3, c) }
                     else if (kind == 1 && row == 2) { b.outlined(x + 2, base - 18, x + 6, base - 1, c, P.OUTLINE); b.box(x + 3, base - 21, x + 5, base - 18, P.OUTLINE) }

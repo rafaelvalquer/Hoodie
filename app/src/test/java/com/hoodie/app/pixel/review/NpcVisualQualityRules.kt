@@ -128,6 +128,8 @@ object NpcVisualQualityRules {
             Item.FORK -> setOf(0xFFD0D4DE.toInt())
             Item.BOOK -> setOf(0xFFC8484A.toInt())
             Item.PRODUCT -> setOf(0xFF4F7FC9.toInt())
+            Item.BASKET -> setOf(0xFFDDE7E0.toInt(), 0xFF2F4A3C.toInt())
+            Item.SHOPPING_BAG -> setOf(0xFF4F7FC9.toInt())
             else -> emptySet()
         }
         val points = image.pixels.indices.filter { image.pixels[it] in targetColors }

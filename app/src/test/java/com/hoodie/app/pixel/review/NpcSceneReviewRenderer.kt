@@ -69,7 +69,8 @@ object NpcSceneReviewRenderer {
     /** Escolhe o primeiro frame em que a própria cena realmente apresenta o estado rotulado. */
     private fun firstMoment(scene: SceneId, animation: NpcAnimation): Long {
         val slots = NpcDirector.plan(scene, variant = 0)
-        return (0L..180_000L step 50L).firstOrNull { time ->
+        // Restaurant speech has long deterministic cooldowns; search a full meal before failing the scene gallery.
+        return (0L..900_000L step 50L).firstOrNull { time ->
             slots.any { slot ->
                 val movement = NpcMotionController.movement(slot, time)
                 movement.animation == animation &&

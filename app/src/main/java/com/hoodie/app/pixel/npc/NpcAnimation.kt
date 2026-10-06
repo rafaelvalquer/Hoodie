@@ -22,8 +22,10 @@ import kotlin.math.sin
  */
 enum class NpcAnimation {
     IDLE, WALK, LOOK, LOOK_WINDOW, TALK,
-    SIT, SIT_PHONE, SIT_EAT, SIT_SLEEP, SIT_HEAD_DROP, SIT_WAKE,
-    STAND, STAND_PHONE, STAND_COFFEE,
+    SIT, SIT_PHONE, SIT_EAT, SIT_DRINK, SIT_LOOK, SIT_READ_MENU, SIT_SLEEP, SIT_HEAD_DROP, SIT_WAKE,
+    STAND, STAND_UP, STAND_PHONE, STAND_COFFEE, TYPE, READ_DOCUMENT, STAND_READ, STRETCH,
+    STAND_BROWSE, STAND_PICK_PRODUCT, STAND_READ_PRODUCT, STAND_COMPARE, STAND_LIST,
+    STAND_BASKET, LOOK_PROMOTION, CHECKOUT_WAIT, CHECKOUT_PAY,
     TURN_LEFT, TURN_RIGHT, ENTER, EXIT, REACTION;
 
     val seated: Boolean get() = name.startsWith("SIT")
@@ -109,12 +111,29 @@ object NpcPoseLibrary {
             NpcAnimation.SIT -> NpcFrame(sitDown(t, seed), base)
             NpcAnimation.SIT_PHONE -> NpcFrame(sitPhone(t, seed), base.copy(breath = breath(t, seed)))
             NpcAnimation.SIT_EAT -> NpcFrame(sitEat(t, seed), base)
+            NpcAnimation.SIT_DRINK -> NpcFrame(sitDrink(t, seed), base)
+            NpcAnimation.SIT_LOOK -> NpcFrame(sitLook(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.SIT_READ_MENU -> NpcFrame(sitReadMenu(t, seed), base.copy(breath = breath(t, seed)))
             NpcAnimation.SIT_SLEEP -> NpcFrame(sitSleep(t, seed), base.copy(breath = breath(t, seed, 1_300)))
             NpcAnimation.SIT_HEAD_DROP -> NpcFrame(headDrop(t), base.copy(breath = 1))
             NpcAnimation.SIT_WAKE -> NpcFrame(wake(t), base)
             NpcAnimation.STAND -> NpcFrame(stand(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_UP -> NpcFrame(standUp(t, seed), base.copy(breath = breath(t, seed)))
             NpcAnimation.STAND_PHONE -> NpcFrame(standPhone(t, seed), base.copy(breath = breath(t, seed)))
             NpcAnimation.STAND_COFFEE -> NpcFrame(standCoffee(t, seed), base)
+            NpcAnimation.TYPE -> NpcFrame(type(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.READ_DOCUMENT -> NpcFrame(readDocument(t, seed, seated), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_READ -> NpcFrame(readDocument(t, seed, seated = false), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STRETCH -> NpcFrame(stretch(t, seated), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_BROWSE -> NpcFrame(browse(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_PICK_PRODUCT -> NpcFrame(pickProduct(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_READ_PRODUCT -> NpcFrame(readProduct(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_COMPARE -> NpcFrame(compareProducts(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_LIST -> NpcFrame(standPhone(t, seed).copy(facing = Facing.SIDE), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_BASKET -> NpcFrame(look(t, seed, false).copy(facing = Facing.SIDE, eyes = Eyes.LOOK_DOWN, leftArm = Arm.HOLD_CHEST, rightArm = Arm.DOWN), base.copy(breath = breath(t, seed)))
+            NpcAnimation.LOOK_PROMOTION -> NpcFrame(look(t, seed, false).copy(facing = Facing.SIDE, eyes = Eyes.LOOK_UP, headTilt = if ((t / 800) % 2 == 0L) 1 else 0), base.copy(breath = breath(t, seed)))
+            NpcAnimation.CHECKOUT_WAIT -> NpcFrame(idle(t, seed, false).copy(facing = Facing.SIDE, eyes = if ((t / 2_000) % 3 == 0L) Eyes.LOOK_UP else Eyes.OPEN), base.copy(breath = breath(t, seed)))
+            NpcAnimation.CHECKOUT_PAY -> NpcFrame(standPhone(t, seed).copy(facing = Facing.SIDE, rightArm = if ((t / 500) % 2 == 0L) Arm.HOLD_CHEST else Arm.FORWARD_DOWN), base.copy(breath = breath(t, seed)))
             NpcAnimation.TURN_LEFT, NpcAnimation.TURN_RIGHT -> NpcFrame(turn(t), base)
             NpcAnimation.REACTION -> NpcFrame(reaction(reaction ?: NpcReaction.LOOK_AT_HOODIE, t, seated), base)
         }
@@ -300,6 +319,127 @@ object NpcPoseLibrary {
             bob = if (turning) -1 else 0,
         )
     }
+
+    /** Digitação discreta em ciclos curtos, com pausas para voltar a olhar o monitor. */
+    private fun type(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 71L, 2_600L)
+        val typing = k < 1_700L
+        return CharacterPose(
+            legs = Legs.SIT, facing = Facing.SIDE,
+            eyes = if (!typing) Eyes.LOOK_UP else if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.FOCUSED,
+            rightArm = if (typing && k % 520L < 280L) Arm.FORWARD_DOWN else Arm.DOWN,
+            leftArm = if (typing && k % 520L >= 180L) Arm.FORWARD_DOWN else Arm.DOWN,
+            mouth = if (k in 2_000L..2_300L) Mouth.FLAT else Mouth.SMILE,
+            item = Item.PENCIL,
+        )
+    }
+
+    /** Segura uma folha, alterna o olhar e vira a página ocasionalmente. */
+    private fun readDocument(t: Long, seed: Int, seated: Boolean): CharacterPose {
+        val k = Math.floorMod(t + seed * 43L, 2_800L)
+        return CharacterPose(
+            legs = if (seated) Legs.SIT else Legs.STAND,
+            facing = Facing.SIDE,
+            eyes = if (k < 1_900L) Eyes.LOOK_DOWN else Eyes.OPEN,
+            rightArm = Arm.HOLD_CHEST,
+            leftArm = if (k in 1_100L..1_450L) Arm.FORWARD_DOWN else Arm.HOLD_CHEST,
+            item = Item.BOOK,
+            headTilt = if (k in 1_700L..2_200L) -1 else 0,
+            mouth = if (shouldBlink(t, seed)) Mouth.FLAT else Mouth.SMILE,
+        )
+    }
+
+    /** Alongamento rápido entre blocos de trabalho, sem deslocar os pés. */
+    private fun stretch(t: Long, seated: Boolean): CharacterPose = when (Math.floorMod(t, 2_400L)) {
+        in 0L..499L -> idle(t, 0, seated)
+        in 500L..1_399L -> CharacterPose(
+            legs = if (seated) Legs.SIT else Legs.STAND,
+            rightArm = Arm.UP, leftArm = Arm.UP, headTilt = -1, eyes = Eyes.CLOSED,
+        )
+        in 1_400L..1_899L -> CharacterPose(
+            legs = if (seated) Legs.SIT else Legs.STAND,
+            rightArm = Arm.FORWARD_UP, leftArm = Arm.FORWARD_UP, headTilt = 1,
+        )
+        else -> idle(t, 0, seated)
+    }
+
+    /** Copo da mesa à boca, pausa curta e retorno ao tampo. */
+    fun sitDrink(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 97L, 3_600L)
+        val base = CharacterPose(legs = Legs.SIT, facing = Facing.SIDE, item = Item.GLASS, eyes = Eyes.OPEN)
+        return when (k) {
+            in 0L..499L -> base.copy(rightArm = Arm.HOLD_CHEST, eyes = Eyes.LOOK_DOWN)
+            in 500L..999L -> base.copy(rightArm = Arm.HOLD_MOUTH, eyes = Eyes.LOOK_DOWN)
+            in 1_000L..1_699L -> base.copy(rightArm = Arm.HOLD_MOUTH, mouth = Mouth.OPEN, eyes = Eyes.CLOSED)
+            in 1_700L..2_199L -> base.copy(rightArm = Arm.FORWARD_DOWN, eyes = Eyes.OPEN)
+            else -> base.copy(rightArm = Arm.HOLD_CHEST, eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.OPEN)
+        }
+    }
+
+    /** Olhar sentado e tranquilo, sem mover o NPC do assento. */
+    fun sitLook(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 131L, 4_800L)
+        val (eyes, tilt) = when (k) {
+            in 0L..1_199L -> Eyes.LOOK_LEFT to -1
+            in 1_200L..2_199L -> Eyes.OPEN to 0
+            in 2_200L..3_399L -> Eyes.LOOK_UP to 0
+            else -> Eyes.LOOK_RIGHT to 1
+        }
+        return CharacterPose(
+            legs = Legs.SIT, facing = Facing.SIDE,
+            eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else eyes,
+            headTilt = tilt, mouth = Mouth.SMILE,
+        )
+    }
+
+    /** Cardápio leve nas duas mãos, com um pequeno movimento de leitura. */
+    fun sitReadMenu(t: Long, seed: Int): CharacterPose {
+        val page = Math.floorMod(t + seed * 73L, 2_400L) in 1_500L..1_799L
+        return CharacterPose(
+            legs = Legs.SIT, facing = Facing.FRONT, item = Item.MENU, itemInBothHands = true,
+            eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.LOOK_DOWN,
+            mouth = Mouth.SMILE, leftArm = Arm.HOLD_CHEST, rightArm = Arm.HOLD_CHEST,
+            headDy = if (page) 1 else 0,
+        )
+    }
+
+    /** SIT → LEAN → RISE → STAND; usado pelo cliente ao deixar a mesa. */
+    fun standUp(t: Long, seed: Int): CharacterPose = when {
+        t < 160 -> CharacterPose(legs = Legs.SIT, facing = Facing.SIDE, eyes = Eyes.OPEN)
+        t < 320 -> CharacterPose(legs = Legs.SIT, facing = Facing.SIDE, headDy = -1, bob = -1, eyes = Eyes.OPEN)
+        t < 480 -> CharacterPose(legs = Legs.STAND, facing = Facing.SIDE, bob = 1, eyes = Eyes.OPEN)
+        t < 560 -> CharacterPose(legs = Legs.STAND, facing = Facing.SIDE, bob = 0, ears = Ears.ALERT)
+        else -> idle(t, seed)
+    }
+
+    private fun browse(t: Long, seed: Int) = look(t, seed, false).copy(
+        facing = Facing.SIDE,
+        eyes = when ((t / 1_800) % 3) { 0L -> Eyes.LOOK_DOWN; 1L -> Eyes.OPEN; else -> Eyes.LOOK_UP },
+        headTilt = when ((t / 2_400) % 3) { 0L -> -1; 1L -> 0; else -> 1 },
+    )
+
+    private fun pickProduct(t: Long, seed: Int): CharacterPose {
+        val held = t >= 900
+        return CharacterPose(
+            facing = Facing.SIDE, eyes = if (held) Eyes.LOOK_DOWN else Eyes.OPEN,
+            rightArm = if (held) Arm.HOLD_CHEST else Arm.FORWARD_DOWN,
+            leftArm = Arm.DOWN, item = if (held) Item.PRODUCT else Item.NONE,
+            mouth = if (held && (t / 300) % 2 == 0L) Mouth.SMILE else Mouth.FLAT,
+            headDy = if (held) 1 else 0,
+        )
+    }
+
+    private fun readProduct(t: Long, seed: Int) = CharacterPose(
+        facing = Facing.SIDE, eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.LOOK_DOWN,
+        rightArm = Arm.HOLD_CHEST, item = Item.PRODUCT, headDy = if ((t / 1_200) % 2 == 0L) 1 else 0,
+        headTilt = if ((t / 1_800) % 2 == 0L) -1 else 1,
+    )
+
+    private fun compareProducts(t: Long, seed: Int) = readProduct(t, seed).copy(
+        eyes = when ((t / 1_300) % 3) { 0L -> Eyes.LOOK_DOWN; 1L -> Eyes.LOOK_UP; else -> Eyes.LOOK_LEFT },
+        leftArm = if ((t / 1_100) % 2 == 0L) Arm.HOLD_CHEST else Arm.DOWN,
+        mouth = if ((t / 1_500) % 2 == 0L) Mouth.FLAT else Mouth.OPEN,
+    )
 
     fun reaction(r: NpcReaction, t: Long, seated: Boolean = false): CharacterPose {
         val base = seatedBase(seated).copy(facing = Facing.FRONT)

@@ -218,7 +218,7 @@ class AnimationStateMachine(
         transients.removeAll { it.until < now }
         transients.forEach { effects += it.kind to (it.x to it.y) }
 
-        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient)
+        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = v.variant)
         return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects, animation, direction, idx)
     }
 

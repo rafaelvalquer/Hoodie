@@ -2,6 +2,9 @@ package com.hoodie.app.pixel.scene
 
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.pixel.npc.restaurant.RestaurantDrinkAmount
+import com.hoodie.app.pixel.npc.restaurant.RestaurantFoodAmount
+import com.hoodie.app.pixel.npc.restaurant.RestaurantMealState
 
 class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
     override val spots = mapOf(
@@ -46,16 +49,11 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
             b.set(24, 96, if ((t / 700) % 2 == 0L) P.CODE_1 else P.RED)
             SceneArt.mug(b, 42, 103)
         },
-        Prop(184) { b, _, _ ->
-            b.outlined(168, 166, 222, 174, P.WHITE, P.OUTLINE)
-            b.box(193, 175, 197, 184, P.FURNITURE)
-            b.outlined(154, 150, 166, 184, P.FURNITURE, P.OUTLINE); b.outlined(224, 150, 236, 184, P.FURNITURE, P.OUTLINE)
-        },
+        // Mesa do cliente: tampo/prato na profundidade do assento; pernas e cadeiras atrás.
+        Prop(218) { b, env, t -> drawGuestTableTop(b, env, t) },
         Prop(190) { b, _, _ -> SceneArt.plant(b, 14, 190, big = true) },
-        Prop(232) { b, _, _ ->
-            b.outlined(102, 204, 138, 246, P.FURNITURE, P.OUTLINE)
-            b.box(106, 208, 134, 212, P.FURNITURE_LIGHT)
-        },
+        Prop(220) { b, _, _ -> drawGuestChair(b) },
+        Prop(260) { b, _, _ -> drawGuestTableFront(b) },
         Prop(292) { b, env, _ ->
             b.outlined(60, 246, 180, 258, P.WHITE, P.OUTLINE)
             b.outlined(62, 257, 178, 286, P.CREAM, P.OUTLINE)
@@ -67,6 +65,74 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
             b.box(151, 240, 157, 249, 0xFFF29B4A.toInt())
         },
     )
+
+    private fun drawGuestChair(b: PixelBuffer) {
+        // Encosto atrás do gato e assento sob o ponto de contato do NPC.
+        b.outlined(196, 216, 215, 238, 0xFF8C5638.toInt(), P.OUTLINE)
+        b.box(199, 219, 212, 234, 0xFFB87349.toInt())
+        b.outlined(194, 235, 217, 240, 0xFFD08A57.toInt(), P.OUTLINE)
+        b.vline(198, 240, 252, P.OUTLINE); b.vline(213, 240, 252, P.OUTLINE)
+        b.hline(195, 216, 251, P.OUTLINE)
+    }
+
+    private fun drawGuestTableTop(b: PixelBuffer, env: SceneEnv, timeMs: Long) {
+        // Tampo pequeno na direita; o centro do prato fica ao alcance da mão do gato.
+        b.outlined(176, 207, 228, 214, 0xFFF1DAB4.toInt(), P.OUTLINE)
+        b.box(178, 208, 226, 210, 0xFFFFE8C4.toInt())
+        b.vline(180, 214, 228, 0xFF6B3E2C.toInt()); b.vline(224, 214, 228, 0xFF6B3E2C.toInt())
+        b.outlined(178, 229, 226, 234, 0xFF8E5435.toInt(), P.OUTLINE)
+        val state = env.restaurantGuestTable
+        drawGuestPlate(b, state?.foodAmount ?: RestaurantFoodAmount.EMPTY, timeMs)
+        drawGuestGlass(b, state?.drinkAmount ?: RestaurantDrinkAmount.FULL)
+        if (state?.mealState == RestaurantMealState.SERVED || state?.mealState == RestaurantMealState.EATING) {
+            val steamFrame = (timeMs / 360L).toInt() % 3
+            for (i in 0..1) {
+                val x = 187 + i * 5
+                val y = 198 - ((steamFrame + i) % 3) * 2
+                b.set(x, y, 0xFFDCE6E8.toInt())
+            }
+        }
+        if (state?.menuOpen == true) {
+            b.outlined(210, 202, 220, 207, 0xFFE9E0C8.toInt(), P.OUTLINE)
+            b.hline(212, 218, 204, 0xFF8B6B4D.toInt())
+        }
+        // Saleiro e guardanapo, detalhes discretos e fixos da mesa.
+        b.outlined(222, 201, 225, 205, P.WHITE, P.OUTLINE)
+        b.box(223, 199, 224, 200, P.YELLOW)
+        b.box(178, 203, 184, 205, P.WHITE)
+    }
+
+    private fun drawGuestPlate(b: PixelBuffer, amount: RestaurantFoodAmount, timeMs: Long) {
+        b.outlined(183, 207, 200, 211, P.WHITE, P.OUTLINE)
+        when (amount) {
+            RestaurantFoodAmount.FULL -> {
+                b.box(186, 205, 197, 207, 0xFFF2CF5B.toInt())
+                b.box(188, 204, 190, 205, P.RED); b.box(193, 203, 195, 205, P.LEAF)
+            }
+            RestaurantFoodAmount.PARTIAL -> {
+                b.box(188, 205, 195, 207, 0xFFF2CF5B.toInt()); b.set(192, 204, P.LEAF)
+            }
+            RestaurantFoodAmount.LOW -> b.box(190, 206, 193, 207, 0xFFF2CF5B.toInt())
+            RestaurantFoodAmount.EMPTY -> if (timeMs % 5_000L < 1_000L) b.set(191, 206, 0xFFE8E0D0.toInt())
+        }
+    }
+
+    private fun drawGuestGlass(b: PixelBuffer, amount: RestaurantDrinkAmount) {
+        b.outlined(204, 203, 209, 211, 0xFFDCECF4.toInt(), P.OUTLINE)
+        val top = when (amount) {
+            RestaurantDrinkAmount.FULL -> 205
+            RestaurantDrinkAmount.HALF -> 207
+            RestaurantDrinkAmount.EMPTY -> 210
+        }
+        if (amount != RestaurantDrinkAmount.EMPTY) b.box(206, top, 207, 209, 0xFFF29B4A.toInt())
+        b.set(205, 204, P.WHITE)
+    }
+
+    private fun drawGuestTableFront(b: PixelBuffer) {
+        // Borda frontal passa à frente do NPC, escondendo apenas pernas/parte inferior.
+        b.outlined(176, 229, 228, 235, 0xFFB87349.toInt(), P.OUTLINE)
+        b.hline(180, 224, 231, 0xFFE0A06B.toInt())
+    }
 
     /** Pratos variam por dia: 🍜 🍔 🍕 🥗 🍛. */
     private fun drawFood(b: PixelBuffer, variant: Int) {

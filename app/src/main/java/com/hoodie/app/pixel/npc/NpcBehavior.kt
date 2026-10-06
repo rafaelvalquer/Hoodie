@@ -112,6 +112,10 @@ data class NpcMovement(
     val seated: Boolean = animation.seated,
     val facing: Facing? = null,
     val reaction: NpcReaction? = null,
+    /** Itens numa cesta carregada pelo NPC comprador (independente do carrinho do Hoodie). */
+    val shoppingBasketCount: Int = 0,
+    /** Produto visível na mão durante o trajeto entre prateleira e cesta. */
+    val shoppingProductHeld: Boolean = false,
 )
 
 /** Escalas permitidas por profundidade (sempre nearest-neighbor). */

@@ -57,6 +57,11 @@ internal object HoodieAccessoryPainter {
                 b.outlined(rx, ry - 8, rx + 4, ry + 1, 0xFF8AD6F2.toInt(), o)
                 b.box(rx + 1, ry - 9, rx + 3, ry - 8, 0xFF2F6FD0.toInt())
             }
+            Item.GLASS -> {
+                b.outlined(rx - 3, ry - 7, rx + 4, ry + 1, 0xFFF4F1EA.toInt(), o)
+                b.box(rx - 2, ry - 3, rx + 3, ry, 0xFFF29B4A.toInt())
+                b.vline(rx - 1, ry - 6, ry - 4, 0xFFFFFFFF.toInt())
+            }
             Item.FORK -> {
                 b.vline(rx + 2, ry - 7, ry + 1, 0xFFD0D4DE.toInt())
                 b.set(rx + 1, ry - 7, 0xFFD0D4DE.toInt()); b.set(rx + 3, ry - 7, 0xFFD0D4DE.toInt())
@@ -87,6 +92,18 @@ internal object HoodieAccessoryPainter {
                 b.outlined(rx - 1, ry - 9, rx + 5, ry + 1, 0xFF4F7FC9.toInt(), o)
                 b.box(rx, ry - 6, rx + 4, ry - 4, 0xFFF6F3EA.toInt())
                 b.set(rx + 2, ry - 8, 0xFFF2CF5B.toInt())
+            }
+            Item.BASKET -> {
+                // Cesta portátil presa à mão.
+                b.outlined(rx - 6, ry - 5, rx + 6, ry + 1, 0xFFDDE7E0.toInt(), o)
+                b.hline(rx - 4, rx + 4, ry - 4, 0xFFDDE7E0.toInt())
+                b.vline(rx - 3, ry - 3, ry, 0xFF2F4A3C.toInt()); b.vline(rx, ry - 3, ry, 0xFF2F4A3C.toInt())
+                b.vline(rx + 3, ry - 3, ry, 0xFF2F4A3C.toInt())
+            }
+            Item.SHOPPING_BAG -> {
+                b.outlined(rx - 5, ry - 7, rx + 5, ry + 1, 0xFF4F7FC9.toInt(), o)
+                b.line(rx - 3, ry - 7, rx - 2, ry - 10, o); b.line(rx + 3, ry - 7, rx + 2, ry - 10, o)
+                b.hline(rx - 2, rx + 2, ry - 5, 0xFFF2CF5B.toInt())
             }
             Item.SNACK -> {
                 // Biscoito com gotas.

@@ -1,0 +1,13 @@
+name,time_ms,intent
+browsing.png,2750,BROWSE_AISLE
+reading-product.png,25250,READ_LABEL
+picking-product.png,23000,PICK_PRODUCT
+comparing-products.png,61000,COMPARE_PRODUCTS
+checking-list.png,36000,CHECK_LIST
+checking-phone.png,79250,CHECK_PHONE
+promotion.png,43250,LOOK_PROMOTION
+basket.png,31750,PUT_IN_BASKET
+checkout-wait.png,118500,WAIT_CHECKOUT
+paying.png,124000,PAY
+leaving.png,129500,EXIT_STORE
+night.png,22500,READ_LABEL

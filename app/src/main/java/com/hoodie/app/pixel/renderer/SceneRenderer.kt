@@ -25,12 +25,12 @@ class SceneRenderer {
 
     fun render(frame: RenderFrame, timeMs: Long): PixelBuffer {
         val scene = frame.scene
-        buffer.copyFrom(background(scene, frame.env))
-
         val npcs = scene.ambientNpcs(frame.env)
+        val env = envWithAmbientNpcState(frame.env, npcs, timeMs)
+        buffer.copyFrom(background(scene, env))
         val behindProps = scene.sortedProps.filter { it.baseline <= frame.y }
         val behindNpcs = npcs.filter { it.baseline <= frame.y }
-        (behindProps.map { it.baseline to { it.draw(buffer, frame.env, timeMs) } } +
+        (behindProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
             behindNpcs.map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } })
             .sortedBy { it.first }.forEach { it.second() }
 
@@ -45,12 +45,12 @@ class SceneRenderer {
         }
         val frontProps = scene.sortedProps.filter { it.baseline > frame.y }
         val frontNpcs = npcs.filter { it.baseline > frame.y }
-        (frontProps.map { it.baseline to { it.draw(buffer, frame.env, timeMs) } } +
+        (frontProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
             frontNpcs.map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } })
             .sortedBy { it.first }.forEach { it.second() }
 
-        Lighting.apply(buffer, Lighting.map(scene, frame.env))
-        applyTransportLighting(buffer, frame.env.transportAmbient?.lighting)
+        Lighting.apply(buffer, Lighting.map(scene, env))
+        applyTransportLighting(buffer, env.transportAmbient?.lighting)
         frame.effects.forEach { (kind, pos) -> Effects.draw(buffer, kind, pos.first, pos.second, timeMs) }
         Lighting.fade(buffer, frame.fade)
         return buffer
@@ -58,16 +58,44 @@ class SceneRenderer {
 
     /** Cena sem personagem (galeria de cenas / thumbnails). */
     fun renderEmpty(scene: PixelScene, env: SceneEnv, timeMs: Long, includeAmbientNpcs: Boolean = true): PixelBuffer {
-        buffer.copyFrom(background(scene, env))
-        val props = scene.sortedProps.map { it.baseline to { it.draw(buffer, env, timeMs) } }
-        val npcs = if (includeAmbientNpcs) {
-            scene.ambientNpcs(env).map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } }
-        } else emptyList()
+        val slots = if (includeAmbientNpcs) scene.ambientNpcs(env) else emptyList()
+        val drawEnv = envWithAmbientNpcState(env, slots, timeMs)
+        buffer.copyFrom(background(scene, drawEnv))
+        val props = scene.sortedProps.map { it.baseline to { it.draw(buffer, drawEnv, timeMs) } }
+        val npcs = slots.map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } }
         (props + npcs)
             .sortedBy { it.first }.forEach { it.second() }
-        Lighting.apply(buffer, Lighting.map(scene, env))
-        applyTransportLighting(buffer, env.transportAmbient?.lighting)
+        Lighting.apply(buffer, Lighting.map(scene, drawEnv))
+        applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
         return buffer
+    }
+
+    /** Frame isolado do NPC para ferramentas de revisão; usa os mesmos props e estado da cena. */
+    fun renderAmbientNpc(scene: PixelScene, env: SceneEnv, timeMs: Long): PixelBuffer {
+        val slots = scene.ambientNpcs(env)
+        val drawEnv = envWithAmbientNpcState(env, slots, timeMs)
+        buffer.copyFrom(background(scene, drawEnv))
+        scene.sortedProps.forEach { it.draw(buffer, drawEnv, timeMs) }
+        slots.forEach { NpcRenderer.draw(buffer, it, timeMs) }
+        Lighting.apply(buffer, Lighting.map(scene, drawEnv))
+        applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
+        return buffer
+    }
+
+    private fun envWithAmbientNpcState(
+        env: SceneEnv,
+        npcs: List<com.hoodie.app.pixel.npc.AmbientNpcSlot>,
+        timeMs: Long,
+    ): SceneEnv {
+        val shopper = npcs.firstNotNullOfOrNull { it.shoppingBrain }
+        val shopperState = shopper?.visualStateAt(timeMs)
+        val restaurant = npcs.firstNotNullOfOrNull { it.restaurantBrain }
+        val tableState = restaurant?.tableStateAt(timeMs)
+        return env.copy(
+            shoppingNpc = shopperState ?: env.shoppingNpc,
+            doorFrame = if (shopperState?.doorOpen == true) maxOf(env.doorFrame, SceneEnv.DOOR_OPEN) else env.doorFrame,
+            restaurantGuestTable = tableState ?: env.restaurantGuestTable,
+        )
     }
 
     /** Ajusta cabine aberta, interior diurno ou túnel após a iluminação de horário da cena. */

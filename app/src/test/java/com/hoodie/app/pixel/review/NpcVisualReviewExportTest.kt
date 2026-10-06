@@ -101,6 +101,8 @@ class NpcVisualReviewExportTest {
         Triple(NpcCharacterRegistry.CAT_GUEST, CharacterPose(rightArm = com.hoodie.app.pixel.sprite.Arm.HOLD_MOUTH, item = Item.FORK), Item.FORK),
         Triple(NpcCharacterRegistry.RABBIT_READER, CharacterPose(leftArm = com.hoodie.app.pixel.sprite.Arm.HOLD_CHEST, rightArm = com.hoodie.app.pixel.sprite.Arm.HOLD_CHEST, item = Item.BOOK, itemInBothHands = true), Item.BOOK),
         Triple(NpcCharacterRegistry.DOG_SHOPPER, CharacterPose(rightArm = com.hoodie.app.pixel.sprite.Arm.HOLD_CHEST, item = Item.PRODUCT), Item.PRODUCT),
+        Triple(NpcCharacterRegistry.DOG_SHOPPER, CharacterPose(rightArm = com.hoodie.app.pixel.sprite.Arm.HOLD_CHEST, item = Item.BASKET), Item.BASKET),
+        Triple(NpcCharacterRegistry.DOG_SHOPPER, CharacterPose(rightArm = com.hoodie.app.pixel.sprite.Arm.HOLD_CHEST, item = Item.SHOPPING_BAG), Item.SHOPPING_BAG),
     )
 
     private fun walkReports(style: CharacterStyle): List<NpcVisualQualityReport> {
@@ -154,6 +156,7 @@ class NpcVisualReviewExportTest {
         appendLine("<style>body{font:16px system-ui;background:#242742;color:#eee;padding:2rem}img{image-rendering:pixelated;max-width:100%;background:#2b2e4a}section{margin:2rem 0}a{color:#f1c66d}</style>")
         appendLine("<h1>NPC Art V3 — candidate review</h1><p>Status: PENDING · veja o manifest e o relatório de qualidade antes de aprovar.</p>")
         appendLine("<p><a href=\"review-manifest.json\">Manifest</a> · <a href=\"quality-report.json\">Qualidade</a> · <a href=\"npc-scale-v3/report.json\">Métricas de legibilidade</a> · <a href=\"performance-report.json\">Desempenho</a></p>")
+        appendLine("<p><a href=\"shopping-live/index.html\">Shopping Live — simulação de compra em cinco minutos</a></p>")
         appendLine("<section><h2>Matrizes por espécie</h2>")
         NpcVisualReviewFrames.reviewSpecies.forEach { style ->
             val slug = style.id.substringBefore('_')

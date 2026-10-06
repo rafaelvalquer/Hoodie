@@ -5,6 +5,8 @@ import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.transport.TransportAmbientProfile
 import com.hoodie.app.pixel.npc.AmbientNpcSlot
 import com.hoodie.app.pixel.npc.NpcDirector
+import com.hoodie.app.pixel.npc.shopping.ShoppingNpcVisualState
+import com.hoodie.app.pixel.npc.restaurant.RestaurantTableState
 
 enum class SceneId(val label: String) {
     HOME("Casa"),
@@ -67,6 +69,12 @@ data class SceneEnv(
     val flags: Set<SceneFlag> = emptySet(),
     /** Perfil ambiental do transporte ativo (paralaxe, balanço e iluminação). */
     val transportAmbient: TransportAmbientProfile? = null,
+    /** Seed opcional do dia; varia a história ambiental sem depender do relógio do frame. */
+    val daySeed: Int = 0,
+    /** Estado de apresentação do comprador; permanece isolado das flags do Hoodie. */
+    val shoppingNpc: ShoppingNpcVisualState = ShoppingNpcVisualState.EMPTY,
+    /** Estado visual da refeição do cliente, independente das interações de Hoodie. */
+    val restaurantGuestTable: RestaurantTableState? = null,
 ) {
     companion object {
         const val DOOR_OPEN = 3
@@ -135,7 +143,7 @@ abstract class PixelScene(val id: SceneId) {
     open fun lights(env: SceneEnv): List<Light> = emptyList()
 
     /** Personagens ambientais estáveis da cena; nunca adicionados a cenas privadas. */
-    open fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> = NpcDirector.plan(id, env.variant)
+    open fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> = NpcDirector.plan(id, env)
 
     fun spot(id: SpotId): Spot = spots[id] ?: spots.getValue(defaultSpot)
 

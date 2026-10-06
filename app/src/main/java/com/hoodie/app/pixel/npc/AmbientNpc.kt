@@ -9,10 +9,19 @@ import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Point
+import com.hoodie.app.pixel.sprite.Item
+import com.hoodie.app.pixel.sprite.HoodiePainter
 import kotlin.math.roundToInt
 import kotlin.math.PI
 import kotlin.math.sin
 import java.util.concurrent.ConcurrentHashMap
+import com.hoodie.app.pixel.npc.office.OfficeAmbientBrain
+import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcBrain
+import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcDirector
+import com.hoodie.app.pixel.npc.shopping.ShoppingNpcBrain
+import com.hoodie.app.pixel.npc.shopping.ShoppingNpcDirector
+import com.hoodie.app.core.time.DayPeriod
+import com.hoodie.app.pixel.scene.SceneEnv
 
 /** Definição de cena seleciona identidade registrada, comportamento e fala — nunca anatomia. */
 data class AmbientNpcDefinition(
@@ -34,6 +43,12 @@ data class AmbientNpcSlot(
     val depth: NpcDepth = NpcDepth.SCENE,
     /** Para NPCs parados de perfil: olhando para a direita. */
     val facingRight: Boolean = false,
+    /** Comportamento procedural do escritório, consultado de forma determinística por tempo. */
+    val officeBrain: OfficeAmbientBrain? = null,
+    /** Comprador procedural do mercado; reconstruído por seed e tempo, sem estado compartilhado. */
+    val shoppingBrain: ShoppingNpcBrain? = null,
+    /** Cliente procedural do restaurante; reconstruído por seed e tempo, sem estado compartilhado. */
+    val restaurantBrain: RestaurantNpcBrain? = null,
 ) {
     val scale: Float get() = NpcScalePolicy.scale(definition.characterStyle, depth)
 }
@@ -100,11 +115,10 @@ object NpcDirector {
         ),
         lines = listOf("Cheiro bom.", "Vou pedir o de sempre."),
     )
-    private val shopper = definition(NpcCharacterRegistry.DOG_SHOPPER, NpcAnimation.WALK)
     private val walker = definition(NpcCharacterRegistry.RABBIT_WALKER, NpcAnimation.WALK)
 
-    fun plan(scene: SceneId, variant: Int): List<AmbientNpcSlot> {
-        val v = variant and 1
+    fun plan(scene: SceneId, env: SceneEnv): List<AmbientNpcSlot> {
+        val v = env.variant and 1
         return when (scene) {
             SceneId.OFFICE -> listOf(
                 if (v == 0) AmbientNpcSlot(exec, 211, 204, 204, 11 + v, officePath())
@@ -125,8 +139,8 @@ object NpcDirector {
                 AmbientNpcSlot(dog, 194, 222, 224, 62, depth = NpcDepth.BACKGROUND),
                 AmbientNpcSlot(duck, 119, 240, 242, 63),
             )
-            SceneId.RESTAURANT -> listOf(AmbientNpcSlot(guest, 207, 251, 252, 71))
-            SceneId.SHOPPING -> listOf(AmbientNpcSlot(shopper, 207, 212, 214, 81, shopperPath(), depth = NpcDepth.BACKGROUND))
+            SceneId.RESTAURANT -> RestaurantNpcDirector.plan(env)
+            SceneId.SHOPPING -> ShoppingNpcDirector.plan(env)
             SceneId.LEISURE -> listOf(
                 AmbientNpcSlot(walker, 204, 252, 254, 91, walkerPath()),
                 AmbientNpcSlot(cat, 38, 252, 254, 92, strollPath()),
@@ -134,6 +148,10 @@ object NpcDirector {
             else -> emptyList()
         }
     }
+
+    fun plan(scene: SceneId, variant: Int): List<AmbientNpcSlot> = plan(
+        scene, SceneEnv(DayPeriod.DAY, 9 * 60, variant = variant),
+    )
 
     private fun definition(
         style: CharacterStyle,
@@ -168,15 +186,6 @@ object NpcDirector {
         millisPerPixel = 30,
     )
 
-    private fun shopperPath() = NpcPath(
-        points = listOf(
-            NpcPathPoint(214, 212, NpcAnimation.IDLE, 1_400),
-            NpcPathPoint(150, 212, NpcAnimation.LOOK, 2_000),
-            NpcPathPoint(214, 212),
-        ),
-        millisPerPixel = 30,
-    )
-
     private fun walkerPath() = NpcPath(
         points = listOf(
             NpcPathPoint(212, 252, NpcAnimation.IDLE, 1_200),
@@ -204,12 +213,23 @@ object NpcRenderer {
     private val turnSideFrontRatios = ConcurrentHashMap<String, TurnWidthRatios>()
 
     fun draw(b: PixelBuffer, slot: AmbientNpcSlot, timeMs: Long) {
-        val movement = NpcMotionController.movement(slot, timeMs)
+        val restaurantBrain = slot.restaurantBrain
+        val restaurantState = restaurantBrain?.stateAt(timeMs)
+        val movement = if (restaurantBrain != null && restaurantState != null) {
+            restaurantBrain.movementAt(timeMs, restaurantState)
+        } else NpcMotionController.movement(slot, timeMs)
         val frameData = NpcMotionController.frame(slot, timeMs, movement)
-        val speechAllowed = shouldSpeak(slot, timeMs)
+        val restaurantLine = if (restaurantBrain != null && restaurantState != null) {
+            restaurantBrain.speechLineAt(timeMs, restaurantState)
+        } else null
+        val speechProfile = restaurantLine?.let {
+            NpcSpeechProfile(listOf(it), visibleMs = RestaurantNpcBrain.SPEECH_VISIBLE_MS)
+        } ?: slot.definition.speechProfile
+        val speechAllowed = if (restaurantBrain != null) restaurantLine != null else shouldSpeak(slot, timeMs)
         val animation = if (
-            movement.animation == NpcAnimation.TALK && slot.definition.speechProfile != null && !speechAllowed
+            movement.animation == NpcAnimation.TALK && speechProfile != null && !speechAllowed && slot.officeBrain == null
         ) {
+            if (restaurantBrain != null) NpcAnimation.IDLE else
             slot.definition.behaviorProfile.sequence?.steps?.lastOrNull { it.animation != NpcAnimation.TALK }?.animation
                 ?: slot.path?.points?.mapNotNull { it.stop }?.lastOrNull { it != NpcAnimation.TALK }
                 ?: NpcAnimation.IDLE
@@ -228,7 +248,26 @@ object NpcRenderer {
         val top = movement.floorY - frame.anchors.feet.y
         drawGroundShadow(b, movement.x, movement.floorY, slot.definition.characterStyle, slot.scale)
         b.blit(frame.image, left, top)
-        if (movement.animation == NpcAnimation.TALK && speechAllowed) slot.definition.speechProfile?.let { speech ->
+        if (slot.shoppingBrain != null && (movement.x in 0..239 || movement.phase == PathPhase.ENTER || movement.phase == PathPhase.EXIT)) {
+            val shoppingState = slot.shoppingBrain.stateAt(timeMs)
+            val heldItem = if (shoppingState.currentIntent == com.hoodie.app.pixel.npc.shopping.ShoppingNpcIntent.EXIT_STORE) Item.SHOPPING_BAG else Item.BASKET
+            val propHand = frame.anchors.leftHand
+            HoodiePainter.drawItemAt(b, heldItem, Point(left + propHand.x, top + propHand.y))
+            if (heldItem == Item.BASKET) {
+                val count = movement.shoppingBasketCount.coerceIn(0, 3)
+                val colors = intArrayOf(0xFFC9544F.toInt(), 0xFF2F4A3C.toInt(), 0xFFF2CF5B.toInt())
+                for (i in 0 until count) b.set(left + propHand.x - 3 + i * 3, top + propHand.y - 2, colors[i])
+            }
+        }
+        slot.shoppingBrain?.stateAt(timeMs)?.let { state ->
+            val line = state.speechLine ?: return@let
+            NpcSpeechBubbleRenderer.draw(
+                b, NpcSpeechProfile(listOf(line), visibleMs = 1_500), movement.x, movement.floorY,
+                slot.seed, timeMs, state.speechOffsetMs, frame.anchors.head.y,
+                (slot.definition.characterStyle.species.headHeight * slot.scale).roundToInt().coerceAtLeast(1),
+            )
+        }
+        if (movement.animation == NpcAnimation.TALK && speechAllowed) speechProfile?.let { speech ->
             NpcSpeechBubbleRenderer.draw(
                 b, speech, movement.x, movement.floorY, slot.seed, timeMs,
                 movement.localTimeMs, frame.anchors.head.y,
@@ -239,6 +278,8 @@ object NpcRenderer {
 
     /** Um ciclo elegível respeita o intervalo do perfil sem alterar a coreografia do NPC. */
     internal fun shouldSpeak(slot: AmbientNpcSlot, timeMs: Long): Boolean {
+        slot.restaurantBrain?.let { return it.speechLineAt(timeMs) != null }
+        slot.officeBrain?.let { return it.shouldSpeak(timeMs) }
         val speech = slot.definition.speechProfile ?: return false
         val behavior = slot.definition.behaviorProfile
         val cycleMs = slot.path?.let(NpcMotionController::pathCycleMs)

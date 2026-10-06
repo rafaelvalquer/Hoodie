@@ -2,6 +2,9 @@ package com.hoodie.app.pixel.npc
 
 import com.hoodie.app.pixel.character.CharacterCanvas
 import com.hoodie.app.pixel.character.CharacterPose
+import com.hoodie.app.pixel.sprite.Arm
+import com.hoodie.app.pixel.sprite.Eyes
+import com.hoodie.app.pixel.sprite.Item
 import kotlin.math.abs
 
 /**
@@ -12,6 +15,9 @@ object NpcMotionController {
     private const val SCENE_WIDTH = 240
 
     fun movement(slot: AmbientNpcSlot, timeMs: Long): NpcMovement {
+        slot.shoppingBrain?.let { return it.movementAt(timeMs) }
+        slot.officeBrain?.let { return it.movementAt(timeMs) }
+        slot.restaurantBrain?.let { return it.movementAt(timeMs) }
         val profile = slot.definition.behaviorProfile
         val path = slot.path ?: return stationary(slot, timeMs)
         val turns = turnFlags(path)
@@ -98,12 +104,16 @@ object NpcMotionController {
     }
 
     /** Quadro completo (pose + movimento secundário) do NPC neste instante. */
-    fun frame(slot: AmbientNpcSlot, timeMs: Long, movement: NpcMovement = movement(slot, timeMs)): NpcFrame =
-        NpcPoseLibrary.frame(
+    fun frame(slot: AmbientNpcSlot, timeMs: Long, movement: NpcMovement = movement(slot, timeMs)): NpcFrame {
+        val result = NpcPoseLibrary.frame(
             movement.animation, movement.localTimeMs, slot.seed, slot.definition.behaviorProfile.motion,
             walkedPx = movement.walkedPx, scale = slot.scale, seated = movement.seated,
             facing = movement.facing, reaction = movement.reaction,
         )
+        return if (movement.shoppingProductHeld) result.copy(pose = result.pose.copy(
+            item = Item.PRODUCT, rightArm = Arm.HOLD_CHEST, eyes = Eyes.LOOK_DOWN,
+        )) else result
+    }
 
     /** Pose isolada (Pixel Lab, testes): mesma biblioteca usada na cena. */
     fun pose(animation: NpcAnimation, elapsedMs: Long, seed: Int, motion: SpeciesMotionProfile): CharacterPose =
