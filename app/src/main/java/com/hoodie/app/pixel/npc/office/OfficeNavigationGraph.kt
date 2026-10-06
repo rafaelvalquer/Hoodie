@@ -4,13 +4,15 @@ package com.hoodie.app.pixel.npc.office
 object OfficeNavigationGraph {
     val spots = mapOf(
         OfficeNpcSpot.DESK_LEFT to OfficeSpot(34, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.DESK_RIGHT to OfficeSpot(211, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.COFFEE to OfficeSpot(75, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.WINDOW to OfficeSpot(35, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.WHITEBOARD to OfficeSpot(138, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.PRINTER to OfficeSpot(183, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.CENTER to OfficeSpot(120, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.DOOR to OfficeSpot(228, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.WINDOW to OfficeSpot(60, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.COFFEE to OfficeSpot(86, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.CENTER to OfficeSpot(112, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.CENTER_LEFT to OfficeSpot(100, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.CENTER_RIGHT to OfficeSpot(124, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.WHITEBOARD to OfficeSpot(152, 198, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.PRINTER to OfficeSpot(180, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.DESK_RIGHT to OfficeSpot(206, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.DOOR to OfficeSpot(234, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
     )
 
     private val aisle = mapOf(
@@ -19,6 +21,8 @@ object OfficeNavigationGraph {
         OfficeNpcSpot.WINDOW to listOf(OfficeNpcSpot.WINDOW, OfficeNpcSpot.COFFEE),
         OfficeNpcSpot.COFFEE to listOf(OfficeNpcSpot.COFFEE, OfficeNpcSpot.CENTER),
         OfficeNpcSpot.CENTER to listOf(OfficeNpcSpot.CENTER, OfficeNpcSpot.WHITEBOARD),
+        OfficeNpcSpot.CENTER_LEFT to listOf(OfficeNpcSpot.CENTER_LEFT, OfficeNpcSpot.CENTER),
+        OfficeNpcSpot.CENTER_RIGHT to listOf(OfficeNpcSpot.CENTER_RIGHT, OfficeNpcSpot.CENTER),
         OfficeNpcSpot.WHITEBOARD to listOf(OfficeNpcSpot.WHITEBOARD, OfficeNpcSpot.PRINTER),
         OfficeNpcSpot.PRINTER to listOf(OfficeNpcSpot.PRINTER, OfficeNpcSpot.DOOR),
         OfficeNpcSpot.DOOR to listOf(OfficeNpcSpot.DOOR, OfficeNpcSpot.PRINTER),
@@ -26,6 +30,12 @@ object OfficeNavigationGraph {
 
     fun route(from: OfficeNpcSpot, to: OfficeNpcSpot): List<OfficeSpot> {
         if (from == to) return listOf(spots.getValue(to))
+        if (from == OfficeNpcSpot.DESK_RIGHT && to == OfficeNpcSpot.WHITEBOARD) {
+            return listOf(OfficeNpcSpot.DESK_RIGHT, OfficeNpcSpot.PRINTER, OfficeNpcSpot.WHITEBOARD).map(spots::getValue)
+        }
+        if (from == OfficeNpcSpot.WHITEBOARD && to == OfficeNpcSpot.DESK_RIGHT) {
+            return listOf(OfficeNpcSpot.WHITEBOARD, OfficeNpcSpot.PRINTER, OfficeNpcSpot.DESK_RIGHT).map(spots::getValue)
+        }
         val previous = mutableMapOf<OfficeNpcSpot, OfficeNpcSpot?>(); val queue = ArrayDeque<OfficeNpcSpot>()
         previous[from] = null; queue += from
         while (queue.isNotEmpty()) {
@@ -33,6 +43,8 @@ object OfficeNavigationGraph {
             val neighbors = aisle[at].orEmpty().filter { it != at } + when (at) {
                 OfficeNpcSpot.COFFEE -> listOf(OfficeNpcSpot.WINDOW, OfficeNpcSpot.CENTER)
                 OfficeNpcSpot.CENTER -> listOf(OfficeNpcSpot.COFFEE, OfficeNpcSpot.WHITEBOARD, OfficeNpcSpot.DESK_RIGHT)
+                OfficeNpcSpot.CENTER_LEFT -> listOf(OfficeNpcSpot.CENTER)
+                OfficeNpcSpot.CENTER_RIGHT -> listOf(OfficeNpcSpot.CENTER)
                 OfficeNpcSpot.WHITEBOARD -> listOf(OfficeNpcSpot.CENTER, OfficeNpcSpot.PRINTER)
                 OfficeNpcSpot.PRINTER -> listOf(OfficeNpcSpot.WHITEBOARD, OfficeNpcSpot.DOOR)
                 OfficeNpcSpot.WINDOW -> listOf(OfficeNpcSpot.COFFEE)

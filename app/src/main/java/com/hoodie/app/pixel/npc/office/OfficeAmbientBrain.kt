@@ -5,22 +5,21 @@ import com.hoodie.app.pixel.npc.NpcMovement
 import com.hoodie.app.pixel.npc.PathPhase
 import com.hoodie.app.pixel.npc.brain.NpcBrainState
 import com.hoodie.app.pixel.npc.brain.NpcCooldowns
-import com.hoodie.app.pixel.npc.brain.NpcDeterministicRandom
+import com.hoodie.app.pixel.npc.brain.NpcAmbientBrain
 import com.hoodie.app.pixel.npc.brain.NpcIntent
-import com.hoodie.app.pixel.npc.brain.NpcIntentPlanner
 import com.hoodie.app.pixel.npc.brain.NpcPersonalityProfile
 import kotlin.math.abs
 
 /** Reconstrói a sessão a partir da seed e do tempo: frame a frame não há estado aleatório. */
 class OfficeAmbientBrain(
-    val npcId: String,
+    override val npcId: String,
     val profile: NpcPersonalityProfile,
     val startSpot: OfficeNpcSpot,
     val daySeed: Int,
-) {
+) : NpcAmbientBrain {
     internal var socialSession: OfficeSocialSession? = null
 
-    fun stateAt(timeMs: Long): NpcBrainState = socialSession?.stateAt(this, timeMs) ?: baseStateAt(timeMs)
+    override fun stateAt(timeMs: Long): NpcBrainState = socialSession?.stateAt(this, timeMs) ?: baseStateAt(timeMs)
 
     internal fun baseStateAt(timeMs: Long): NpcBrainState {
         val t = timeMs.coerceAtLeast(0)
@@ -31,12 +30,12 @@ class OfficeAmbientBrain(
         var index = 0L
         while (true) {
             val seedState = NpcBrainState(NpcIntent.WORK, spot, cursor, cursor, recent, decisionIndex = index, cooldowns = cooldowns)
-            val intent = NpcIntentPlanner.choose(npcId, daySeed, seedState, profile, cursor)
-            val target = NpcIntentPlanner.target(intent, spot, startSpot)
+            val intent = OfficeBehaviorPlanner.choose(npcId, daySeed, seedState, profile, cursor)
+            val target = OfficeBehaviorPlanner.target(intent, spot, startSpot)
             val route = OfficeNavigationGraph.route(spot, target)
             val travelMs = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L }
             val started = cursor + travelMs
-            val duration = NpcIntentPlanner.durationMs(npcId, daySeed, index, profile, intent)
+            val duration = OfficeBehaviorPlanner.durationMs(npcId, daySeed, index, profile, intent)
             val end = started + duration
             val state = NpcBrainState(intent, target, started, end,
                 (listOf(intent) + recent).take(4), targetSpot = target, decisionIndex = index, cooldowns = cooldowns)
@@ -46,19 +45,39 @@ class OfficeAmbientBrain(
             cursor = end
             recent = (listOf(intent) + recent).take(4)
             val nextIndex = index + 1
-            cooldowns = cooldowns.copy(
-                coffeeUntil = if (intent == NpcIntent.GET_COFFEE) cursor + 60_000 + (NpcDeterministicRandom.value(npcId, daySeed, nextIndex + 20) * 30_000).toLong() else cooldowns.coffeeUntil,
-                phoneUntil = if (intent == NpcIntent.CHECK_PHONE) cursor + 20_000 + (NpcDeterministicRandom.value(npcId, daySeed, nextIndex + 21) * 30_000).toLong() else cooldowns.phoneUntil,
-                socialUntil = if (intent == NpcIntent.SOCIALIZE) cursor + 45_000 + (NpcDeterministicRandom.value(npcId, daySeed, nextIndex + 22) * 75_000).toLong() else cooldowns.socialUntil,
-                stretchUntil = if (intent == NpcIntent.STRETCH) cursor + 60_000 + (NpcDeterministicRandom.value(npcId, daySeed, nextIndex + 23) * 120_000).toLong() else cooldowns.stretchUntil,
+            cooldowns = com.hoodie.app.pixel.npc.brain.NpcCooldownManager.afterIntent(
+                npcId, daySeed, nextIndex, intent, cursor, cooldowns,
             )
             index++
         }
     }
 
-    fun movementAt(timeMs: Long): NpcMovement {
+    override fun movementAt(timeMs: Long): NpcMovement {
         if (npcId == "bulldog_exec") return bulldogMovement(timeMs.coerceAtLeast(0))
         return regularMovement(timeMs)
+    }
+
+    fun isOffscreenAt(timeMs: Long): Boolean = npcId == "bulldog_exec" &&
+        Math.floorMod(timeMs.coerceAtLeast(0), 240_000L) >= 66_000L
+
+    /** Door animation follows the executive's approach and departure windows. */
+    fun officeDoorFrameAt(timeMs: Long): Int {
+        if (npcId != "bulldog_exec") return 0
+        val cycle = Math.floorMod(timeMs.coerceAtLeast(0), 240_000L)
+        val entranceOpenAt = 5_800L
+        val exitOpenAt = 58_000L
+        val openDuration = 300L
+        val entranceCloseAt = 7_100L
+        val exitCloseAt = 66_000L
+        return when {
+            cycle in entranceOpenAt until entranceOpenAt + openDuration -> ((cycle - entranceOpenAt) / 100L + 1).toInt()
+            cycle in entranceOpenAt + openDuration until entranceCloseAt -> 3
+            cycle in entranceCloseAt until entranceCloseAt + openDuration -> (3 - (cycle - entranceCloseAt) / 100L).toInt().coerceAtLeast(0)
+            cycle in exitOpenAt until exitOpenAt + openDuration -> ((cycle - exitOpenAt) / 100L + 1).toInt()
+            cycle in exitOpenAt + openDuration until exitCloseAt -> 3
+            cycle in exitCloseAt until exitCloseAt + openDuration -> (3 - (cycle - exitCloseAt) / 100L).toInt().coerceAtLeast(0)
+            else -> 0
+        }
     }
 
     private fun bulldogMovement(timeMs: Long): NpcMovement {
@@ -67,14 +86,15 @@ class OfficeAmbientBrain(
         val enterMs = 7_000L
         val visitMs = 52_000L
         val exitMs = 7_000L
-        if (cycle >= enterMs + visitMs + exitMs) {
+        if (isOffscreenAt(timeMs)) {
             return NpcMovement(-32, door.floorY, false, NpcAnimation.IDLE, cycle, phase = PathPhase.IDLE)
         }
         if (cycle < enterMs) {
             val f = cycle.toFloat() / enterMs
-            val x = (-24 + (door.x + 24) * f).toInt()
-            return NpcMovement(x, door.floorY, true, NpcAnimation.WALK, cycle,
-                walkedPx = (door.x + 24) * f, phase = PathPhase.ENTER)
+            val outsideX = 264
+            val x = (outsideX + (door.x - outsideX) * f).toInt()
+            return NpcMovement(x, door.floorY, false, NpcAnimation.WALK, cycle,
+                walkedPx = (outsideX - door.x) * f, phase = PathPhase.ENTER)
         }
         if (cycle < enterMs + visitMs) return regularMovement(cycle - enterMs)
         val elapsed = cycle - enterMs - visitMs
@@ -122,5 +142,5 @@ class OfficeAmbientBrain(
             reaction = if (state.currentIntent == NpcIntent.SOCIALIZE && animation == NpcAnimation.REACTION) com.hoodie.app.pixel.npc.NpcReaction.NOD else null)
     }
 
-    fun shouldSpeak(timeMs: Long): Boolean = socialSession?.shouldSpeak(npcId, timeMs) == true
+    override fun shouldSpeak(timeMs: Long): Boolean = socialSession?.shouldSpeak(npcId, timeMs) == true
 }

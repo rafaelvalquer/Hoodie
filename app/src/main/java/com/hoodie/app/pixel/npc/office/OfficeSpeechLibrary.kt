@@ -1,7 +1,5 @@
 package com.hoodie.app.pixel.npc.office
 
-import com.hoodie.app.pixel.npc.NpcSpeechProfile
-import com.hoodie.app.pixel.npc.brain.NpcDeterministicRandom
 
 enum class NpcSpeechTopic { GREETING, WORK, COFFEE, LUNCH, AFTERNOON, SMALL_TALK, END_OF_DAY }
 
@@ -34,14 +32,5 @@ object OfficeSpeechLibrary {
         in 11 * 60..13 * 60 + 29 -> lunch
         in 13 * 60 + 30..17 * 60 + 29 -> afternoon
         else -> endOfDay
-    }
-}
-
-object NpcSpeechScheduler {
-    fun profile(npcId: String, clockMinute: Int, daySeed: Int): NpcSpeechProfile {
-        val candidates = OfficeSpeechLibrary.linesAt(clockMinute)
-        val shift = NpcDeterministicRandom.choose(npcId, daySeed, clockMinute.toLong(), candidates.size)
-        val ordered = candidates.drop(shift) + candidates.take(shift)
-        return NpcSpeechProfile(ordered.map { it.text }, cycleMs = 90_000, visibleMs = 1_700)
     }
 }

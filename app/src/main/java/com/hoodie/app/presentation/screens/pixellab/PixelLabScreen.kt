@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.createBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontFamily
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.DayPeriod
@@ -162,6 +163,7 @@ private fun OfficeLiveLab() {
     var speed by remember { mutableFloatStateOf(1f) }
     var seed by remember { mutableIntStateOf(42) }
     var playing by remember { mutableStateOf(true) }
+    var showTimeline by remember { mutableStateOf(false) }
     var elapsed by remember { mutableLongStateOf(0L) }
     LaunchedEffect(playing, speed) {
         var last = -1L
@@ -186,13 +188,44 @@ private fun OfficeLiveLab() {
     }
     ChipRow(listOf("1x", "5x", "10x", "30x"), listOf(1f, 5f, 10f, 30f).indexOf(speed), { speed = listOf(1f, 5f, 10f, 30f)[it] })
     SectionLabel("Estado ao vivo")
-    OfficeNpcDirector.plan(env).forEach { slot ->
+    val slots = OfficeNpcDirector.plan(env)
+    slots.forEach { slot ->
         val brain = slot.officeBrain ?: return@forEach
         val state = brain.stateAt(elapsed)
         val movement = brain.movementAt(elapsed)
         Text("${slot.definition.id.uppercase()} · ${state.currentIntent} · ${state.currentSpot} → ${state.targetSpot} · decisão #${state.decisionIndex} · próximo em ${((state.nextDecisionAt - elapsed).coerceAtLeast(0) / 1_000)}s · ${movement.phase}",
             color = HoodieColors.Gold, style = MaterialTheme.typography.labelSmall)
+        Text("cooldown · café ${((state.cooldowns.coffeeUntil - elapsed).coerceAtLeast(0) / 1_000)}s · celular ${((state.cooldowns.phoneUntil - elapsed).coerceAtLeast(0) / 1_000)}s · social ${((state.cooldowns.socialUntil - elapsed).coerceAtLeast(0) / 1_000)}s · fala ${((state.cooldowns.speechUntil - elapsed).coerceAtLeast(0) / 1_000)}s",
+            color = HoodieColors.Muted, style = MaterialTheme.typography.labelSmall)
     }
+    PixelButton(if (showTimeline) "Ocultar timeline" else "Mostrar timeline dos NPCs", { showTimeline = !showTimeline }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+    if (showTimeline) {
+        SectionLabel("Histórico · 30 s por marca")
+        val timelineStart = (elapsed - 300_000L).coerceAtLeast(0L)
+        slots.forEach { slot ->
+            val brain = slot.officeBrain ?: return@forEach
+            val codes = (0..10).joinToString(" · ") { index ->
+                val at = timelineStart + index * 30_000L
+                if (at > elapsed) "—" else timelineCode(brain.stateAt(at).currentIntent)
+            }
+            Text("${slot.definition.id.removeSuffix("_analyst").removeSuffix("_colleague").removeSuffix("_exec").uppercase()}  $codes",
+                color = HoodieColors.Gold, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
+        }
+        Text("W trabalho · C café · P celular · J quadro · I ociosidade · V deslocamento · S social",
+            color = HoodieColors.Muted, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+private fun timelineCode(intent: com.hoodie.app.pixel.npc.brain.NpcIntent): String = when (intent) {
+    com.hoodie.app.pixel.npc.brain.NpcIntent.WORK -> "W"
+    com.hoodie.app.pixel.npc.brain.NpcIntent.GET_COFFEE -> "C"
+    com.hoodie.app.pixel.npc.brain.NpcIntent.CHECK_PHONE -> "P"
+    com.hoodie.app.pixel.npc.brain.NpcIntent.READ_WHITEBOARD -> "J"
+    com.hoodie.app.pixel.npc.brain.NpcIntent.IDLE, com.hoodie.app.pixel.npc.brain.NpcIntent.STRETCH -> "I"
+    com.hoodie.app.pixel.npc.brain.NpcIntent.WALK_AROUND, com.hoodie.app.pixel.npc.brain.NpcIntent.ENTER_OFFICE,
+    com.hoodie.app.pixel.npc.brain.NpcIntent.EXIT_OFFICE -> "V"
+    com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE -> "S"
+    else -> "A"
 }
 
 @Composable
