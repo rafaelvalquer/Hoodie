@@ -1,5 +1,6 @@
 package com.hoodie.app.presentation.theme
 
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
@@ -21,6 +22,8 @@ object HoodieColors {
     val Outline = Color(0xFF0F1124)
     val Ink = Color(0xFFE9EDFF)
     val Muted = Color(0xFF9AA3C7)
+    /** Rótulos de 8 sp: 6,3:1 sobre PanelLight (o Muted dá 4,56:1, no limite para texto tão pequeno). */
+    val MutedStrong = Color(0xFFB8C0E0)
     val Blue = Color(0xFF86A9E8)
     val Hood = Color(0xFFB9CBEF)
     val Gold = Color(0xFFF2CF5B)
@@ -57,9 +60,20 @@ private val shapes = Shapes(
     extraLarge = CutCornerShape(8.dp),
 )
 
+/** Espaços padrão da interface. */
+object HoodieSpacing {
+    /** Entre o rótulo pequeno (SectionLabel) e o valor logo abaixo. */
+    val LabelToValue = 4.dp
+}
+
 @Composable
 fun HoodieTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = scheme, typography = HoodieTypography, shapes = shapes) {
-        CompositionLocalProvider(LocalContentColor provides scheme.onBackground, content = content)
+        // Todo Text sem estilo explícito é texto de leitura (fonte do sistema), não o padrão do Material.
+        CompositionLocalProvider(
+            LocalContentColor provides scheme.onBackground,
+            LocalTextStyle provides HoodieTypography.bodyMedium,
+            content = content,
+        )
     }
 }
