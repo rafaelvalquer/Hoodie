@@ -59,7 +59,13 @@ import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.core.time.SystemClockProvider
 import com.hoodie.app.engine.routine.RoutineEngine
+import com.hoodie.app.pixel.icons.IconLabel
+import com.hoodie.app.pixel.icons.PixelIconView
+import com.hoodie.app.pixel.icons.PixelIcons
+import com.hoodie.app.pixel.icons.PixelSprite
 import com.hoodie.app.presentation.components.ChipRow
+import com.hoodie.app.presentation.components.ErrorState
+import com.hoodie.app.presentation.components.HomeLoadingSkeleton
 import com.hoodie.app.presentation.components.HoodieSceneView
 import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
@@ -141,16 +147,11 @@ internal fun HomeContent(
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
     if (state.loading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            androidx.compose.material3.CircularProgressIndicator()
-        }
+        HomeLoadingSkeleton()
         return
     }
     if (state.error != null) {
-        PixelPanel(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(uiTextContext.appErrorText(requireNotNull(state.error)), color = HoodieColors.Coral)
-            PixelButton(stringResource(R.string.place_retry_load), actions.retryLoad, Modifier.fillMaxWidth())
-        }
+        ErrorState(uiTextContext.appErrorText(requireNotNull(state.error)), actions.retryLoad, fillScreen = true)
         return
     }
     Box(Modifier.fillMaxSize()) {
@@ -165,16 +166,19 @@ internal fun HomeContent(
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (state.now > 0) formatClock(state.now, zone) else "--:--", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.width(8.dp))
-            Text(periodEmoji(state.period) + " " + state.period.label, color = HoodieColors.Muted, style = MaterialTheme.typography.labelLarge)
+            IconLabel(PixelIcons.of(state.period), state.period.label, color = periodColor(state.period), style = MaterialTheme.typography.labelLarge, iconSize = 20.dp)
             Spacer(Modifier.weight(1f))
-            HeaderIcon("✨", stringResource(R.string.home_memories)) { onOpen(Routes.MEMORIES) }
-            HeaderIcon("🐱", stringResource(R.string.home_profile)) { onOpen(Routes.PROFILE) }
+            HeaderIcon(PixelIcons.SPARKLE, HoodieColors.Gold, stringResource(R.string.home_memories)) { onOpen(Routes.MEMORIES) }
+            HeaderIcon(PixelIcons.CAT, HoodieColors.Hood, stringResource(R.string.home_profile)) { onOpen(Routes.PROFILE) }
         }
 
         // Cena viva.
-        Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f).padding(horizontal = 8.dp), contentAlignment = Alignment.TopCenter) {
-            HoodieSceneView(state.visual, Modifier.fillMaxSize(), reactions = reactions)
-            state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp)) }
+        // A altura é a da própria cena (escala inteira pela largura): sem caixa 3:4 sobrando abaixo dela,
+        // o texto "Hoodie está…" fica logo embaixo do cenário.
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
+            state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp, bottom = 6.dp)) }
+            HoodieSceneView(state.visual, Modifier.fillMaxWidth(), reactions = reactions)
         }
 
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -229,7 +233,7 @@ internal fun HomeContent(
                 SectionLabel(stringResource(R.string.ui_home_screen_2))
                 val ctx = state.context
                 val type = ctx?.type ?: UserContextType.UNKNOWN
-                Text("${type.emoji} ${type.label}" + if (state.probableMode && ctx != null) stringResource(R.string.home_probable_suffix) else "", style = MaterialTheme.typography.titleMedium)
+                IconLabel(PixelIcons.of(type), type.label + if (state.probableMode && ctx != null) stringResource(R.string.home_probable_suffix) else "", style = MaterialTheme.typography.titleMedium, iconSize = 20.dp)
                 ctx?.let { Text(stringResource(R.string.home_context_since, formatClock(it.startedAt, zone)), color = HoodieColors.Muted) }
                 state.next?.let {
                     Spacer(Modifier.padding(4.dp))
@@ -268,14 +272,14 @@ internal fun HomeContent(
 internal fun ManualPlaceOptions(onSelect: (PlaceType) -> Unit) {
     PlaceType.physicalPlaceOptions.forEach { type ->
         PixelButton(
-            "${type.emoji} ${type.label}", { onSelect(type) }, Modifier.fillMaxWidth(),
-            color = HoodieColors.PanelLight, textColor = HoodieColors.Ink,
+            type.label, { onSelect(type) }, Modifier.fillMaxWidth(),
+            color = HoodieColors.PanelLight, textColor = HoodieColors.Ink, leadingIcon = PixelIcons.of(type),
         )
     }
 }
 
 @Composable
-private fun HeaderIcon(emoji: String, description: String, onClick: () -> Unit) {
+private fun HeaderIcon(icon: PixelSprite, tint: androidx.compose.ui.graphics.Color, description: String, onClick: () -> Unit) {
     Box(
         Modifier
             .padding(start = 8.dp)
@@ -285,14 +289,14 @@ private fun HeaderIcon(emoji: String, description: String, onClick: () -> Unit) 
             .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description }
             .padding(horizontal = 10.dp, vertical = 6.dp),
-    ) { Text(emoji) }
+        contentAlignment = Alignment.Center,
+    ) { PixelIconView(icon, size = 24.dp, tint = tint) }
 }
 
-private fun periodEmoji(p: com.hoodie.app.core.time.DayPeriod) = when (p) {
-    com.hoodie.app.core.time.DayPeriod.MORNING -> "🌅"
-    com.hoodie.app.core.time.DayPeriod.DAY -> "☀️"
-    com.hoodie.app.core.time.DayPeriod.EVENING -> "🌇"
-    com.hoodie.app.core.time.DayPeriod.NIGHT -> "🌙"
+private fun periodColor(p: com.hoodie.app.core.time.DayPeriod) = when (p) {
+    com.hoodie.app.core.time.DayPeriod.MORNING, com.hoodie.app.core.time.DayPeriod.DAY -> HoodieColors.Gold
+    com.hoodie.app.core.time.DayPeriod.EVENING -> HoodieColors.Coral
+    com.hoodie.app.core.time.DayPeriod.NIGHT -> HoodieColors.Hood
 }
 
 @Composable
@@ -307,7 +311,7 @@ private fun QuestionCard(q: ContextQuestion, actions: HomeActions) {
             }
             QuestionKind.NEW_PLACE -> {
                 val options = PlaceType.physicalPlaceOptions
-                ChipRow(options.map { "${it.emoji} ${it.label}" }, null, { actions.answerNewPlace(q.id, options[it]) })
+                ChipRow(options.map { it.label }, null, { actions.answerNewPlace(q.id, options[it]) }, icons = options.map { PixelIcons.of(it) })
                 Spacer(Modifier.padding(4.dp))
                 PixelButton(stringResource(R.string.ui_home_screen_8), { actions.dismissQuestion(q.id) }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.PanelLight)
             }

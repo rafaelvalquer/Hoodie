@@ -45,3 +45,11 @@ As 222 referências revisadas continuam em `app/src/androidTest/assets/goldens/s
 Execução estrita API 34 em 03/10/2026 (`verifyGoldens=true`): 180 casos executados, 18 aprovados e 162 falharam; nenhum foi ignorado. Distribuição: Home 6/30 aprovados, Diário 0/30, Digital 12/30, Onboarding 0/30, Ajustes 0/30 e PlacePicker 0/30. Os PNGs `actual/diff` ficam no armazenamento externo do AVD; amostras da Home e Digital também foram copiadas para `app/build`. As referências não foram substituídas automaticamente. A matriz geral precisa de análise e revisão visual antes de atualizar qualquer baseline.
 
 Os dois testes instrumentados novos do catálogo físico passaram na API 34: “O que estou fazendo?” e o diálogo real “Novo lugar” expõem os mesmos dez nomes. O teste de teclado passou isoladamente depois de recolher a shade de notificações que tinha tomado o foco da janela. A rodada Android anterior (261 casos) teve apenas esse timeout de foco; a repetição isolada passou.
+
+## Polimento visual (07/10/2026)
+
+Branch `feature/ui-polish`: entrelinha centralizada em todos os estilos, espaço padrão rótulo/valor, ícones pixel no lugar dos emojis da interface fixa, botão "Minha localização" no topo do mapa, esqueletos de carregamento, estado de erro com o Hoodie e cena do Home com a própria altura.
+
+Comparação antes (main `a926566c`) × depois no mesmo aparelho (Pixel_8, API 37.1), matriz completa em modo captura: 180 casos executados nas duas versões e 180 imagens diferentes (esperado: o estilo de texto mudou em todas as telas). Inspeção visual: sem rótulos sobrepostos em Ajustes, Digital e Diário; crédito do OpenStreetMap livre; erro e carregamento sem tela vazia.
+
+As 222 referências NÃO foram regravadas. Elas só valem no ambiente de referência (Hoodie_API34), que não estava disponível nesta máquina: regravar lá com `recordGoldens=true`, inspecionar e só então atualizar os assets e o manifesto. Os fixtures de screenshot desligam o pulso do esqueleto (`LocalSkeletonPulse = false`) para a captura ser determinística.

@@ -23,15 +23,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.model.PlaceType
+import com.hoodie.app.pixel.icons.IconLabel
+import com.hoodie.app.pixel.icons.PixelIcons
 import com.hoodie.app.presentation.theme.HoodieColors
 
 /** Título da tela: editar um lugar existente ou criar um novo. */
 @Composable
 fun placePickerTitle(editing: Boolean, type: PlaceType): String =
-    if (editing) stringResource(R.string.place_edit_title) else stringResource(R.string.place_new_title, type.emoji)
+    if (editing) stringResource(R.string.place_edit_title) else stringResource(R.string.place_new_title)
 
 /**
- *     📍 MUDAR LOCAL                    ✕
+ *     [pino] MUDAR LOCAL                    ✕
  *
  * Altura fixa (~52 dp), sem padding excessivo.
  */
@@ -42,12 +44,12 @@ fun PlacePickerHeader(editing: Boolean, type: PlaceType, onClose: () -> Unit, ho
         Modifier.fillMaxWidth().height(52.dp).padding(start = horizontalPadding, end = 4.dp).testTag(PlacePickerTags.HEADER),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        IconLabel(
+            if (editing) PixelIcons.PIN else PixelIcons.of(type),
             placePickerTitle(editing, type),
             style = MaterialTheme.typography.titleMedium,
             color = HoodieColors.Hood,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
         Text(

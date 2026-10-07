@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.presentation.components.SectionLabel
+import com.hoodie.app.pixel.icons.PixelIconView
+import com.hoodie.app.pixel.icons.PixelIcons
 import com.hoodie.app.presentation.theme.HoodieColors
 
 /** Lista de tipos fora da tela principal: tira o ChipRow de nove itens do caminho. */
@@ -50,7 +53,8 @@ fun PlaceTypeBottomSheet(selected: PlaceType, onSelect: (PlaceType) -> Unit, onD
                         .testTag(PlacePickerTags.sheetType(t)),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(t.emoji, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(36.dp))
+                    PixelIconView(PixelIcons.of(t), size = 24.dp, tint = if (isSelected) HoodieColors.Hood else HoodieColors.Ink)
+                    Spacer(Modifier.width(12.dp))
                     Text(t.label, style = MaterialTheme.typography.bodyLarge, color = if (isSelected) HoodieColors.Hood else HoodieColors.Ink, modifier = Modifier.weight(1f))
                     if (isSelected) Text(stringResource(R.string.ui_place_type_bottom_sheet_2), color = HoodieColors.Gold)
                 }

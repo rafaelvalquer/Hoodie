@@ -42,7 +42,7 @@ class PlaceTypeSelectorIntegrationTest {
             }
         }
         PlaceType.physicalPlaceOptions.forEach { type ->
-            val label = "${type.emoji} ${type.label}".uppercase()
+            val label = type.label.uppercase()
             assertTrue("Opção ausente na Home: $label", rule.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty())
         }
     }
@@ -54,7 +54,7 @@ class PlaceTypeSelectorIntegrationTest {
             }
         }
         PlaceType.physicalPlaceOptions.forEach { type ->
-            val label = "${type.emoji} ${type.label}"
+            val label = type.label
             assertTrue("Opção ausente em Novo lugar: $label", rule.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty())
         }
     }
@@ -95,10 +95,10 @@ class PlaceTypeSelectorIntegrationTest {
         }
 
         rule.mainClock.advanceTimeBy(100L)
-        rule.scrollWithPausedClock(rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4).uppercase())).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        rule.scrollWithPausedClock(rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4))).performSemanticsAction(SemanticsActions.OnClick) { it() }
         rule.waitForIdle()
         rule.mainClock.advanceTimeBy(1_000L)
-        rule.scrollWithPausedClock(rule.onNodeWithText("🍽 RESTAURANTE")).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        rule.scrollWithPausedClock(rule.onNodeWithText("RESTAURANTE")).performSemanticsAction(SemanticsActions.OnClick) { it() }
         rule.waitForIdle()
         rule.mainClock.advanceTimeBy(1_000L)
         rule.runOnIdle {
@@ -106,7 +106,7 @@ class PlaceTypeSelectorIntegrationTest {
             assertEquals(UserContextType.DINING, selectedContext)
             assertEquals(SceneId.RESTAURANT, selectedScene)
         }
-        rule.onNodeWithText("🍽 Restaurante").assertExists()
-        rule.onAllNodesWithText("🍽 RESTAURANTE").assertCountEquals(0)
+        rule.onNodeWithText("Restaurante").assertExists()
+        rule.onAllNodesWithText("RESTAURANTE").assertCountEquals(0)
     }
 }
