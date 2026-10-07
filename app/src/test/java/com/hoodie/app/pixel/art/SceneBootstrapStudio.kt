@@ -334,5 +334,10 @@ object SceneBootstrapStudio {
         return AsepriteFile.Document(W, H, layers, frames, tags, palette)
     }
 
-    val SCENES: Map<String, () -> AsepriteFile.Document> = linkedMapOf("car" to ::car)
+    val SCENES: Map<String, () -> AsepriteFile.Document> = linkedMapOf(
+        "car" to ::car,
+        "train" to { SceneBootstrapInteriors.build(SceneBootstrapInteriors.Kind.TRAIN) },
+        "metro" to { SceneBootstrapInteriors.build(SceneBootstrapInteriors.Kind.METRO) },
+        "bus" to { SceneBootstrapInteriors.build(SceneBootstrapInteriors.Kind.BUS) },
+    )
 }

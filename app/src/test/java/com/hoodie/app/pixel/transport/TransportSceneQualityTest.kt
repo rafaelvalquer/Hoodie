@@ -29,7 +29,7 @@ import kotlin.math.min
  * ruim de forma objetiva; a aprovação final continua sendo humana (scene-art-status.json).
  */
 class TransportSceneQualityTest {
-    private val scenes = mapOf("car" to MovementMode.CAR)
+    private val scenes = mapOf("car" to MovementMode.CAR, "train" to MovementMode.TRAIN, "metro" to MovementMode.METRO, "bus" to MovementMode.BUS)
 
     // ───────────── Medidas ─────────────
 
@@ -100,7 +100,8 @@ class TransportSceneQualityTest {
                         val top = stack.removeLast()
                         val left = if (stack.isEmpty()) x else stack.last() + 1
                         val area = heights[top] * (k - left)
-                        if (area > best) { best = area; lastFlat = "x $left..${k - 1}, y ${y - heights[top] + 1}..$y, cor #%08X".format(color) }
+                        // Painel = área com as duas dimensões >= 6 px; frisos, molduras e barras são linhas.
+                        if (heights[top] >= PANEL_MIN_SIDE && k - left >= PANEL_MIN_SIDE && area > best) { best = area; lastFlat = "x $left..${k - 1}, y ${y - heights[top] + 1}..$y, cor #%08X".format(color) }
                     }
                     if (k <= end) stack.addLast(k)
                 }
@@ -185,19 +186,27 @@ class TransportSceneQualityTest {
             val shot = TransportSceneV3Review.render(mode, DayPeriod.DAY)
             val scene = withV3 { SceneRegistry[shot.frame.scene.id] } as LayeredTransportScene
             val art = SceneArtStore.get(name)!!
-            // Sentado: os pés do frame caem exatamente no slot `seat_feet`.
-            val seat = art.slot("seat_feet")!!
-            assertEquals("$name: spot SEAT ≠ slot", seat.x to seat.y, scene.spot(SpotId.SEAT).let { it.x to it.y })
-            assertEquals("$name: Hoodie fora do banco no meio da viagem", seat.x to seat.y, shot.frame.x to shot.frame.y)
-            // 1:1: o que a cena desenha é o sprite sem escala (mesma bbox, mesmos pixels).
-            val sprite = shot.frame.sprite.image
+            val sprite = shot.frame.sprite
+            val hipSlot = art.slot("seat_hip")
+            // Onde o sprite deve cair: quadril no `seat_hip` (de frente) ou pés no `seat_feet` (carro).
+            val (left, top) = if (hipSlot != null) {
+                val hip = sprite.anchors.seatHip
+                assertNotNull("$name: o Hoodie deveria sentar de frente (SIT_FRONT com seat_hip)", hip)
+                (hipSlot.x - hip!!.x) to (hipSlot.y - hip.y)
+            } else {
+                val seat = art.slot("seat_feet")!!
+                (seat.x - sprite.anchors.feet.x) to (seat.y - sprite.anchors.feet.y)
+            }
+            val spot = scene.spot(SpotId.SEAT)
+            assertEquals("$name: Hoodie fora do banco no meio da viagem", spot.x to spot.y, shot.frame.x to shot.frame.y)
+            // 1:1: a cena desenha o sprite sem escala, exatamente no slot.
             val out = PixelBuffer(240, 320)
-            val left = seat.x - shot.frame.sprite.anchors.feet.x
-            val top = seat.y - shot.frame.sprite.anchors.feet.y
-            scene.drawCharacter(out, shot.frame.sprite, left, top, 0L, shot.frame.env.copy(transportAmbient = null))
+            scene.drawCharacter(out, sprite, spot.x - sprite.anchors.feet.x, spot.y - sprite.anchors.feet.y, 0L, shot.frame.env.copy(transportAmbient = null))
             var same = 0; var total = 0
-            for (y in 0 until sprite.height) for (x in 0 until sprite.width) if (sprite[x, y] ushr 24 != 0) { total++; if (out[left + x, top + y] == sprite[x, y]) same++ }
-            assertEquals("$name: Hoodie redimensionado ou deslocado", total, same)
+            for (y in 0 until sprite.image.height) for (x in 0 until sprite.image.width) if (sprite.image[x, y] ushr 24 != 0) {
+                total++; if (out[left + x, top + y] == sprite.image[x, y]) same++
+            }
+            assertEquals("$name: Hoodie redimensionado ou fora do slot", total, same)
         }
     }
 
@@ -239,6 +248,8 @@ class TransportSceneQualityTest {
     private companion object {
         const val FLAT_MAX = 600
         const val BLUE_MAX = 600
+        /** Lado mínimo para contar como painel (abaixo disso é linha: friso, moldura, barra). */
+        const val PANEL_MIN_SIDE = 6
         /** Abaixo disto é contorno/sombra profunda: igual em qualquer cena, não conta para matiz/contraste. */
         const val DARK_LUMA = 50.0
     }

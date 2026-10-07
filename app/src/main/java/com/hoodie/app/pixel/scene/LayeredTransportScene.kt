@@ -2,6 +2,17 @@ package com.hoodie.app.pixel.scene
 
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.art.SceneArt
+import com.hoodie.app.pixel.npc.AmbientNpcDefinition
+import com.hoodie.app.pixel.npc.AmbientNpcSlot
+import com.hoodie.app.pixel.npc.NpcAnimation
+import com.hoodie.app.pixel.npc.NpcBehaviorProfile
+import com.hoodie.app.pixel.npc.NpcBehaviorSequence
+import com.hoodie.app.pixel.npc.NpcCharacterRegistry
+import com.hoodie.app.pixel.npc.NpcDepth
+import com.hoodie.app.pixel.npc.NpcStep
+import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
+import com.hoodie.app.pixel.sprite.Facing
+import com.hoodie.app.pixel.sprite.Posture
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.sprite.SpriteFrame
 import com.hoodie.app.pixel.transport.TransportVibration
@@ -26,6 +37,21 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
     protected open val nearPxPerSecond = 40f
     protected open val fallbackSpeed = .8f
 
+    /** O Hoodie senta de frente (ancorado pelo quadril no slot `seat_hip`), como no ônibus. */
+    open val seatsFacingFront: Boolean = false
+
+    /** Cabine com luz própria à noite: o interior fica claro e só as janelas escurecem. */
+    protected open val litCabin: Boolean = false
+    protected open val cabinTint: Triple<Int, Int, Int> = Triple(246, 238, 222)
+    override val usesTransportLightingProfile: Boolean get() = !litCabin
+
+    /** Pés do Hoodie sentado: `seat_feet`, ou o quadril (`seat_hip`) + a altura do quadril ao pé no sprite. */
+    protected val seatFeet: com.hoodie.app.pixel.sprite.Point? =
+        art.slot("seat_feet") ?: art.slot("seat_hip")?.let { com.hoodie.app.pixel.sprite.Point(it.x, it.y + HIP_TO_FEET) }
+
+    /** Retângulos das janelas (componentes da máscara), para a luz da cabine. */
+    protected val windowRects: List<IntArray> by lazy { maskRects() }
+
     private val covered = BooleanArray(SCENE_W * SCENE_H)
     private var pendingCharacter: Triple<SpriteFrame, Int, Int>? = null
 
@@ -36,13 +62,17 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
         Prop(FRONT_BASELINE) { b, env, t -> drawFrontLayers(b, env, t) },
     )
 
-    /** Pés do Hoodie sentado: o slot da arte. */
-    protected fun seatLeft(frame: SpriteFrame): Int? = art.slot("seat_feet")?.let { it.x - frame.anchors.feet.x }
+    protected fun seatLeft(frame: SpriteFrame): Int? = seatFeet?.let { it.x - frame.anchors.feet.x }
 
     override fun drawCharacter(buffer: PixelBuffer, frame: SpriteFrame, x: Int, y: Int, timeMs: Long, env: SceneEnv) {
         val seat = seatLeft(frame)
+        val hipSlot = art.slot("seat_hip")
+        val hip = frame.anchors.seatHip
         if (seat != null && kotlin.math.abs(x - seat) <= SEATED_TOLERANCE) {
-            buffer.blit(frame.image, x, y + occupantSway(timeMs, env))
+            val dy = occupantSway(timeMs, env)
+            // Sentado de frente: o quadril do sprite cai exatamente no slot.
+            if (hipSlot != null && hip != null) buffer.blit(frame.image, hipSlot.x - hip.x, hipSlot.y - hip.y + dy)
+            else buffer.blit(frame.image, x, y + dy)
         } else {
             // Fora do banco (entrando/saindo): fica na frente do veículo.
             pendingCharacter = Triple(frame, x, y)
@@ -119,6 +149,36 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
         }
     }
 
+    override fun lights(env: SceneEnv): List<Light> {
+        if (!litCabin || (env.period != DayPeriod.EVENING && env.period != DayPeriod.NIGHT)) return emptyList()
+        val (wr, wg, wb) = if (env.period == DayPeriod.NIGHT) Triple(122, 134, 204) else Triple(238, 192, 182)
+        val (cr, cg, cb) = cabinTint
+        return listOf(Light.RegionTint(0, 0, SCENE_W - 1, SCENE_H - 1, cr, cg, cb)) +
+            windowRects.map { r -> Light.RegionTint(r[0], r[1], r[2], r[3], wr, wg, wb) }
+    }
+
+    private fun maskRects(): List<IntArray> {
+        val m = art.mask ?: return emptyList()
+        val seen = BooleanArray(m.size)
+        val out = mutableListOf<IntArray>()
+        for (start in m.indices) {
+            if (!m[start] || seen[start]) continue
+            var x0 = SCENE_W; var y0 = SCENE_H; var x1 = -1; var y1 = -1
+            val stack = ArrayDeque<Int>().apply { addLast(start) }
+            seen[start] = true
+            while (stack.isNotEmpty()) {
+                val i = stack.removeLast(); val x = i % SCENE_W; val y = i / SCENE_W
+                x0 = minOf(x0, x); y0 = minOf(y0, y); x1 = maxOf(x1, x); y1 = maxOf(y1, y)
+                if (x > 0 && m[i - 1] && !seen[i - 1]) { seen[i - 1] = true; stack.addLast(i - 1) }
+                if (x < SCENE_W - 1 && m[i + 1] && !seen[i + 1]) { seen[i + 1] = true; stack.addLast(i + 1) }
+                if (y > 0 && m[i - SCENE_W] && !seen[i - SCENE_W]) { seen[i - SCENE_W] = true; stack.addLast(i - SCENE_W) }
+                if (y < SCENE_H - 1 && m[i + SCENE_W] && !seen[i + SCENE_W]) { seen[i + SCENE_W] = true; stack.addLast(i + SCENE_W) }
+            }
+            out += intArrayOf(x0, y0, x1, y1)
+        }
+        return out
+    }
+
     protected open fun bodySway(t: Long, env: SceneEnv): Int = when (env.transportAmbient?.vibration) {
         TransportVibration.MEDIUM -> SWAY_MEDIUM[((t.coerceAtLeast(0) / 210L) % SWAY_MEDIUM.size).toInt()]
         TransportVibration.NONE -> 0
@@ -132,6 +192,8 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
         const val OUTLINE = 0xFF1A1C33.toInt()
         const val FRONT_BASELINE = 10_000
         const val SEATED_TOLERANCE = 6
+        /** Quadril → pés do Hoodie sentado de frente (procedural: quadril em y 60, pés em 71). */
+        const val HIP_TO_FEET = 11
         val SWAY_LOW = intArrayOf(0, 0, 1, 0, 0, -1, 0, 0)
         val SWAY_MEDIUM = intArrayOf(0, 1, 1, 0, -1, 0, 1, 0)
     }
@@ -164,4 +226,59 @@ class CarSceneV3(art: SceneArt) : LayeredTransportScene(SceneId.CAR, art) {
 
     override fun lights(env: SceneEnv): List<Light> =
         if (env.period == DayPeriod.NIGHT || env.period == DayPeriod.EVENING) listOf(Light.Glow(11, 219, 36, .55f)) else emptyList()
+}
+
+
+/**
+ * Interior V3 (trem, metrô, ônibus): Hoodie sentado de frente no slot `seat_hip`, passageiros nos slots
+ * `npc_seat_N` (SIT_FRONT, escala 1:1), cabine iluminada à noite e janelas recortadas pela máscara.
+ */
+class InteriorSceneV3(id: SceneId, art: SceneArt, private val joltPhase: Boolean = false) : LayeredTransportScene(id, art) {
+    override val seatsFacingFront = true
+    override val litCabin = true
+    private val seat = seatFeet ?: com.hoodie.app.pixel.sprite.Point(120, 260)
+    override val spots = mapOf(
+        SpotId.SEAT to Spot(seat.x, seat.y),
+        SpotId.CENTER to Spot(seat.x, seat.y),
+        SpotId.DOOR to (art.slot("door_feet")?.let { Spot(it.x, it.y) } ?: Spot(seat.x, seat.y)),
+    )
+    override val defaultSpot = SpotId.SEAT
+
+    override fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> {
+        val seats = art.slotsWithPrefix("npc_seat_").values.toList()
+        if (seats.isEmpty()) return emptyList()
+        val seed = env.daySeed * 31 + env.variant * 17 + Math.floorDiv(env.clockMinute, 15) + id.ordinal * 7
+        val candidates = listOf(
+            NpcCharacterRegistry.MOUSE_COMMUTER,
+            NpcCharacterRegistry.RABBIT_READER,
+            NpcCharacterRegistry.DUCK_SLEEPY,
+            NpcCharacterRegistry.RACCOON_COMMUTER,
+            NpcCharacterRegistry.DOG_WORKER,
+        )
+        return seats.mapIndexed { i, hip ->
+            val style = candidates[Math.floorMod(seed + i * 3, candidates.size)]
+            val sequence = NpcBehaviorSequence.of(
+                NpcStep(NpcAnimation.SIT_PHONE, 4_200, seated = true, facing = Facing.FRONT),
+                NpcStep(NpcAnimation.SIT_LOOK, 2_600, seated = true, facing = Facing.FRONT),
+            )
+            AmbientNpcSlot(
+                definition = AmbientNpcDefinition(
+                    id = style.id,
+                    characterStyle = style,
+                    behaviorProfile = NpcBehaviorProfile(
+                        animation = NpcAnimation.SIT_PHONE,
+                        motion = SpeciesMotionProfiles.forCharacter(style),
+                        sequence = sequence,
+                        reactions = false,
+                    ),
+                ),
+                x = hip.x, floorY = hip.y, baseline = hip.y,
+                seed = seed + i * 23,
+                depth = NpcDepth.SCENE,
+                seatedPosture = Posture.SIT_FRONT,
+                seatSlotId = "npc_seat_$i",
+                busJoltPhaseMs = if (joltPhase) (i % 2) * 480L else null,
+            )
+        }
+    }
 }

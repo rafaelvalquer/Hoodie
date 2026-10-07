@@ -1,3 +1,26 @@
 {
-  "car": { "final": false, "manualReview": false, "pass": "bootstrap-v1", "reviewedBy": null }
+  "car": {
+    "final": false,
+    "manualReview": false,
+    "pass": "bootstrap-v1",
+    "reviewedBy": null
+  },
+  "train": {
+    "final": false,
+    "manualReview": false,
+    "pass": "bootstrap-v1",
+    "reviewedBy": null
+  },
+  "metro": {
+    "final": false,
+    "manualReview": false,
+    "pass": "bootstrap-v1",
+    "reviewedBy": null
+  },
+  "bus": {
+    "final": false,
+    "manualReview": false,
+    "pass": "bootstrap-v1",
+    "reviewedBy": null
+  }
 }

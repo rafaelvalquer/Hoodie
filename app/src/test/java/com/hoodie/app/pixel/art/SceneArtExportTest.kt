@@ -20,7 +20,12 @@ class SceneArtExportTest {
     private val sourceDir = File("../assets-source/scenes/transport")
     private val runtimeDir = File("src/main/resources/${SceneArtStore.DIR}")
 
-    private val required = mapOf("car" to setOf("seat_feet", "steering", "door_feet", "wheel_0", "wheel_1"))
+    private val required = mapOf(
+        "car" to setOf("seat_feet", "steering", "door_feet", "wheel_0", "wheel_1"),
+        "train" to setOf("seat_hip", "npc_seat_0"),
+        "metro" to setOf("seat_hip", "npc_seat_0"),
+        "bus" to setOf("seat_hip", "npc_seat_0"),
+    )
 
     @Test fun bootstrapAndExport() {
         val bootstrap = System.getProperty("sceneBootstrap").orEmpty()

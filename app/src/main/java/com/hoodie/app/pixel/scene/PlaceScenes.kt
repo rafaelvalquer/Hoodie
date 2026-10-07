@@ -409,16 +409,29 @@ object SceneRegistry {
     }
 
     operator fun get(id: SceneId): PixelScene = when {
-        id == SceneId.BUS && com.hoodie.app.core.config.HoodieConfig.BUS_SCENE_V2 -> busV2
-        id == SceneId.CAR && com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3 -> carV3 ?: scenes.getValue(id)
-        else -> scenes.getValue(id)
+        com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3 && id in V3_SCENES -> v3(id) ?: legacy(id)
+        else -> legacy(id)
     }
 
-    /** Carro V3 em camadas (null se a arte compilada não estiver no APK). */
-    private val carV3: PixelScene? by lazy { com.hoodie.app.pixel.art.SceneArtStore.get("car")?.let { CarSceneV3(it) } }
+    /** Cenas de transporte V3 em camadas e o arquivo de arte de cada uma. */
+    private val V3_SCENES = mapOf(SceneId.CAR to "car", SceneId.TRAIN to "train", SceneId.METRO to "metro", SceneId.BUS to "bus")
+
+    private val v3Cache = java.util.concurrent.ConcurrentHashMap<SceneId, java.util.Optional<PixelScene>>()
+
+    /** Cena V3 (null se a arte compilada não estiver no APK). */
+    fun v3(id: SceneId): PixelScene? = v3Cache.getOrPut(id) {
+        java.util.Optional.ofNullable(V3_SCENES[id]?.let { name ->
+            com.hoodie.app.pixel.art.SceneArtStore.get(name)?.let { art ->
+                if (id == SceneId.CAR) CarSceneV3(art) else InteriorSceneV3(id, art, joltPhase = id == SceneId.BUS)
+            }
+        })
+    }.orElse(null)
+
+    private fun legacy(id: SceneId): PixelScene =
+        if (id == SceneId.BUS && com.hoodie.app.core.config.HoodieConfig.BUS_SCENE_V2) busV2 else scenes.getValue(id)
 
     /** Carro do Lab: V3 em camadas ou o legado, independente da flag. */
-    fun car(v3: Boolean): PixelScene = if (v3) carV3 ?: scenes.getValue(SceneId.CAR) else scenes.getValue(SceneId.CAR)
+    fun car(v3: Boolean): PixelScene = if (v3) v3(SceneId.CAR) ?: scenes.getValue(SceneId.CAR) else scenes.getValue(SceneId.CAR)
 
     private val busV2: PixelScene by lazy { BusSceneV2() }
 

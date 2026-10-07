@@ -23,7 +23,8 @@ correspondente em `TransportSceneQualityTest` (Marco 2); as outras são de revis
   dele precisa passar do limiar. Isso reprova carro azul e banco azul.
 - ✔ **Sem painel chapado.** Nenhum retângulo de uma só cor com mais de ~600 px fora do céu, medido na cena como
   o usuário vê: textura, costura, rebite, reflexo ou dithering. Sombra profunda e contorno (luma < 50) ficam de
-  fora — são sólidos por convenção.
+  fora — são sólidos por convenção. Só conta como painel um retângulo com os dois lados de 6 px ou mais;
+  frisos, molduras e barras são linhas.
 
 ## 4. Profundidade
 Três planos de paralaxe, mais o veículo, mais um oclusor:

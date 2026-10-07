@@ -684,9 +684,9 @@ private fun TransportLab() {
         ChipRow(listOf("Cena legada", "Trem V2"), if (trainV2) 1 else 0, { trainV2 = it == 1 })
         Text("V2: bancos longitudinais, slots preferenciais, portas centrais, mapa de estações e balanço ferroviário.", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     }
-    if (mode == MovementMode.CAR) {
-        ChipRow(listOf("Carro legado", "Carro V3"), if (transportV3) 1 else 0, { transportV3 = it == 1 })
-        Text("V3: cena em camadas (assets-source/scenes/transport/car.aseprite). Rascunho até a revisão do Rafael.", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+    if (mode in listOf(MovementMode.CAR, MovementMode.TRAIN, MovementMode.METRO, MovementMode.BUS)) {
+        ChipRow(listOf("Cena atual", "Cena V3"), if (transportV3) 1 else 0, { transportV3 = it == 1 })
+        Text("V3: cena em camadas (assets-source/scenes/transport/). Rascunho até a revisão do Rafael.", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     }
     Text("Perfil visual único · ${profile.journey.vehicle} · rota ${profile.journey.routeStyle}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     // Recria a cena ao trocar de versão: o cache de fundo do renderer é por SceneId.
