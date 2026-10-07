@@ -81,6 +81,7 @@ import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsScreen
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.theme.HoodieColors
+import com.hoodie.app.presentation.theme.HoodieSpacing
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -326,8 +327,9 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
                     val click = if (onContext != null && item.context != null) { { onContext(item.context) } } else null
                     PixelPanel(Modifier.weight(1f), color = HoodieColors.PanelLight, onClick = click) {
                         Text(item.emoji, style = MaterialTheme.typography.titleLarge)
-                        Text(item.label.uppercase(), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(HoodieSpacing.LabelToValue))
+                        Text(item.label.uppercase(), style = MaterialTheme.typography.labelSmall, color = HoodieColors.MutedStrong)
+                        Spacer(Modifier.height(HoodieSpacing.LabelToValue))
                         Text(formatDuration(item.duration), style = MaterialTheme.typography.titleMedium, color = HoodieColors.Hood)
                     }
                 }

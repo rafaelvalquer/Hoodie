@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.time.formatHm
 import com.hoodie.app.presentation.theme.HoodieColors
+import com.hoodie.app.presentation.theme.HoodieSpacing
 
 /** Painel com contorno escuro e sombra dura deslocada — o "card" do jogo. */
 @Composable
@@ -92,7 +93,12 @@ fun PixelButton(
 
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
-    Text(text.uppercase(), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = modifier)
+    Text(
+        text.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        color = HoodieColors.MutedStrong,
+        modifier = modifier.padding(bottom = HoodieSpacing.LabelToValue),
+    )
 }
 
 /** Barra de necessidade em blocos (10 segmentos). */
