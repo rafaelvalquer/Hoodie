@@ -42,7 +42,7 @@ class BottomNavigationFitTest(private val width: Int, private val fontScale: Flo
         }
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val overflowing = listOf(
-            R.string.nav_home to R.string.nav_home, R.string.nav_timeline_short to R.string.nav_timeline, R.string.nav_places to R.string.nav_places,
+            R.string.nav_home to R.string.nav_home, R.string.nav_timeline_short to R.string.nav_timeline, R.string.nav_places_short to R.string.nav_places,
             R.string.nav_diary to R.string.nav_diary, R.string.nav_settings to R.string.nav_settings,
         ).filter { (shortLabel, fullLabel) ->
             val results = mutableListOf<TextLayoutResult>()
@@ -53,10 +53,10 @@ class BottomNavigationFitTest(private val width: Int, private val fontScale: Flo
             val tab = rule.onNodeWithContentDescription(context.getString(fullLabel)).fetchSemanticsNode().boundsInRoot.width
             results.single().let { it.lineCount > 1 || it.multiParagraph.maxIntrinsicWidth > tab + 5f }
         }.map { "${context.getString(it.first)}" }
-        val detail = listOf(R.string.nav_places, R.string.nav_settings).joinToString { r ->
+        val detail = listOf(R.string.nav_places_short to R.string.nav_places, R.string.nav_settings to R.string.nav_settings).joinToString { (shortLabel, fullLabel) ->
             val l = mutableListOf<TextLayoutResult>()
-            rule.onNodeWithText(context.getString(r), useUnmergedTree = true).fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(l)
-            "${context.getString(r)}: natural=${l.single().multiParagraph.maxIntrinsicWidth} linhas=${l.single().lineCount} aba=${rule.onNodeWithContentDescription(context.getString(r)).fetchSemanticsNode().boundsInRoot.width}"
+            rule.onNodeWithText(context.getString(shortLabel), useUnmergedTree = true).fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(l)
+            "${context.getString(shortLabel)}: natural=${l.single().multiParagraph.maxIntrinsicWidth} linhas=${l.single().lineCount} aba=${rule.onNodeWithContentDescription(context.getString(fullLabel)).fetchSemanticsNode().boundsInRoot.width}"
         }
         val output = File(context.getExternalFilesDir(null), "nav").apply { mkdirs() }
         File(output, "nav_${width}_f${(fontScale * 100).toInt()}.png").outputStream().use {

@@ -80,6 +80,9 @@ import com.hoodie.app.presentation.screens.phoneinsights.DiaryPhoneCard
 import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsScreen
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
+import com.hoodie.app.pixel.icons.PixelIconView
+import com.hoodie.app.pixel.icons.PixelIcons
+import com.hoodie.app.pixel.icons.PixelSprite
 import com.hoodie.app.presentation.theme.HoodieColors
 import com.hoodie.app.presentation.theme.HoodieSpacing
 import java.time.LocalDate
@@ -308,7 +311,7 @@ private fun DateChip(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-private data class SummaryItem(val label: String, val emoji: String, val duration: Long, val context: UserContextType? = null)
+private data class SummaryItem(val label: String, val icon: PixelSprite, val duration: Long, val context: UserContextType? = null)
 
 @Composable
 internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType) -> Unit)? = null) {
@@ -316,9 +319,9 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionLabel(stringResource(R.string.ui_diary_screen_8))
         val items = listOf(
-            SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_3), "🏠", summary.homeMs, UserContextType.HOME), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_4), "🏢", summary.workMs, UserContextType.WORK),
-            SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_5), "🚶", summary.commutingMs, UserContextType.COMMUTING), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_6), uiTextContext.getString(R.string.ui_extra_diary_screen_7), summary.lunchMs, UserContextType.LUNCH),
-        SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_8), uiTextContext.getString(R.string.ui_extra_diary_screen_9), summary.gymMs, UserContextType.GYM), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_10), "🎉", summary.leisureMs, UserContextType.LEISURE), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_11), "📍", summary.otherMs),
+            SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_3), PixelIcons.of(UserContextType.HOME), summary.homeMs, UserContextType.HOME), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_4), PixelIcons.of(UserContextType.WORK), summary.workMs, UserContextType.WORK),
+            SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_5), PixelIcons.of(UserContextType.COMMUTING), summary.commutingMs, UserContextType.COMMUTING), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_6), PixelIcons.of(UserContextType.LUNCH), summary.lunchMs, UserContextType.LUNCH),
+        SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_8), PixelIcons.of(UserContextType.GYM), summary.gymMs, UserContextType.GYM), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_10), PixelIcons.of(UserContextType.LEISURE), summary.leisureMs, UserContextType.LEISURE), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_11), PixelIcons.of(UserContextType.UNKNOWN), summary.otherMs),
         ).filter { it.duration > 0 }
         if (items.isEmpty()) PixelPanel(Modifier.fillMaxWidth()) { Text(stringResource(R.string.ui_diary_screen_9), color = HoodieColors.Muted) }
         items.chunked(2).forEach { row ->
@@ -326,7 +329,7 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
                 row.forEach { item ->
                     val click = if (onContext != null && item.context != null) { { onContext(item.context) } } else null
                     PixelPanel(Modifier.weight(1f), color = HoodieColors.PanelLight, onClick = click) {
-                        Text(item.emoji, style = MaterialTheme.typography.titleLarge)
+                        PixelIconView(item.icon, size = 24.dp, tint = HoodieColors.Hood)
                         Spacer(Modifier.height(HoodieSpacing.LabelToValue))
                         Text(item.label.uppercase(), style = MaterialTheme.typography.labelSmall, color = HoodieColors.MutedStrong)
                         Spacer(Modifier.height(HoodieSpacing.LabelToValue))

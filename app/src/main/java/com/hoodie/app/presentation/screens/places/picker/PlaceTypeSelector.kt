@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
+import com.hoodie.app.pixel.icons.IconLabel
+import com.hoodie.app.pixel.icons.PixelIconView
+import com.hoodie.app.pixel.icons.PixelIcons
 import com.hoodie.app.presentation.theme.HoodieColors
 
 /** Como escolher o tipo: escondido (onboarding), resumo + "Alterar" (edição) ou grade (novo lugar). */
@@ -47,7 +50,7 @@ fun placeTypeSelectorMode(allowTypeChange: Boolean, editing: Boolean) = when {
 }
 
 /**
- * Edição:  Tipo / 🏠 Casa ................ ALTERAR  (abre [PlaceTypeBottomSheet])
+ * Edição:  Tipo / [ícone] Casa ........... ALTERAR  (abre [PlaceTypeBottomSheet])
  * Novo:    grade 2 colunas que acomoda todos os tipos físicos com rótulos legíveis.
  */
 @Composable
@@ -59,7 +62,7 @@ fun PlaceTypeSelector(type: PlaceType, mode: PlaceTypeSelectorMode, onChange: (P
             PixelPanel(modifier.fillMaxWidth().testTag(PlacePickerTags.TYPE_SUMMARY), color = HoodieColors.PanelLight) {
                 SectionLabel(stringResource(R.string.ui_place_type_selector_1))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                    Text("${type.emoji} ${type.label}", style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    IconLabel(PixelIcons.of(type), type.label, style = MaterialTheme.typography.bodyLarge, maxLines = 1, modifier = Modifier.weight(1f))
                     Text(
                         stringResource(R.string.ui_place_type_selector_2),
                         style = MaterialTheme.typography.labelLarge,
@@ -95,7 +98,7 @@ private fun PlaceTypeCell(t: PlaceType, selected: Boolean, onClick: () -> Unit, 
             .testTag(PlacePickerTags.typeCell(t)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(t.emoji, style = MaterialTheme.typography.titleMedium)
+        PixelIconView(PixelIcons.of(t), size = 22.dp, tint = if (selected) HoodieColors.Hood else HoodieColors.Ink)
         Text(t.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
             color = if (selected) HoodieColors.Hood else HoodieColors.Ink)
     }

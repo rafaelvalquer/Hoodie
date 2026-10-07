@@ -54,6 +54,9 @@ import com.hoodie.app.presentation.screens.profile.ProfileScreen
 import com.hoodie.app.presentation.screens.routine.RoutineScreen
 import com.hoodie.app.presentation.screens.settings.SettingsScreen
 import com.hoodie.app.presentation.screens.timeline.TimelineScreen
+import com.hoodie.app.pixel.icons.PixelIconView
+import com.hoodie.app.pixel.icons.PixelIcons
+import com.hoodie.app.pixel.icons.PixelSprite
 import com.hoodie.app.presentation.theme.HoodieColors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -108,14 +111,14 @@ fun SplashScreen() {
 }
 
 /** [shortLabel] é o texto visível (cabe na aba de 72 dp); [label] vai para a descrição de acessibilidade. */
-private data class Tab(val route: String, val emoji: String, @androidx.annotation.StringRes val label: Int, @androidx.annotation.StringRes val shortLabel: Int = label)
+private data class Tab(val route: String, val icon: PixelSprite, @androidx.annotation.StringRes val label: Int, @androidx.annotation.StringRes val shortLabel: Int = label)
 
 private val tabs = listOf(
-    Tab(Routes.HOME, "🐱", R.string.nav_home),
-    Tab(Routes.TIMELINE, "📅", R.string.nav_timeline, R.string.nav_timeline_short),
-    Tab(Routes.PLACES, "📍", R.string.nav_places),
-    Tab(Routes.DIARY, "🗺️", R.string.nav_diary),
-    Tab(Routes.SETTINGS, "⚙️", R.string.nav_settings),
+    Tab(Routes.HOME, PixelIcons.CAT, R.string.nav_home),
+    Tab(Routes.TIMELINE, PixelIcons.CALENDAR, R.string.nav_timeline, R.string.nav_timeline_short),
+    Tab(Routes.PLACES, PixelIcons.PIN, R.string.nav_places, R.string.nav_places_short),
+    Tab(Routes.DIARY, PixelIcons.MAP, R.string.nav_diary),
+    Tab(Routes.SETTINGS, PixelIcons.GEAR, R.string.nav_settings),
 )
 
 object Routes {
@@ -153,9 +156,9 @@ internal fun HoodieBottomNavigation(route: String?, onNavigate: (String) -> Unit
                 },
                 selected = selected,
                 onClick = { onNavigate(tab.route) },
-                icon = { Text(tab.emoji, style = MaterialTheme.typography.titleLarge) },
+                icon = { PixelIconView(tab.icon, size = 24.dp, tint = if (selected) HoodieColors.Hood else HoodieColors.Muted) },
                 label = { Text(stringResource(tab.shortLabel), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false, modifier = Modifier.wrapContentWidth(unbounded = true)) },
-                colors = NavigationBarItemDefaults.colors(indicatorColor = HoodieColors.PanelLight, selectedTextColor = HoodieColors.Hood, unselectedTextColor = HoodieColors.Muted),
+                colors = NavigationBarItemDefaults.colors(indicatorColor = HoodieColors.PanelLight, selectedTextColor = HoodieColors.Hood, unselectedTextColor = HoodieColors.MutedStrong),
             )
         }
     }

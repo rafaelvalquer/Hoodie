@@ -37,6 +37,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.time.formatHm
+import com.hoodie.app.pixel.icons.IconLabel
+import com.hoodie.app.pixel.icons.PixelIconView
+import com.hoodie.app.pixel.icons.PixelSprite
 import com.hoodie.app.presentation.theme.HoodieColors
 import com.hoodie.app.presentation.theme.HoodieSpacing
 
@@ -71,6 +74,7 @@ fun PixelButton(
     color: Color = HoodieColors.Blue,
     textColor: Color = HoodieColors.Outline,
     enabled: Boolean = true,
+    leadingIcon: PixelSprite? = null,
 ) {
     val bg = if (enabled) color else HoodieColors.PanelLight
     Box(
@@ -87,7 +91,16 @@ fun PixelButton(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text.uppercase(), style = MaterialTheme.typography.labelLarge, color = if (enabled) textColor else HoodieColors.Muted, textAlign = TextAlign.Center, maxLines = 2)
+        val contentColor = if (enabled) textColor else HoodieColors.Muted
+        if (leadingIcon == null) {
+            Text(text.uppercase(), style = MaterialTheme.typography.labelLarge, color = contentColor, textAlign = TextAlign.Center, maxLines = 2)
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                PixelIconView(leadingIcon, size = 20.dp, tint = contentColor)
+                Spacer(Modifier.width(8.dp))
+                Text(text.uppercase(), style = MaterialTheme.typography.labelLarge, color = contentColor, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.weight(1f, fill = false))
+            }
+        }
     }
 }
 
@@ -158,7 +171,7 @@ fun SpeechBubble(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ChipRow(options: List<String>, selected: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun ChipRow(options: List<String>, selected: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, icons: List<PixelSprite?>? = null) {
     androidx.compose.foundation.layout.FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEachIndexed { i, label ->
             val on = i == selected
@@ -171,7 +184,10 @@ fun ChipRow(options: List<String>, selected: Int?, onSelect: (Int) -> Unit, modi
                     .semantics { contentDescription = label }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
-                Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) HoodieColors.Outline else HoodieColors.Ink)
+                val contentColor = if (on) HoodieColors.Outline else HoodieColors.Ink
+                val icon = icons?.getOrNull(i)
+                if (icon == null) Text(label, style = MaterialTheme.typography.labelLarge, color = contentColor)
+                else IconLabel(icon, label, style = MaterialTheme.typography.labelLarge, color = contentColor, iconSize = 18.dp)
             }
         }
     }

@@ -318,8 +318,8 @@
     <string name="settings_clear_mobility_warning">Os deslocamentos salvos (horários e meios de transporte) e o que o %1$s aprendeu dos seus trajetos serão apagados deste aparelho.</string>
     <string name="settings_version">Hoodie %1$s</string>
     <string name="settings_clear_all_warning">Lugares, histórico, memórias e o estado do %1$s serão apagados deste aparelho. Não dá para desfazer.</string>
-    <string name="place_edit_title">📍 MUDAR LOCAL</string>
-    <string name="place_new_title">%1$s NOVO LOCAL</string>
+    <string name="place_edit_title">MUDAR LOCAL</string>
+    <string name="place_new_title">NOVO LOCAL</string>
     <string name="place_saving">SALVANDO...</string>
     <string name="place_save_as">SALVAR COMO %1$s</string>
     <string name="place_privacy_geocoding">O endereço usado na busca é enviado ao serviço de geocodificação do Android.</string>
@@ -346,6 +346,7 @@
     <string name="nav_timeline">Histórico</string>
     <string name="nav_timeline_short">Hist.</string>
     <string name="nav_places">Lugares</string>
+    <string name="nav_places_short">Locais</string>
     <string name="nav_diary">Diário</string>
     <string name="nav_settings">Ajustes</string>
     <string name="diary_map_empty">Ainda não tenho lugares suficientes para montar o mapa deste dia.</string>
