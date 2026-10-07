@@ -2,5 +2,6 @@
   "walk": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" },
   "idle": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" },
   "sleep": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" },
-  "work": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" }
+  "work": { "final": true, "manualReview": true, "pass": "manual-v1", "reviewedBy": "Rafael" },
+  "transport": { "final": true, "manualReview": true, "pass": "bootstrap-v1", "reviewedBy": "aprovação no chat (07/10/2026)" }
 }

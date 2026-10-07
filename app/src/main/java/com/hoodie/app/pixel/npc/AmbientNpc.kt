@@ -91,13 +91,12 @@ object NpcDirector {
             NpcStep(NpcAnimation.SIT_WAKE, 1_200), NpcStep(NpcAnimation.SIT_SLEEP, 3_000),
         ),
     )
-    /** Em pé na barra → olha → tranco do ônibus → segura de novo. */
-    private val dog = definition(
-        NpcCharacterRegistry.DOG_WORKER, NpcAnimation.STAND,
+    /** Ônibus: olha a janela → celular → comenta o trânsito (sentado, uma fala curta por vez). */
+    private val talker = definition(
+        NpcCharacterRegistry.DOG_WORKER, NpcAnimation.SIT_LOOK,
         NpcBehaviorSequence.of(
-            NpcStep(NpcAnimation.STAND, 3_000), NpcStep(NpcAnimation.LOOK, 2_000),
-            NpcStep(NpcAnimation.REACTION, 900, reaction = NpcReaction.SURPRISED),
-            NpcStep(NpcAnimation.TALK, 1_500), NpcStep(NpcAnimation.STAND, 500),
+            NpcStep(NpcAnimation.SIT_LOOK, 3_000), NpcStep(NpcAnimation.SIT_PHONE, 2_400),
+            NpcStep(NpcAnimation.TALK, 1_500, seated = true), NpcStep(NpcAnimation.SIT_LOOK, 600),
         ),
         lines = listOf("Trânsito de novo.", "Chego já.", "Quase perdi o ponto."),
     )
@@ -105,18 +104,17 @@ object NpcDirector {
         NpcCharacterRegistry.RABBIT_READER, NpcAnimation.SIT_PHONE,
         NpcBehaviorSequence.of(NpcStep(NpcAnimation.SIT_PHONE, 4_400), NpcStep(NpcAnimation.LOOK_WINDOW, 2_000, seated = true)),
     )
-    private val trainPole = definition(
-        NpcCharacterRegistry.DOG_WORKER, NpcAnimation.STAND,
-        NpcBehaviorSequence.of(NpcStep(NpcAnimation.STAND, 2_600), NpcStep(NpcAnimation.LOOK, 1_600), NpcStep(NpcAnimation.STAND, 2_200)),
-    )
-    /** Janela → celular → janela. */
-    private val raccoon = definition(
-        NpcCharacterRegistry.RACCOON_COMMUTER, NpcAnimation.LOOK_WINDOW,
-        NpcBehaviorSequence.of(
-            NpcStep(NpcAnimation.LOOK_WINDOW, 3_000), NpcStep(NpcAnimation.STAND_PHONE, 2_400),
-            NpcStep(NpcAnimation.LOOK_WINDOW, 2_600),
-        ),
-    )
+
+    /**
+     * Passageiros sentados dos interiores em camadas (ônibus, trem, metrô): a cena coloca um por slot
+     * `npc_seat_N`, escolhido por seed. O ônibus mantém a única fala curta do transporte.
+     */
+    fun passengers(scene: SceneId): List<AmbientNpcDefinition> = when (scene) {
+        SceneId.BUS -> listOf(talker)
+        SceneId.TRAIN -> listOf(bunny, mouse)
+        SceneId.METRO -> listOf(duck, mouse)
+        else -> emptyList()
+    }
     /** Restaurante: come, comenta algo, volta a comer. */
     private val guest = definition(
         NpcCharacterRegistry.CAT_GUEST, NpcAnimation.SIT_EAT,
@@ -135,23 +133,6 @@ object NpcDirector {
                 if (v == 0) AmbientNpcSlot(exec, 211, 204, 204, 11 + v, officePath())
                 else AmbientNpcSlot(cat, 211, 204, 204, 11 + v, colleaguePath()),
                 AmbientNpcSlot(rabbit, 34, 204, 204, 31),
-            )
-            SceneId.BUS -> listOf(
-                AmbientNpcSlot(mouse, 38, 237, 240, 41, facingRight = true),
-                AmbientNpcSlot(duck, 202, 237, 240, 42),
-                AmbientNpcSlot(dog, 119, 221, 222, 43, depth = NpcDepth.BACKGROUND),
-            )
-            SceneId.TRAIN -> listOf(
-                AmbientNpcSlot(bunny, 48, 217, 220, 51, seatedPosture = Posture.SIT_FRONT, seatSlotId = "left-0"),
-                AmbientNpcSlot(raccoon, 190, 217, 220, 52, seatedPosture = Posture.SIT_FRONT, seatSlotId = "right-1"),
-                // Leave the centre seat to Hoodie; the standing commuter uses
-                // the foreground aisle instead of obscuring that occupant.
-                AmbientNpcSlot(trainPole, 20, 290, 292, 53, depth = NpcDepth.BACKGROUND),
-            )
-            SceneId.METRO -> listOf(
-                AmbientNpcSlot(mouse, 44, 240, 242, 61, facingRight = true),
-                AmbientNpcSlot(dog, 194, 222, 224, 62, depth = NpcDepth.BACKGROUND),
-                AmbientNpcSlot(duck, 119, 240, 242, 63),
             )
             SceneId.RESTAURANT -> RestaurantNpcDirector.plan(env)
             SceneId.SHOPPING -> ShoppingNpcDirector.plan(env)

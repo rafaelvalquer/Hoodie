@@ -401,39 +401,23 @@ class GenericOutdoorScene : PixelScene(SceneId.GENERIC_OUTDOOR) {
 object SceneRegistry {
     private val scenes: Map<SceneId, PixelScene> by lazy {
         listOf(
-            HomeScene(), OfficeScene(), StreetScene(), TransitScene(), CarScene(), RestaurantScene(), GymScene(),
-            BusScene(), TrainScene(), MetroScene(), BicycleScene(), GenericRideScene(),
+            HomeScene(), OfficeScene(), StreetScene(), TransitScene(), RestaurantScene(), GymScene(),
+            BicycleScene(), GenericRideScene(),
             SchoolScene(), ShoppingScene(), FamilyScene(), LeisureScene(),
             UnknownScene(), GenericIndoorScene(), GenericOutdoorScene(),
         ).associateBy { it.id }
     }
 
-    operator fun get(id: SceneId): PixelScene = when {
-        com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3 && id in V3_SCENES -> v3(id) ?: legacy(id)
-        else -> legacy(id)
+    operator fun get(id: SceneId): PixelScene = layered[id] ?: scenes.getValue(id)
+
+    /** Carro, trem, metrô e ônibus: cenas em camadas (assets-source/scenes/transport, docs/transport-art-bible.md). */
+    private val LAYERED = mapOf(SceneId.CAR to "car", SceneId.TRAIN to "train", SceneId.METRO to "metro", SceneId.BUS to "bus")
+
+    private val layered: Map<SceneId, PixelScene> by lazy {
+        LAYERED.mapValues { (id, name) ->
+            val art = com.hoodie.app.pixel.art.SceneArtStore.get(name)
+                ?: error("Arte da cena $name ausente em resources/${com.hoodie.app.pixel.art.SceneArtStore.DIR}")
+            if (id == SceneId.CAR) CarSceneV3(art) else InteriorSceneV3(id, art, joltPhase = id == SceneId.BUS)
+        }
     }
-
-    /** Cenas de transporte V3 em camadas e o arquivo de arte de cada uma. */
-    private val V3_SCENES = mapOf(SceneId.CAR to "car", SceneId.TRAIN to "train", SceneId.METRO to "metro", SceneId.BUS to "bus")
-
-    private val v3Cache = java.util.concurrent.ConcurrentHashMap<SceneId, java.util.Optional<PixelScene>>()
-
-    /** Cena V3 (null se a arte compilada não estiver no APK). */
-    fun v3(id: SceneId): PixelScene? = v3Cache.getOrPut(id) {
-        java.util.Optional.ofNullable(V3_SCENES[id]?.let { name ->
-            com.hoodie.app.pixel.art.SceneArtStore.get(name)?.let { art ->
-                if (id == SceneId.CAR) CarSceneV3(art) else InteriorSceneV3(id, art, joltPhase = id == SceneId.BUS)
-            }
-        })
-    }.orElse(null)
-
-    private fun legacy(id: SceneId): PixelScene =
-        if (id == SceneId.BUS && com.hoodie.app.core.config.HoodieConfig.BUS_SCENE_V2) busV2 else scenes.getValue(id)
-
-    /** Carro do Lab: V3 em camadas ou o legado, independente da flag. */
-    fun car(v3: Boolean): PixelScene = if (v3) v3(SceneId.CAR) ?: scenes.getValue(SceneId.CAR) else scenes.getValue(SceneId.CAR)
-
-    private val busV2: PixelScene by lazy { BusSceneV2() }
-
-    fun bus(v2: Boolean): PixelScene = if (v2) busV2 else scenes.getValue(SceneId.BUS)
 }

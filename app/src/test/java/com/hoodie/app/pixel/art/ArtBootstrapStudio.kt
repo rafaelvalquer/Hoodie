@@ -32,15 +32,15 @@ object ArtBootstrapStudio {
             AnimationId.SIT_DOWN, AnimationId.WORK_TYPING, AnimationId.STOP_TYPING, AnimationId.REACH_MOUSE, AnimationId.WORK_MOUSE,
             AnimationId.WORK_READ, AnimationId.STAND_UP, AnimationId.WORK_NOTES, AnimationId.WORK_TIRED,
         ).map { it to Facing.FRONT },
+        // Hoodie dirigindo (de lado, no carro em camadas) — aprovado em 07/10/2026.
+        "hoodie_transport" to listOf(AnimationId.CAR_IDLE, AnimationId.CAR_LOOK_WINDOW, AnimationId.CAR_LOOK_FRONT, AnimationId.CAR_BUMP).map { it to Facing.SIDE },
     )
 
     /**
      * Grupos em produção: só a FONTE é gerada (para o artista pintar); entram em [GROUPS], no
-     * art-status e no APK quando a arte for aprovada. Ver docs/transport-art-progress.md.
+     * art-status e no APK quando a arte for aprovada.
      */
-    val PENDING_GROUPS: Map<String, List<Pair<AnimationId, Facing>>> = linkedMapOf(
-        "hoodie_transport" to listOf(AnimationId.CAR_IDLE, AnimationId.CAR_LOOK_WINDOW, AnimationId.CAR_LOOK_FRONT, AnimationId.CAR_BUMP).map { it to Facing.SIDE },
-    )
+    val PENDING_GROUPS: Map<String, List<Pair<AnimationId, Facing>>> = linkedMapOf()
 
     const val BASELINE = AsepriteSourceCompiler.BASELINE_LAYER
     const val ANCHORS = AsepriteSourceCompiler.ANCHORS_LAYER

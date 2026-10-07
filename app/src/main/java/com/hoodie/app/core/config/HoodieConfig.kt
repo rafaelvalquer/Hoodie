@@ -9,10 +9,6 @@ import com.hoodie.app.core.time.MINUTE_MS
  * referenciam estas constantes em vez de repetir valores soltos.
  */
 object HoodieConfig {
-    /** Nova composição da cena ferroviária; desligue para comparar com o vagão legado. */
-    var TRAIN_SCENE_V2 = true
-    /** Cenas de transporte V3 em camadas (docs/transport-art-bible.md), aprovadas em 07/10/2026 (scene-art-status.json). Sem a arte compilada, a cena antiga assume. */
-    @Volatile var TRANSPORT_SCENES_V3 = true
     // ── Geofence ──
     /** Raio padrão: 100–200 m absorve a imprecisão do GPS sem pegar o quarteirão inteiro. */
     const val DEFAULT_GEOFENCE_RADIUS_M = 150f
@@ -125,8 +121,6 @@ object HoodieConfig {
     /** Botão [RELÓGIO] no seletor do mapa. */
     const val DIARY_CLOCK_VIEW = true
 
-    /** Interior do ônibus V2: bancos com slots, NPCs frontais e janelas com paralaxe recortada. */
-    const val BUS_SCENE_V2 = true
 
     /** Relógio do Dia 2.0 (mostrador pixel 104×104). false = relógio legado (continua no Diary Lab). */
     const val DIARY_DAY_CLOCK_V2 = true

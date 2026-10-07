@@ -25,18 +25,17 @@ em pé do primeiro plano é uma silhueta pintada na arte (`vehicle_front`), sem 
 - `TransportSceneV3ExportTest` (`-PtransportReview=true`) exporta a revisão em `docs/transport-art/review/`.
 
 ## Regra de aprovação
-- **A inspeção do agente não conta como aprovação.** Só o Rafael marca `manualReview=true` em
-  `assets-source/scenes/transport/scene-art-status.json`.
-- `HoodieConfig.TRANSPORT_SCENES_V3` só pode ser ligado com todas as cenas revisadas (teste
-  `v3StaysOffUntilAHumanApproves`); a release também exige revisão. Até lá, a V3 aparece só no Pixel Lab.
-- Goldens das cenas V3 só são gravados depois da revisão humana.
+- **A inspeção do agente não conta como aprovação.** Só revisão humana marca `manualReview=true` em
+  `assets-source/scenes/transport/scene-art-status.json`; o teste `everySceneInTheAppHasAHumanReview` exige isso de
+  todas as cenas que estão no app.
+- Goldens das cenas só são regravados depois de revisão humana.
 
-## Hoodie
-- `assets-source/hoodie/hoodie_transport.aseprite` (CAR_* de lado) é **só fonte** para o Rafael pintar
-  (`ArtBootstrapStudio.PENDING_GROUPS`). Fica fora do APK e dos scripts de exportação até a aprovação: se entrasse
-  agora, a sheet substituiria o procedural também no carro atual.
-
-## Aprovação (07/10/2026)
-As quatro cenas foram aprovadas no chat. `scene-art-status.json` marca `manualReview=true`, a flag
-`TRANSPORT_SCENES_V3` foi ligada e os goldens `transport-scenes-v1.sha256` e `car-scenes-v1.sha256` foram
-regravados com as cenas V3. O Hoodie dirigindo (`hoodie_transport.aseprite`) **não** foi aprovado e continua fora do APK.
+## Estado (07/10/2026)
+- As quatro cenas foram aprovadas no chat e são as **únicas** cenas de carro, trem, metrô e ônibus do app:
+  as cenas antigas (`CarScene`, `BusSceneV2`/`BusSeatProp`, o interior antigo de ônibus/trem/metrô), as flags
+  `BUS_SCENE_V2`, `TRAIN_SCENE_V2` e `TRANSPORT_SCENES_V3`, os passageiros antigos desses interiores no
+  `NpcDirector` e as chaves de versão do Pixel Lab foram removidos. Bicicleta, "outro transporte" e transporte
+  genérico continuam como estavam (não têm versão em camadas).
+- O Hoodie dirigindo (`assets-source/hoodie/hoodie_transport.aseprite`, CAR_* de lado) foi aprovado no chat e entrou
+  no APK como o grupo `transport` (`ArtBootstrapStudio.GROUPS`, `RequiredShippedAnimations`, `art-status.json`, CI).
+- Goldens regravados com as cenas aprovadas: `transport-scenes-v1.sha256` e `car-scenes-v1.sha256`.

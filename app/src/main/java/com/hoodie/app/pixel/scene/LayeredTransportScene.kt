@@ -2,16 +2,8 @@ package com.hoodie.app.pixel.scene
 
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.art.SceneArt
-import com.hoodie.app.pixel.npc.AmbientNpcDefinition
 import com.hoodie.app.pixel.npc.AmbientNpcSlot
-import com.hoodie.app.pixel.npc.NpcAnimation
-import com.hoodie.app.pixel.npc.NpcBehaviorProfile
-import com.hoodie.app.pixel.npc.NpcBehaviorSequence
-import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.NpcDepth
-import com.hoodie.app.pixel.npc.NpcStep
-import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
-import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Posture
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.sprite.SpriteFrame
@@ -201,7 +193,7 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
 
 /** Carro V3 (enquadramento B: três quartos, frente à esquerda), arte em `car.aseprite`. */
 class CarSceneV3(art: SceneArt) : LayeredTransportScene(SceneId.CAR, art) {
-    private val seat = art.slot("seat_feet") ?: com.hoodie.app.pixel.sprite.Point(CarScene.SEAT_X, CarScene.SEAT_Y)
+    private val seat = requireNotNull(art.slot("seat_feet")) { "car.aseprite sem o slot seat_feet" }
     private val door = art.slot("door_feet") ?: seat
     override val spots = mapOf(
         SpotId.SEAT to Spot(seat.x, seat.y),
@@ -246,32 +238,12 @@ class InteriorSceneV3(id: SceneId, art: SceneArt, private val joltPhase: Boolean
 
     override fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> {
         val seats = art.slotsWithPrefix("npc_seat_").values.toList()
-        if (seats.isEmpty()) return emptyList()
+        val passengers = com.hoodie.app.pixel.npc.NpcDirector.passengers(id)
+        if (seats.isEmpty() || passengers.isEmpty()) return emptyList()
         val seed = env.daySeed * 31 + env.variant * 17 + Math.floorDiv(env.clockMinute, 15) + id.ordinal * 7
-        val candidates = listOf(
-            NpcCharacterRegistry.MOUSE_COMMUTER,
-            NpcCharacterRegistry.RABBIT_READER,
-            NpcCharacterRegistry.DUCK_SLEEPY,
-            NpcCharacterRegistry.RACCOON_COMMUTER,
-            NpcCharacterRegistry.DOG_WORKER,
-        )
         return seats.mapIndexed { i, hip ->
-            val style = candidates[Math.floorMod(seed + i * 3, candidates.size)]
-            val sequence = NpcBehaviorSequence.of(
-                NpcStep(NpcAnimation.SIT_PHONE, 4_200, seated = true, facing = Facing.FRONT),
-                NpcStep(NpcAnimation.SIT_LOOK, 2_600, seated = true, facing = Facing.FRONT),
-            )
             AmbientNpcSlot(
-                definition = AmbientNpcDefinition(
-                    id = style.id,
-                    characterStyle = style,
-                    behaviorProfile = NpcBehaviorProfile(
-                        animation = NpcAnimation.SIT_PHONE,
-                        motion = SpeciesMotionProfiles.forCharacter(style),
-                        sequence = sequence,
-                        reactions = false,
-                    ),
-                ),
+                definition = passengers[Math.floorMod(seed + i, passengers.size)],
                 x = hip.x, floorY = hip.y, baseline = hip.y,
                 seed = seed + i * 23,
                 depth = NpcDepth.SCENE,

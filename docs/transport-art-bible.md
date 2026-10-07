@@ -1,6 +1,6 @@
 # Bíblia de arte — cenas de transporte (V3)
 
-Vale para **carro, trem e metrô**. O ônibus V2 fica como está. Toda regra marcada com ✔ tem um teste
+Vale para **carro, trem, metrô e ônibus**. Toda regra marcada com ✔ tem um teste
 correspondente em `TransportSceneQualityTest` (Marco 2); as outras são de revisão humana.
 
 ## 1. Escala

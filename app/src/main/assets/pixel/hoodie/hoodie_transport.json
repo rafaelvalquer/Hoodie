@@ -1,0 +1,1045 @@
+{
+  "frames": [
+    {
+      "duration": 720,
+      "filename": "frame 0.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 0,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 420,
+      "filename": "frame 1.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 48,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 180,
+      "filename": "frame 2.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 96,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 400,
+      "filename": "frame 3.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 144,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 230,
+      "filename": "frame 4.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 192,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 850,
+      "filename": "frame 5.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 240,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 220,
+      "filename": "frame 6.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 288,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 230,
+      "filename": "frame 7.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 336,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 720,
+      "filename": "frame 8.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 384,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 200,
+      "filename": "frame 9.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 432,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 100,
+      "filename": "frame 10.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 480,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 120,
+      "filename": "frame 11.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 528,
+        "h": 72,
+        "y": 0
+      }
+    },
+    {
+      "duration": 300,
+      "filename": "frame 12.aseprite",
+      "frame": {
+        "w": 48,
+        "x": 576,
+        "h": 72,
+        "y": 0
+      }
+    }
+  ],
+  "meta": {
+    "app": "https://www.aseprite.org/",
+    "slices": [
+      {
+        "color": "#0000ffff",
+        "keys": [
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 0
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 1
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 2
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 3
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 4
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 5
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 6
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 7
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 8
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 9
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 10
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 11
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 24,
+              "h": 1,
+              "y": 71
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 12
+          }
+        ],
+        "name": "feet"
+      },
+      {
+        "color": "#0000ffff",
+        "keys": [
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 0
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 14
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 1
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 2
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 3
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 14
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 4
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 5
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 12
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 6
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 7
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 8
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 9
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 14
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 10
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 11
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 13
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 12
+          }
+        ],
+        "name": "head"
+      },
+      {
+        "color": "#0000ffff",
+        "keys": [
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 0
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 48
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 1
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 2
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 3
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 4
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 5
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 6
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 7
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 8
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 9
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 10
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 46
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 11
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 8,
+              "h": 1,
+              "y": 47
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 12
+          }
+        ],
+        "name": "right_hand"
+      },
+      {
+        "color": "#0000ffff",
+        "keys": [
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 0
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 58
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 1
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 2
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 3
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 4
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 5
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 6
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 7
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 8
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 9
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 59
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 10
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 56
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 11
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 20,
+              "h": 1,
+              "y": 57
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 12
+          }
+        ],
+        "name": "left_hand"
+      },
+      {
+        "color": "#0000ffff",
+        "keys": [
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 0
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 50
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 1
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 2
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 3
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 4
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 5
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 6
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 7
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 8
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 9
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 51
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 10
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 48
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 11
+          },
+          {
+            "bounds": {
+              "w": 1,
+              "x": 33,
+              "h": 1,
+              "y": 49
+            },
+            "pivot": {
+              "x": 0,
+              "y": 0
+            },
+            "frame": 12
+          }
+        ],
+        "name": "back"
+      }
+    ],
+    "size": {
+      "w": 624,
+      "h": 72
+    },
+    "format": "RGBA8888",
+    "frameTags": [
+      {
+        "name": "car_idle_side",
+        "from": 0,
+        "to": 3,
+        "direction": "forward"
+      },
+      {
+        "name": "car_look_window_side",
+        "from": 4,
+        "to": 6,
+        "direction": "forward"
+      },
+      {
+        "name": "car_look_front_side",
+        "from": 7,
+        "to": 9,
+        "direction": "forward"
+      },
+      {
+        "name": "car_bump_side",
+        "from": 10,
+        "to": 12,
+        "direction": "forward"
+      }
+    ]
+  }
+}

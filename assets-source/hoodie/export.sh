@@ -10,8 +10,6 @@ for f in "$SRC"/hoodie_*.aseprite; do
   [ -e "$f" ] || continue
   name="$(basename "$f" .aseprite)"
   [ "$name" = "hoodie_master" ] && continue
-  # Grupos em produção (ArtBootstrapStudio.PENDING_GROUPS) ficam fora do APK até a aprovação.
-  [ "$name" = "hoodie_transport" ] && continue
   "$ASEPRITE" -b "$f" --ignore-layer "baseline (referencia)" --ignore-layer "anchors" \
     --sheet "$OUT/$name.png" --data "$OUT/$name.json" \
     --format json-array --list-tags --list-slices --sheet-type horizontal

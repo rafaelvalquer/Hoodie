@@ -58,7 +58,7 @@ class MobilityVisualIntegrationTest {
     }
 
     @Test
-    fun `CarScene registrada, sentado e desenhando com movimento`() {
+    fun `carro em camadas registrado, sentado e desenhando com movimento`() {
         val v = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = MovementMode.CAR)
         assertTrue(v.actions.any { it.anim == AnimationId.CAR_IDLE })
         val car = SceneRegistry[SceneId.CAR]
@@ -69,9 +69,11 @@ class MobilityVisualIntegrationTest {
             car.sortedProps.forEach { it.draw(b, env, t) }
         }
         assertFalse("o mundo corre: quadros diferentes", frame(0).pixels.contentEquals(frame(400).pixels))
-        // A lente do farol continua visível na carroceria durante a noite.
-        val night = PixelBuffer(car.width, car.height).also { b -> car.sortedProps.forEach { it.draw(b, SceneEnv(DayPeriod.NIGHT, 22 * 60), 0) } }
-        assertTrue("a lente do farol é visível à noite", night.pixels.any { it == com.hoodie.app.pixel.scene.CarScenePalette.HEADLIGHT })
+        // Faróis acesos à noite: a camada emissiva do carro em camadas fica sobre a luz do período.
+        val nightEnv = SceneEnv(DayPeriod.NIGHT, 22 * 60)
+        val night = com.hoodie.app.pixel.renderer.SceneRenderer().renderEmpty(car, nightEnv, 0)
+        val lit = com.hoodie.app.pixel.art.SceneArtStore.get("car")!!.layer("emissive", DayPeriod.NIGHT)!!.pixels.filter { it ushr 24 == 0xFF }.toSet()
+        assertTrue("os faróis acendem à noite", night.pixels.any { it in lit })
     }
 
     @Test

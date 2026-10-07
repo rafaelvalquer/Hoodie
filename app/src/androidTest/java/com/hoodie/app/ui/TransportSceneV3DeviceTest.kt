@@ -23,8 +23,8 @@ class TransportSceneV3DeviceTest {
         val art = SceneArtStore.get("car")
         assertNotNull("car.aseprite não está no APK", art)
         assertTrue(art!!.slots.keys.containsAll(listOf("seat_feet", "steering", "wheel_0", "wheel_1")))
-        val scene = SceneRegistry.car(v3 = true)
-        assertTrue("SceneRegistry caiu no carro legado", scene is com.hoodie.app.pixel.scene.CarSceneV3)
+        val scene = SceneRegistry[com.hoodie.app.pixel.scene.SceneId.CAR]
+        assertTrue("o carro deveria ser a cena em camadas", scene is com.hoodie.app.pixel.scene.CarSceneV3)
         val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "transport-v3").apply { mkdirs() }
         DayPeriod.entries.forEach { p ->
             val img = SceneRenderer().renderEmpty(scene, SceneEnv(p, 12 * 60), 4_000L)
