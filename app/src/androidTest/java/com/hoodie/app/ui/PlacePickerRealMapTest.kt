@@ -25,6 +25,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.hoodie.app.core.model.PlaceType
+import com.hoodie.app.presentation.components.MAP_ATTRIBUTION_TAG
 import com.hoodie.app.presentation.components.MAP_MY_LOCATION_TAG
 import com.hoodie.app.presentation.screens.places.PlacePickerState
 import com.hoodie.app.presentation.screens.places.picker.PlacePickerActions
@@ -127,6 +128,10 @@ class PlacePickerRealMapTest {
         rule.onNodeWithTag(MAP_MY_LOCATION_TAG).assertIsDisplayed()
         val myLocation = rule.onNodeWithTag(MAP_MY_LOCATION_TAG).fetchSemanticsNode().boundsInWindow
         assertTrue("$tag Minha localização dentro do mapa", myLocation.top >= map.top - 1 && myLocation.bottom <= map.bottom + 1)
+        // O crédito do OpenStreetMap nunca fica coberto pelo botão, em nenhuma largura/fonte.
+        rule.onNodeWithTag(MAP_ATTRIBUTION_TAG).assertIsDisplayed()
+        val attribution = rule.onNodeWithTag(MAP_ATTRIBUTION_TAG).fetchSemanticsNode().boundsInWindow
+        assertTrue("$tag botão $myLocation cobre o crédito $attribution", !myLocation.overlaps(attribution))
 
         // Pixel a pixel: a faixa logo abaixo do mapa (padding do topo dos detalhes) é só fundo da tela.
         val rootNode = rule.onNodeWithTag(PlacePickerTags.ROOT).fetchSemanticsNode()

@@ -15,6 +15,8 @@
     <string name="app_name">Hoodie</string>
     <string name="place_load_failed">Não consegui carregar este local.</string>
     <string name="place_retry_load">Tentar novamente</string>
+    <string name="state_loading">Carregando…</string>
+    <string name="state_error_title">Ops, algo deu errado</string>
     <string name="place_back">Voltar</string>
     <string name="usage_restricted_hint">Não conseguiu ativar? Em alguns aparelhos, apps instalados manualmente precisam liberar Configurações restritas.</string>
     <string name="usage_restricted_help">Ver como liberar</string>

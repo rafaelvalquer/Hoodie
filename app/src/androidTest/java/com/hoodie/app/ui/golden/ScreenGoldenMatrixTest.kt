@@ -97,6 +97,7 @@ class ScreenGoldenMatrixTest(private val case: ScreenGoldenCase) {
             CompositionLocalProvider(
                 LocalDensity provides Density(1f, case.fontScale),
                 LocalPixelRenderFrame provides PixelRenderFrame(),
+                com.hoodie.app.presentation.components.LocalSkeletonPulse provides false,
             ) {
                 HoodieTheme {
                     Box(Modifier.requiredSize(case.width.dp, case.height.dp).background(HoodieColors.Night).testTag("golden_viewport")) {

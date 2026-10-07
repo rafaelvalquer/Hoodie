@@ -64,6 +64,8 @@ import com.hoodie.app.pixel.icons.PixelIconView
 import com.hoodie.app.pixel.icons.PixelIcons
 import com.hoodie.app.pixel.icons.PixelSprite
 import com.hoodie.app.presentation.components.ChipRow
+import com.hoodie.app.presentation.components.ErrorState
+import com.hoodie.app.presentation.components.HomeLoadingSkeleton
 import com.hoodie.app.presentation.components.HoodieSceneView
 import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
@@ -145,16 +147,11 @@ internal fun HomeContent(
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
     if (state.loading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            androidx.compose.material3.CircularProgressIndicator()
-        }
+        HomeLoadingSkeleton()
         return
     }
     if (state.error != null) {
-        PixelPanel(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(uiTextContext.appErrorText(requireNotNull(state.error)), color = HoodieColors.Coral)
-            PixelButton(stringResource(R.string.place_retry_load), actions.retryLoad, Modifier.fillMaxWidth())
-        }
+        ErrorState(uiTextContext.appErrorText(requireNotNull(state.error)), actions.retryLoad, fillScreen = true)
         return
     }
     Box(Modifier.fillMaxSize()) {

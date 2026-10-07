@@ -315,11 +315,8 @@ internal fun SettingsContent(
     if (isLoading || error != null) {
         Column(Modifier.fillMaxSize().statusBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(stringResource(R.string.ui_settings_screen_1), style = MaterialTheme.typography.headlineSmall)
-            if (isLoading) androidx.compose.material3.CircularProgressIndicator()
-            else {
-                Text(context.appErrorText(requireNotNull(error)), color = HoodieColors.Coral)
-                PixelButton(stringResource(R.string.place_retry_load), actions.retryLoad)
-            }
+            if (isLoading) com.hoodie.app.presentation.components.SettingsLoadingSkeleton()
+            else com.hoodie.app.presentation.components.ErrorState(context.appErrorText(requireNotNull(error)), actions.retryLoad)
         }
         return
     }

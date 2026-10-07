@@ -80,6 +80,8 @@ import com.hoodie.app.presentation.screens.phoneinsights.DiaryPhoneCard
 import com.hoodie.app.presentation.screens.phoneinsights.PhoneInsightsScreen
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
+import com.hoodie.app.presentation.components.DiaryLoadingSkeleton
+import com.hoodie.app.presentation.components.ErrorState
 import com.hoodie.app.pixel.icons.PixelIconView
 import com.hoodie.app.pixel.icons.PixelIcons
 import com.hoodie.app.pixel.icons.PixelSprite
@@ -181,12 +183,9 @@ internal fun DiaryContent(
         if (tab == DiaryTab.DIGITAL) {
             digitalContent(state.selectedDate)
         } else if (state.isLoading) {
-            PixelPanel(Modifier.fillMaxWidth()) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp); Text(stringResource(R.string.ui_diary_screen_2), color = HoodieColors.Muted) } }
+            DiaryLoadingSkeleton()
         } else if (state.error != null) {
-            PixelPanel(Modifier.fillMaxWidth()) {
-                Text(context.appErrorText(requireNotNull(state.error)), color = HoodieColors.Coral)
-                PixelButton(stringResource(R.string.ui_diary_screen_3), actions.retry)
-            }
+            ErrorState(context.appErrorText(requireNotNull(state.error)), actions.retry, retryLabel = stringResource(R.string.ui_diary_screen_3))
         } else {
             val diary = state.diary
             if (diary == null || diary.summary.totalMs == 0L && diary.timeline.isEmpty()) {

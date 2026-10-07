@@ -120,10 +120,13 @@ fun moodAnimation(mood: DigitalMood): AnimationId = when (mood) {
 
 @Composable
 fun DigitalLoading(modifier: Modifier = Modifier) {
-    PixelPanel(modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp, color = RetroUiTheme.Screen)
-            Text(stringResource(R.string.ui_phone_insights_components_3), style = RetroFontStyles.Body, color = HoodieColors.Muted)
+    com.hoodie.app.presentation.components.LoadingSkeleton(modifier.fillMaxWidth(), stringResource(R.string.ui_phone_insights_components_3)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            com.hoodie.app.presentation.components.SkeletonPanel(lines = 2)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                com.hoodie.app.presentation.components.SkeletonBlock(Modifier.weight(1f).height(56.dp))
+                com.hoodie.app.presentation.components.SkeletonBlock(Modifier.weight(1f).height(56.dp))
+            }
         }
     }
 }
