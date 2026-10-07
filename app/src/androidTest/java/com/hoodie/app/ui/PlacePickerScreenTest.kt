@@ -138,7 +138,7 @@ class PlacePickerScreenTest {
     @Test
     fun busca_de_endereco_sempre_visivel_ao_abrir_novo_local() {
         show(393.dp, 873.dp, state = newPlace())
-        rule.onNodeWithText("🏢 NOVO LOCAL").assertIsDisplayed()
+        rule.onNodeWithText("NOVO LOCAL").assertIsDisplayed()
         rule.onNodeWithText("🔎 BUSCAR ENDEREÇO").assertIsDisplayed()
         rule.onNodeWithTag(PlacePickerTags.SEARCH).assertIsDisplayed()
         rule.onNodeWithTag(PlacePickerTags.SEARCH_ACTION).assertIsDisplayed()
@@ -254,7 +254,7 @@ class PlacePickerScreenTest {
     @Test
     fun edicao_mostra_mudar_local_e_tipo_resumido() {
         show(360.dp, 800.dp)
-        rule.onNodeWithText("📍 MUDAR LOCAL").assertIsDisplayed()
+        rule.onNodeWithText("MUDAR LOCAL").assertIsDisplayed()
         rule.onNodeWithTag(PlacePickerTags.TYPE_SUMMARY).assertIsDisplayed()
         assertEquals(0, rule.onAllNodes(hasTestTag(PlacePickerTags.TYPE_GRID)).fetchSemanticsNodes().size)
         rule.onNodeWithText("🏠 Casa").assertIsDisplayed()
@@ -294,7 +294,7 @@ class PlacePickerScreenTest {
     @Test
     fun novo_lugar_mostra_os_nove_tipos_sem_sobreposicao_e_fora_do_mapa() {
         show(360.dp, 800.dp, 1.3f, state = PlacePickerState(type = PlaceType.HOME, name = "Casa"))
-        rule.onNodeWithText("🏠 NOVO LOCAL").assertIsDisplayed()
+        rule.onNodeWithText("NOVO LOCAL").assertIsDisplayed()
         val mapBottom = bounds(PlacePickerTags.MAP).bottom
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.TYPE_GRID))
         val cells = PlaceType.entries.map { t ->

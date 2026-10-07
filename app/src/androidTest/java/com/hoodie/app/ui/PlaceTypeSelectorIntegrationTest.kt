@@ -40,7 +40,7 @@ class PlaceTypeSelectorIntegrationTest {
             }
         }
         PlaceType.physicalPlaceOptions.forEach { type ->
-            val label = "${type.emoji} ${type.label}".uppercase()
+            val label = type.label.uppercase()
             assertTrue("Opção ausente na Home: $label", rule.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty())
         }
     }
@@ -52,7 +52,7 @@ class PlaceTypeSelectorIntegrationTest {
             }
         }
         PlaceType.physicalPlaceOptions.forEach { type ->
-            val label = "${type.emoji} ${type.label}"
+            val label = type.label
             assertTrue("Opção ausente em Novo lugar: $label", rule.onAllNodesWithText(label).fetchSemanticsNodes().isNotEmpty())
         }
     }
@@ -92,13 +92,13 @@ class PlaceTypeSelectorIntegrationTest {
         }
 
         rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4)).performClick()
-        rule.onNodeWithText("🍽 RESTAURANTE").performClick()
+        rule.onNodeWithText("RESTAURANTE").performClick()
         rule.runOnIdle {
             assertEquals(PlaceType.RESTAURANT, selected)
             assertEquals(UserContextType.DINING, selectedContext)
             assertEquals(SceneId.RESTAURANT, selectedScene)
         }
-        rule.onNodeWithText("🍽 Restaurante").assertExists()
-        rule.onAllNodesWithText("🍽 RESTAURANTE").assertCountEquals(0)
+        rule.onNodeWithText("Restaurante").assertExists()
+        rule.onAllNodesWithText("RESTAURANTE").assertCountEquals(0)
     }
 }
