@@ -1,0 +1,102 @@
+[
+  {
+    "name": "com.hoodie.app.integration.mobility.MobilityVisualIntegrationTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": []
+  },
+  {
+    "name": "com.hoodie.app.pixel.CharacterGeometryTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": []
+  },
+  {
+    "name": "com.hoodie.app.pixel.CharacterPainterCompatibilityTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": []
+  },
+  {
+    "name": "com.hoodie.app.pixel.NewPlaceScenesTest",
+    "tests": 20,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": [
+      {
+        "name": "goldens das cenas novas",
+        "message": "org.junit.ComparisonFailure: golden mudou: shopping_look expected:<[fd98eaac269f4b6d25f3ab8f43f4a0dd0c76bd049057f308a2f07aa752f00b91]> but was:<[a1b1c342793b66a26bb3cd68608cd2fcdba89ca88b8d40c317c456a529a4d0c6]>"
+      }
+    ]
+  },
+  {
+    "name": "com.hoodie.app.pixel.NpcArtGoldenTest",
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": [
+      {
+        "name": "hoodieVersusEveryNpcReferencePoseMatchesApprovedPixelDigests",
+        "message": "java.lang.AssertionError: Visual hashes changed; review npc-art-v2-current.sha256 and the exported comparison PNGs expected:<{hoodie_vs_bulldog_exec=be435d65e16c875fca2796cd93db903e396007442a4ce9d7ba42aa6a397e1fe3, hoodie_vs_dog_worker=8cafae92456798073e9172e0d199692537a34e58043faef0a343e0aa81eaef3e"
+      }
+    ]
+  },
+  {
+    "name": "com.hoodie.app.pixel.NpcArtV3GoldenTest",
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": [
+      {
+        "name": "npcV3ArtGoldens",
+        "message": "org.junit.ComparisonFailure: golden NPC V3 mudou: bulldog_walk expected:<[66f8ec3999b14f324e4cd99148f57e0a708300afcf5d225e8817853e33ee5f6e]> but was:<[c8318141d7b343cef659540b6b4eb3fce43501fcd77f99173544b6d97c21113c]>"
+      }
+    ]
+  },
+  {
+    "name": "com.hoodie.app.pixel.NpcBehaviorTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": []
+  },
+  {
+    "name": "com.hoodie.app.pixel.ProceduralPainterRegressionTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": []
+  },
+  {
+    "name": "com.hoodie.app.pixel.TransportVisualRegistryTest",
+    "tests": 7,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": [
+      {
+        "name": "vibracao ambiental altera quadros nos transportes em movimento",
+        "message": "java.lang.AssertionError: TRAIN precisa refletir sua vibração no cenário"
+      }
+    ]
+  },
+  {
+    "name": "com.hoodie.app.ReadmeConsistencyTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "failedCases": []
+  }
+]

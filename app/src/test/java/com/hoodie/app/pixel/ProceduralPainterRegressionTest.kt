@@ -22,7 +22,11 @@ class ProceduralPainterRegressionTest {
                 Facing.entries.forEach { facing ->
                     val (sprite, parts) = HoodiePainter.paintWithParts(frame.pose.copy(facing = facing))
                     val digest = MessageDigest.getInstance("SHA-256")
-                    digest.update(sprite.anchors.toString().toByteArray(Charsets.UTF_8))
+                    // Freeze the v1 fingerprint format: a later optional seatHip
+                    // field must not invalidate pixels/anchors of standing clips.
+                    val anchors = sprite.anchors
+                    val v1Anchors = "SpriteAnchors(rightHand=${anchors.rightHand}, leftHand=${anchors.leftHand}, head=${anchors.head}, back=${anchors.back}, feet=${anchors.feet})"
+                    digest.update(v1Anchors.toByteArray(Charsets.UTF_8))
                     val pixels = sprite.image.pixels
                     val bytes = ByteBuffer.allocate((pixels.size + parts.size) * Int.SIZE_BYTES)
                     pixels.forEach(bytes::putInt)

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.ui.PixelLabNpcTest" tests="5" failures="0" errors="0" skipped="0" time="58.468" timestamp="2026-10-07T17:09:11" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_8(AVD) - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="changingSpeciesUpdatesTheVisibleRenderedNpcPixels" classname="com.hoodie.app.ui.PixelLabNpcTest" time="17.615" />
+  <testcase name="scaleComparisonShowsProductionScalesAndKeepsLegacyValuesDiagnostic" classname="com.hoodie.app.ui.PixelLabNpcTest" time="8.728" />
+  <testcase name="inspectorStepsFrameByFrameAndShowsOnionSkin" classname="com.hoodie.app.ui.PixelLabNpcTest" time="11.136" />
+  <testcase name="npcTabShowsBothRendersPoseControlsAndOverlays" classname="com.hoodie.app.ui.PixelLabNpcTest" time="9.0" />
+  <testcase name="selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="7.34" />
+</testsuite>

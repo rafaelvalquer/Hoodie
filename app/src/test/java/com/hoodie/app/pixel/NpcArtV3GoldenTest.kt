@@ -90,6 +90,9 @@ class NpcArtV3GoldenTest {
 
         val actual = images.mapValues { digest(it.value) }
         val lines = actual.map { (k, v) -> "$k\t$v" }
+        val candidate = File(PreviewExport.dir, "npc-art-review/npc-art-v3-candidate.sha256")
+        candidate.parentFile?.mkdirs()
+        candidate.writeText(lines.joinToString("\n", postfix = "\n"))
         if (System.getProperty("approveNpcV3Goldens") == "true") {
             assertTrue(
                 "goldens V3 só podem ser atualizados depois de toda a matriz receber aprovação humana em npc-art-v3-review-manifest.json",

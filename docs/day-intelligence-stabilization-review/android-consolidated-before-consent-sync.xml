@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.database.DataStorePersistenceTest" tests="99" failures="1" errors="0" skipped="0" time="460.46" timestamp="2026-10-07T17:32:12" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_8(AVD) - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="valorSobreviveAReabertura" classname="com.hoodie.app.database.DataStorePersistenceTest" time="0.32" />
+  <testcase name="ctSec002_upgradeDeTextoPuroParaCifradoSemPerderDados" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="8.46" />
+  <testcase name="senhaIrrecuperavelNaoAbreNemRegeneraSenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="1.39" />
+  <testcase name="senhaErradaNaoAbre" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="3.724" />
+  <testcase name="ctSec003_reaberturaComNovaInstanciaUsaAMesmaSenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="2.682" />
+  <testcase name="ctSec001_instalacaoNovaJaNasceCifrada" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="1.265" />
+  <testcase name="ctSec004_deleteRemoveBancoESenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="1.222" />
+  <testcase name="timelineAntigaSobreviveEGanhaOrigem" classname="com.hoodie.app.database.Migration1To2InstrumentedTest" time="0.478" />
+  <testcase name="digitalV5HistorySurvivesEncryptedReopen" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="2.08" />
+  <testcase name="sqlCipherNativeLibraryLoads" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="0.063" />
+  <testcase name="encryptedPlaceCanBeInsertedReadAndReopened" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="4.63" />
+  <testcase name="canaisCriadosNaInicializacao" classname="com.hoodie.app.notifications.NotificationChannelsTest" time="0.081" />
+  <testcase name="validPositionSavesEncryptedHomeAndAdvancesWithLiveApp" classname="com.hoodie.app.onboarding.OnboardingHomeSaveInstrumentedTest" time="21.208" />
+  <testcase name="unavailablePositionKeepsHomeRecoverable" classname="com.hoodie.app.onboarding.OnboardingHomeSaveInstrumentedTest" time="7.552" />
+  <testcase name="databaseWriteFailureShowsMessageAndAllowsRetry" classname="com.hoodie.app.onboarding.OnboardingHomeSaveInstrumentedTest" time="6.868" />
+  <testcase name="estadoReflete_asPermissoesDoSistema" classname="com.hoodie.app.permissions.LocationPermissionManagerTest" time="0.21" />
+  <testcase name="intentDeConfiguracoesApontaParaOApp" classname="com.hoodie.app.permissions.LocationPermissionManagerTest" time="0.134" />
+  <testcase name="abreEChegaAUmaTelaPrincipal" classname="com.hoodie.app.ui.AppLaunchTest" time="8.854" />
+  <testcase name="labelsFitTheirTab[360dp f1]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="6.094" />
+  <testcase name="labelsFitTheirTab[360dp f1.3]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="4.858" />
+  <testcase name="labelsFitTheirTab[411dp f1]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="4.728" />
+  <testcase name="labelsFitTheirTab[411dp f1.3]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="4.151" />
+  <testcase name="tabClickPublishesItsRoute" classname="com.hoodie.app.ui.BottomNavigationTest" time="4.328" />
+  <testcase name="primaryTabsRemainVisibleSelectedAndAccessible" classname="com.hoodie.app.ui.BottomNavigationTest" time="6.203" />
+  <testcase name="secondaryDestinationsHideBarAndReturningRestoresIt" classname="com.hoodie.app.ui.BottomNavigationTest" time="4.577" />
+  <testcase name="pixelButtonHasButtonRoleAndMinimumTouchTarget" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="4.451" />
+  <testcase name="weekdaysExposeCheckboxRoleAndMinimumTarget" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="2.831" />
+  <testcase name="disabledMapButtonHasMinimumTouchTargetAndDisabledState" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="2.913" />
+  <testcase name="chipExposesSelectedRadioRoleAndMinimumTouchTarget" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="3.373" />
+  <testcase name="exportReviewScreenshots" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="6.316" />
+  <testcase name="tappingTheRingSelectsTheSegment" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="3.759" />
+  <testcase name="largeFontDoesNotOverflowTheCenter" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="3.121" />
+  <testcase name="switchingBetweenJourneyAndClock" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="4.51" />
+  <testcase name="noPlaceListUnderTheClock" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="4.23" />
+  <testcase name="nowButtonAndCenterTapReturnToTheCurrentMoment" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="5.807" />
+  <testcase name="tappingAMoveOnTheRingShowsItInTheCenter" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="7.997" />
+  <testcase name="pausedReplayOffersResumeAndAccessibleReset" classname="com.hoodie.app.ui.DiaryControlsTest" time="6.797" />
+  <testcase name="completedReplayOffersReplayAgain" classname="com.hoodie.app.ui.DiaryControlsTest" time="3.528" />
+  <testcase name="timelineScrollsToCurrentReplayEvent" classname="com.hoodie.app.ui.DiaryControlsTest" time="3.629" />
+  <testcase name="replaySpeedControlsSelectAllSupportedSpeeds" classname="com.hoodie.app.ui.DiaryControlsTest" time="3.812" />
+  <testcase name="dateSelectorChangesBetweenTodayAndYesterday" classname="com.hoodie.app.ui.DiaryControlsTest" time="5.895" />
+  <testcase name="permissionAloneNeverOptsIn" classname="com.hoodie.app.ui.DigitalConsentTest" time="0.662" />
+  <testcase name="deniedReturnAndCancelledRequestStayDisabled" classname="com.hoodie.app.ui.DigitalConsentTest" time="10.491">
+    <failure>kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 10000 ms
+at kotlinx.coroutines.TimeoutKt.TimeoutCancellationException(Timeout.kt:189)
+at kotlinx.coroutines.TimeoutCoroutine.run(Timeout.kt:157)
+at kotlinx.coroutines.EventLoopImplBase$DelayedRunnableTask.run(EventLoop.common.kt:505)
+at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)
+at kotlinx.coroutines.DefaultExecutor.run(DefaultExecutor.kt:105)
+at java.lang.Thread.run(Thread.java:1571)
+</failure>
+  </testcase>
+  <testcase name="explicitRequestAndGrantedReturnSurviveReopening" classname="com.hoodie.app.ui.DigitalConsentTest" time="0.079" />
+  <testcase name="retrySurvivesLeavingPickerAndDoesNotSaveAgain" classname="com.hoodie.app.ui.GeofenceFeedbackTest" time="4.944" />
+  <testcase name="failedRegistrationCanBeRetriedAgain" classname="com.hoodie.app.ui.GeofenceFeedbackTest" time="7.05" />
+  <testcase name="replayControlsPlayNextPreviousAndSpeed" classname="com.hoodie.app.ui.JourneyMapUiTest" time="6.365" />
+  <testcase name="tappingACardOpensThatVisit" classname="com.hoodie.app.ui.JourneyMapUiTest" time="4.701" />
+  <testcase name="journeyShowsEveryVisitInOrderIncludingReturns" classname="com.hoodie.app.ui.JourneyMapUiTest" time="3.836" />
+  <testcase name="mapModeSelectorSwitchesBetweenJourneyAndClock" classname="com.hoodie.app.ui.JourneyMapUiTest" time="3.004" />
+  <testcase name="detailsSheetShowsReturnTotalsAndSeeAll" classname="com.hoodie.app.ui.JourneyMapUiTest" time="3.94" />
+  <testcase name="tappingABuildingOpensItsStop" classname="com.hoodie.app.ui.JourneyV3UiTest" time="3.534" />
+  <testcase name="tappingAClosedChapterOpensIt" classname="com.hoodie.app.ui.JourneyV3UiTest" time="3.332" />
+  <testcase name="tappingAClockArcOpensItsStop" classname="com.hoodie.app.ui.JourneyV3UiTest" time="3.52" />
+  <testcase name="playingReplayOpensTheChapterOfTheReplayTime" classname="com.hoodie.app.ui.JourneyV3UiTest" time="4.493" />
+  <testcase name="changingSpeciesUpdatesTheVisibleRenderedNpcPixels" classname="com.hoodie.app.ui.PixelLabNpcTest" time="11.947" />
+  <testcase name="scaleComparisonShowsProductionScalesAndKeepsLegacyValuesDiagnostic" classname="com.hoodie.app.ui.PixelLabNpcTest" time="8.838" />
+  <testcase name="inspectorStepsFrameByFrameAndShowsOnionSkin" classname="com.hoodie.app.ui.PixelLabNpcTest" time="7.396" />
+  <testcase name="npcTabShowsBothRendersPoseControlsAndOverlays" classname="com.hoodie.app.ui.PixelLabNpcTest" time="4.784" />
+  <testcase name="mapa_real_393x873_tela_da_imagem" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="6.709" />
+  <testcase name="mapa_real_360x640_fonte130" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="5.2" />
+  <testcase name="mapa_real_360x640" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="6.81" />
+  <testcase name="mapa_real_360x800" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="7.572" />
+  <testcase name="mapa_real_411x891" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="7.853" />
+  <testcase name="mapa_real_393x873_fonte130" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="6.66" />
+  <testcase name="edicao_mostra_mudar_local_e_tipo_resumido" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.079" />
+  <testcase name="grande_411x891" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.086" />
+  <testcase name="busca_de_endereco_sempre_visivel_ao_abrir_novo_local" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.935" />
+  <testcase name="foco_na_busca_reduz_o_mapa_e_buscar_reexpande" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="6.516" />
+  <testcase name="campo_nome_e_solido_alto_e_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.312" />
+  <testcase name="grande_411x891_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.217" />
+  <testcase name="tela_da_imagem_393x873_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="6.156" />
+  <testcase name="endereco_longo_fica_em_duas_linhas_sem_empurrar_o_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.1" />
+  <testcase name="pequeno_360x640" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="6.608" />
+  <testcase name="medio_360x800" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.224" />
+  <testcase name="teclado_nao_cobre_o_salvar_nem_o_campo" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.77" />
+  <testcase name="medio_360x800_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.229" />
+  <testcase name="altura_de_teclado_aberto_mantem_salvar_e_nome" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.676" />
+  <testcase name="tela_da_imagem_393x873" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.337" />
+  <testcase name="alterar_tipo_abre_e_selecionar_fecha_o_sheet" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.767" />
+  <testcase name="novo_lugar_mostra_todos_os_tipos_sem_sobreposicao_e_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.421" />
+  <testcase name="onboarding_esconde_o_tipo" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.924" />
+  <testcase name="detalhes_rolam_ate_a_privacidade_em_tela_pequena" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.142" />
+  <testcase name="privacidade_compacta_abre_detalhes" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.994" />
+  <testcase name="fluxo_de_busca_escolhe_endereco_e_habilita_salvar" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.727" />
+  <testcase name="pequeno_360x640_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.766" />
+  <testcase name="raio_fica_inteiro_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.405" />
+  <testcase name="novo_local_inicial_e_com_endereco" classname="com.hoodie.app.ui.PlacePickerScreenshotTest" time="9.73" />
+  <testcase name="selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="5.116" />
+  <testcase name="selecao_manual_da_home_exibe_todos_os_tipos_fisicos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="3.862" />
+  <testcase name="dialogo_novo_lugar_exibe_o_mesmo_catalogo_fisico" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="3.761" />
+  <testcase name="optionalRestrictedHelpExplainsStepsAndOpensAppDetails" classname="com.hoodie.app.ui.ScreenStateTest" time="4.695" />
+  <testcase name="unavailablePermissionExplainsFailureWithoutActivationAction" classname="com.hoodie.app.ui.ScreenStateTest" time="2.954" />
+  <testcase name="homeReadFailureShowsLocalizedRetry" classname="com.hoodie.app.ui.ScreenStateTest" time="2.653" />
+  <testcase name="settingsReadFailureShowsLocalizedRetry" classname="com.hoodie.app.ui.ScreenStateTest" time="3.561" />
+  <testcase name="monitoredPlacesUsesQuantity" classname="com.hoodie.app.ui.UiTextResourceTest" time="0.078" />
+  <testcase name="formattedLocationSummaryKeepsArguments" classname="com.hoodie.app.ui.UiTextResourceTest" time="0.1" />
+  <testcase name="nestedReasonResolvesAndKeepsLineBreak" classname="com.hoodie.app.ui.UiTextResourceTest" time="0.124" />
+  <testcase name="reconciliacaoPeriodicaEstaAgendada" classname="com.hoodie.app.work.WorkSchedulingTest" time="0.049" />
+</testsuite>

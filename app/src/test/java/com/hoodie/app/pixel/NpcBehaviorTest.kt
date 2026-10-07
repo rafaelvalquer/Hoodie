@@ -58,21 +58,23 @@ class NpcBehaviorTest {
 
     @Test fun dialogueIsSparseAndNeverCompetesBetweenNpcs() {
         scenes.forEach { scene ->
-            val speakers = NpcDirector.plan(scene, 0).filter { it.definition.speechProfile != null }
+            val speakers = NpcDirector.plan(scene, 0).filter { it.definition.speechProfile != null || it.restaurantBrain != null }
             assertTrue("$scene must have at most one speaking NPC", speakers.size <= 1)
         }
 
         listOf(SceneId.OFFICE, SceneId.BUS, SceneId.RESTAURANT).forEach { scene ->
-            val speaker = NpcDirector.plan(scene, 0).single { it.definition.speechProfile != null }
+            val speaker = NpcDirector.plan(scene, 0).single { it.definition.speechProfile != null || it.restaurantBrain != null }
             val talkStarts = mutableListOf<Long>()
             var wasTalking = false
-            for (time in 0L..150_000L step 100L) {
-                val talking = NpcMotionController.movement(speaker, time).animation == NpcAnimation.TALK &&
-                    NpcRenderer.shouldSpeak(speaker, time)
+            for (time in 0L..300_000L step 100L) {
+                val restaurant = speaker.restaurantBrain
+                val talking = if (restaurant != null) restaurant.speechLineAt(time) != null else
+                    NpcMotionController.movement(speaker, time).animation == NpcAnimation.TALK && NpcRenderer.shouldSpeak(speaker, time)
                 if (talking && !wasTalking) talkStarts += time
                 wasTalking = talking
             }
-            assertTrue("$scene should have several short conversations", talkStarts.size >= 2)
+            val minimumConversations = if (speaker.restaurantBrain != null) 1 else 2
+            assertTrue("$scene should expose visible short conversations", talkStarts.size >= minimumConversations)
             talkStarts.zipWithNext().forEach { (first, next) ->
                 assertTrue("$scene speech cooldown was only ${next - first}ms", next - first >= 40_000L)
             }

@@ -1,0 +1,122 @@
+[
+  {
+    "file": "hoodie_vs_bulldog_exec.png",
+    "sha256": "4d53f93c2304232b915c8591ddbe6aeaff2fda74431479d117914bfb06f82627"
+  },
+  {
+    "file": "hoodie_vs_cat_colleague.png",
+    "sha256": "98263d78513959edb4edf1db2638b7eb8ffeb817365a47cd6f68a0c170cb38dc"
+  },
+  {
+    "file": "hoodie_vs_dog_worker.png",
+    "sha256": "c83169eb83cd03b784cff6c175dbf3f4dfa76dacfcc2d33d169086334de98ae6"
+  },
+  {
+    "file": "hoodie_vs_duck_sleepy.png",
+    "sha256": "3e0eac9482b8e7185630d015f8f2ffd4ef16d47af933f3b1e2c750d2fad6b527"
+  },
+  {
+    "file": "hoodie_vs_mouse_commuter.png",
+    "sha256": "6bc651a0b8ec416671b5c6e02c1b5ade9e002696a808dce1d4988bf4445ae867"
+  },
+  {
+    "file": "hoodie_vs_rabbit_analyst.png",
+    "sha256": "b524f3de2cb6a890b8116f4b85505eebc2bab95fadce115d056e64557100ae00"
+  },
+  {
+    "file": "hoodie_vs_raccoon_window.png",
+    "sha256": "05458035ed05d05df4c9ebe2a43c329490a13a7da694e66debbe79ef8ec301cb"
+  },
+  {
+    "file": "new_place_scenes.png",
+    "sha256": "1f8b87553db08c407664db40215ba6774e68e6dae74b0e109d35b897d963d7c0"
+  },
+  {
+    "file": "npc-scenes.png",
+    "sha256": "d9d245f53b8fb9e42f98e729970a02e9bb1f18ea7bab3dfd350f35c28803e97a"
+  },
+  {
+    "file": "v3-bulldog_idle.png",
+    "sha256": "1650bd9408f5cdd51c1b6293d5d7c8e40a9bb2f0beccfadc926cc9073f1d62c6"
+  },
+  {
+    "file": "v3-bulldog_talk.png",
+    "sha256": "dd1f7f184ef6fe40f704bf6a0542fef105b7184d0799a752498eb5037531edcb"
+  },
+  {
+    "file": "v3-bulldog_walk.png",
+    "sha256": "226f2091f30312097cc94b5b2703b62e1cbc144f6463244ada06e6ef2471da0b"
+  },
+  {
+    "file": "v3-bulldog-walk-sheet.png",
+    "sha256": "eaf0abd8c55fe747d8b9fdd492b12c8b8b4653fb8bbbffc4051b2ed33703cbf2"
+  },
+  {
+    "file": "v3-cat_idle.png",
+    "sha256": "2a2b5b70ccd3e5b8f08ecfbf1051148b327baf0d72ce76681c83b0be229f5224"
+  },
+  {
+    "file": "v3-dog_idle.png",
+    "sha256": "cc616230a3cbc86a16cd5f443baee6335a24ecf4aabce2fd9747f836a5c3b50e"
+  },
+  {
+    "file": "v3-duck_idle.png",
+    "sha256": "f28da33b31fa49fa2b7e90a7e81907c3ed6e3143b3730363f8769a4810623b78"
+  },
+  {
+    "file": "v3-duck-walk-sheet.png",
+    "sha256": "5ba388b67b77423e2f4a5f1a34e20bdf618e9b14cb7742eaa27f4a2a6fabc75a"
+  },
+  {
+    "file": "v3-mouse_idle.png",
+    "sha256": "1f79d7ee0943d1333765c320883838d3ad56212cb92e17901614eb0311c5d494"
+  },
+  {
+    "file": "v3-mouse-walk-sheet.png",
+    "sha256": "a60cd6d234de519dd2566bbd5ffe0b5ab2fd5a589ba031f4b7ab0f77a326b8ec"
+  },
+  {
+    "file": "v3-rabbit_idle.png",
+    "sha256": "4126be872ff228b347f1dfffde501e33da67e73093ef1fb7455d6d04d66b8186"
+  },
+  {
+    "file": "v3-rabbit-walk-sheet.png",
+    "sha256": "3d6f1480bb5e47f59dc63ef37b051b19a24323b4125106dba7c838d016654293"
+  },
+  {
+    "file": "v3-raccoon_idle.png",
+    "sha256": "3c1fc348704e9eb7d37b217f7f6527cea7202d1158b999fe71ec177af37a530c"
+  },
+  {
+    "file": "v3-scene_bus.png",
+    "sha256": "05ea88db206441fa5257d843174d92294ea80702149a32eebe04efd015152253"
+  },
+  {
+    "file": "v3-scene_leisure.png",
+    "sha256": "45092fac2e42c0231d0fda97c8b5ba95872891903bed5336244a96907eb2b344"
+  },
+  {
+    "file": "v3-scene_metro.png",
+    "sha256": "4f54a0735163fb6ac096a9e2888eca9919c9de66d8a69b6703a50f4508e5533d"
+  },
+  {
+    "file": "v3-scene_office.png",
+    "sha256": "a75b8a83f04f5d61b407fc41c2ce8010388b9b670d01e500a80b68c2ddfdf54d"
+  },
+  {
+    "file": "v3-scene_restaurant.png",
+    "sha256": "9c5c1931e8333856755f72b46931101031cfae5b3ec9ed78cf5ccb320e1f126d"
+  },
+  {
+    "file": "v3-scene_shopping.png",
+    "sha256": "3d50316cd31acb6327288cc0f6b151abcca2221288c9a3df74d8a3c3648fabf9"
+  },
+  {
+    "file": "v3-scene_train.png",
+    "sha256": "1eeee030edcb0f0f5d8046b4770053c8313aa5e93e52b3c3417999d3e698fe49"
+  },
+  {
+    "file": "v3-scenes.png",
+    "sha256": "d9d245f53b8fb9e42f98e729970a02e9bb1f18ea7bab3dfd350f35c28803e97a"
+  }
+]

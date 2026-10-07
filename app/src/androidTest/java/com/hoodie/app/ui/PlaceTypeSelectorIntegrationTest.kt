@@ -3,11 +3,13 @@ package com.hoodie.app.ui
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertCountEquals
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.hoodie.app.core.model.ContextEvent
 import com.hoodie.app.core.model.ContextSource
@@ -58,18 +60,19 @@ class PlaceTypeSelectorIntegrationTest {
     }
 
     @Test fun selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos() {
+        rule.mainClock.autoAdvance = false
         var selected: PlaceType? = null
         var selectedContext: UserContextType? = null
         var selectedScene: SceneId? = null
         rule.setContent {
-            var state by mutableStateOf(
+            var state by remember { mutableStateOf(
                 HomeUiState(
                     loading = false,
                     now = 1L,
                     context = ContextEvent(type = UserContextType.HOME, startedAt = 1L, endedAt = null, confidence = 1f, placeId = null, source = ContextSource.MANUAL),
                     visual = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME),
                 ),
-            )
+            ) }
             HoodieTheme {
                 HomeContent(
                     state = state,
@@ -91,8 +94,13 @@ class PlaceTypeSelectorIntegrationTest {
             }
         }
 
-        rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4)).performClick()
-        rule.onNodeWithText("🍽 RESTAURANTE").performClick()
+        rule.mainClock.advanceTimeBy(100L)
+        rule.scrollWithPausedClock(rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4).uppercase())).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeBy(1_000L)
+        rule.scrollWithPausedClock(rule.onNodeWithText("🍽 RESTAURANTE")).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeBy(1_000L)
         rule.runOnIdle {
             assertEquals(PlaceType.RESTAURANT, selected)
             assertEquals(UserContextType.DINING, selectedContext)

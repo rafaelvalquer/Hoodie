@@ -7,6 +7,7 @@ import com.hoodie.app.pixel.character.species.EarStyle
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Legs
+import com.hoodie.app.pixel.sprite.Posture
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -17,7 +18,7 @@ class CharacterGeometryTest {
             Facing.entries.forEach { facing ->
                 val pose = frame.pose.copy(facing = facing)
                 val geometry = CharacterGeometry.resolveHoodie(pose)
-                val expectedUp = (if (pose.legs == Legs.SIT) 5 else 0) + pose.bob
+                val expectedUp = (if (pose.legs == Legs.SIT || pose.posture == Posture.SIT_FRONT) 5 else 0) + pose.bob
                 val expectedBodyTop = (if (facing == Facing.SIDE) 28 else 33) + expectedUp
                 val expectedBodyBottom = (if (facing == Facing.SIDE) 55 else 60) + expectedUp
 

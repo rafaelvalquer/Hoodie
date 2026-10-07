@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.ui.PixelLabNpcTest" tests="1" failures="1" errors="0" skipped="0" time="65.766" timestamp="2026-10-07T16:55:38" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_8(AVD) - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="changingSpeciesUpdatesTheVisibleRenderedNpcPixels" classname="com.hoodie.app.ui.PixelLabNpcTest" time="63.511">
+    <failure>org.junit.runners.model.TestTimedOutException: test timed out after 60 seconds
+at jdk.internal.misc.Unsafe.park(Native Method)
+at java.util.concurrent.locks.LockSupport.park(LockSupport.java:226)
+at java.util.concurrent.FutureTask.awaitDone(FutureTask.java:511)
+at java.util.concurrent.FutureTask.get(FutureTask.java:192)
+at androidx.test.espresso.Espresso.onIdle(Espresso.java:349)
+at androidx.test.espresso.Espresso.onIdle(Espresso.java:378)
+at androidx.compose.ui.test.EspressoLink_androidKt.runEspressoOnIdle(EspressoLink.android.kt:88)
+at androidx.compose.ui.test.EspressoLink.runUntilIdle(EspressoLink.android.kt:82)
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.waitForNextChoreographerFrame(ComposeUiTest.android.kt:402)
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.waitForIdle(ComposeUiTest.android.kt:385)
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment.access$waitForIdle(ComposeUiTest.android.kt:235)
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidTestOwner.getRoots(ComposeUiTest.android.kt:603)
+at androidx.compose.ui.test.TestOwnerKt.getAllSemanticsNodes(TestOwner.kt:81)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNodes$ui_test_release(SemanticsNodeInteraction.kt:64)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:157)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+at androidx.compose.ui.test.ActionsKt.performScrollTo(Actions.kt:82)
+at com.hoodie.app.ui.PixelLabNpcTest.show(PixelLabNpcTest.kt:36)
+at com.hoodie.app.ui.PixelLabNpcTest.changingSpeciesUpdatesTheVisibleRenderedNpcPixels$preview$7(PixelLabNpcTest.kt:115)
+at com.hoodie.app.ui.PixelLabNpcTest.changingSpeciesUpdatesTheVisibleRenderedNpcPixels(PixelLabNpcTest.kt:119)
+</failure>
+  </testcase>
+</testsuite>
