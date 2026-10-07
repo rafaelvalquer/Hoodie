@@ -36,6 +36,8 @@ data class SpriteAnchors(
     val back: Point,
     /** Ponto de contato com o chão — é ele que é alinhado ao spot da cena. */
     val feet: Point,
+    /** Ponto de encaixe da bacia em bancos; null para posturas ancoradas pelos pés. */
+    val seatHip: Point? = null,
 ) {
     /**
      * Espelhar troca as mãos de lado. Os pés marcam a linha central do corpo
@@ -45,6 +47,7 @@ data class SpriteAnchors(
     fun mirror(width: Int) = SpriteAnchors(
         rightHand = leftHand.mirror(width), leftHand = rightHand.mirror(width),
         head = head.mirror(width), back = back.mirror(width), feet = Point(width - feet.x, feet.y),
+        seatHip = seatHip?.mirror(width),
     )
 
     operator fun get(a: Anchor): Point = when (a) {
@@ -53,10 +56,11 @@ data class SpriteAnchors(
         Anchor.HEAD -> head
         Anchor.BACK -> back
         Anchor.FEET -> feet
+        Anchor.SEAT_HIP -> seatHip ?: feet
     }
 }
 
-enum class Anchor { RIGHT_HAND, LEFT_HAND, HEAD, BACK, FEET }
+enum class Anchor { RIGHT_HAND, LEFT_HAND, HEAD, BACK, FEET, SEAT_HIP }
 
 /** Um frame pronto para desenhar, venha de sprite sheet ou do pintor procedural. */
 data class SpriteFrame(
@@ -69,7 +73,7 @@ data class SpriteFrame(
     val source: String = "procedural",
 )
 
-enum class Posture { STANDING, SITTING }
+enum class Posture { STANDING, SITTING, SIT_FRONT }
 
 /**
  * Ajustes por cima do clip: piscada, olhar, expressão e orelhas. Só substituem

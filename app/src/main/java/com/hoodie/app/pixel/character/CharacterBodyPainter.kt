@@ -67,6 +67,29 @@ internal object CharacterBodyPainter {
         }
     }
 
+    /** Colo curto e canelas pendentes: os pés pousam no piso, mas a composição fixa-se ao quadril. */
+    fun drawLegsSeatFront(b: PixelBuffer, style: CharacterStyle, outfit: OutfitPainter, l: BodyLayout) {
+        val p = style.palette
+        val pr = style.artProfile.proportions
+        val bird = style.species.legStyle == LegStyle.BIRD
+        val tones = if (bird) Tones(p.accent, p.accent, p.furDark, p.outline) else outfit.legTones(p)
+        val lapTop = l.hipY + 1
+        val lapBottom = lapTop + 4
+        CharacterMask.roundRect(l.hipLeft + 1, lapTop, l.hipRight - 1, lapBottom, 2)
+            .paint(b, tones, style.artProfile.shading)
+
+        val legW = if (bird) 3 else pr.legWidth.coerceAtLeast(3)
+        val inset = if (bird) 3 else 2
+        val leftX = l.hipLeft + inset + legW / 2
+        val rightX = l.hipRight - inset - legW / 2
+        for ((x, side) in listOf(leftX to -1, rightX to 1)) {
+            CharacterMask.roundRect(x - legW / 2, lapBottom - 1, x + legW / 2, l.ankleY, if (bird) 0 else 1)
+                .paint(b, tones, null)
+            val footX = x + side * (if (bird) 1 else 0)
+            drawFoot(b, style, outfit, footX, l.groundY, pr.footWidth, farSide = false, facing = Facing.FRONT)
+        }
+    }
+
     /**
      * Pernas de perfil (autorado olhando para a direita): perna de trás mais escura
      * primeiro; sentado, a coxa vai para a frente e a canela desce até o pé.

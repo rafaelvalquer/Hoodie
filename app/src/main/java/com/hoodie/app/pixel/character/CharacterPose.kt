@@ -33,6 +33,8 @@ data class CharacterPose(
     val headOnly: Boolean = false,
     val headTilt: Int = 0,
     val blush: Boolean = false,
+    /** Postura de composição; SIT_FRONT ancora no quadril e usa pernas de banco. */
+    val posture: Posture = Posture.STANDING,
 ) {
     /** Preserva a impressão textual antiga, incluída no SHA dos clips aprovados. */
     override fun toString(): String = "HoodiePose(" +
@@ -68,6 +70,8 @@ data class CharacterPose(
 
     /** Override de postura usado por ferramentas de comparação e composição de cenas. */
     fun withPosture(posture: Posture): CharacterPose = copy(
-        legs = if (posture == Posture.SITTING) Legs.SIT else Legs.STAND,
+        legs = if (posture == Posture.SITTING || posture == Posture.SIT_FRONT) Legs.SIT else Legs.STAND,
+        facing = if (posture == Posture.SIT_FRONT) Facing.FRONT else facing,
+        posture = posture,
     )
 }

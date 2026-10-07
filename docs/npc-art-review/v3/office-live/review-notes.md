@@ -9,6 +9,6 @@ Reviewed the generated seed 42 contact sheet, five-minute sequence, period sampl
 - The Bulldog enters and leaves from the right-side doorway; door frames animate during both transitions.
 - The five-minute contact sheet shows changing activities and occasional social interaction while retaining long work intervals and quiet frames.
 - Speech appears only in the sampled social conversation, and the phrase matches the morning context.
-- JVM render sample: 1.9218 ms/frame for 3 NPCs (120 measured frames after 20 warmup frames), below the 8 ms target.
+- Latest isolated JVM render sample: 7.5884 ms/frame for 3 NPCs (120 measured frames after 20 warmup frames), below the 8 ms target. The margin is small and the result is host-dependent.
 
 These artifacts remain candidates and are not approved golden images.

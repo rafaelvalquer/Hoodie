@@ -32,6 +32,7 @@ object RequiredAnchors {
         // Mochila nas costas.
         put(AnimationId.WALK_BACKPACK, setOf(Anchor.FEET, Anchor.BACK))
         put(AnimationId.BUS_SIT, setOf(Anchor.FEET, Anchor.BACK))
+        put(AnimationId.BUS_SIT_FRONT, setOf(Anchor.SEAT_HIP, Anchor.BACK))
         // Efeitos na cabeça (Zzz, suor, brilho).
         listOf(AnimationId.SLEEP, AnimationId.SLEEP_TURN, AnimationId.RUN, AnimationId.GYM_REST).forEach {
             put(it, setOf(Anchor.FEET, Anchor.HEAD))

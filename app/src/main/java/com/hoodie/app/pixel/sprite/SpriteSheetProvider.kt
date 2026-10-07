@@ -64,13 +64,14 @@ object AnchorMarkers {
     const val RIGHT_HAND = 0xFFFF0000.toInt()  // vermelho
     const val LEFT_HAND = 0xFF0000FF.toInt()   // azul
     const val BACK = 0xFF00FF00.toInt()        // verde
+    const val SEAT_HIP = 0xFF00FFFF.toInt()    // ciano
 
-    val BY_NAME = mapOf("feet" to FEET, "head" to HEAD, "right_hand" to RIGHT_HAND, "left_hand" to LEFT_HAND, "back" to BACK)
+    val BY_NAME = mapOf("feet" to FEET, "head" to HEAD, "right_hand" to RIGHT_HAND, "left_hand" to LEFT_HAND, "back" to BACK, "seat_hip" to SEAT_HIP)
 }
 
 object AsepriteSheetParser {
 
-    private val ANCHOR_SLICES = setOf("feet", "head", "right_hand", "left_hand", "back")
+    private val ANCHOR_SLICES = setOf("feet", "head", "right_hand", "left_hand", "back", "seat_hip")
 
     fun tagKey(tag: String): Pair<AnimationId, Facing>? {
         val upper = tag.trim().uppercase()
@@ -130,7 +131,7 @@ object AsepriteSheetParser {
             if (p != null) explicit += name
             return p ?: default
         }
-        val anchorByName = mapOf("feet" to Anchor.FEET, "head" to Anchor.HEAD, "right_hand" to Anchor.RIGHT_HAND, "left_hand" to Anchor.LEFT_HAND, "back" to Anchor.BACK)
+        val anchorByName = mapOf("feet" to Anchor.FEET, "head" to Anchor.HEAD, "right_hand" to Anchor.RIGHT_HAND, "left_hand" to Anchor.LEFT_HAND, "back" to Anchor.BACK, "seat_hip" to Anchor.SEAT_HIP)
 
         fun frameAt(i: Int): SheetFrame {
             val r = raw[i]
@@ -144,6 +145,7 @@ object AsepriteSheetParser {
                 head = anchorAt("head", i, Point(r.w / 2, r.h / 8)),
                 back = anchorAt("back", i, Point(r.w / 2, r.h * 2 / 3)),
                 feet = anchorAt("feet", i, feetDefault),
+                seatHip = markerAt("seat_hip", i) ?: anchorKeys["seat_hip"]?.lastOrNull { it.first <= i }?.second,
             )
             return SheetFrame(img, anchors, r.duration, explicit.mapNotNull { anchorByName[it] }.toSet())
         }

@@ -408,5 +408,9 @@ object SceneRegistry {
         ).associateBy { it.id }
     }
 
-    operator fun get(id: SceneId): PixelScene = scenes.getValue(id)
+    operator fun get(id: SceneId): PixelScene = if (id == SceneId.BUS && com.hoodie.app.core.config.HoodieConfig.BUS_SCENE_V2) busV2 else scenes.getValue(id)
+
+    private val busV2: PixelScene by lazy { BusSceneV2() }
+
+    fun bus(v2: Boolean): PixelScene = if (v2) busV2 else scenes.getValue(SceneId.BUS)
 }

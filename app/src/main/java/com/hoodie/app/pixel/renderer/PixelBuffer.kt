@@ -79,6 +79,32 @@ class PixelBuffer(val width: Int, val height: Int) {
         }
     }
 
+    /** Copia um trecho retangular sem criar buffers intermediários. */
+    fun blitRegion(src: PixelBuffer, sx: Int, sy: Int, w: Int, h: Int, dx: Int, dy: Int) {
+        val x0 = maxOf(0, -sx, -dx)
+        val y0 = maxOf(0, -sy, -dy)
+        val x1 = minOf(w, src.width - sx, width - dx)
+        val y1 = minOf(h, src.height - sy, height - dy)
+        if (x0 >= x1 || y0 >= y1) return
+        for (row in y0 until y1) {
+            val source = (sy + row) * src.width + sx + x0
+            val target = (dy + row) * width + dx + x0
+            for (col in x0 until x1) {
+                val c = src.pixels[source + col - x0]
+                if (c ushr 24 != 0) set(dx + col, dy + row, c)
+            }
+        }
+    }
+
+    fun oval(x0: Int, y0: Int, x1: Int, y1: Int, color: Int) {
+        val cx2 = x0 + x1; val cy2 = y0 + y1
+        val rx2 = (x1 - x0).coerceAtLeast(1); val ry2 = (y1 - y0).coerceAtLeast(1)
+        for (y in minOf(y0, y1)..maxOf(y0, y1)) for (x in minOf(x0, x1)..maxOf(x0, x1)) {
+            val dx = 2 * x - cx2; val dy = 2 * y - cy2
+            if (dx * dx * ry2 * ry2 + dy * dy * rx2 * rx2 <= rx2 * rx2 * ry2 * ry2) set(x, y, color)
+        }
+    }
+
     fun copyFrom(src: PixelBuffer) {
         require(src.width == width && src.height == height)
         System.arraycopy(src.pixels, 0, pixels, 0, pixels.size)

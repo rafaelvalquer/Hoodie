@@ -51,6 +51,16 @@ internal fun leisureAnimations(): Map<AnimationId, AnimationClip> = ClipDefiniti
             val b = SIT.copy(backpack = true, eyes = Eyes.LOOK_LEFT)
             f(500, b); f(500, b.copy(bob = 1, backpackDy = -1)); f(500, b.copy(backpackDy = 1)); f(500, b.copy(eyes = Eyes.OPEN, bob = 1))
         }
+        clip(AnimationId.BUS_SIT_FRONT, policy = IMMEDIATE) {
+            val seated = SIT.copy(facing = Facing.FRONT, posture = Posture.SIT_FRONT, backpack = true)
+            f(180, seated.copy(legs = Legs.STAND, bob = 1, headDy = -1))
+            f(180, seated.copy(legs = Legs.SIT, bob = 1), AnimationEvent.SIT)
+            f(180, seated.copy(legs = Legs.SIT, bob = 0, eyes = Eyes.OPEN))
+            f(760, seated.copy(legs = Legs.SIT, eyes = Eyes.OPEN, bob = 0))
+            f(260, seated.copy(legs = Legs.SIT, eyes = Eyes.HALF, bob = 1))
+            f(180, seated.copy(legs = Legs.SIT, eyes = Eyes.CLOSED))
+            f(420, seated.copy(legs = Legs.SIT, eyes = Eyes.OPEN, ears = Ears.TWITCH_LEFT))
+        }
         // ───── Passeio ─────
         // Caminhada derivada do WALK, sem mochila, mais lenta e olhando o ambiente.
         clip(AnimationId.LEISURE_WALK, policy = IMMEDIATE, directional = true) {

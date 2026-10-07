@@ -40,6 +40,14 @@ object Lighting {
         // Luz quente das lâmpadas só faz diferença quando escurece.
         val glows = period == DayPeriod.NIGHT || period == DayPeriod.EVENING
         for (light in lights) when (light) {
+            is Light.RegionTint -> for (y in light.y0.coerceAtLeast(0)..light.y1.coerceAtMost(h - 1)) {
+                for (x in light.x0.coerceAtLeast(0)..light.x1.coerceAtMost(w - 1)) {
+                    val i = y * w + x
+                    r[i] = light.red.coerceIn(0, 256)
+                    g[i] = light.green.coerceIn(0, 256)
+                    b[i] = light.blue.coerceIn(0, 256)
+                }
+            }
             is Light.Glow -> if (glows) {
                 val rad = light.radius
                 for (y in (light.cy - rad).coerceAtLeast(0) until (light.cy + rad).coerceAtMost(h)) {

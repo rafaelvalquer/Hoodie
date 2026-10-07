@@ -14,6 +14,7 @@ import com.hoodie.app.pixel.sprite.HoodiePainter
 import com.hoodie.app.pixel.sprite.Item
 import com.hoodie.app.pixel.sprite.Legs
 import com.hoodie.app.pixel.sprite.Point
+import com.hoodie.app.pixel.sprite.Posture
 import kotlin.math.roundToInt
 
 /**
@@ -70,6 +71,7 @@ object CharacterPainter {
         }
         // 4. Pernas e pés.
         if (facing == Facing.SIDE) CharacterBodyPainter.drawLegsSide(b, style, outfit, l, gait)
+        else if (pose.posture == Posture.SIT_FRONT) CharacterBodyPainter.drawLegsSeatFront(b, style, outfit, l)
         else CharacterBodyPainter.drawLegsFront(b, style, outfit, l, gait)
         // 5. Tronco: barriga de pena (pato) + roupa sobre a máscara de ombro→quadril.
         if (bird) {
@@ -117,6 +119,7 @@ object CharacterPainter {
                 feet = CharacterCanvas.FEET, head = head.safe(),
                 leftHand = hands.first.safe(), rightHand = hands.second.safe(),
                 mouth = mouth.safe(), back = Point(l.cx, l.shoulderY + 8).safe(),
+                seatHip = if (pose.posture == Posture.SIT_FRONT) Point(l.cx, l.hipY).safe() else null,
             ),
         )
     }

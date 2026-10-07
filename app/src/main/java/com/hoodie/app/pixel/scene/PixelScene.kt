@@ -7,6 +7,7 @@ import com.hoodie.app.pixel.npc.AmbientNpcSlot
 import com.hoodie.app.pixel.npc.NpcDirector
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcVisualState
 import com.hoodie.app.pixel.npc.restaurant.RestaurantTableState
+import com.hoodie.app.pixel.sprite.SpriteFrame
 
 enum class SceneId(val label: String) {
     HOME("Casa"),
@@ -105,6 +106,8 @@ class Prop(val baseline: Int, val draw: (PixelBuffer, SceneEnv, Long) -> Unit)
 sealed interface Light {
     data class Emissive(val x0: Int, val y0: Int, val x1: Int, val y1: Int) : Light
     data class Glow(val cx: Int, val cy: Int, val radius: Int, val strength: Float = 0.75f) : Light
+    /** Multiplicador RGB local, usado para manter a cabine clara e o exterior escuro. */
+    data class RegionTint(val x0: Int, val y0: Int, val x1: Int, val y1: Int, val red: Int, val green: Int, val blue: Int) : Light
 }
 
 abstract class PixelScene(val id: SceneId) {
@@ -131,6 +134,9 @@ abstract class PixelScene(val id: SceneId) {
     /** Cenas já escuras/estilizadas podem dispensar o overlay de período. */
     open val usesLighting: Boolean = true
 
+    /** Transport scenes can own a spatial lighting mask instead of the global transport tint. */
+    open val usesTransportLightingProfile: Boolean = true
+
     /** Camada estática (paredes, chão, janela). Cacheada por período. */
     abstract fun drawBackground(b: PixelBuffer, env: SceneEnv)
 
@@ -141,6 +147,13 @@ abstract class PixelScene(val id: SceneId) {
     val sortedProps: List<Prop> by lazy { props().sortedBy { it.baseline } }
 
     open fun lights(env: SceneEnv): List<Light> = emptyList()
+
+    /** Hook de composição de personagem; cenas de cabine podem aplicar recorte local. */
+    open fun drawCharacter(buffer: PixelBuffer, frame: SpriteFrame, x: Int, y: Int, timeMs: Long, env: SceneEnv) =
+        buffer.blit(frame.image, x, y)
+
+    /** Efeitos da cena que devem ficar sobre o overlay global de período. */
+    open fun drawPostLighting(buffer: PixelBuffer, env: SceneEnv, timeMs: Long) = Unit
 
     /** Personagens ambientais estáveis da cena; nunca adicionados a cenas privadas. */
     open fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> = NpcDirector.plan(id, env)

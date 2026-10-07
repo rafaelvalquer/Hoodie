@@ -2,6 +2,7 @@ package com.hoodie.app.pixel.character
 
 import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Legs
+import com.hoodie.app.pixel.sprite.Posture
 
 /** Medidas resolvidas no canvas lógico para uma escala e pose compartilhadas. */
 data class CharacterGeometry(
@@ -20,7 +21,7 @@ data class CharacterGeometry(
     companion object {
         /** Geometria do Hoodie legado expressa pelo mesmo contrato, sem normalizar os seus offsets. */
         fun resolveHoodie(pose: CharacterPose): CharacterGeometry {
-            val torsoOffsetY = (if (pose.legs == Legs.SIT) 5 else 0) + pose.bob
+            val torsoOffsetY = (if (pose.legs == Legs.SIT || pose.posture == Posture.SIT_FRONT) 5 else 0) + pose.bob
             val side = pose.facing == Facing.SIDE
             val bodyLeft = if (side) 13 else 11
             val bodyRight = 36
@@ -89,7 +90,8 @@ data class BodyLayout(
         fun resolve(style: CharacterStyle, pose: CharacterPose, sway: Int = 0, sitDrop: Int? = null): BodyLayout {
             val pr = style.artProfile.proportions
             val face = style.artProfile.face
-            val sitting = pose.legs == Legs.SIT
+            val sitFront = pose.posture == Posture.SIT_FRONT
+            val sitting = pose.legs == Legs.SIT || sitFront
             val lift = pose.lift.coerceIn(0, 8)
             val drop = (sitDrop ?: if (sitting) SIT_DROP else 0) + pose.bob.coerceIn(-2, 2)
             val groundY = CharacterCanvas.GROUND_Y - lift
@@ -102,7 +104,7 @@ data class BodyLayout(
             val shoulderY = hipY - pr.torsoHeight + 2
             // De perfil o tronco mostra a profundidade (~2/3 da largura frontal).
             val shoulderW = if (side) (pr.shoulderWidth * 2 / 3).coerceAtLeast(14) else pr.shoulderWidth
-            val hipW = if (side) (pr.hipWidth * 2 / 3).coerceAtLeast(13) else pr.hipWidth
+            val hipW = if (side) (pr.hipWidth * 2 / 3).coerceAtLeast(13) else pr.hipWidth + if (sitFront) 2 else 0
             val bodyCx = if (side) cx - 1 else cx
             val shoulderLeft = bodyCx - shoulderW / 2
             val hipLeft = bodyCx - hipW / 2

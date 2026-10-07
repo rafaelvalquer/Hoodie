@@ -58,13 +58,14 @@ internal object HoodiePoseRenderer {
 
     fun paintFront(b: PixelBuffer, p: HoodiePose, up: Int): SpriteAnchors {
         val sit = p.legs == Legs.SIT
+        val sitFront = p.posture == Posture.SIT_FRONT
         if (p.backpack) part(b, Part.BACKPACK) { shape(b, R(8, 37, 39, 56, 3).dy(up + p.backpackDy), HoodiePalette.BACKPACK) }
         if (!sit) drawLegsFront(b, p)
         part(b, Part.TORSO) {
             shape(b, R(9, 28, 38, 39, 5).dy(up), HoodiePalette.HOOD_SHADE)
             drawBodyFront(b, up, p)
         }
-        if (sit) drawLegsFront(b, p)
+        if (sitFront) drawSeatLegsFront(b, up) else if (sit) drawLegsFront(b, p)
 
         val left = armShape(p.leftArm)
         val right = armShape(p.rightArm)
@@ -82,9 +83,24 @@ internal object HoodiePoseRenderer {
             head = Point(24, 8 + up + p.headDy),
             back = Point(24, 46 + up),
             feet = FEET,
+            seatHip = if (sitFront) Point(24, 60 + up) else null,
         )
         part(b, Part.ACCESSORY) { drawItemFront(b, p, left, right, up, anchors) }
         return anchors
+    }
+
+    /** Short lap block with calves hanging from the seat edge, authored independently from floor feet. */
+    private fun drawSeatLegsFront(b: PixelBuffer, up: Int) {
+        part(b, Part.LEG_LEFT) {
+            shape(b, R(14, 54, 33, 60, 2).dy(up), HoodiePalette.FUR_SHADE)
+            shape(b, R(15, 60 + up, 19, 67, 1), HoodiePalette.FUR)
+            foot(b, R(12, 66, 21, 70, 3))
+        }
+        part(b, Part.LEG_RIGHT) {
+            shape(b, R(14, 54, 33, 60, 2).dy(up), HoodiePalette.FUR_SHADE)
+            shape(b, R(28, 60 + up, 32, 67, 1), HoodiePalette.FUR)
+            foot(b, R(12, 66, 21, 70, 3).mirror())
+        }
     }
 
     fun paintBack(b: PixelBuffer, p: HoodiePose, up: Int): SpriteAnchors {

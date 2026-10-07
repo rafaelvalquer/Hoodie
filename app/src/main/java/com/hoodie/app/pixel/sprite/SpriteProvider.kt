@@ -55,9 +55,15 @@ object ProceduralSpriteProvider : SpriteProvider {
         val clip = request.animation.clip
         val af = clip.frames[request.frameIndex.mod(clip.frames.size)]
         var pose = af.pose
-        if (pose.legs == Legs.INHERIT) pose = pose.copy(legs = if (request.posture == Posture.SITTING) Legs.SIT else Legs.STAND)
+        if (pose.legs == Legs.INHERIT) pose = pose.copy(
+            legs = if (request.posture == Posture.SITTING || request.posture == Posture.SIT_FRONT) Legs.SIT else Legs.STAND,
+        )
         val view = viewFor(request.animation, request.direction)
-        pose = pose.copy(facing = if (pose.headOnly) Facing.FRONT else view.facing)
+        val frontSeat = request.posture == Posture.SIT_FRONT && pose.legs == Legs.SIT
+        pose = pose.copy(
+            facing = if (pose.headOnly || frontSeat) Facing.FRONT else view.facing,
+            posture = if (frontSeat) Posture.SIT_FRONT else pose.posture,
+        )
         return request.overlay.apply(pose)
     }
 
@@ -105,7 +111,7 @@ class CompositeSpriteProvider(
     fun providerFor(request: SpriteRequest): SpriteProvider {
         val p = providerFor(request.animation, request.direction)
         val inheritsPosture = request.animation.clip.frames.any { it.pose.legs == Legs.INHERIT }
-        return if (p === primary && inheritsPosture && request.posture == Posture.SITTING) fallback else p
+        return if (p === primary && (request.posture == Posture.SIT_FRONT || inheritsPosture && request.posture == Posture.SITTING)) fallback else p
     }
 
     override fun supports(animation: AnimationId, facing: Facing) = true

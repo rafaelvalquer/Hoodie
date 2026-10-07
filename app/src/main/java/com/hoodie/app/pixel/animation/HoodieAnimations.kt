@@ -115,6 +115,7 @@ enum class AnimationId(val label: String, val group: AnimGroup) {
     COOK("Cozinhar", AnimGroup.HOME),
     CLEAN("Varrer", AnimGroup.HOME),
     BUS_SIT("Sentado no ônibus", AnimGroup.TRANSPORT),
+    BUS_SIT_FRONT("Sentado de frente no ônibus", AnimGroup.TRANSPORT),
 
     // Carro
     CAR_ENTER("Entrar no carro", AnimGroup.TRANSPORT),

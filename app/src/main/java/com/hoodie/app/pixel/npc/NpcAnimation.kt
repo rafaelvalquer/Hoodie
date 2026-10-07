@@ -243,7 +243,7 @@ object NpcPoseLibrary {
         return CharacterPose(
             legs = Legs.SIT, facing = facing, item = Item.PHONE,
             rightArm = Arm.HOLD_CHEST,
-            leftArm = if (k in 1_500L..1_699L || k in 2_600L..2_699L) Arm.HOLD_CHEST else Arm.DOWN,
+            leftArm = if (facing == Facing.FRONT || k in 1_500L..1_699L || k in 2_600L..2_699L) Arm.HOLD_CHEST else Arm.DOWN,
             eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.LOOK_DOWN,
             headDy = 1, mouth = if (k in 2_000L..2_500L) Mouth.FLAT else Mouth.SMILE,
         )

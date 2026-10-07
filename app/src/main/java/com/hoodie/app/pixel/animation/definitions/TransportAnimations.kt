@@ -5,29 +5,31 @@ import com.hoodie.app.pixel.animation.InterruptPolicy.*
 import com.hoodie.app.pixel.sprite.*
 
 internal fun transportAnimations(): Map<AnimationId, AnimationClip> = ClipDefinitions().apply {
-    clip(AnimationId.CAR_ENTER, loop = false, policy = FINISH_CYCLE) {
-        f(160, S.copy(eyes = Eyes.LOOK_RIGHT, ears = Ears.ALERT)); f(170, S.copy(legs = Legs.SIT, bob = 1), AnimationEvent.SIT)
-        f(180, S.copy(legs = Legs.SIT, eyes = Eyes.OPEN)); f(160, S.copy(legs = Legs.SIT, bob = -1))
+    clip(AnimationId.CAR_ENTER, loop = false, policy = FINISH_CYCLE, directional = true) {
+        f(160, S.copy(facing = Facing.SIDE, eyes = Eyes.LOOK_RIGHT, ears = Ears.ALERT)); f(170, S.copy(facing = Facing.SIDE, legs = Legs.SIT, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, bob = 1), AnimationEvent.SIT)
+        f(180, S.copy(facing = Facing.SIDE, legs = Legs.SIT, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED)); f(160, S.copy(facing = Facing.SIDE, legs = Legs.SIT, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, bob = -1))
     }
-    clip(AnimationId.CAR_IDLE) {
-        f(720, HoodiePose(legs = Legs.SIT, eyes = Eyes.OPEN, bob = 0)); f(420, HoodiePose(legs = Legs.SIT, eyes = Eyes.HALF, bob = 1))
-        f(180, HoodiePose(legs = Legs.SIT, eyes = Eyes.CLOSED)); f(400, HoodiePose(legs = Legs.SIT, eyes = Eyes.OPEN, ears = Ears.TWITCH_LEFT))
+    clip(AnimationId.CAR_IDLE, directional = true) {
+        f(720, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED, bob = 0))
+        f(420, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED, bob = 1))
+        f(180, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.CLOSED))
+        f(400, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED, ears = Ears.TWITCH_LEFT))
     }
-    clip(AnimationId.CAR_LOOK_WINDOW, loop = false) {
-        f(230, HoodiePose(legs = Legs.SIT, eyes = Eyes.LOOK_RIGHT, headDy = 1)); f(850, HoodiePose(legs = Legs.SIT, eyes = Eyes.LOOK_RIGHT))
-        f(220, HoodiePose(legs = Legs.SIT, eyes = Eyes.OPEN, headDy = -1))
+    clip(AnimationId.CAR_LOOK_WINDOW, loop = false, directional = true) {
+        f(230, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.LOOK_RIGHT, headDy = 1)); f(850, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.LOOK_RIGHT))
+        f(220, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED, headDy = -1))
     }
-    clip(AnimationId.CAR_LOOK_FRONT, loop = false) {
-        f(230, HoodiePose(legs = Legs.SIT, eyes = Eyes.LOOK_UP)); f(720, HoodiePose(legs = Legs.SIT, eyes = Eyes.FOCUSED))
-        f(200, HoodiePose(legs = Legs.SIT, eyes = Eyes.OPEN))
+    clip(AnimationId.CAR_LOOK_FRONT, loop = false, directional = true) {
+        f(230, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.LOOK_RIGHT)); f(720, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED))
+        f(200, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED))
     }
-    clip(AnimationId.CAR_BUMP, loop = false) {
-        f(100, HoodiePose(legs = Legs.SIT, bob = 2, headDy = -1, ears = Ears.ALERT, stringSwing = 2))
-        f(120, HoodiePose(legs = Legs.SIT, bob = -1, headDy = 1, stringSwing = -2)); f(300, HoodiePose(legs = Legs.SIT, eyes = Eyes.OPEN))
+    clip(AnimationId.CAR_BUMP, loop = false, directional = true) {
+        f(100, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, bob = 2, headDy = -1, ears = Ears.ALERT, stringSwing = 2))
+        f(120, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, bob = -1, headDy = 1, stringSwing = -2)); f(300, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, leftArm = Arm.FORWARD_DOWN, eyes = Eyes.FOCUSED))
     }
-    clip(AnimationId.CAR_EXIT, loop = false, policy = FINISH_CYCLE) {
-        f(160, HoodiePose(legs = Legs.SIT, eyes = Eyes.LOOK_RIGHT)); f(180, HoodiePose(legs = Legs.STAND, bob = 1), AnimationEvent.STAND)
-        f(150, HoodiePose(legs = Legs.STAND, stringSwing = 1)); f(160, S)
+    clip(AnimationId.CAR_EXIT, loop = false, policy = FINISH_CYCLE, directional = true) {
+        f(160, HoodiePose(legs = Legs.SIT, facing = Facing.SIDE, rightArm = Arm.FORWARD_DOWN, eyes = Eyes.LOOK_RIGHT)); f(180, HoodiePose(legs = Legs.STAND, facing = Facing.SIDE, rightArm = Arm.FORWARD_UP, bob = 1), AnimationEvent.STAND)
+        f(150, HoodiePose(legs = Legs.STAND, facing = Facing.SIDE, rightArm = Arm.FORWARD_UP, stringSwing = 1)); f(160, S.copy(facing = Facing.SIDE))
     }
 
     clip(AnimationId.BUS_ENTER, loop = false, policy = FINISH_CYCLE) {

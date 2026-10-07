@@ -13,6 +13,7 @@ data class CharacterAnchors(
     val rightHand: Point,
     val mouth: Point,
     val back: Point,
+    val seatHip: Point? = null,
 ) {
     companion object {
         /** Adapta os anchors legados do Hoodie ao contrato comum sem tocar na imagem. */
@@ -26,6 +27,7 @@ data class CharacterAnchors(
                 (anchors.head.y + 17).coerceIn(0, CharacterCanvas.HEIGHT - 1),
             ),
             back = anchors.back,
+            seatHip = anchors.seatHip,
         )
     }
 }

@@ -135,7 +135,9 @@ object VisualDirector {
                 SceneId.METRO -> listOf(36, 28, 18, 12).getOrElse(index) { 10 }
                 else -> listOf(55, 30, 15).getOrElse(index) { 10 }
             }
-            MicroAction(animation, baseWeight, 4_000, 9_000, once = animation in setOf(CAR_BUMP, BUS_BUMP, TRAIN_BRAKE, METRO_BRAKE, BIKE_LOOK, OTHER_RIDE_LOOK, TRANSIT_BUMP))
+            val seatedAnimation = if (profile.scene == SceneId.BUS && animation == BUS_SIT)
+                com.hoodie.app.pixel.animation.AnimationId.BUS_SIT_FRONT else animation
+            MicroAction(seatedAnimation, baseWeight, 4_000, 9_000, once = animation in setOf(CAR_BUMP, BUS_BUMP, TRAIN_BRAKE, METRO_BRAKE, BIKE_LOOK, OTHER_RIDE_LOOK, TRANSIT_BUMP))
         }.toMutableList()
         if (mood.tired && profile.journey.vehicle in setOf(JourneyVehicle.BUS, JourneyVehicle.TRAIN, JourneyVehicle.METRO, JourneyVehicle.GENERIC_TRANSIT)) {
             actions += MicroAction(NAP_SIT, 8, 4_000, 8_000)

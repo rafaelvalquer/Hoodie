@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontFamily
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.pixel.animation.AnimGroup
@@ -318,6 +319,7 @@ private fun AnimationTool() {
 @Composable
 private fun SceneLab() {
     var scene by remember { mutableStateOf(SceneId.HOME) }
+    var busSceneV2 by remember { mutableStateOf(HoodieConfig.BUS_SCENE_V2) }
     var anim by remember { mutableStateOf(AnimationId.WORK_TYPING) }
     var group by remember { mutableStateOf<AnimGroup?>(null) }
     var direction by remember { mutableStateOf(Direction.FRONT) }
@@ -333,7 +335,7 @@ private fun SceneLab() {
     var context by remember { mutableStateOf(UserContextType.STUDY) }
     var energy by remember { mutableIntStateOf(70) }
     var mood by remember { mutableIntStateOf(70) }
-    val s = SceneRegistry[scene]
+    val s = if (scene == SceneId.BUS) SceneRegistry.bus(busSceneV2) else SceneRegistry[scene]
     val chosenSpot = spot?.takeIf { it in s.spots } ?: s.defaultSpot
     val visual = if (byActivity) {
         VisualDirector.resolve(activity, context, mobilityMode = transportMode.takeIf { context == UserContextType.COMMUTING }, variant = variant, energy = energy, mood = mood)
@@ -349,7 +351,7 @@ private fun SceneLab() {
     )
     Text("Trocar de cena/spot toca a transição completa (levantar, andar, porta, fade).", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
-        HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = period)
+        HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = period, sceneOverride = s)
     }
     SectionLabel("Modo")
     ChipRow(listOf("Animação", "Atividade"), if (byActivity) 1 else 0, { byActivity = it == 1 })
@@ -372,6 +374,10 @@ private fun SceneLab() {
     } else {
         SectionLabel("Cena")
         ChipRow(SceneId.entries.map { it.label }, scene.ordinal, { scene = SceneId.entries[it] })
+        if (scene == SceneId.BUS) {
+            SectionLabel("Interior do ônibus")
+            ChipRow(listOf("V1 legado", "V2 assentos/paralaxe"), if (busSceneV2) 1 else 0, { busSceneV2 = it == 1 })
+        }
         SectionLabel("Spot")
         val spots = s.spots.keys.toList()
         ChipRow(spots.map { it.name }, spots.indexOf(chosenSpot), { spot = spots[it] })
@@ -654,6 +660,8 @@ private fun TransportLab() {
     var energy by remember { mutableIntStateOf(70) }
     var mood by remember { mutableIntStateOf(70) }
     var speed by remember { mutableFloatStateOf(1f) }
+    var trainV2 by remember { mutableStateOf(com.hoodie.app.core.config.HoodieConfig.TRAIN_SCENE_V2) }
+    androidx.compose.runtime.SideEffect { com.hoodie.app.core.config.HoodieConfig.TRAIN_SCENE_V2 = trainV2 }
     val profile = com.hoodie.app.pixel.transport.TransportVisualRegistry.profileFor(mode, com.hoodie.app.core.model.CommuteStyle.WALK)
     val visual = remember(mode, phase, energy, mood, direction) {
         val base = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = mode, energy = energy, mood = mood)
@@ -665,6 +673,10 @@ private fun TransportLab() {
         if (clip == null) base else base.copy(actions = listOf(MicroAction(clip, 1, 60_000, 60_000, direction = if (clip.clip.directional) direction else Direction.FRONT)))
     }
     SectionLabel("TRANSPORTES · ${profile.scene.label.uppercase()}")
+    if (mode == MovementMode.TRAIN) {
+        ChipRow(listOf("Cena legada", "Trem V2"), if (trainV2) 1 else 0, { trainV2 = it == 1 })
+        Text("V2: bancos longitudinais, slots preferenciais, portas centrais, mapa de estações e balanço ferroviário.", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+    }
     Text("Perfil visual único · ${profile.journey.vehicle} · rota ${profile.journey.routeStyle}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
         HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = period)

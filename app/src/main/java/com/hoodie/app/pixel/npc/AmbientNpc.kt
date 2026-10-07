@@ -11,6 +11,7 @@ import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Point
 import com.hoodie.app.pixel.sprite.Item
 import com.hoodie.app.pixel.sprite.HoodiePainter
+import com.hoodie.app.pixel.sprite.Posture
 import kotlin.math.roundToInt
 import kotlin.math.PI
 import kotlin.math.sin
@@ -49,6 +50,12 @@ data class AmbientNpcSlot(
     val shoppingBrain: ShoppingNpcBrain? = null,
     /** Cliente procedural do restaurante; reconstruído por seed e tempo, sem estado compartilhado. */
     val restaurantBrain: RestaurantNpcBrain? = null,
+    /** Postura própria do assento (a caminhada e a orientação visual continuam separadas). */
+    val seatedPosture: Posture? = null,
+    /** Identificador do SeatSlot ocupado nesta cena. */
+    val seatSlotId: String? = null,
+    /** Alternating deterministic bump phase, set only for V2 bus passengers. */
+    val busJoltPhaseMs: Long? = null,
 ) {
     val scale: Float get() = NpcScalePolicy.scale(definition.characterStyle, depth)
 }
@@ -98,6 +105,10 @@ object NpcDirector {
         NpcCharacterRegistry.RABBIT_READER, NpcAnimation.SIT_PHONE,
         NpcBehaviorSequence.of(NpcStep(NpcAnimation.SIT_PHONE, 4_400), NpcStep(NpcAnimation.LOOK_WINDOW, 2_000, seated = true)),
     )
+    private val trainPole = definition(
+        NpcCharacterRegistry.DOG_WORKER, NpcAnimation.STAND,
+        NpcBehaviorSequence.of(NpcStep(NpcAnimation.STAND, 2_600), NpcStep(NpcAnimation.LOOK, 1_600), NpcStep(NpcAnimation.STAND, 2_200)),
+    )
     /** Janela → celular → janela. */
     private val raccoon = definition(
         NpcCharacterRegistry.RACCOON_COMMUTER, NpcAnimation.LOOK_WINDOW,
@@ -131,8 +142,9 @@ object NpcDirector {
                 AmbientNpcSlot(dog, 119, 221, 222, 43, depth = NpcDepth.BACKGROUND),
             )
             SceneId.TRAIN -> listOf(
-                AmbientNpcSlot(bunny, 43, 240, 242, 51, facingRight = true),
-                AmbientNpcSlot(raccoon, 193, 240, 242, 52),
+                AmbientNpcSlot(bunny, 48, 217, 220, 51, seatedPosture = Posture.SIT_FRONT, seatSlotId = "left-0"),
+                AmbientNpcSlot(raccoon, 190, 217, 220, 52, seatedPosture = Posture.SIT_FRONT, seatSlotId = "right-1"),
+                AmbientNpcSlot(trainPole, 119, 273, 275, 53, depth = NpcDepth.BACKGROUND),
             )
             SceneId.METRO -> listOf(
                 AmbientNpcSlot(mouse, 44, 240, 242, 61, facingRight = true),
@@ -234,9 +246,17 @@ object NpcRenderer {
                 ?: slot.path?.points?.mapNotNull { it.stop }?.lastOrNull { it != NpcAnimation.TALK }
                 ?: NpcAnimation.IDLE
         } else movement.animation
-        val pose = if (animation == movement.animation) frameData.pose else NpcMotionController.frame(
+        val pose = (if (animation == movement.animation) frameData.pose else NpcMotionController.frame(
             slot, timeMs, movement.copy(animation = animation),
-        ).pose
+        ).pose).let { resolved ->
+            val seated = slot.seatedPosture != null && movement.animation !in setOf(NpcAnimation.STAND, NpcAnimation.STAND_UP, NpcAnimation.WALK)
+            val postured = if (seated) resolved.copy(facing = Facing.FRONT, posture = slot.seatedPosture!!) else resolved
+            slot.busJoltPhaseMs?.let { phase ->
+                val body = busJolt(timeMs + phase)
+                val delayedHead = busJolt(timeMs + phase - 90L)
+                postured.copy(bob = (postured.bob + body).coerceIn(-2, 2), headDy = (postured.headDy + delayedHead).coerceIn(-3, 3))
+            } ?: postured
+        }
         val paintedFrame = CharacterPainter.paint(slot.definition.characterStyle, pose, frameData.motion).let {
             if (movement.facingRight && pose.facing == Facing.SIDE) it.mirrored() else it
         }
@@ -244,9 +264,10 @@ object NpcRenderer {
             turnPerspective(paintedFrame, slot.definition.characterStyle, movement.localTimeMs)
         } else paintedFrame
         val frame = scaleFrameForAmbient(turnedFrame, slot.scale)
-        val left = movement.x - frame.anchors.feet.x
-        val top = movement.floorY - frame.anchors.feet.y
-        drawGroundShadow(b, movement.x, movement.floorY, slot.definition.characterStyle, slot.scale)
+        val anchor = frame.anchors.seatHip ?: frame.anchors.feet
+        val left = movement.x - anchor.x
+        val top = movement.floorY - anchor.y
+        if (frame.anchors.seatHip == null) drawGroundShadow(b, movement.x, movement.floorY, slot.definition.characterStyle, slot.scale)
         b.blit(frame.image, left, top)
         if (slot.shoppingBrain != null && (movement.x in 0..239 || movement.phase == PathPhase.ENTER || movement.phase == PathPhase.EXIT)) {
             val shoppingState = slot.shoppingBrain.stateAt(timeMs)
@@ -357,6 +378,13 @@ object NpcRenderer {
         return if (maxX < minX) 1 else maxX - minX + 1
     }
 
+    private fun busJolt(timeMs: Long): Int = when (Math.floorMod(timeMs, 1_800L)) {
+        in 0L..89L -> 1
+        in 90L..189L -> 0
+        in 190L..299L -> -1
+        else -> 0
+    }
+
     /** Sombra suave sob os pés: escurece o cenário (não acrescenta cor ao personagem). */
     internal fun drawGroundShadow(b: PixelBuffer, x: Int, floorY: Int, style: CharacterStyle, scale: Float) {
         val half = (((style.artProfile.proportions.hipWidth + 6) * scale / 2f).roundToInt()).coerceAtLeast(2)
@@ -374,14 +402,14 @@ object NpcRenderer {
     /** Reduz em torno da âncora dos pés, com pixels nítidos (nearest-neighbor). */
     fun scaleFrameForAmbient(frame: CharacterFrame, scale: Float): CharacterFrame {
         if (scale >= 0.999f) return frame
-        val feet = frame.anchors.feet
+        val pivot = frame.anchors.seatHip ?: frame.anchors.feet
         val source = frame.image
         val scaled = PixelBuffer(source.width, source.height)
         for (y in 0 until scaled.height) {
-            val sourceY = (feet.y + (y - feet.y) / scale).roundToInt()
+            val sourceY = (pivot.y + (y - pivot.y) / scale).roundToInt()
             if (sourceY !in 0 until source.height) continue
             for (x in 0 until scaled.width) {
-                val sourceX = (feet.x + (x - feet.x) / scale).roundToInt()
+                val sourceX = (pivot.x + (x - pivot.x) / scale).roundToInt()
                 if (sourceX in 0 until source.width) {
                     val color = source[sourceX, sourceY]
                     if (color ushr 24 != 0) scaled.set(x, y, color)
@@ -389,19 +417,20 @@ object NpcRenderer {
             }
         }
         fun shrink(point: Point) = Point(
-            (feet.x + (point.x - feet.x) * scale).roundToInt().coerceIn(0, scaled.width - 1),
-            (feet.y + (point.y - feet.y) * scale).roundToInt().coerceIn(0, scaled.height - 1),
+            (pivot.x + (point.x - pivot.x) * scale).roundToInt().coerceIn(0, scaled.width - 1),
+            (pivot.y + (point.y - pivot.y) * scale).roundToInt().coerceIn(0, scaled.height - 1),
         )
         val anchors = frame.anchors
         return CharacterFrame(
             scaled,
             CharacterAnchors(
-                feet = feet,
+                feet = shrink(anchors.feet),
                 head = shrink(anchors.head),
                 leftHand = shrink(anchors.leftHand),
                 rightHand = shrink(anchors.rightHand),
                 mouth = shrink(anchors.mouth),
                 back = shrink(anchors.back),
+                seatHip = anchors.seatHip?.let(::shrink),
             ),
         )
     }

@@ -1,6 +1,7 @@
 package com.hoodie.app.pixel.scene
 
 import com.hoodie.app.core.time.DayPeriod
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.transport.TransportAmbientProfile
 import com.hoodie.app.pixel.transport.TransportVibration
@@ -28,6 +29,10 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
     override val defaultSpot = SpotId.SEAT
     override val walkInPlace = true
 
+    override fun lights(env: SceneEnv): List<Light> = if (kind == InteriorKind.TRAIN && HoodieConfig.TRAIN_SCENE_V2) listOf(
+        Light.Emissive(14, 36, 225, 38), Light.Emissive(101, 17, 139, 21), Light.Emissive(188, 70, 201, 74),
+    ) else emptyList()
+
     override fun drawBackground(b: PixelBuffer, env: SceneEnv) {
         when (kind) {
             InteriorKind.BUS -> {
@@ -38,11 +43,20 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
                 b.box(0, 298, 239, 302, 0xFFEACD65.toInt())
             }
             InteriorKind.TRAIN -> {
-                b.box(0, 0, 239, 24, 0xFFD7E2EB.toInt())
-                b.box(0, 25, 239, 150, 0xFF819E9E.toInt())
-                b.box(0, 151, 239, 319, 0xFF77808D.toInt())
-                b.box(0, 145, 239, 153, 0xFF394352.toInt())
-                b.hline(0, 239, 297, 0xFF394352.toInt())
+                if (HoodieConfig.TRAIN_SCENE_V2) {
+                    b.box(0, 0, 239, 34, 0xFFE3E7EC.toInt())
+                    b.box(0, 35, 239, 148, 0xFFB5C1C8.toInt())
+                    b.box(0, 149, 239, 319, 0xFF929AA3.toInt())
+                    b.box(0, 148, 239, 153, 0xFF283241.toInt())
+                    b.box(0, 268, 239, 319, 0xFF696F79.toInt())
+                    b.hline(0, 239, 268, 0xFF424953.toInt())
+                } else {
+                    b.box(0, 0, 239, 24, 0xFFD7E2EB.toInt())
+                    b.box(0, 25, 239, 150, 0xFF819E9E.toInt())
+                    b.box(0, 151, 239, 319, 0xFF77808D.toInt())
+                    b.box(0, 145, 239, 153, 0xFF394352.toInt())
+                    b.hline(0, 239, 297, 0xFF394352.toInt())
+                }
             }
             InteriorKind.METRO -> {
                 b.box(0, 0, 239, 319, 0xFF292D42.toInt())
@@ -71,17 +85,20 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
                     b.box(166, 173, 226, 244, 0xFF35709B.toInt())
                 }
                 InteriorKind.TRAIN -> {
-                    window(b, 12, 38, 216, 105, env, time, TransportMotion.speed(env.transportAmbient, .9f), 0xFF8BA9AD.toInt())
-                    b.outlined(8, 30, 231, 35, 0xFFB8C6D1.toInt(), 0xFF34394A.toInt()) // rack superior
-                    for (x in 28..210 step 36) {
-                        val sway = TransportMotion.offset(time + x * 47L, env.transportAmbient?.vibration)
-                        b.vline(x + sway, 144, 168, 0xFF363E4E.toInt())
-                        b.box(x - 1 + sway, 163, x + 2 + sway, 167, 0xFFB58CF0.toInt())
+                    if (HoodieConfig.TRAIN_SCENE_V2) drawTrainV2(b, env, time)
+                    else {
+                        window(b, 12, 38, 216, 105, env, time, TransportMotion.speed(env.transportAmbient, .9f), 0xFF8BA9AD.toInt())
+                        b.outlined(8, 30, 231, 35, 0xFFB8C6D1.toInt(), 0xFF34394A.toInt())
+                        for (x in 28..210 step 36) {
+                            val sway = TransportMotion.offset(time + x * 47L, env.transportAmbient?.vibration)
+                            b.vline(x + sway, 144, 168, 0xFF363E4E.toInt())
+                            b.box(x - 1 + sway, 163, x + 2 + sway, 167, 0xFFB58CF0.toInt())
+                        }
+                        b.box(20, 176, 94, 244, 0xFF526E9A.toInt())
+                        b.box(146, 176, 220, 244, 0xFF526E9A.toInt())
+                        b.box(99, 14, 141, 27, 0xFF33495D.toInt())
+                        b.box(103, 18, 137, 23, 0xFFFFD98A.toInt())
                     }
-                    b.box(20, 176, 94, 244, 0xFF526E9A.toInt())
-                    b.box(146, 176, 220, 244, 0xFF526E9A.toInt())
-                    b.box(99, 14, 141, 27, 0xFF33495D.toInt())
-                    b.box(103, 18, 137, 23, 0xFFFFD98A.toInt()) // painel de estação
                 }
                 InteriorKind.METRO -> {
                     val station = (time / 9000) % 2L == 0L
@@ -126,6 +143,76 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
                 for (wy in y + height - h + 5 until y + height - 5 step 10) b.box(bx + 3, wy, bx + 5, wy + 3, 0xFFFFE5A0.toInt())
             }
         }
+    }
+
+    /** Frente de vagão baseado no mockup: portas no centro, bancos longitudinais e vista segmentada. */
+    private fun drawTrainV2(b: PixelBuffer, env: SceneEnv, time: Long) {
+        val speed = TransportMotion.speed(env.transportAmbient, .9f)
+        // Janelas independentes em cada lado das portas, com morros suaves e elementos mais rápidos.
+        for (x in intArrayOf(11, 151)) {
+            window(b, x, 76, 78, 76, env, time, speed, 0xFF77AFA7.toInt())
+            b.vline(x + 39, 77, 151, 0xFF687782.toInt())
+            b.hline(x + 2, x + 75, 151, 0xFF53616E.toInt())
+        }
+        // Mapa de linha: cinco estações genéricas, progresso monotônico por tempo do trecho.
+        b.outlined(26, 42, 214, 67, 0xFF333D4B.toInt(), 0xFFFAFAF7.toInt())
+        b.hline(47, 192, 54, 0xFF768290.toInt())
+        val station = (time / 18_000L).toInt().coerceIn(0, 4)
+        for (i in 0..4) {
+            val x = 51 + i * 34
+            b.disc(x, 54, 3, when { i < station -> 0xFF9DA3A8.toInt(); i == station -> 0xFFE85F58.toInt(); else -> 0xFFFAFAF7.toInt() })
+        }
+        // Barra de luz contínua e letreiro central.
+        b.outlined(10, 34, 229, 40, 0xFF333D4B.toInt(), 0xFFE5E8E8.toInt())
+        b.box(14, 36, 225, 38, if (env.period == DayPeriod.NIGHT) 0xFFFFE6A6.toInt() else 0xFFF9FAF7.toInt())
+        b.outlined(97, 12, 143, 27, 0xFF33495D.toInt(), 0xFF1F2935.toInt())
+        b.box(102, 17, 138, 22, 0xFFFFD98A.toInt())
+        // Catenária: fio fixo e postes que cruzam as janelas mais depressa que a paisagem.
+        val phase = ((time * speed / 7f).toInt() % 54)
+        for (x0 in -phase until 240 step 54) {
+            b.vline(x0, 78, 149, 0xFF414D5A.toInt())
+            b.vline(x0 + 2, 78, 149, 0xFFCAD2D6.toInt())
+        }
+        // Porta dupla e guias verticais.
+        b.box(91, 73, 148, 265, 0xFF9AA4AE.toInt())
+        b.outlined(94, 78, 119, 261, 0xFF303A48.toInt(), 0xFF646F7A.toInt())
+        b.outlined(120, 78, 145, 261, 0xFF303A48.toInt(), 0xFF646F7A.toInt())
+        b.vline(120, 74, 265, 0xFF293443.toInt())
+        b.box(116, 154, 118, 157, 0xFFDAE4E7.toInt()); b.box(122, 154, 124, 157, 0xFFDAE4E7.toInt())
+        // Dois bancos como props contínuos, com três slots cada e estampa 6×6 exclusiva.
+        bench(b, 10, 177, 88, preferred = 2)
+        bench(b, 152, 177, 230, preferred = 2)
+        // Barras próximas à porta, barra central e suportes; mão do personagem fica visualmente sobre a barra.
+        for (x in intArrayOf(84, 156, 119)) {
+            b.vline(x, 155, 276, 0xFF35414D.toInt())
+            b.vline(x + 1, 155, 276, 0xFFB8C4C8.toInt())
+        }
+        for (x in 43..203 step 32) {
+            b.vline(x, 154, 161, 0xFF364250.toInt()); b.box(x - 2, 160, x + 3, 164, 0xFFBCC7C9.toInt())
+        }
+        // Plataforma de luz e indicador acima da porta.
+        b.box(188, 70, 201, 74, if ((time / 500L) % 2L == 0L) 0xFF59D487.toInt() else 0xFF30664A.toInt())
+    }
+
+    private fun bench(b: PixelBuffer, x0: Int, y0: Int, x1: Int, preferred: Int) {
+        b.box(x0, y0, x1, y0 + 8, 0xFF273341.toInt())
+        b.box(x0 + 2, y0 + 2, x1 - 2, y0 + 6, 0xFF1B5973.toInt())
+        for (x in x0 + 4..x1 - 10 step 6) for (y in y0 + 2..y0 + 6 step 6) {
+            b.box(x, y, x + 1, y + 1, 0xFFE48A48.toInt())
+        }
+        // Três assentos separados por apoios; slot preferencial usa tecido dourado e símbolo bordado.
+        for (i in 0..2) {
+            val sx = x0 + 3 + i * 25
+            val color = if (i == preferred) 0xFFC99B28.toInt() else 0xFF21718D.toInt()
+            b.box(sx, y0 + 9, sx + 22, y0 + 17, color)
+            if (i == preferred) {
+                b.box(sx + 9, y0 + 11, sx + 10, y0 + 14, 0xFFFFEAB5.toInt())
+                b.box(sx + 7, y0 + 12, sx + 12, y0 + 13, 0xFFFFEAB5.toInt())
+            }
+            if (i < 2) b.vline(sx + 23, y0 + 8, y0 + 17, 0xFF455361.toInt())
+        }
+        b.box(x0 + 2, y0 + 18, x1 - 2, y0 + 25, 0xFF89929B.toInt())
+        b.hline(x0 + 2, x1 - 2, y0 + 26, 0xFF4B5663.toInt())
     }
 }
 

@@ -167,7 +167,11 @@ class AnimationStateMachine(
         action = loopSelector.pick(v, null)
         // Microação com spot próprio (banco do passeio, esteira da academia): já aparece lá.
         action?.spot?.takeIf { it in scene!!.spots }?.let { scene!!.spot(it) }?.let { x = it.x.toFloat(); y = it.y.toFloat() }
-        posture = if (action?.anim?.posture == Legs.SIT) Posture.SITTING else Posture.STANDING
+        posture = when {
+            v.scene == com.hoodie.app.pixel.scene.SceneId.BUS -> Posture.SIT_FRONT
+            action?.anim?.posture == Legs.SIT -> Posture.SITTING
+            else -> Posture.STANDING
+        }
         startAction(now)
     }
 
@@ -286,7 +290,7 @@ class AnimationStateMachine(
         // Alongamento esporádico durante idle.
         if (a.anim.group == AnimGroup.IDLE && a.anim.loop && idle.wantsStretch(now)) {
             steps.clear()
-            steps += Step.Play(if (posture == Posture.SITTING) AnimationId.STRETCH_SIT else AnimationId.STRETCH)
+            steps += Step.Play(if (posture == Posture.SITTING || posture == Posture.SIT_FRONT) AnimationId.STRETCH_SIT else AnimationId.STRETCH)
             steps += Step.Loop
             next(now)
             return
@@ -390,11 +394,15 @@ class AnimationStateMachine(
     // ───────────────────────── Clips ─────────────────────────
 
     private fun play(anim: AnimationId, dir: Direction, now: Long, restart: Boolean = false) {
-        if (!player.play(anim, dir, now, restart)) return
+        val visualDirection = if (
+            scene?.id == com.hoodie.app.pixel.scene.SceneId.CAR &&
+            anim.group == AnimGroup.TRANSPORT && anim.clip.directional
+        ) Direction.LEFT else dir
+        if (!player.play(anim, visualDirection, now, restart)) return
         // Clips com postura explícita definem a postura (INHERIT herda).
         val legs = anim.frames.first().pose
         if (!legs.headOnly) when (legs.legs) {
-            Legs.SIT -> if (anim.loop) posture = Posture.SITTING
+            Legs.SIT -> if (anim.loop) posture = if (scene?.id == com.hoodie.app.pixel.scene.SceneId.BUS) Posture.SIT_FRONT else Posture.SITTING
             Legs.INHERIT -> Unit
             else -> if (anim.loop) posture = Posture.STANDING
         }
@@ -405,7 +413,7 @@ class AnimationStateMachine(
         val last = anim.frames.last().pose
         if (last.headOnly) return
         when (last.legs) {
-            Legs.SIT -> posture = Posture.SITTING
+            Legs.SIT -> posture = if (scene?.id == com.hoodie.app.pixel.scene.SceneId.BUS) Posture.SIT_FRONT else Posture.SITTING
             Legs.INHERIT -> Unit
             else -> posture = Posture.STANDING
         }

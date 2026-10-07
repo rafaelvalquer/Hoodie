@@ -41,7 +41,7 @@ class SceneRenderer {
         val sprite = frame.sprite
         val left = frame.x - sprite.anchors.feet.x
         val top = frame.y - sprite.anchors.feet.y
-        buffer.blit(sprite.image, left, top)
+        scene.drawCharacter(buffer, sprite, left, top, timeMs, env)
         sprite.itemOverlay?.let { item ->
             val hand = sprite.anchors.rightHand
             HoodiePainter.drawItemAt(buffer, item, com.hoodie.app.pixel.sprite.Point(left + hand.x, top + hand.y))
@@ -53,7 +53,8 @@ class SceneRenderer {
             .sortedBy { it.first }.forEach { it.second() }
 
         Lighting.apply(buffer, Lighting.map(scene, env))
-        applyTransportLighting(buffer, env.transportAmbient?.lighting)
+        if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, env.transportAmbient?.lighting)
+        scene.drawPostLighting(buffer, env, timeMs)
         frame.effects.forEach { (kind, pos) -> Effects.draw(buffer, kind, pos.first, pos.second, timeMs) }
         Lighting.fade(buffer, frame.fade)
         return buffer
@@ -77,7 +78,8 @@ class SceneRenderer {
         (props + npcs)
             .sortedBy { it.first }.forEach { it.second() }
         Lighting.apply(buffer, Lighting.map(scene, drawEnv))
-        applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
+        if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
+        scene.drawPostLighting(buffer, drawEnv, timeMs)
         return buffer
     }
 
@@ -89,7 +91,8 @@ class SceneRenderer {
         scene.sortedProps.forEach { it.draw(buffer, drawEnv, timeMs) }
         slots.forEach { NpcRenderer.draw(buffer, it, timeMs, movementOverride(it, timeMs, facingOverride)) }
         Lighting.apply(buffer, Lighting.map(scene, drawEnv))
-        applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
+        if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
+        scene.drawPostLighting(buffer, drawEnv, timeMs)
         return buffer
     }
 

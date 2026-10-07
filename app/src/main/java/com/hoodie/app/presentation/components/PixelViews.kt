@@ -77,6 +77,7 @@ fun HoodieSceneView(
     greet: Boolean = true,
     speed: Float = 1f,
     periodOverride: DayPeriod? = null,
+    sceneOverride: PixelScene? = null,
 ) {
     val fixedFrame = LocalPixelRenderFrame.current
     val machine = remember(fixedFrame != null) {
@@ -95,10 +96,10 @@ fun HoodieSceneView(
         visual?.let { machine.setVisual(it, if (fixedFrame != null) 1L else clock.now(currentSpeed), greet = greet) }
     }
     LaunchedEffect(reactions, fixedFrame) { if (fixedFrame == null) reactions?.collect { machine.react(it, clock.now(currentSpeed)) } }
-    LaunchedEffect(fixedFrame, visual) {
+    LaunchedEffect(fixedFrame, visual, sceneOverride) {
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
-                val buf = renderer.render(f, fixedFrame.animationMillis)
+                val buf = renderer.render(if (sceneOverride == null) f else f.copy(scene = sceneOverride), fixedFrame.animationMillis)
                 bitmap.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height)
                 frames++
             }
@@ -113,7 +114,7 @@ fun HoodieSceneView(
                     val time = LocalTime.now()
                     val period = currentPeriod ?: DayPeriod.of(time.hour)
                     machine.frame(t, time.hour * 60 + time.minute, period)?.let { f ->
-                        val buf = renderer.render(f, t)
+                        val buf = renderer.render(if (sceneOverride == null) f else f.copy(scene = sceneOverride), t)
                         bitmap.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height)
                         frames++
                     }
