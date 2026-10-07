@@ -22,4 +22,11 @@ Os tamanhos ficam em `HoodieTypographyTokens` e a tipografia do tema em `HoodieT
 
 HUD (`RetroFontStyles`): título de painel 9 sp, número grande 26 sp, número 14 sp, rótulo 8 sp. Textos longos (descrições, privacidade, erros) usam sempre fonte do sistema. Alvos de toque seguem em 48 dp e a escala de fonte do usuário é respeitada.
 
-Barra inferior: uma linha, `softWrap = false`, mesmo token em todas as abas. O texto visível de Histórico é "Hist." (a descrição de acessibilidade continua "Histórico"); `BottomNavigationFitTest` confere 360/411 dp com fonte 1.0 e 1.3.
+Barra inferior: uma linha, `softWrap = false`, mesmo token em todas as abas. Textos visíveis: "Hoje, Hist., Locais, Diário, Ajustes" (as descrições de acessibilidade seguem por extenso: "Histórico", "Lugares"); `BottomNavigationFitTest` confere 360/411 dp com fonte 1.0 e 1.3.
+
+## Ícones, espaçamento e contraste
+
+- **Ícones pixel** (`pixel/icons/PixelIcons.kt`): sprites 10×10 próprios (gato, calendário, pino, mapa, engrenagem, brilho, caminhada, sol, nascer do sol, lua) e os 10 ícones de lugar do `DiaryMapIcons`. `PixelIconView` desenha em escala inteira; `IconLabel` junta ícone e texto. A interface fixa (barra inferior, resumo do Diário, Home, tipos de lugar) usa ícones; emojis em texto livre (linha do tempo, notificações, Jornada, Digital) continuam.
+- **Entrelinha:** todo estilo de texto usa `HoodieLineHeightStyle` (centralizado, sem corte), o que evita o glifo invadir o texto vizinho.
+- **Espaço rótulo → valor:** `HoodieSpacing.LabelToValue` (4 dp), já incluído no `SectionLabel`.
+- **Contraste:** rótulos de 8 sp usam `HoodieColors.MutedStrong` (6,3:1 sobre `PanelLight`); `Muted` fica para textos maiores. `HoodieContrastTest` garante os limites.

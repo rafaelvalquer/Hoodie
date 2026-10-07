@@ -98,7 +98,7 @@ private fun PlaceTypeCell(t: PlaceType, selected: Boolean, onClick: () -> Unit, 
             .testTag(PlacePickerTags.typeCell(t)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PixelIconView(PixelIcons.of(t), size = 22.dp, tint = if (selected) HoodieColors.Hood else HoodieColors.Ink)
+        PixelIconView(PixelIcons.of(t), size = 16.dp, tint = if (selected) HoodieColors.Hood else HoodieColors.Ink)
         Text(t.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
             color = if (selected) HoodieColors.Hood else HoodieColors.Ink)
     }

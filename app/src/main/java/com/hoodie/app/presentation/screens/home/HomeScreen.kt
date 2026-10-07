@@ -175,9 +175,10 @@ internal fun HomeContent(
         // Cena viva.
         // A altura é a da própria cena (escala inteira pela largura): sem caixa 3:4 sobrando abaixo dela,
         // o texto "Hoodie está…" fica logo embaixo do cenário.
-        Box(Modifier.fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.TopCenter) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
+            state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp, bottom = 6.dp)) }
             HoodieSceneView(state.visual, Modifier.fillMaxWidth(), reactions = reactions)
-            state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp)) }
         }
 
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
