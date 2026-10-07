@@ -6,10 +6,10 @@ frente e barra no primeiro plano — enquadramento do plano, sem rodada de thumb
 
 | Cena | Estado | Fonte | Revisão humana |
 |---|---|---|---|
-| Carro | rascunho (bootstrap) | `assets-source/scenes/transport/car.aseprite` | pendente |
-| Trem | rascunho (bootstrap) | `assets-source/scenes/transport/train.aseprite` | pendente |
-| Metrô | rascunho (bootstrap) | `assets-source/scenes/transport/metro.aseprite` | pendente |
-| Ônibus | rascunho (bootstrap) | `assets-source/scenes/transport/bus.aseprite` | pendente |
+| Carro | aprovado (bootstrap-v1) | `assets-source/scenes/transport/car.aseprite` | aprovado no chat em 07/10/2026 |
+| Trem | aprovado (bootstrap-v1) | `assets-source/scenes/transport/train.aseprite` | aprovado no chat em 07/10/2026 |
+| Metrô | aprovado (bootstrap-v1) | `assets-source/scenes/transport/metro.aseprite` | aprovado no chat em 07/10/2026 |
+| Ônibus | aprovado (bootstrap-v1) | `assets-source/scenes/transport/bus.aseprite` | aprovado no chat em 07/10/2026 |
 
 Interiores (trem, metrô, ônibus): Hoodie sentado de frente com o quadril no slot `seat_hip`, passageiros nos
 slots `npc_seat_N` (SIT_FRONT, escala 1:1), cabine com luz própria à noite (só as janelas escurecem). O passageiro
@@ -35,3 +35,8 @@ em pé do primeiro plano é uma silhueta pintada na arte (`vehicle_front`), sem 
 - `assets-source/hoodie/hoodie_transport.aseprite` (CAR_* de lado) é **só fonte** para o Rafael pintar
   (`ArtBootstrapStudio.PENDING_GROUPS`). Fica fora do APK e dos scripts de exportação até a aprovação: se entrasse
   agora, a sheet substituiria o procedural também no carro atual.
+
+## Aprovação (07/10/2026)
+As quatro cenas foram aprovadas no chat. `scene-art-status.json` marca `manualReview=true`, a flag
+`TRANSPORT_SCENES_V3` foi ligada e os goldens `transport-scenes-v1.sha256` e `car-scenes-v1.sha256` foram
+regravados com as cenas V3. O Hoodie dirigindo (`hoodie_transport.aseprite`) **não** foi aprovado e continua fora do APK.

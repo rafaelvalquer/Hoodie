@@ -1,26 +1,26 @@
 {
   "car": {
-    "final": false,
-    "manualReview": false,
+    "final": true,
+    "manualReview": true,
     "pass": "bootstrap-v1",
-    "reviewedBy": null
+    "reviewedBy": "aprovação no chat (07/10/2026)"
   },
   "train": {
-    "final": false,
-    "manualReview": false,
+    "final": true,
+    "manualReview": true,
     "pass": "bootstrap-v1",
-    "reviewedBy": null
+    "reviewedBy": "aprovação no chat (07/10/2026)"
   },
   "metro": {
-    "final": false,
-    "manualReview": false,
+    "final": true,
+    "manualReview": true,
     "pass": "bootstrap-v1",
-    "reviewedBy": null
+    "reviewedBy": "aprovação no chat (07/10/2026)"
   },
   "bus": {
-    "final": false,
-    "manualReview": false,
+    "final": true,
+    "manualReview": true,
     "pass": "bootstrap-v1",
-    "reviewedBy": null
+    "reviewedBy": "aprovação no chat (07/10/2026)"
   }
 }
