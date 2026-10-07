@@ -3,11 +3,13 @@ package com.hoodie.app.pixel.npc.office
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcMovement
 import com.hoodie.app.pixel.npc.PathPhase
+import com.hoodie.app.pixel.npc.NpcPoseLibrary
 import com.hoodie.app.pixel.npc.brain.NpcBrainState
 import com.hoodie.app.pixel.npc.brain.NpcCooldowns
 import com.hoodie.app.pixel.npc.brain.NpcAmbientBrain
 import com.hoodie.app.pixel.npc.brain.NpcIntent
 import com.hoodie.app.pixel.npc.brain.NpcPersonalityProfile
+import com.hoodie.app.pixel.sprite.Facing
 import kotlin.math.abs
 
 /** Reconstrói a sessão a partir da seed e do tempo: frame a frame não há estado aleatório. */
@@ -33,7 +35,10 @@ class OfficeAmbientBrain(
             val intent = OfficeBehaviorPlanner.choose(npcId, daySeed, seedState, profile, cursor)
             val target = OfficeBehaviorPlanner.target(intent, spot, startSpot)
             val route = OfficeNavigationGraph.route(spot, target)
-            val travelMs = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L }
+            val routeMs = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L }
+            val leavingDesk = isDesk(spot) && spot != target
+            val arrivingDesk = isDesk(target) && spot != target
+            val travelMs = routeMs + when { leavingDesk -> STAND_MS + NpcPoseLibrary.TURN_MS; arrivingDesk -> NpcPoseLibrary.TURN_MS + SIT_MS; else -> 0L }
             val started = cursor + travelMs
             val duration = OfficeBehaviorPlanner.durationMs(npcId, daySeed, index, profile, intent)
             val end = started + duration
@@ -107,9 +112,32 @@ class OfficeAmbientBrain(
         val state = stateAt(timeMs)
         val route = OfficeNavigationGraph.route(state.currentSpot, state.targetSpot ?: state.currentSpot)
         val routeLength = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L }
-        val travelStart = (state.intentStartedAt - routeLength).coerceAtLeast(0)
+        val leavingDesk = isDesk(state.currentSpot) && state.currentSpot != (state.targetSpot ?: state.currentSpot)
+        val arrivingDesk = isDesk(state.targetSpot ?: state.currentSpot) && state.currentSpot != (state.targetSpot ?: state.currentSpot)
+        val preTransition = if (leavingDesk) STAND_MS + NpcPoseLibrary.TURN_MS else 0L
+        val postTransition = if (arrivingDesk) NpcPoseLibrary.TURN_MS + SIT_MS else 0L
+        val travelStart = (state.intentStartedAt - routeLength - preTransition - postTransition).coerceAtLeast(0)
         if (timeMs < state.intentStartedAt && route.size > 1) {
             var left = timeMs - travelStart
+            if (leavingDesk && left < STAND_MS) {
+                val point = OfficeNavigationGraph.spots.getValue(state.currentSpot)
+                return NpcMovement(point.x, point.floorY, false, NpcAnimation.STAND_UP, left.coerceAtLeast(0), phase = PathPhase.STOP, facing = Facing.FRONT)
+            }
+            if (leavingDesk) left -= STAND_MS
+            if (leavingDesk && left < NpcPoseLibrary.TURN_MS) {
+                val point = OfficeNavigationGraph.spots.getValue(state.currentSpot)
+                return NpcMovement(point.x, point.floorY, false, NpcAnimation.TURN_RIGHT, left.coerceAtLeast(0), phase = PathPhase.TURN, facing = Facing.FRONT)
+            }
+            if (leavingDesk) left -= NpcPoseLibrary.TURN_MS
+            val routeStartedAt = travelStart + preTransition
+            left = timeMs - routeStartedAt
+            if (arrivingDesk && left >= routeLength) {
+                val point = OfficeNavigationGraph.spots.getValue(state.targetSpot!!)
+                val afterRoute = left - routeLength
+                if (afterRoute < NpcPoseLibrary.TURN_MS) return NpcMovement(point.x, point.floorY, false, NpcAnimation.TURN_LEFT, afterRoute, phase = PathPhase.TURN, facing = Facing.FRONT)
+                return NpcMovement(point.x, point.floorY, false, NpcAnimation.SIT, afterRoute - NpcPoseLibrary.TURN_MS,
+                    phase = PathPhase.STOP, seated = true, facing = Facing.FRONT)
+            }
             var walked = 0f
             for ((a, b) in route.zipWithNext()) {
                 val distance = maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY))
@@ -123,7 +151,7 @@ class OfficeAmbientBrain(
             }
         }
         val point = OfficeNavigationGraph.spots.getValue(state.currentSpot)
-        val seated = state.currentIntent == NpcIntent.WORK || state.currentIntent == NpcIntent.CHECK_PHONE
+        val seated = isDesk(state.currentSpot) && state.currentIntent in setOf(NpcIntent.WORK, NpcIntent.CHECK_PHONE, NpcIntent.IDLE, NpcIntent.STRETCH)
         val animation = when (state.currentIntent) {
             NpcIntent.WORK -> NpcAnimation.TYPE
             NpcIntent.GET_COFFEE -> NpcAnimation.STAND_COFFEE
@@ -143,4 +171,8 @@ class OfficeAmbientBrain(
     }
 
     override fun shouldSpeak(timeMs: Long): Boolean = socialSession?.shouldSpeak(npcId, timeMs) == true
+
+    private fun isDesk(spot: OfficeNpcSpot) = spot == OfficeNpcSpot.DESK_LEFT || spot == OfficeNpcSpot.DESK_RIGHT
+
+    private companion object { const val STAND_MS = 640L; const val SIT_MS = 640L }
 }

@@ -32,7 +32,7 @@ class NpcAnimationRegressionTest {
     @Test fun restaurantGuestEatsWithAForkAndCyclesFromPickToChew() {
         val guest = com.hoodie.app.pixel.npc.NpcDirector.plan(com.hoodie.app.pixel.scene.SceneId.RESTAURANT, 0).single()
         val profile = guest.definition.behaviorProfile.motion
-        assertEquals(NpcAnimation.SIT_EAT, guest.definition.behaviorProfile.animation)
+        assertTrue("restaurant guest must use the procedural meal brain", guest.restaurantBrain != null)
         val pose = NpcMotionController.pose(NpcAnimation.SIT_EAT, 360, guest.seed, profile)
         assertEquals(Legs.SIT, pose.legs)
         assertEquals(Item.FORK, pose.item)

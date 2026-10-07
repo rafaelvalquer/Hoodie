@@ -87,7 +87,7 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
         if (state?.mealState == RestaurantMealState.SERVED || state?.mealState == RestaurantMealState.EATING) {
             val steamFrame = (timeMs / 360L).toInt() % 3
             for (i in 0..1) {
-                val x = 187 + i * 5
+                val x = 199 + i * 5
                 val y = 198 - ((steamFrame + i) % 3) * 2
                 b.set(x, y, 0xFFDCE6E8.toInt())
             }
@@ -103,29 +103,29 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
     }
 
     private fun drawGuestPlate(b: PixelBuffer, amount: RestaurantFoodAmount, timeMs: Long) {
-        b.outlined(183, 207, 200, 211, P.WHITE, P.OUTLINE)
+        b.outlined(195, 207, 212, 211, P.WHITE, P.OUTLINE)
         when (amount) {
             RestaurantFoodAmount.FULL -> {
-                b.box(186, 205, 197, 207, 0xFFF2CF5B.toInt())
-                b.box(188, 204, 190, 205, P.RED); b.box(193, 203, 195, 205, P.LEAF)
+                b.box(198, 205, 209, 207, 0xFFF2CF5B.toInt())
+                b.box(200, 204, 202, 205, P.RED); b.box(205, 203, 207, 205, P.LEAF)
             }
             RestaurantFoodAmount.PARTIAL -> {
-                b.box(188, 205, 195, 207, 0xFFF2CF5B.toInt()); b.set(192, 204, P.LEAF)
+                b.box(200, 205, 207, 207, 0xFFF2CF5B.toInt()); b.set(204, 204, P.LEAF)
             }
-            RestaurantFoodAmount.LOW -> b.box(190, 206, 193, 207, 0xFFF2CF5B.toInt())
-            RestaurantFoodAmount.EMPTY -> if (timeMs % 5_000L < 1_000L) b.set(191, 206, 0xFFE8E0D0.toInt())
+            RestaurantFoodAmount.LOW -> b.box(202, 206, 205, 207, 0xFFF2CF5B.toInt())
+            RestaurantFoodAmount.EMPTY -> if (timeMs % 5_000L < 1_000L) b.set(203, 206, 0xFFE8E0D0.toInt())
         }
     }
 
     private fun drawGuestGlass(b: PixelBuffer, amount: RestaurantDrinkAmount) {
-        b.outlined(204, 203, 209, 211, 0xFFDCECF4.toInt(), P.OUTLINE)
+        b.outlined(213, 203, 218, 211, 0xFFDCECF4.toInt(), P.OUTLINE)
         val top = when (amount) {
             RestaurantDrinkAmount.FULL -> 205
             RestaurantDrinkAmount.HALF -> 207
             RestaurantDrinkAmount.EMPTY -> 210
         }
-        if (amount != RestaurantDrinkAmount.EMPTY) b.box(206, top, 207, 209, 0xFFF29B4A.toInt())
-        b.set(205, 204, P.WHITE)
+        if (amount != RestaurantDrinkAmount.EMPTY) b.box(215, top, 216, 209, 0xFFF29B4A.toInt())
+        b.set(214, 204, P.WHITE)
     }
 
     private fun drawGuestTableFront(b: PixelBuffer) {

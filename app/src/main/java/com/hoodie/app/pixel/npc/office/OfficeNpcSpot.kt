@@ -7,6 +7,6 @@ enum class OfficeNpcSpot { DESK_LEFT, DESK_RIGHT, COFFEE, WINDOW, WHITEBOARD, PR
 data class OfficeSpot(
     val x: Int,
     val floorY: Int,
-    val facing: Facing,
+    val interactionFacing: Facing,
     val capacity: Int = 1,
-)
+) { val facing: Facing get() = interactionFacing }

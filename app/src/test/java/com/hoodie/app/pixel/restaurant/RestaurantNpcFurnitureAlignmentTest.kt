@@ -30,6 +30,7 @@ class RestaurantNpcFurnitureAlignmentTest {
         val seat = RestaurantNavigationGraph.spots.getValue(seatId)
         val slot = RestaurantNpcDirector.plan(SceneEnv(DayPeriod.DAY, 12 * 60)).single()
         assertEquals(RestaurantNpcSpot.TABLE_A_SEAT_RIGHT, seatId)
+        assertEquals(com.hoodie.app.pixel.sprite.Facing.FRONT, seat.interactionFacing)
         assertEquals(seat.x, slot.x)
         assertEquals(seat.floorY, slot.floorY)
         assertEquals("table_a", seat.tableId)
@@ -37,6 +38,8 @@ class RestaurantNpcFurnitureAlignmentTest {
         val baselines = RestaurantScene().sortedProps.map { it.baseline }
         assertTrue("cadeira traseira deve estar atrás do gato", baselines.any { it < slot.baseline && it >= 216 })
         assertTrue("borda frontal deve passar à frente do gato", baselines.any { it > slot.baseline && it <= 270 })
+        assertTrue("NPC deve estar centrado na cadeira", kotlin.math.abs(seat.x - 205) <= 1)
+        assertTrue("prato deve ficar diretamente à frente do assento", kotlin.math.abs(seat.x - 203) <= 3)
         assertTrue("mesa e cadeira devem pertencer à área do assento", seat.x in 194..217 && seat.floorY in 240..255)
     }
 

@@ -3,7 +3,7 @@ package com.hoodie.app.pixel.npc.office
 /** Corredores de circulação do escritório; rotas passam pelo corredor central. */
 object OfficeNavigationGraph {
     val spots = mapOf(
-        OfficeNpcSpot.DESK_LEFT to OfficeSpot(34, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.DESK_LEFT to OfficeSpot(34, 204, com.hoodie.app.pixel.sprite.Facing.FRONT),
         OfficeNpcSpot.WINDOW to OfficeSpot(60, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
         OfficeNpcSpot.COFFEE to OfficeSpot(86, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
         OfficeNpcSpot.CENTER to OfficeSpot(112, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
@@ -11,7 +11,7 @@ object OfficeNavigationGraph {
         OfficeNpcSpot.CENTER_RIGHT to OfficeSpot(124, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
         OfficeNpcSpot.WHITEBOARD to OfficeSpot(152, 198, com.hoodie.app.pixel.sprite.Facing.SIDE),
         OfficeNpcSpot.PRINTER to OfficeSpot(180, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
-        OfficeNpcSpot.DESK_RIGHT to OfficeSpot(206, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
+        OfficeNpcSpot.DESK_RIGHT to OfficeSpot(206, 204, com.hoodie.app.pixel.sprite.Facing.FRONT),
         OfficeNpcSpot.DOOR to OfficeSpot(234, 204, com.hoodie.app.pixel.sprite.Facing.SIDE),
     )
 

@@ -17,19 +17,19 @@ enum class RestaurantNpcSpot {
 data class RestaurantSeat(
     val x: Int,
     val floorY: Int,
-    val facing: Facing,
+    val interactionFacing: Facing,
     val tableId: String,
-)
+) { val facing: Facing get() = interactionFacing }
 
 data class RestaurantWaypoint(val x: Int, val floorY: Int, val facing: Facing = Facing.SIDE)
 
 /** Posições e caminhos semânticos: os percursos usam o corredor à direita da mesa principal. */
 object RestaurantNavigationGraph {
     val spots = mapOf(
-        RestaurantNpcSpot.TABLE_A_SEAT_LEFT to RestaurantSeat(184, 253, Facing.SIDE, "table_a"),
-        RestaurantNpcSpot.TABLE_A_SEAT_RIGHT to RestaurantSeat(201, 253, Facing.SIDE, "table_a"),
-        RestaurantNpcSpot.TABLE_B_SEAT_LEFT to RestaurantSeat(72, 224, Facing.SIDE, "table_b"),
-        RestaurantNpcSpot.TABLE_B_SEAT_RIGHT to RestaurantSeat(98, 224, Facing.SIDE, "table_b"),
+        RestaurantNpcSpot.TABLE_A_SEAT_LEFT to RestaurantSeat(184, 253, Facing.FRONT, "table_a"),
+        RestaurantNpcSpot.TABLE_A_SEAT_RIGHT to RestaurantSeat(205, 253, Facing.FRONT, "table_a"),
+        RestaurantNpcSpot.TABLE_B_SEAT_LEFT to RestaurantSeat(72, 224, Facing.FRONT, "table_b"),
+        RestaurantNpcSpot.TABLE_B_SEAT_RIGHT to RestaurantSeat(98, 224, Facing.FRONT, "table_b"),
         RestaurantNpcSpot.COUNTER to RestaurantSeat(80, 184, Facing.SIDE, "counter"),
         RestaurantNpcSpot.WINDOW to RestaurantSeat(202, 112, Facing.SIDE, "window"),
         RestaurantNpcSpot.AISLE to RestaurantSeat(222, 220, Facing.SIDE, "aisle"),

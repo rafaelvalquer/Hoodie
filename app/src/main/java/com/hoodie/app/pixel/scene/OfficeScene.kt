@@ -54,15 +54,29 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
             b.set(188, 95, if ((t / 1_300) % 2 == 0L) P.CODE_1 else P.RED)
         },
         // Mesas compactas dos colegas; o monitor e a cadeira dão contexto ao trabalho.
+        Prop(192) { b, _, _ ->
+            b.outlined(26, 183, 42, 198, 0xFF3F4A66.toInt(), P.OUTLINE)
+            b.box(29, 185, 39, 194, 0xFF566389.toInt())
+            b.outlined(25, 197, 43, 201, 0xFF3F4A66.toInt(), P.OUTLINE)
+            b.vline(28, 200, 204, P.OUTLINE); b.vline(40, 200, 204, P.OUTLINE)
+        },
         Prop(208) { b, _, t ->
             b.outlined(5, 183, 55, 190, 0xFFB8AA90.toInt(), P.OUTLINE)
             b.box(9, 190, 12, 201, 0xFF8B785F.toInt()); b.box(48, 190, 51, 201, 0xFF8B785F.toInt())
             SceneArt.monitor(b, 17, 162, 42, 181, t, true, 1)
+            b.outlined(22, 181, 38, 183, 0xFF353B50.toInt(), P.OUTLINE)
         },
         Prop(208) { b, _, t ->
             b.outlined(187, 183, 237, 190, 0xFFB8AA90.toInt(), P.OUTLINE)
             b.box(191, 190, 194, 201, 0xFF8B785F.toInt()); b.box(230, 190, 233, 201, 0xFF8B785F.toInt())
             SceneArt.monitor(b, 199, 162, 224, 181, t, true, 2)
+            b.outlined(204, 181, 220, 183, 0xFF353B50.toInt(), P.OUTLINE)
+        },
+        Prop(192) { b, _, _ ->
+            b.outlined(198, 183, 214, 198, 0xFF3F4A66.toInt(), P.OUTLINE)
+            b.box(201, 185, 211, 194, 0xFF566389.toInt())
+            b.outlined(197, 197, 215, 201, 0xFF3F4A66.toInt(), P.OUTLINE)
+            b.vline(200, 200, 204, P.OUTLINE); b.vline(212, 200, 204, P.OUTLINE)
         },
         Prop(168) { b, _, _ -> SceneArt.plant(b, 26, 168, big = true) },
         Prop(198) { b, _, t ->

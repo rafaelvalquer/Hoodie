@@ -2,6 +2,7 @@ package com.hoodie.app.pixel.npc.restaurant
 
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcMovement
+import com.hoodie.app.pixel.npc.NpcPoseLibrary
 import com.hoodie.app.pixel.npc.PathPhase
 import com.hoodie.app.pixel.npc.brain.NpcDeterministicRandom
 import com.hoodie.app.pixel.sprite.Arm
@@ -26,7 +27,7 @@ data class RestaurantNpcBrain(
         val startSpot = RestaurantNpcSpot.DOOR
         val enterRoute = RestaurantNavigationGraph.route(startSpot, homeSeat)
         val enterTravel = routeDuration(enterRoute)
-        val enterEnd = enterTravel + SIT_TRANSITION_MS
+        val enterEnd = enterTravel + NpcPoseLibrary.TURN_MS + SIT_TRANSITION_MS
         if (time < enterEnd) {
             return state(
                 RestaurantNpcIntent.ENTER, RestaurantMealState.WAITING, startSpot, homeSeat,
@@ -48,7 +49,7 @@ data class RestaurantNpcBrain(
         while (true) {
             val intent = choose(seed, meal, cursor, recent, index, menuRead, cooldowns, hoodieReactionDone)
             if (intent == RestaurantNpcIntent.LEAVE) {
-                val leaveEnd = cursor + STAND_TRANSITION_MS + routeDuration(
+                val leaveEnd = cursor + STAND_TRANSITION_MS + NpcPoseLibrary.TURN_MS + routeDuration(
                     RestaurantNavigationGraph.route(homeSeat, RestaurantNpcSpot.DOOR),
                 )
                 val leaving = state(
@@ -108,13 +109,17 @@ data class RestaurantNpcBrain(
         if (state.currentIntent == RestaurantNpcIntent.ENTER) {
             val route = RestaurantNavigationGraph.route(RestaurantNpcSpot.DOOR, homeSeat)
             val travel = routeDuration(route)
-            return if (time < travel) routeMovement(route, time, PathPhase.ENTER) else {
-                val seat = RestaurantNavigationGraph.spots.getValue(homeSeat)
-                NpcMovement(
-                    seat.x, seat.floorY, false, NpcAnimation.SIT, time - travel,
-                    phase = PathPhase.ENTER, facing = seat.facing,
-                )
-            }
+            val seat = RestaurantNavigationGraph.spots.getValue(homeSeat)
+            if (time < travel) return routeMovement(route, time, PathPhase.ENTER)
+            val afterRoute = time - travel
+            if (afterRoute < NpcPoseLibrary.TURN_MS) return NpcMovement(
+                seat.x, seat.floorY, false, NpcAnimation.TURN_LEFT, afterRoute,
+                phase = PathPhase.TURN, facing = seat.interactionFacing,
+            )
+            return NpcMovement(
+                seat.x, seat.floorY, false, NpcAnimation.SIT, afterRoute - NpcPoseLibrary.TURN_MS,
+                phase = PathPhase.ENTER, seated = true, facing = seat.interactionFacing,
+            )
         }
         if (state.currentIntent == RestaurantNpcIntent.LEAVE) {
             if (state.currentSpot == RestaurantNpcSpot.DOOR) {
@@ -122,15 +127,20 @@ data class RestaurantNpcBrain(
                 return NpcMovement(door.x, door.floorY, true, NpcAnimation.IDLE, 0, phase = PathPhase.EXIT)
             }
             val elapsed = (time - state.intentStartedAt).coerceAtLeast(0)
+                .coerceAtMost(STAND_TRANSITION_MS + NpcPoseLibrary.TURN_MS)
             val seat = RestaurantNavigationGraph.spots.getValue(state.currentSpot)
-            return if (elapsed < STAND_TRANSITION_MS) {
-                NpcMovement(
-                    seat.x, seat.floorY, false, NpcAnimation.STAND_UP, elapsed,
-                    phase = PathPhase.STOP, seated = false, facing = seat.facing,
-                )
-            } else routeMovement(
+            if (elapsed < STAND_TRANSITION_MS) return NpcMovement(
+                seat.x, seat.floorY, false, NpcAnimation.STAND_UP, elapsed,
+                phase = PathPhase.STOP, seated = false, facing = seat.interactionFacing,
+            )
+            val afterStand = elapsed - STAND_TRANSITION_MS
+            if (afterStand < NpcPoseLibrary.TURN_MS) return NpcMovement(
+                seat.x, seat.floorY, false, NpcAnimation.TURN_RIGHT, afterStand,
+                phase = PathPhase.TURN, seated = false, facing = Facing.FRONT,
+            )
+            return routeMovement(
                 RestaurantNavigationGraph.route(state.currentSpot, RestaurantNpcSpot.DOOR),
-                elapsed - STAND_TRANSITION_MS,
+                afterStand - NpcPoseLibrary.TURN_MS,
                 PathPhase.EXIT,
             )
         }
