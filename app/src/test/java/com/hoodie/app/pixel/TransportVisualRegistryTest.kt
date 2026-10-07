@@ -20,6 +20,19 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TransportVisualRegistryTest {
+    @Test fun `passageiros do trem deixam o assento do Hoodie visivel`() {
+        val scene = SceneRegistry[SceneId.TRAIN]
+        val seat = scene.spots.getValue(com.hoodie.app.pixel.scene.SpotId.SEAT)
+        val passengers = scene.ambientNpcs(SceneEnv(DayPeriod.DAY, 10 * 60))
+        assertTrue("o teste deve observar passageiros reais", passengers.isNotEmpty())
+        for (time in 0L..5_000L step 250L) passengers.forEach { passenger ->
+            val movement = com.hoodie.app.pixel.npc.NpcMotionController.movement(passenger, time)
+            assertTrue("${passenger.definition.id} obstrui o assento do Hoodie em $time",
+                kotlin.math.abs(movement.x - seat.x) >= com.hoodie.app.pixel.sprite.HoodiePainter.WIDTH ||
+                    kotlin.math.abs(movement.floorY - seat.y) >= com.hoodie.app.pixel.sprite.HoodiePainter.HEIGHT)
+        }
+    }
+
     @Test fun `vibracao ambiental altera quadros nos transportes em movimento`() {
         val renderer = SceneRenderer()
         val cases = listOf(
@@ -28,14 +41,16 @@ class TransportVisualRegistryTest {
         )
         cases.forEach { mode ->
             val profile = TransportVisualRegistry.profileFor(mode, CommuteStyle.WALK)
-            val vibration = profile.ambient.vibration
-            val time = if (vibration == TransportVibration.LOW) 620L else 220L
             val vibrating = profile.ambient
             val still = vibrating.copy(vibration = TransportVibration.NONE)
             val scene = SceneRegistry[profile.scene]
-            fun render(ambient: com.hoodie.app.pixel.transport.TransportAmbientProfile) =
+            fun render(ambient: com.hoodie.app.pixel.transport.TransportAmbientProfile, time: Long) =
                 renderer.renderEmpty(scene, SceneEnv(DayPeriod.DAY, 10 * 60, transportAmbient = ambient), time).pixels.copyOf()
-            assertNotEquals("$mode precisa refletir sua vibração no cenário", render(vibrating).toList(), render(still).toList())
+            // A waveform can be at zero at a single instant. Observe a cycle
+            // instead of tying the contract to one implementation phase.
+            assertTrue("$mode precisa refletir sua vibração no cenário", (0L..1_600L step 160L).any { time ->
+                !render(vibrating, time).contentEquals(render(still, time))
+            })
         }
     }
 

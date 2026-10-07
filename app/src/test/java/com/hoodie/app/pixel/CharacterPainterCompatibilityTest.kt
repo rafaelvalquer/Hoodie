@@ -30,6 +30,7 @@ class CharacterPainterCompatibilityTest {
                 com.hoodie.app.pixel.sprite.SpriteAnchors(
                     rightHand = shared.anchors.rightHand, leftHand = shared.anchors.leftHand,
                     head = shared.anchors.head, back = shared.anchors.back, feet = shared.anchors.feet,
+                    seatHip = shared.anchors.seatHip,
                 ))
         } } }
     }

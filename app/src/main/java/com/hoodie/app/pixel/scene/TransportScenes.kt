@@ -188,7 +188,9 @@ open class InteriorTransportScene(id: SceneId, private val kind: InteriorKind) :
             b.vline(x + 1, 155, 276, 0xFFB8C4C8.toInt())
         }
         for (x in 43..203 step 32) {
-            b.vline(x, 154, 161, 0xFF364250.toInt()); b.box(x - 2, 160, x + 3, 164, 0xFFBCC7C9.toInt())
+            val sway = TransportMotion.offset(time, env.transportAmbient?.vibration)
+            b.line(x, 154, x + sway, 161, 0xFF364250.toInt())
+            b.box(x - 2 + sway, 160, x + 3 + sway, 164, 0xFFBCC7C9.toInt())
         }
         // Plataforma de luz e indicador acima da porta.
         b.box(188, 70, 201, 74, if ((time / 500L) % 2L == 0L) 0xFF59D487.toInt() else 0xFF30664A.toInt())

@@ -144,7 +144,9 @@ object NpcDirector {
             SceneId.TRAIN -> listOf(
                 AmbientNpcSlot(bunny, 48, 217, 220, 51, seatedPosture = Posture.SIT_FRONT, seatSlotId = "left-0"),
                 AmbientNpcSlot(raccoon, 190, 217, 220, 52, seatedPosture = Posture.SIT_FRONT, seatSlotId = "right-1"),
-                AmbientNpcSlot(trainPole, 119, 273, 275, 53, depth = NpcDepth.BACKGROUND),
+                // Leave the centre seat to Hoodie; the standing commuter uses
+                // the foreground aisle instead of obscuring that occupant.
+                AmbientNpcSlot(trainPole, 20, 290, 292, 53, depth = NpcDepth.BACKGROUND),
             )
             SceneId.METRO -> listOf(
                 AmbientNpcSlot(mouse, 44, 240, 242, 61, facingRight = true),
@@ -241,10 +243,13 @@ object NpcRenderer {
         val animation = if (
             movement.animation == NpcAnimation.TALK && speechProfile != null && !speechAllowed && slot.officeBrain == null
         ) {
-            if (restaurantBrain != null) NpcAnimation.IDLE else
-            slot.definition.behaviorProfile.sequence?.steps?.lastOrNull { it.animation != NpcAnimation.TALK }?.animation
-                ?: slot.path?.points?.mapNotNull { it.stop }?.lastOrNull { it != NpcAnimation.TALK }
-                ?: NpcAnimation.IDLE
+            if (restaurantBrain != null) {
+                NpcAnimation.IDLE
+            } else {
+                slot.definition.behaviorProfile.sequence?.steps?.lastOrNull { it.animation != NpcAnimation.TALK }?.animation
+                    ?: slot.path?.points?.mapNotNull { it.stop }?.lastOrNull { it != NpcAnimation.TALK }
+                    ?: NpcAnimation.IDLE
+            }
         } else movement.animation
         val pose = (if (animation == movement.animation) frameData.pose else NpcMotionController.frame(
             slot, timeMs, movement.copy(animation = animation),

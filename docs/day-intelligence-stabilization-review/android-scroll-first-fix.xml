@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.ui.PixelLabNpcTest" tests="29" failures="4" errors="0" skipped="0" time="177.518" timestamp="2026-10-07T17:00:23" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_8(AVD) - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="changingSpeciesUpdatesTheVisibleRenderedNpcPixels" classname="com.hoodie.app.ui.PixelLabNpcTest" time="23.612" />
+  <testcase name="scaleComparisonShowsProductionScalesAndKeepsLegacyValuesDiagnostic" classname="com.hoodie.app.ui.PixelLabNpcTest" time="9.121">
+    <failure>java.lang.AssertionError: Failed to assert count of nodes.
+Reason: Expected '2' nodes but found '1' node that satisfies: (Text + InputText + EditableText contains '90%' (ignoreCase: false))
+Node found:
+Node #856 at (l=42.0, t=2116.0, r=184.0, b=2242.0)px
+ContentDescription = '[90%]'
+Focused = 'false'
+Role = 'RadioButton'
+Selected = 'false'
+Text = '[90%]'
+Actions = [ClearTextSubstitution, GetTextLayoutResult, OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution]
+MergeDescendants = 'true'
+Has 152 siblings
+
+at androidx.compose.ui.test.AssertionsKt.assertCountEquals(Assertions.kt:278)
+at com.hoodie.app.ui.PixelLabNpcTest.scaleComparisonShowsProductionScalesAndKeepsLegacyValuesDiagnostic(PixelLabNpcTest.kt:65)
+</failure>
+  </testcase>
+  <testcase name="inspectorStepsFrameByFrameAndShowsOnionSkin" classname="com.hoodie.app.ui.PixelLabNpcTest" time="9.274">
+    <failure>java.lang.AssertionError: Failed to assert the following: (Selected = 'true')
+Semantics of the node:
+Node #1254 at (l=231.0, t=5.0, r=399.0, b=131.0)px
+ContentDescription = '[WALK]'
+Focused = 'false'
+Role = 'RadioButton'
+Selected = 'false'
+Text = '[WALK]'
+Actions = [ClearTextSubstitution, GetTextLayoutResult, OnClick, RequestFocus, SetTextSubstitution, ShowTextSubstitution]
+MergeDescendants = 'true'
+Has 152 siblings
+Selector used: (ContentDescription = 'WALK' (ignoreCase: false))
+
+at androidx.compose.ui.test.AssertionsKt.assert(Assertions.kt:260)
+at androidx.compose.ui.test.AssertionsKt.assert$default(Assertions.kt:250)
+at androidx.compose.ui.test.AssertionsKt.assertIsSelected(Assertions.kt:84)
+at com.hoodie.app.ui.PixelLabNpcTest.inspectorStepsFrameByFrameAndShowsOnionSkin(PixelLabNpcTest.kt:80)
+</failure>
+  </testcase>
+  <testcase name="npcTabShowsBothRendersPoseControlsAndOverlays" classname="com.hoodie.app.ui.PixelLabNpcTest" time="5.948" />
+  <testcase name="edicao_mostra_mudar_local_e_tipo_resumido" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.421" />
+  <testcase name="grande_411x891" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.575" />
+  <testcase name="busca_de_endereco_sempre_visivel_ao_abrir_novo_local" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.009" />
+  <testcase name="foco_na_busca_reduz_o_mapa_e_buscar_reexpande" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="6.208" />
+  <testcase name="campo_nome_e_solido_alto_e_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.332" />
+  <testcase name="grande_411x891_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.026" />
+  <testcase name="tela_da_imagem_393x873_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.286" />
+  <testcase name="endereco_longo_fica_em_duas_linhas_sem_empurrar_o_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.882" />
+  <testcase name="pequeno_360x640" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.785" />
+  <testcase name="medio_360x800" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.82" />
+  <testcase name="teclado_nao_cobre_o_salvar_nem_o_campo" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="20.307">
+    <failure>androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 15000 ms
+at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)
+at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)
+at com.hoodie.app.ui.PlacePickerScreenTest.teclado_nao_cobre_o_salvar_nem_o_campo(PlacePickerScreenTest.kt:384)
+</failure>
+  </testcase>
+  <testcase name="medio_360x800_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.4" />
+  <testcase name="altura_de_teclado_aberto_mantem_salvar_e_nome" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.027" />
+  <testcase name="tela_da_imagem_393x873" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.586" />
+  <testcase name="alterar_tipo_abre_e_selecionar_fecha_o_sheet" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.23" />
+  <testcase name="novo_lugar_mostra_todos_os_tipos_sem_sobreposicao_e_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.601" />
+  <testcase name="onboarding_esconde_o_tipo" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.8" />
+  <testcase name="detalhes_rolam_ate_a_privacidade_em_tela_pequena" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.637" />
+  <testcase name="privacidade_compacta_abre_detalhes" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.106" />
+  <testcase name="fluxo_de_busca_escolhe_endereco_e_habilita_salvar" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.132" />
+  <testcase name="pequeno_360x640_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.536" />
+  <testcase name="raio_fica_inteiro_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.578" />
+  <testcase name="selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="3.675">
+    <failure>java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + InputText + EditableText contains 'O que estou fazendo?' (ignoreCase: false))
+
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode$default(SemanticsNodeInteraction.kt:83)
+at com.hoodie.app.ui.PausedClockScrollKt.scrollWithPausedClock(PausedClockScroll.kt:13)
+at com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest.selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos(PlaceTypeSelectorIntegrationTest.kt:97)
+</failure>
+  </testcase>
+  <testcase name="selecao_manual_da_home_exibe_todos_os_tipos_fisicos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="2.925" />
+  <testcase name="dialogo_novo_lugar_exibe_o_mesmo_catalogo_fisico" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="6.131" />
+</testsuite>
