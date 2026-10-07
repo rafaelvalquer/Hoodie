@@ -25,6 +25,9 @@
   312 px (×3), com ícones 15×15, dígitos 5×7, estrelas em "+", plaquinhas com aro e espessuras revistas.
 - **Ids**: permanências e trechos entre visitas usam os ids da Jornada (`journey-i`, `journey-seg-i`).
 
+- **Lista removida** (06/10/2026): "Para onde o Hoodie foi" repetia a linha do tempo do Diário, que fica logo abaixo;
+  o painel mantém mostrador + barra "Tempo por lugar" e a seleção vem do toque no anel.
+
 ## Para virar padrão definitivo
 
 A flag já está ligada (o relógio anterior nunca foi publicado na `main`). Pendente da checagem do plano:

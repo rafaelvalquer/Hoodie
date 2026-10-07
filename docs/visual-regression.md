@@ -34,7 +34,7 @@ O mostrador tem regressão própria na JVM: `DayClockGoldenTest` renderiza 8 est
 dia completo, parada antiga selecionada, deslocamento selecionado, dia passado, muitos trechos curtos e dia de horário
 de verão) e compara SHA-256 com `app/src/test/resources/day-clock-v1.sha256`. PNGs em `app/build/pixel-preview/day-clock/`;
 regravar com `DAY_CLOCK_GOLDEN_RECORD=1` só depois de inspecionar. O mesmo teste garante que todo pixel pertence à
-`DayClockPalette`. Na tela, `DayClockPanelUiTest` cobre toque no anel/lista, AGORA, troca JORNADA/RELÓGIO e fonte 1,3×
+`DayClockPalette`. Na tela, `DayClockPanelUiTest` cobre toque no anel e no centro, AGORA, ausência da lista (a linha do tempo cumpre esse papel), troca JORNADA/RELÓGIO e fonte 1,3×
 sem estourar o centro; O mostrador tem 312×312 px lógicos (PNGs exportados em escala 2). `exportReviewScreenshots` grava manhã, tarde, noite e fonte 1,3× em
 `files/day-clock-review/` do aparelho para revisão. Rodar com `am instrument` (não `connectedDebugAndroidTest`).
 

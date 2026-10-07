@@ -230,7 +230,8 @@ DayClockData + "agora" (ao vivo ou replay) + seleção ─► DayClockRenderer (
 * **Resolução**: pixel art fina — 312×312 px lógicos (base 104 × `DayClockGeometry.K` = 3), ×3 num Pixel 8 (~1 dp
   por pixel). Telas com menos de 312 px de largura reduzem o mostrador com filtro.
 * **UI**: toque no anel seleciona o trecho (centro volta ao agora; futuro é ignorado), centro em Press Start 2P,
-  barra "Tempo por lugar" e lista "Para onde o Hoodie foi" com a mesma seleção; no replay o "agora" é o tempo do replay.
+  e barra "Tempo por lugar"; a lista das paradas é a linha do tempo do Diário, logo abaixo (também o caminho do
+  TalkBack). No replay o "agora" é o tempo do replay.
 * **Desempenho**: raio e minuto de cada pixel em tabelas pré-calculadas; camada estática refeita fora da main thread
   só quando muda o minuto, a seleção ou o dia; ~8 FPS só com a tela visível.
 * **Paleta**: fechada e sem cores novas (17 cores do Hoodie + biomas/trilhas da Jornada + céu por período) — testada.

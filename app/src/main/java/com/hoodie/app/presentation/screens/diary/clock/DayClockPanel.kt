@@ -21,15 +21,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -40,8 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -84,8 +79,9 @@ import kotlin.math.floor
 private const val FRAME_MS = 125L
 
 /**
- * Aba RELÓGIO (Relógio do Dia 2.0): mostrador pixel art, barra "Tempo por lugar" e
- * lista "Para onde o Hoodie foi". Mostrador e lista compartilham [DayClockUiState.selectedId].
+ * Aba RELÓGIO (Relógio do Dia 2.0): mostrador pixel art e barra "Tempo por lugar".
+ * O toque no anel escolhe [DayClockUiState.selectedId] e o centro mostra o trecho; a lista
+ * das paradas é a linha do tempo do Diário, logo abaixo do painel.
  * [onMinuteTick] é chamado a cada minuto enquanto a tela está visível (só faz sentido hoje).
  */
 @Composable
@@ -106,7 +102,6 @@ fun DayClockPanel(
             return@PixelPanel
         }
         TimeByPlaceBar(data, Modifier.padding(top = 12.dp))
-        ClockSegmentList(state, onSelect, Modifier.padding(top = 12.dp))
     }
 }
 
@@ -341,73 +336,6 @@ private fun TimeByPlaceBar(data: DayClockData, modifier: Modifier) {
                     }
                 }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
-            }
-        }
-    }
-}
-
-/** Lista "Para onde o Hoodie foi": rolagem própria até o item selecionado, alvos ≥ 48 dp. */
-@Composable
-private fun ClockSegmentList(state: DayClockUiState, onSelect: (String?) -> Unit, modifier: Modifier) {
-    val data = state.data ?: return
-    val scroll = rememberScrollState()
-    val positions = remember(data) { mutableStateMapOf<String, Int>() }
-    val highlighted = state.selectedId ?: state.current?.id
-    LaunchedEffect(highlighted, positions[highlighted]) {
-        positions[highlighted]?.let { scroll.animateScrollTo((it - 24).coerceAtLeast(0)) }
-    }
-    val zone = data.zone
-    Column(modifier.fillMaxWidth()) {
-        SectionLabel(stringResource(R.string.clock2_where))
-        Column(Modifier.fillMaxWidth().padding(top = 6.dp).heightIn(max = 280.dp).verticalScroll(scroll).testTag("clock_list")) {
-            data.segments.forEach { s ->
-                val from = formatClock(data.instantOf(s.startMinute), zone)
-                val to = formatClock(data.instantOf(s.endMinute), zone)
-                val isSelected = s.id == highlighted
-                val description = when (s) {
-                    is ClockSegment.Stay -> stringResource(R.string.clock2_item_stay, from, to, s.placeName, s.hoodieActivity?.label.orEmpty(), formatDuration(s.minutes * 60_000L))
-                    is ClockSegment.Move -> stringResource(R.string.clock2_item_move, from, to, s.mode?.label ?: stringResource(R.string.clock2_move_generic), formatDuration(s.minutes * 60_000L))
-                    is ClockSegment.Unknown -> stringResource(R.string.clock2_item_unknown, from, to)
-                }
-                Row(
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                        .onGloballyPositioned { positions[s.id] = it.positionInParent().y.toInt() }
-                        .background(if (isSelected) HoodieColors.PanelLight else Color.Transparent)
-                        .semantics(mergeDescendants = true) { contentDescription = description; selected = isSelected; role = Role.Button }
-                        .clickable { onSelect(s.id) }
-                        .padding(horizontal = 6.dp, vertical = if (s is ClockSegment.Stay) 8.dp else 4.dp)
-                        .testTag("clock_item_${s.id}"),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val swatch = when (s) {
-                        is ClockSegment.Stay -> categoryColor(s.category)
-                        is ClockSegment.Move -> Color(DayClockPalette.mode(s.mode))
-                        is ClockSegment.Unknown -> Color(DayClockPalette.TRACK)
-                    }
-                    Box(Modifier.width(14.dp), contentAlignment = Alignment.CenterStart) {
-                        Box(Modifier.size(if (s is ClockSegment.Stay) 12.dp else 8.dp).background(swatch).border(1.dp, HoodieColors.Outline))
-                    }
-                    Text(" $from", style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.width(64.dp))
-                    when (s) {
-                        is ClockSegment.Stay -> Column(Modifier.weight(1f)) {
-                            Text("${s.placeType.emoji} ${s.placeName}", style = MaterialTheme.typography.labelLarge, color = if (isSelected) HoodieColors.Gold else HoodieColors.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            val extra = listOfNotNull(
-                                s.hoodieActivity?.let { "${it.emoji} ${it.label}" },
-                                formatDuration(s.minutes * 60_000L),
-                                if (s.visitNumber > 1) stringResource(R.string.clock2_return, s.visitNumber) else null,
-                            ).joinToString(" · ")
-                            Text(extra, style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                        is ClockSegment.Move -> Text(
-                            "${s.mode?.emoji ?: "↝"} ${s.mode?.label ?: stringResource(R.string.clock2_move_generic)} · ${formatDuration(s.minutes * 60_000L)}",
-                            style = MaterialTheme.typography.bodySmall, color = if (isSelected) HoodieColors.Gold else HoodieColors.Muted, maxLines = 1, modifier = Modifier.weight(1f),
-                        )
-                        is ClockSegment.Unknown -> Text(
-                            "${stringResource(R.string.clock2_unknown)} · ${formatDuration(s.minutes * 60_000L)}",
-                            style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted, maxLines = 1, modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
             }
         }
     }

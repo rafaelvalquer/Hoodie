@@ -12,8 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -97,19 +95,17 @@ class DayClockPanelUiTest {
         rule.waitForIdle()
     }
 
-    @Test fun tappingTheRingSelectsTheSegmentAndSyncsTheList() {
+    @Test fun tappingTheRingSelectsTheSegment() {
         val selected = panel()
         tapRing(work.startMinute + work.minutes / 2f)
         assertEquals(work.id, selected())
-        rule.onNodeWithTag("clock_item_${work.id}").performScrollTo().assertIsSelected()
         rule.onNodeWithText("PARADA ${work.stopIndex} DE ${data.stopCount}").assertExists()
     }
 
-    @Test fun tappingTheListUpdatesTheCenter() {
+    @Test fun tappingAMoveOnTheRingShowsItInTheCenter() {
         val selected = panel()
         val bus = data.segments.first { it is ClockSegment.Move && it.mode == com.hoodie.app.core.mobility.MovementMode.BUS }
-        rule.onNodeWithTag("clock_item_${bus.id}").performScrollTo().performClick()
-        rule.waitForIdle()
+        tapRing(bus.startMinute + bus.minutes / 2f)
         assertEquals(bus.id, selected())
         rule.onNodeWithText("DESLOCAMENTO").assertExists()
         rule.onNodeWithText("🚌 Ônibus").assertExists()
@@ -117,12 +113,18 @@ class DayClockPanelUiTest {
 
     @Test fun nowButtonAndCenterTapReturnToTheCurrentMoment() {
         val selected = panel()
-        rule.onNodeWithTag("clock_item_${work.id}").performScrollTo().performClick()
+        tapRing(work.startMinute + work.minutes / 2f)
         rule.onNodeWithTag("clock_now").performScrollTo().performClick()
         rule.waitForIdle()
         assertNull(selected())
         rule.onNodeWithText("AGORA").assertExists()
-        rule.onNodeWithTag("clock_item_${work.id}").assertIsNotSelected()
+        rule.onNodeWithTag("clock_now").assertDoesNotExist()
+        // Toque no centro também volta ao agora.
+        tapRing(work.startMinute + work.minutes / 2f)
+        assertEquals(work.id, selected())
+        rule.onNodeWithTag("day_clock_dial").performTouchInput { click(center) }
+        rule.waitForIdle()
+        assertNull(selected())
         // Toque na área futura é ignorado.
         tapRing(23f * 60)
         assertNull(selected())
@@ -130,14 +132,20 @@ class DayClockPanelUiTest {
 
     @Test fun largeFontDoesNotOverflowTheCenter() {
         panel(fontScale = 1.3f)
-        rule.onNodeWithTag("clock_item_${work.id}").performScrollTo().performClick()
-        rule.waitForIdle()
+        tapRing(work.startMinute + work.minutes / 2f)
         val dial = rule.onNodeWithTag("day_clock_dial").fetchSemanticsNode().boundsInRoot
         val center = rule.onNodeWithTag("clock_center", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val scale = floor(dial.width / DayClockGeometry.SIZE)
         val plate = DayClockGeometry.CENTER_PLATE.endInclusive * 2 * scale
         assertTrue("centro ${center.height} > placa $plate", center.height <= plate)
         assertTrue(center.width <= plate)
+    }
+
+    @Test fun noPlaceListUnderTheClock() {
+        panel()
+        // A lista das paradas é a linha do tempo do Diário; o painel só tem mostrador e barra.
+        rule.onNodeWithTag("clock_time_by_place").assertExists()
+        rule.onNodeWithTag("clock_list").assertDoesNotExist()
     }
 
     @Test fun switchingBetweenJourneyAndClock() {
