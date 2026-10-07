@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.ui.PlacePickerScreenTest" tests="1" failures="0" errors="0" skipped="0" time="12.935" timestamp="2026-10-07T17:17:03" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_8(AVD) - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="teclado_nao_cobre_o_salvar_nem_o_campo" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="10.639" />
+</testsuite>

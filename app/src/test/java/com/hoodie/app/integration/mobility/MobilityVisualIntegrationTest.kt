@@ -62,16 +62,16 @@ class MobilityVisualIntegrationTest {
         val v = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = MovementMode.CAR)
         assertTrue(v.actions.any { it.anim == AnimationId.CAR_IDLE })
         val car = SceneRegistry[SceneId.CAR]
-        assertTrue(car.walkInPlace)
+        assertFalse("o ocupante permanece no assento durante o percurso", car.walkInPlace)
         fun frame(t: Long) = PixelBuffer(car.width, car.height).also { b ->
             val env = SceneEnv(DayPeriod.DAY, 8 * 60)
             car.drawBackground(b, env)
             car.sortedProps.forEach { it.draw(b, env, t) }
         }
         assertFalse("o mundo corre: quadros diferentes", frame(0).pixels.contentEquals(frame(400).pixels))
-        // Noite: farol aceso.
+        // A lente do farol continua visível na carroceria durante a noite.
         val night = PixelBuffer(car.width, car.height).also { b -> car.sortedProps.forEach { it.draw(b, SceneEnv(DayPeriod.NIGHT, 22 * 60), 0) } }
-        assertTrue(night.pixels.any { it == com.hoodie.app.pixel.scene.P.LAMP_LIGHT })
+        assertTrue("a lente do farol é visível à noite", night.pixels.any { it == com.hoodie.app.pixel.scene.CarScenePalette.HEADLIGHT })
     }
 
     @Test

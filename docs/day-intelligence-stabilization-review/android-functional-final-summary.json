@@ -1,0 +1,7 @@
+{
+  "Tests": 99,
+  "Failures": 0,
+  "Errors": 0,
+  "Skipped": 0,
+  "ReferenceGoldensExcluded": "ScreenGoldenMatrixTest (180 cases, API34 reference unavailable)"
+}

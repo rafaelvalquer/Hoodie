@@ -87,6 +87,17 @@ class DigitalConsentTest {
             else -> "default"
         }
         android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("appops set ${context.packageName} GET_USAGE_STATS $label")).bufferedReader().use { it.readText() }
+        // The shell command completing does not guarantee that this process has
+        // observed the AppOp cache invalidation from the previous test yet.
+        val ops = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        runBlocking {
+            withTimeout(10_000) {
+                @Suppress("DEPRECATION")
+                while (ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName) != mode) {
+                    delay(25)
+                }
+            }
+        }
     }
     private fun awaitDigital(predicate: (DigitalSettings) -> Boolean) = runBlocking {
         withTimeout(10_000) { settings.settings.first { predicate(it.digital) }.digital }

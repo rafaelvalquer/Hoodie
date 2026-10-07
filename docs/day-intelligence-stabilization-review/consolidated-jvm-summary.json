@@ -1,0 +1,1122 @@
+[
+  {
+    "Suite": "com.hoodie.app.core.database.DatabaseMigrationValidatorTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.core.database.SecureDatabaseBootstrapTest",
+    "Tests": 12,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.core.model.UserContextTypeTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.core.security.DatabaseKeyCorruptionTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.core.security.DatabaseKeyStoreTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.data.repository.DiaryRepositoryTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.ContextEngineRulesTest",
+    "Tests": 10,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.daycycle.DailyActivityWindowResolverTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.daycycle.MobilityWakeEvidenceBuilderTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.daycycle.PhoneWakeEvidenceBuilderTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.daycycle.RealUserActivityBuilderTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.daycycle.SleepOnsetDetectorTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.daycycle.SleepSpanResolverTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.daycycle.WakeDetectorTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.AppCategoryResolverTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.AppSessionBuilderTest",
+    "Tests": 9,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.AppSessionContextSplitterTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.ContextUsageCorrelatorTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.DailyPhoneUsageCalculatorTest",
+    "Tests": 10,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.PhoneDiaryIntegrationTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.ReplayActiveAppTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.ScreenSessionBuilderTest",
+    "Tests": 9,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.deviceusage.VisitPhoneUsageCalculatorTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.DailyMapBuilderTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.DailySummaryCalculatorTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.DailyTimelineBuilderTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.DayClockAssemblerTest",
+    "Tests": 13,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.DiaryEngineTest",
+    "Tests": 9,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.DiaryMobilityMergerTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.journey.DayClockLegacyAssemblerTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.journey.JourneyChapterPlannerTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.journey.JourneyReplayOverworldTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.journey.QuickStopClustererTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.journey.SerpentineLayoutEngineTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.JourneyActiveDayIntegrationTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.JourneyMapAssemblerTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.JourneyReplayAssemblerTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.PlaceVisitBuilderTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.PlaceVisitPhoneIntegrationTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.ReplayActiveStartTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.diary.ReplaySequenceBuilderTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.HoodieEngineRulesTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.LocationAndGeofenceRulesTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.MiscEngineTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.mobility.MobilityRulesTest",
+    "Tests": 12,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.PlaceActivityCoverageTest",
+    "Tests": 11,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.SimulatorPersistenceTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.engine.TimeRobustnessTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.ContextEngineIntegrationTest",
+    "Tests": 14,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.DeviceUsageRepositoryTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.EndToEndJourneysTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.HistoricalPhoneInsightsTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.ManualRestaurantContextTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.Migration1To2Test",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.Migration2To3Test",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.Migration3To4Test",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.Migration4To5Test",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.Migration5To6Test",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.Migration6To7Test",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.mobility.MobilityArrivalIntegrationTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.mobility.MobilityContextIntegrationTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.mobility.MobilityEngineIntegrationTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.mobility.MobilityLearningIntegrationTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.integration.mobility.MobilityVisualIntegrationTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.AnimationBehaviorTest",
+    "Tests": 14,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.AnimationRegistryTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.AnimationResolversTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.art.AsepriteRuntimeParityTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.art.FinalArtExportTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.AssetValidationTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CarSceneTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterAnchorsTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterComparisonRendererTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterEyeStyleTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterGeometryTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterMouthRenderingTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterOutfitRenderingTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterPainterCompatibilityTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterSideProfileTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.CharacterSpeciesStylingTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.clock.DayClockAssetsTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.clock.DayClockGeometryTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.clock.DayClockGoldenTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.clock.DayClockLegacyGoldenTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.DiaryHoodieMarkerTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.DiaryLightingResolverTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.DiaryMapLayoutEngineTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.DiaryMapRenderCacheTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.DiaryMapRendererTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.DiaryMapViewportTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.DiaryRoadBuilderTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyGoldenTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyHoodieMarkerTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyLayoutEngineTest",
+    "Tests": 7,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyLightingRendererTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyMapRendererTest",
+    "Tests": 10,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyPathBuilderTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyPathBuilderV3Test",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.journey.JourneyV3GoldenTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.diary.overworld.OverworldBiomeCatalogTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.DuckSpeciesAnatomyTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.FrontSeatedVisualReviewTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 1
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.IconExportTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NewPlaceScenesTest",
+    "Tests": 20,
+    "Failures": 1,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcAmbientBrainTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcAnimationRegressionTest",
+    "Tests": 11,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcArtConsistencyTest",
+    "Tests": 11,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcArtGoldenTest",
+    "Tests": 1,
+    "Failures": 1,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcArtReviewPreviewTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcArtV3ApprovalGateTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcArtV3GoldenTest",
+    "Tests": 1,
+    "Failures": 1,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcArtV3SheetTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcBehaviorTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcCooldownManagerTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcDeterministicRandomTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcFootContactTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcFrontSeatedPoseTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcIntentPlannerTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcMotionContinuityTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcMovementTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.NpcScalePolicyTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.OfficeAmbientBrainTest",
+    "Tests": 10,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.OfficeBehaviorPlannerTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.OfficeNavigationGraphTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.OfficeSeatedOrientationTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.OfficeSocialCoordinatorTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.OfficeSpeechSchedulerTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.OfficeVisualReviewTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 1
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.ProceduralPainterRegressionTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.restaurant.RestaurantLiveSceneReviewExportTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 1
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.restaurant.RestaurantNpcBrainTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.restaurant.RestaurantNpcFurnitureAlignmentTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.restaurant.RestaurantNpcRitualTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.RestaurantSeatedOrientationTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.review.NpcScaleLegibilityTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.review.NpcVisualReviewExportTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 1
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.ScenePreviewTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.SharedMammalFootRenderingTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.ShippedSheetsValidationTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.ShoppingNpcBrainTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.ShoppingVisualReviewTest",
+    "Tests": 1,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 1
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.SpritePreviewTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.SpriteSheetPipelineTest",
+    "Tests": 12,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.pixel.TransportVisualRegistryTest",
+    "Tests": 8,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.JourneyMapScreenStateTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.NavigationRulesTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.PlacePickerLayoutRulesTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.PlacePickerViewModelTest",
+    "Tests": 22,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.RetryableUiStateTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.screens.diary.DiaryMapFinishedLightingTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.screens.diary.DiaryMapNodeLabelTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.screens.diary.DiaryReplayRegressionTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.screens.diary.ReplayHudAssemblerTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.SystemActionTest",
+    "Tests": 4,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.theme.TypographyTokensTest",
+    "Tests": 6,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.presentation.UiActionTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.ReadmeConsistencyTest",
+    "Tests": 3,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.VersionConsistencyTest",
+    "Tests": 5,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.worker.GeofenceRegistrationPolicyTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  },
+  {
+    "Suite": "com.hoodie.app.worker.WorkerResultTest",
+    "Tests": 2,
+    "Failures": 0,
+    "Errors": 0,
+    "Skipped": 0
+  }
+]

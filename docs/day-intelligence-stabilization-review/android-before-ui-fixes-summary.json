@@ -1,0 +1,158 @@
+[
+  {
+    "Class": "com.hoodie.app.database.DataStorePersistenceTest",
+    "Tests": 1,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.database.EncryptedDatabaseTest",
+    "Tests": 6,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.database.Migration1To2InstrumentedTest",
+    "Tests": 1,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.database.SqlCipherRuntimeTest",
+    "Tests": 3,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.notifications.NotificationChannelsTest",
+    "Tests": 1,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.onboarding.OnboardingHomeSaveInstrumentedTest",
+    "Tests": 3,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.permissions.LocationPermissionManagerTest",
+    "Tests": 2,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.AppLaunchTest",
+    "Tests": 1,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.BottomNavigationFitTest",
+    "Tests": 4,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.BottomNavigationTest",
+    "Tests": 3,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.CommonAccessibilityTest",
+    "Tests": 4,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.DayClockPanelUiTest",
+    "Tests": 7,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.DiaryControlsTest",
+    "Tests": 5,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.DigitalConsentTest",
+    "Tests": 3,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.GeofenceFeedbackTest",
+    "Tests": 2,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+    "Tests": 180,
+    "Failed": 0,
+    "Skipped": 180
+  },
+  {
+    "Class": "com.hoodie.app.ui.JourneyMapUiTest",
+    "Tests": 5,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.JourneyV3UiTest",
+    "Tests": 4,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.PixelLabNpcTest",
+    "Tests": 4,
+    "Failed": 3,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.PlacePickerRealMapTest",
+    "Tests": 6,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.PlacePickerScreenshotTest",
+    "Tests": 1,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.PlacePickerScreenTest",
+    "Tests": 22,
+    "Failed": 2,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest",
+    "Tests": 3,
+    "Failed": 1,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.ScreenStateTest",
+    "Tests": 4,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.ui.UiTextResourceTest",
+    "Tests": 3,
+    "Failed": 0,
+    "Skipped": 0
+  },
+  {
+    "Class": "com.hoodie.app.work.WorkSchedulingTest",
+    "Tests": 1,
+    "Failed": 0,
+    "Skipped": 0
+  }
+]

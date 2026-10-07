@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "train-day-corrected.png",
+    "Bytes": 9004,
+    "SHA256": "ab6f019919c0331a1e6bd8f019d68db86b9d9446a3a4482b64b374c55dedbbde"
+  },
+  {
+    "Name": "train-night-corrected.png",
+    "Bytes": 8500,
+    "SHA256": "3763609d72696b5697a61b76fbab4c672ea0d015db36bbfd8dcb5300eb9db20b"
+  },
+  {
+    "Name": "v3-scene-train-corrected.png",
+    "Bytes": 8321,
+    "SHA256": "c40ad44c30f528eb622baaf3bc668248c9cb87275abea6c235e719b490e9bb17"
+  }
+]

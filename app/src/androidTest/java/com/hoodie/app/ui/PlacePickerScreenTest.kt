@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -11,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -30,12 +33,12 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -50,10 +53,13 @@ import com.hoodie.app.presentation.screens.places.picker.PlacePickerTags
 import com.hoodie.app.presentation.theme.HoodieColors
 import com.hoodie.app.presentation.theme.HoodieTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.ComposeTimeoutException
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -292,22 +298,30 @@ class PlacePickerScreenTest {
     }
 
     @Test
-    fun novo_lugar_mostra_os_nove_tipos_sem_sobreposicao_e_fora_do_mapa() {
+    fun novo_lugar_mostra_todos_os_tipos_sem_sobreposicao_e_fora_do_mapa() {
         show(360.dp, 800.dp, 1.3f, state = PlacePickerState(type = PlaceType.HOME, name = "Casa"))
         rule.onNodeWithText("🏠 NOVO LOCAL").assertIsDisplayed()
         val mapBottom = bounds(PlacePickerTags.MAP).bottom
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.TYPE_GRID))
-        val cells = PlaceType.entries.map { t ->
+        val cells = PlaceType.physicalPlaceOptions.map { t ->
             rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.typeCell(t)))
-            t to bounds(PlacePickerTags.typeCell(t))
-        }
-        cells.forEach { (t, r) ->
+            rule.onNodeWithTag(PlacePickerTags.typeCell(t)).assertIsDisplayed()
+            val r = bounds(PlacePickerTags.typeCell(t))
             assertTrue("$t com altura de toque", r.height >= 47f)
             assertTrue("$t nunca aparece sobre o mapa", r.top >= mapBottom - 0.5f)
+            val scrollPixels = rule.onNodeWithTag(PlacePickerTags.DETAILS).fetchSemanticsNode()
+                .config[SemanticsProperties.VerticalScrollAxisRange].value()
+            val scrollDp = scrollPixels / rule.activity.resources.displayMetrics.density
+            // Compare in content coordinates: each item may require a different
+            // scroll offset before it can be measured in the viewport.
+            t to Rect(r.left, r.top + scrollDp, r.right, r.bottom + scrollDp)
         }
-        // Mesma linha da grade: células lado a lado, sem interseção.
-        cells.chunked(3).forEach { row ->
-            row.zipWithNext().forEach { (a, b) -> assertTrue("${a.first} x ${b.first}", a.second.right <= b.second.left + 0.5f) }
+        cells.forEachIndexed { index, (type, cell) ->
+            cells.drop(index + 1).forEach { (otherType, otherCell) ->
+                val overlapX = maxOf(cell.left, otherCell.left) < minOf(cell.right, otherCell.right) - 0.5f
+                val overlapY = maxOf(cell.top, otherCell.top) < minOf(cell.bottom, otherCell.bottom) - 0.5f
+                assertFalse("$type x $otherType", overlapX && overlapY)
+            }
         }
         // Salvar desabilitado sem ponto, mas sempre presente.
         rule.onNodeWithTag(PlacePickerTags.SAVE).assertIsDisplayed()
@@ -361,18 +375,39 @@ class PlacePickerScreenTest {
             WindowCompat.setDecorFitsSystemWindows(rule.activity.window, false)
             rule.activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }
-        rule.setContent { Picker(editing(), modifier = Modifier.imePadding()) }
+        var keyboardBottom = 0
+        rule.setContent {
+            val bottom = WindowInsets.ime.getBottom(LocalDensity.current)
+            SideEffect { keyboardBottom = bottom }
+            Picker(editing(), modifier = Modifier.imePadding())
+        }
         val view = rule.activity.window.decorView
         rule.waitUntil(timeoutMillis = 10_000) { view.hasWindowFocus() }
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
-        rule.onNodeWithTag(PlacePickerTags.NAME).performClick().assertIsFocused()
+        rule.onNodeWithTag(PlacePickerTags.NAME)
+            .performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+            .assertIsFocused()
         rule.runOnUiThread {
             val inputMethod = rule.activity.getSystemService(InputMethodManager::class.java)
-            inputMethod.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            inputMethod.showSoftInput(rule.activity.currentFocus ?: view, InputMethodManager.SHOW_IMPLICIT)
             WindowCompat.getInsetsController(rule.activity.window, view).show(WindowInsetsCompat.Type.ime())
         }
-        fun imeBottom() = ViewCompat.getRootWindowInsets(view)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
-        rule.waitUntil(timeoutMillis = 15_000) { imeBottom() > 0 }
+        // Read the same real window insets used by imePadding. Compose consumes
+        // them on its host view, so a later read from DecorView can return zero.
+        fun imeBottom() = keyboardBottom
+        try {
+            rule.waitUntil(timeoutMillis = 15_000) { imeBottom() > 0 }
+        } catch (timeout: ComposeTimeoutException) {
+            val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+            val output = java.io.File(rule.activity.getExternalFilesDir(null), "stabilization-ime-timeout.png")
+            output.outputStream().use { screenshot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+            screenshot.recycle()
+            throw AssertionError(
+                "IME sem insets positivos: compose=$keyboardBottom, window=${view.rootWindowInsets}, " +
+                    "focus=${rule.activity.currentFocus}; captura=$output",
+                timeout,
+            )
+        }
         assertTrue("teclado virtual real deve estar visível", imeBottom() > 0)
         rule.waitForIdle()
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
