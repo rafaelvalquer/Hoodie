@@ -6,17 +6,14 @@ import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.pixel.animation.AnimationStateMachine
-import com.hoodie.app.pixel.animation.AnimationEvent
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.renderer.SceneRenderer
-import com.hoodie.app.pixel.scene.CarScene
-import com.hoodie.app.pixel.scene.CarStrip
+import com.hoodie.app.pixel.art.SceneArtStore
+import com.hoodie.app.pixel.scene.CarSceneV3
 import com.hoodie.app.pixel.scene.SceneEnv
-import com.hoodie.app.pixel.scene.TrafficPhase
+import com.hoodie.app.pixel.scene.SceneId
+import com.hoodie.app.pixel.scene.SceneRegistry
 import com.hoodie.app.pixel.scene.VisualDirector
-import com.hoodie.app.pixel.sprite.Point
-import com.hoodie.app.pixel.sprite.SpriteAnchors
-import com.hoodie.app.pixel.sprite.SpriteFrame
 import com.hoodie.app.pixel.transport.TransportAmbientProfile
 import com.hoodie.app.pixel.transport.TransportLighting
 import com.hoodie.app.pixel.transport.TransportVibration
@@ -39,64 +36,37 @@ class CarSceneTest {
         transportAmbient = TransportAmbientProfile(true, .8f, vibration, TransportLighting.DAYLIGHT_INTERIOR),
     )
 
+    private val car get() = SceneRegistry[SceneId.CAR]
+
+    @Test fun theCarIsTheLayeredScene() {
+        assertTrue("carro em camadas (car.aseprite)", car is CarSceneV3)
+    }
+
     @Test fun renderingIsDeterministicAtTheSameSceneClock() {
-        val scene = CarScene()
         val renderer = SceneRenderer()
-        val first = renderer.renderEmpty(scene, env(DayPeriod.NIGHT), 18_500L).pixels.copyOf()
-        // Intervening frames must not change a later render at the same scene time.
-        renderer.renderEmpty(scene, env(), 3_000L)
-        renderer.renderEmpty(scene, env(DayPeriod.EVENING), 72_000L)
-        val again = renderer.renderEmpty(scene, env(DayPeriod.NIGHT), 18_500L).pixels
+        val first = renderer.renderEmpty(car, env(DayPeriod.NIGHT), 18_500L).pixels.copyOf()
+        // Quadros no meio não mudam um quadro posterior no mesmo tempo de cena.
+        renderer.renderEmpty(car, env(), 3_000L)
+        renderer.renderEmpty(car, env(DayPeriod.EVENING), 72_000L)
+        val again = renderer.renderEmpty(car, env(DayPeriod.NIGHT), 18_500L).pixels
         assertArrayEquals(first, again)
     }
 
-    @Test fun cachedParallaxStripsRepeatWithoutASeam() {
-        val scene = CarScene()
-        val state = env(DayPeriod.NIGHT)
-        scene.drawBackground(PixelBuffer(240, 320), state)
-        for (layer in CarStrip.entries) {
-            val height = if (layer == CarStrip.CITY) CarScene.CITY_H else 116
-            for (y in 0 until height) for (x in 0 until CarScene.PERIOD) {
-                assertEquals("$layer seam at ($x,$y)", scene.stripPixel(layer, x, y, state), scene.stripPixel(layer, x + CarScene.PERIOD, y, state))
+    @Test fun wheelAndShadowStayFixedWhenTheBodyBounces() {
+        val art = SceneArtStore.get("car")!!
+        val wheels = art.slotsWithPrefix("wheel_").values
+        assertEquals(2, wheels.size)
+        val renderer = SceneRenderer()
+        // Mesma posição de rodas (tempo 0); só a vibração muda: aro e sombra não podem mexer.
+        val calm = renderer.renderEmpty(car, env(vibration = TransportVibration.NONE), 640).pixels.copyOf()
+        val rough = renderer.renderEmpty(car, env(vibration = TransportVibration.LOW), 640).pixels
+        wheels.forEach { c ->
+            for (y in c.y - 18..c.y + 18) for (x in c.x - 18..c.x + 18) {
+                val dx = x - c.x; val dy = y - c.y
+                if (dx * dx + dy * dy in 100..18 * 18) assertEquals("roda mexeu em ($x,$y)", calm[y * 240 + x], rough[y * 240 + x])
             }
         }
-    }
-
-    @Test fun characterPixelsAreClippedToTheDriverWindow() {
-        val scene = CarScene()
-        val source = PixelBuffer(48, 72).also { it.fill(0xFFFFFFFF.toInt()) }
-        val anchors = SpriteAnchors(Point(8, 42), Point(20, 42), Point(20, 8), Point(33, 44), Point(24, 70))
-        val frame = SpriteFrame(source, anchors, 100, setOf(AnimationEvent.SIT))
-        val out = PixelBuffer(240, 320)
-        val left = 96; val top = 176
-        scene.drawCharacter(out, frame, left, top, 0, env())
-        for (y in 0 until 320) for (x in 0 until 240) {
-            if (out[x, y] ushr 24 != 0) assertTrue("pixel outside window ($x,$y)", scene.isDriverWindowPixel(x, y))
-        }
-        assertTrue(out.pixels.any { it ushr 24 != 0 })
-    }
-
-    @Test fun wheelAndShadowStayFixedWhenTheBodyBounces() {
-        val scene = CarScene()
-        val renderer = SceneRenderer()
-        val calm = renderer.renderEmpty(scene, env(vibration = TransportVibration.NONE), 640).pixels.copyOf()
-        val rough = renderer.renderEmpty(scene, env(vibration = TransportVibration.LOW), 640).pixels
-        for (cx in listOf(62, 184)) for (y in 262..294) for (x in cx - 16..cx + 16) {
-            val dx = x - cx; val dy = y - 278
-            if (dx * dx + dy * dy <= 16 * 16 + 16) assertEquals("wheel moved at ($x,$y)", calm[y * 240 + x], rough[y * 240 + x])
-        }
-        assertEquals("shadow moved", calm[300 * 240 + 100], rough[300 * 240 + 100])
-    }
-
-    @Test fun trafficLightEasesThroughSlowRedAndGreenPhases() {
-        val scene = CarScene()
-        assertEquals(TrafficPhase.GO, scene.trafficPhase(0))
-        assertEquals(TrafficPhase.SLOW, scene.trafficPhase(CarScene.TRAFFIC_GREEN_MS))
-        assertEquals(TrafficPhase.STOP, scene.trafficPhase(CarScene.TRAFFIC_SLOW_END_MS))
-        assertEquals(TrafficPhase.SLOW, scene.trafficPhase(CarScene.TRAFFIC_STOP_END_MS))
-        assertEquals(TrafficPhase.GO, scene.trafficPhase(CarScene.TRAFFIC_ACCEL_END_MS))
-        assertEquals(0L, scene.traveledClockMs(CarScene.TRAFFIC_SLOW_END_MS + 1) - scene.traveledClockMs(CarScene.TRAFFIC_SLOW_END_MS))
-        assertEquals(1L, scene.traveledClockMs(CarScene.TRAFFIC_CYCLE_MS) - scene.traveledClockMs(CarScene.TRAFFIC_CYCLE_MS - 1))
+        assertEquals("sombra mexeu", calm[291 * 240 + 120], rough[291 * 240 + 120])
     }
 
     @Test fun exportTwelveCarReviewMoments() {

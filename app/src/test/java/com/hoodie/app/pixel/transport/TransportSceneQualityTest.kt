@@ -1,6 +1,5 @@
 package com.hoodie.app.pixel.transport
 
-import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.PreviewExport
@@ -231,19 +230,13 @@ class TransportSceneQualityTest {
         assertEquals(sources, status.keys)
     }
 
-    /** A cena V3 só vira padrão (flag ligada) com revisão humana de todas as cenas; idem para a release. */
-    @Test fun v3StaysOffUntilAHumanApproves() {
-        val pending = status.filterValues { !it.manualReview }.keys
-        if (HoodieConfig.TRANSPORT_SCENES_V3) assertTrue("TRANSPORT_SCENES_V3 ligado sem revisão humana: $pending", pending.isEmpty())
-        val props = java.util.Properties().apply { File("../gradle.properties").inputStream().use(::load) }
-        if (!props.getProperty("HOODIE_VERSION_NAME").endsWith("-dev")) assertTrue("Release com cenas sem revisão: $pending", pending.isEmpty())
+    /** As cenas em camadas estão no app: todas precisam de revisão humana registrada. */
+    @Test fun everySceneInTheAppHasAHumanReview() {
+        val pending = status.filterValues { !it.manualReview || !it.final }.keys
+        assertTrue("Cenas sem revisão humana: $pending", pending.isEmpty())
     }
 
-    private fun <T> withV3(block: () -> T): T {
-        val before = HoodieConfig.TRANSPORT_SCENES_V3
-        HoodieConfig.TRANSPORT_SCENES_V3 = true
-        try { return block() } finally { HoodieConfig.TRANSPORT_SCENES_V3 = before }
-    }
+    private fun <T> withV3(block: () -> T): T = block()
 
     private companion object {
         const val FLAT_MAX = 600

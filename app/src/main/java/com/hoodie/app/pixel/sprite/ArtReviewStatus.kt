@@ -14,7 +14,7 @@ object ArtReviewStatus {
     const val FILE = "art-status.json"
 
     /** Grupo do manifest → grupo de animações. */
-    val GROUPS: Map<String, AnimGroup> = mapOf("walk" to AnimGroup.LOCOMOTION, "idle" to AnimGroup.IDLE, "sleep" to AnimGroup.SLEEP, "work" to AnimGroup.WORK)
+    val GROUPS: Map<String, AnimGroup> = mapOf("walk" to AnimGroup.LOCOMOTION, "idle" to AnimGroup.IDLE, "sleep" to AnimGroup.SLEEP, "work" to AnimGroup.WORK, "transport" to AnimGroup.TRANSPORT)
 
     fun parse(json: String): Map<String, ArtGroupStatus> {
         val root = JSONObject(json)

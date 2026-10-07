@@ -35,12 +35,6 @@ class SceneArtExportTest {
                 println("Rascunho gravado: ${File(sourceDir, "$name.aseprite").absolutePath}")
             }
         }
-        // Fonte do Hoodie em transporte (drive_side): só o .aseprite, fora do APK até a aprovação.
-        if (bootstrap == "all" || bootstrap == "hoodie_transport") {
-            val file = File("../assets-source/hoodie/hoodie_transport.aseprite")
-            AsepriteFile.write(file, ArtBootstrapStudio.document("hoodie_transport"))
-            println("Fonte do Hoodie gravada: ${file.absolutePath}")
-        }
         if (System.getProperty("exportSceneArt") == "true") {
             sourceFiles().forEach { src ->
                 val doc = AsepriteFile.read(src)

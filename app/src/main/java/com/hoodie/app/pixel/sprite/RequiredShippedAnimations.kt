@@ -17,10 +17,11 @@ object RequiredShippedAnimations {
         AnimationId.IDLE to Facing.FRONT,
         AnimationId.SLEEP to Facing.FRONT,
         AnimationId.WORK_TYPING to Facing.FRONT,
+        AnimationId.CAR_IDLE to Facing.SIDE,
     )
 
     /** Arquivos que levam esses clips para o APK. */
-    val files = listOf("hoodie_walk", "hoodie_idle", "hoodie_sleep", "hoodie_work")
+    val files = listOf("hoodie_walk", "hoodie_idle", "hoodie_sleep", "hoodie_work", "hoodie_transport")
 
     fun missing(available: Set<Pair<AnimationId, Facing>>): Set<Pair<AnimationId, Facing>> = required - available
 

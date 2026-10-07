@@ -168,7 +168,7 @@ class AnimationStateMachine(
         // Microação com spot próprio (banco do passeio, esteira da academia): já aparece lá.
         action?.spot?.takeIf { it in scene!!.spots }?.let { scene!!.spot(it) }?.let { x = it.x.toFloat(); y = it.y.toFloat() }
         posture = when {
-            v.scene == com.hoodie.app.pixel.scene.SceneId.BUS || seatsFacingFront() -> Posture.SIT_FRONT
+            seatsFacingFront() -> Posture.SIT_FRONT
             action?.anim?.posture == Legs.SIT -> Posture.SITTING
             else -> Posture.STANDING
         }
@@ -402,13 +402,13 @@ class AnimationStateMachine(
         // Clips com postura explícita definem a postura (INHERIT herda).
         val legs = anim.frames.first().pose
         if (!legs.headOnly) when (legs.legs) {
-            Legs.SIT -> if (anim.loop) posture = if (scene?.id == com.hoodie.app.pixel.scene.SceneId.BUS || seatsFacingFront()) Posture.SIT_FRONT else Posture.SITTING
+            Legs.SIT -> if (anim.loop) posture = if (seatsFacingFront()) Posture.SIT_FRONT else Posture.SITTING
             Legs.INHERIT -> Unit
             else -> if (anim.loop) posture = Posture.STANDING
         }
     }
 
-    /** Cenas V3 de interior (trem, metrô) sentam o Hoodie de frente, como o ônibus. */
+    /** Interiores em camadas (ônibus, trem, metrô) sentam o Hoodie de frente, ancorado pelo quadril. */
     private fun seatsFacingFront() = (scene as? com.hoodie.app.pixel.scene.LayeredTransportScene)?.seatsFacingFront == true
 
     /** Ao final de um clip de transição, a postura é a do último frame (sentou/levantou). */
@@ -416,7 +416,7 @@ class AnimationStateMachine(
         val last = anim.frames.last().pose
         if (last.headOnly) return
         when (last.legs) {
-            Legs.SIT -> posture = if (scene?.id == com.hoodie.app.pixel.scene.SceneId.BUS || seatsFacingFront()) Posture.SIT_FRONT else Posture.SITTING
+            Legs.SIT -> posture = if (seatsFacingFront()) Posture.SIT_FRONT else Posture.SITTING
             Legs.INHERIT -> Unit
             else -> posture = Posture.STANDING
         }

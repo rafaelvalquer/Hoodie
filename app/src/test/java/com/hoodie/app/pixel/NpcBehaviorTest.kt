@@ -7,19 +7,27 @@ import com.hoodie.app.pixel.npc.NpcMotionController
 import com.hoodie.app.pixel.npc.NpcRenderer
 import com.hoodie.app.pixel.npc.NpcReactions
 import com.hoodie.app.pixel.npc.PathPhase
+import com.hoodie.app.core.time.DayPeriod
+import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.scene.SceneId
+import com.hoodie.app.pixel.scene.SceneRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Comportamentos: sequências determinísticas, reações raras, entrar/sair, virar. */
 class NpcBehaviorTest {
+    /** Ônibus, trem e metrô trazem os passageiros pela própria cena (slots da arte em camadas). */
+    private fun npcs(scene: SceneId, variant: Int) =
+        if (scene in setOf(SceneId.BUS, SceneId.TRAIN, SceneId.METRO)) SceneRegistry[scene].ambientNpcs(SceneEnv(DayPeriod.DAY, 9 * 60, variant = variant))
+        else NpcDirector.plan(scene, variant)
+
     private val scenes = listOf(SceneId.OFFICE, SceneId.BUS, SceneId.TRAIN, SceneId.METRO, SceneId.RESTAURANT, SceneId.SHOPPING, SceneId.LEISURE)
 
     @Test fun behaviorIsDeterministicBySceneSeedAndTime() {
         scenes.forEach { scene ->
             (0..1).forEach { variant ->
-                NpcDirector.plan(scene, variant).forEach { slot ->
+                npcs(scene, variant).forEach { slot ->
                     (0L..60_000L step 777L).forEach { t ->
                         assertEquals(NpcMotionController.movement(slot, t), NpcMotionController.movement(slot, t))
                         assertEquals(NpcMotionController.frame(slot, t), NpcMotionController.frame(slot, t))
@@ -31,7 +39,7 @@ class NpcBehaviorTest {
 
     @Test fun animationDoesNotFlickerFrameToFrame() {
         scenes.forEach { scene ->
-            NpcDirector.plan(scene, 0).forEach { slot ->
+            npcs(scene, 0).forEach { slot ->
                 var changes = 0
                 var last: NpcAnimation? = null
                 for (t in 0L until 30_000L step 33L) {
@@ -46,24 +54,29 @@ class NpcBehaviorTest {
     }
 
     @Test fun planDescribedBehaviorsAreUsed() {
-        val bus = NpcDirector.plan(SceneId.BUS, 0).associateBy { it.definition.characterStyle.id }
-        val mouseAnims = (0L..20_000L step 100L).map { NpcMotionController.movement(bus.getValue("mouse_commuter"), it).animation }.toSet()
+        // Passageiros dos interiores em camadas, por seed: cada espécie mantém o comportamento descrito.
+        val byStyle = (0..40).flatMap { seed ->
+            listOf(SceneId.BUS, SceneId.TRAIN, SceneId.METRO).flatMap { scene ->
+                SceneRegistry[scene].ambientNpcs(SceneEnv(DayPeriod.DAY, 9 * 60, daySeed = seed))
+            }
+        }.associateBy { it.definition.characterStyle.id }
+        val mouseAnims = (0L..20_000L step 100L).map { NpcMotionController.movement(byStyle.getValue("mouse_commuter"), it).animation }.toSet()
         assertTrue("mouse: phone ↔ window, $mouseAnims", NpcAnimation.SIT_PHONE in mouseAnims && NpcAnimation.LOOK_WINDOW in mouseAnims)
-        val duckAnims = (0L..20_000L step 100L).map { NpcMotionController.movement(bus.getValue("duck_sleepy"), it).animation }.toSet()
+        val duckAnims = (0L..20_000L step 100L).map { NpcMotionController.movement(byStyle.getValue("duck_sleepy"), it).animation }.toSet()
         assertTrue("duck: sleep, head drop, small wake, $duckAnims",
             duckAnims.containsAll(listOf(NpcAnimation.SIT_SLEEP, NpcAnimation.SIT_HEAD_DROP, NpcAnimation.SIT_WAKE)))
-        val dogAnims = (0L..60_000L step 100L).map { NpcMotionController.movement(bus.getValue("dog_worker"), it).animation }.toSet()
-        assertTrue("dog: holds, looks, bump reaction, $dogAnims", dogAnims.containsAll(listOf(NpcAnimation.STAND, NpcAnimation.LOOK, NpcAnimation.REACTION)))
+        val dogAnims = (0L..60_000L step 100L).map { NpcMotionController.movement(byStyle.getValue("dog_worker"), it).animation }.toSet()
+        assertTrue("dog: looks, phone and a short comment, $dogAnims", dogAnims.containsAll(listOf(NpcAnimation.SIT_LOOK, NpcAnimation.SIT_PHONE, NpcAnimation.TALK)))
     }
 
     @Test fun dialogueIsSparseAndNeverCompetesBetweenNpcs() {
         scenes.forEach { scene ->
-            val speakers = NpcDirector.plan(scene, 0).filter { it.definition.speechProfile != null || it.restaurantBrain != null }
+            val speakers = npcs(scene, 0).filter { it.definition.speechProfile != null || it.restaurantBrain != null }
             assertTrue("$scene must have at most one speaking NPC", speakers.size <= 1)
         }
 
         listOf(SceneId.OFFICE, SceneId.BUS, SceneId.RESTAURANT).forEach { scene ->
-            val speaker = NpcDirector.plan(scene, 0).single { it.definition.speechProfile != null || it.restaurantBrain != null }
+            val speaker = npcs(scene, 0).single { it.definition.speechProfile != null || it.restaurantBrain != null }
             val talkStarts = mutableListOf<Long>()
             var wasTalking = false
             for (time in 0L..300_000L step 100L) {
@@ -82,7 +95,7 @@ class NpcBehaviorTest {
     }
 
     @Test fun executiveEntersWalksLooksTalksWaitsAndExits() {
-        val exec = NpcDirector.plan(SceneId.OFFICE, 0).first().copy(seed = 0)
+        val exec = npcs(SceneId.OFFICE, 0).first().copy(seed = 0)
         val timeline = (0L until 10_000L step 50L).map { NpcMotionController.movement(exec, it) }
         val phases = timeline.map { it.phase }.distinct()
         assertEquals(PathPhase.ENTER, phases.first())
@@ -94,7 +107,7 @@ class NpcBehaviorTest {
     }
 
     @Test fun walkersTurnInsteadOfFlippingInstantly() {
-        val cat = NpcDirector.plan(SceneId.OFFICE, 1).first()
+        val cat = npcs(SceneId.OFFICE, 1).first()
         val anims = (0L until 12_000L step 20L).map { NpcMotionController.movement(cat, it) }
         assertTrue("colleague turns around", anims.any { it.animation == NpcAnimation.TURN_LEFT } && anims.any { it.animation == NpcAnimation.TURN_RIGHT })
         // Toda troca de direção andando passa por um TURN.
@@ -113,7 +126,7 @@ class NpcBehaviorTest {
     }
 
     @Test fun depthScalesAreFromTheAllowedSet() {
-        scenes.forEach { scene -> (0..1).forEach { v -> NpcDirector.plan(scene, v).forEach { assertTrue(it.scale in AmbientScale.allowed) } } }
+        scenes.forEach { scene -> (0..1).forEach { v -> npcs(scene, v).forEach { assertTrue(it.scale in AmbientScale.allowed) } } }
         assertEquals(listOf(0.90f, 0.95f, 1.00f), AmbientScale.allowed)
     }
 

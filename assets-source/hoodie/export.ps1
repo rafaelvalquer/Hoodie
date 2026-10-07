@@ -10,8 +10,8 @@ $src = $PSScriptRoot
 $out = Join-Path $src "..\..\app\src\main\assets\pixel\hoodie"
 New-Item -ItemType Directory -Force $out | Out-Null
 
-# Grupos em produção (ArtBootstrapStudio.PENDING_GROUPS) ficam fora do APK até a aprovação do Rafael.
-$pending = @("hoodie_transport")
+# Grupos em produção (ArtBootstrapStudio.PENDING_GROUPS) ficam fora do APK até a aprovação.
+$pending = @()
 Get-ChildItem $src -Filter "hoodie_*.aseprite" | Where-Object { $_.BaseName -ne "hoodie_master" -and $pending -notcontains $_.BaseName } | ForEach-Object {
     $name = $_.BaseName
     & $aseprite -b $_.FullName `
