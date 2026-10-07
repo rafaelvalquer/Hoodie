@@ -47,8 +47,15 @@ object HoodieConfig {
     const val WAKE_CORROBORATION_WINDOW_MS = 30 * MINUTE_MS
     const val SLEEP_INACTIVITY_MIN_MS = 3 * HOUR_MS
     const val SLEEP_ONSET_GRACE_MS = 8 * MINUTE_MS
+    const val SLEEP_END_MIN_INACTIVITY_MS = 3 * HOUR_MS
+    const val SLEEP_END_HOME_SETTLE_MS = 30 * MINUTE_MS
+    const val SLEEP_END_SCHEDULE_WINDOW_MS = 3 * HOUR_MS
+    const val SLEEP_END_CORROBORATION_WINDOW_MS = HOUR_MS
+    const val SLEEP_END_LOOKAHEAD_MS = 4 * HOUR_MS
     const val WAKE_TRANSITION_REAL_MS = 1_200L
     const val WAKE_PRESENTATION_MS = MINUTE_MS
+    const val DIARY_CLOCK_SLEEP_SEGMENTS = true
+    const val ACTIVE_DAY_END_INFERENCE = true
 
     // ── Mobilidade (Activity Recognition + geofence) ──
     /** Caminhada só vale como deslocamento depois de sustentada por este tempo. */

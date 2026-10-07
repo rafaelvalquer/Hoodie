@@ -6,6 +6,7 @@ import com.hoodie.app.core.model.ContextSource
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.UserContextType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class PlaceVisitBuilderTest {
@@ -29,5 +30,21 @@ class PlaceVisitBuilderTest {
         assertEquals(2, result.size)
         assertEquals(listOf(2, 2), result.map { it.visitsCount })
         assertEquals(listOf(0L, 200L), result.map { it.arrivalAt })
+    }
+
+    @Test fun inferredActiveEndClipsOpenVisitAndKeepsRecordedDepartureWithinWindow() {
+        val open = ContextEventEntity(id = 3, type = UserContextType.HOME, startedAt = 100,
+            endedAt = null, confidence = 1f, placeId = 1, source = ContextSource.GEOFENCE)
+        val inferred = PlaceVisitBuilder.build(listOf(open), emptyList(), 0, 1_000, 900, activeEndAt = 500).single()
+        assertEquals(500L, inferred.departureAt)
+        assertEquals(400L, inferred.durationMs)
+
+        val recorded = open.copy(endedAt = 800)
+        val clipped = PlaceVisitBuilder.build(listOf(recorded), emptyList(), 0, 1_000, 900, activeEndAt = 500).single()
+        assertEquals(500L, clipped.departureAt)
+        assertEquals(400L, clipped.durationMs)
+
+        val live = PlaceVisitBuilder.build(listOf(open), emptyList(), 0, 1_000, 900, activeEndAt = 900).single()
+        assertNull(live.departureAt)
     }
 }

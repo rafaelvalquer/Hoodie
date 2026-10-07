@@ -1,6 +1,11 @@
 package com.hoodie.app.pixel.restaurant
 
 import com.hoodie.app.core.time.DayPeriod
+import com.hoodie.app.pixel.character.CharacterPainter
+import com.hoodie.app.pixel.npc.NpcAnimation
+import com.hoodie.app.pixel.npc.NpcCharacterRegistry
+import com.hoodie.app.pixel.npc.NpcPoseLibrary
+import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNavigationGraph
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcDirector
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcSpot
@@ -37,10 +42,20 @@ class RestaurantNpcFurnitureAlignmentTest {
 
         val baselines = RestaurantScene().sortedProps.map { it.baseline }
         assertTrue("cadeira traseira deve estar atrás do gato", baselines.any { it < slot.baseline && it >= 216 })
-        assertTrue("borda frontal deve passar à frente do gato", baselines.any { it > slot.baseline && it <= 270 })
+        assertTrue("tampo/prato devem passar à frente da parte inferior do torso", baselines.any { it == 224 })
+        assertTrue("borda frontal deve passar à frente do gato", baselines.any { it == 260 })
         assertTrue("NPC deve estar centrado na cadeira", kotlin.math.abs(seat.x - 205) <= 1)
         assertTrue("prato deve ficar diretamente à frente do assento", kotlin.math.abs(seat.x - 203) <= 3)
         assertTrue("mesa e cadeira devem pertencer à área do assento", seat.x in 194..217 && seat.floorY in 240..255)
+
+        val eatPose = NpcPoseLibrary.frame(
+            NpcAnimation.SIT_EAT, 700, 0, SpeciesMotionProfiles.forCharacter(NpcCharacterRegistry.CAT_GUEST),
+            seated = true, facing = seat.interactionFacing,
+        )
+        val frame = CharacterPainter.paint(NpcCharacterRegistry.CAT_GUEST, eatPose.pose, eatPose.motion)
+        val handX = seat.x - frame.anchors.feet.x + frame.anchors.rightHand.x
+        val handY = seat.floorY - frame.anchors.feet.y + frame.anchors.rightHand.y
+        assertTrue("garfo deve alcançar o prato: hand=($handX,$handY)", kotlin.math.abs(handX - 208) <= 9 && kotlin.math.abs(handY - 228) <= 8)
     }
 
     @Test fun `cena completa continua renderizavel em dia e noite durante a refeicao`() {

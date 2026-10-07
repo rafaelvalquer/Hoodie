@@ -10,6 +10,7 @@ data class DailyActivityWindow(
     val wakeReason: WakeReason,
     val wakeConfidence: WakeConfidence,
     val provisional: Boolean,
+    val sleepAfterEnd: InferredSleepOnset? = null,
 ) {
     init {
         require(civilEndAt >= civilStartAt)
@@ -32,6 +33,21 @@ data class DailyActivityWindow(
             )
         }
     }
+}
+
+data class InferredSleepOnset(
+    val startedAt: Long,
+    val reason: SleepOnsetReason,
+    val confidence: SleepConfidence,
+    val provisional: Boolean = false,
+)
+
+enum class SleepOnsetReason {
+    HOME_INACTIVITY,
+    PHONE_INACTIVITY,
+    HOME_ARRIVAL,
+    CORROBORATED,
+    SCHEDULE_FALLBACK,
 }
 
 data class InferredSleepSpan(

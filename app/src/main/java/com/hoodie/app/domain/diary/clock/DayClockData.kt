@@ -4,6 +4,7 @@ import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.UserContextType
+import com.hoodie.app.domain.daycycle.SleepConfidence
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -110,6 +111,14 @@ sealed interface ClockSegment {
         val toStopId: String?,
     ) : ClockSegment
 
+    data class Sleep(
+        override val id: String,
+        override val startMinute: Int,
+        override val endMinute: Int,
+        val phase: SleepPhase,
+        val confidence: SleepConfidence,
+    ) : ClockSegment
+
     /** Buraco sem contexto: nunca é preenchido com suposição. */
     data class Unknown(
         override val id: String,
@@ -117,3 +126,5 @@ sealed interface ClockSegment {
         override val endMinute: Int,
     ) : ClockSegment
 }
+
+enum class SleepPhase { BEFORE_WAKE, AFTER_ACTIVE_DAY }

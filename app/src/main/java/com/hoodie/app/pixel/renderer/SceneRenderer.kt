@@ -8,6 +8,9 @@ import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.transport.TransportLighting
 import com.hoodie.app.pixel.sprite.HoodiePainter
 import com.hoodie.app.pixel.npc.NpcRenderer
+import com.hoodie.app.pixel.npc.NpcMotionController
+import com.hoodie.app.pixel.npc.NpcMovement
+import com.hoodie.app.pixel.sprite.Facing
 
 /**
  * Compõe um frame: fundo (cacheado) → objetos atrás → Hoodie → objetos na frente
@@ -57,12 +60,20 @@ class SceneRenderer {
     }
 
     /** Cena sem personagem (galeria de cenas / thumbnails). */
-    fun renderEmpty(scene: PixelScene, env: SceneEnv, timeMs: Long, includeAmbientNpcs: Boolean = true): PixelBuffer {
+    fun renderEmpty(
+        scene: PixelScene,
+        env: SceneEnv,
+        timeMs: Long,
+        includeAmbientNpcs: Boolean = true,
+        facingOverride: Pair<String, Facing>? = null,
+    ): PixelBuffer {
         val slots = if (includeAmbientNpcs) scene.ambientNpcs(env) else emptyList()
         val drawEnv = envWithAmbientNpcState(env, slots, timeMs)
         buffer.copyFrom(background(scene, drawEnv))
         val props = scene.sortedProps.map { it.baseline to { it.draw(buffer, drawEnv, timeMs) } }
-        val npcs = slots.map { it.baseline to { NpcRenderer.draw(buffer, it, timeMs) } }
+        val npcs = slots.map { slot -> slot.baseline to {
+            NpcRenderer.draw(buffer, slot, timeMs, movementOverride(slot, timeMs, facingOverride))
+        } }
         (props + npcs)
             .sortedBy { it.first }.forEach { it.second() }
         Lighting.apply(buffer, Lighting.map(scene, drawEnv))
@@ -71,15 +82,23 @@ class SceneRenderer {
     }
 
     /** Frame isolado do NPC para ferramentas de revisão; usa os mesmos props e estado da cena. */
-    fun renderAmbientNpc(scene: PixelScene, env: SceneEnv, timeMs: Long): PixelBuffer {
+    fun renderAmbientNpc(scene: PixelScene, env: SceneEnv, timeMs: Long, facingOverride: Pair<String, Facing>? = null): PixelBuffer {
         val slots = scene.ambientNpcs(env)
         val drawEnv = envWithAmbientNpcState(env, slots, timeMs)
         buffer.copyFrom(background(scene, drawEnv))
         scene.sortedProps.forEach { it.draw(buffer, drawEnv, timeMs) }
-        slots.forEach { NpcRenderer.draw(buffer, it, timeMs) }
+        slots.forEach { NpcRenderer.draw(buffer, it, timeMs, movementOverride(it, timeMs, facingOverride)) }
         Lighting.apply(buffer, Lighting.map(scene, drawEnv))
         applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
         return buffer
+    }
+
+    private fun movementOverride(
+        slot: com.hoodie.app.pixel.npc.AmbientNpcSlot,
+        timeMs: Long,
+        facingOverride: Pair<String, Facing>?,
+    ): NpcMovement? = facingOverride?.takeIf { it.first == slot.definition.id }?.let { (_, facing) ->
+        NpcMotionController.movement(slot, timeMs).copy(facing = facing)
     }
 
     private fun envWithAmbientNpcState(

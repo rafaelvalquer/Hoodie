@@ -1,10 +1,13 @@
 package com.hoodie.app.engine.diary
 
 import com.hoodie.app.core.model.UserContextType
+import com.hoodie.app.core.config.HoodieConfig
+import com.hoodie.app.domain.daycycle.SleepConfidence
 import com.hoodie.app.domain.diary.clock.ClockCategory
 import com.hoodie.app.domain.diary.clock.ClockHourMark
 import com.hoodie.app.domain.diary.clock.ClockSegment
 import com.hoodie.app.domain.diary.clock.DayClockData
+import com.hoodie.app.domain.diary.clock.SleepPhase
 import com.hoodie.app.domain.diary.model.DailyDiary
 import com.hoodie.app.domain.diary.model.JourneyMapData
 import java.time.LocalDate
@@ -42,6 +45,26 @@ object DayClockAssembler {
         // 1. Itens em ms, já recortados.
         data class Item(val s: Long, val e: Long, val stay: Boolean, val id: String, val build: (Int, Int) -> ClockSegment)
         val items = mutableListOf<Item>()
+        val window = diary.activityWindow
+        if (HoodieConfig.DIARY_CLOCK_SLEEP_SEGMENTS) {
+            window.sleepBeforeStart?.let { sleep ->
+                val s = maxOf(dayStart, sleep.startedAt ?: dayStart)
+                val e = minOf(window.activeStartAt, sleep.endedAt, cut)
+                if (e > s) items += Item(s, e, false, "sleep-before-wake") { a, b ->
+                    ClockSegment.Sleep(
+                        "sleep-before-wake", a, b, SleepPhase.BEFORE_WAKE,
+                        if (window.wakeReason == com.hoodie.app.domain.daycycle.WakeReason.SCHEDULE_FALLBACK) SleepConfidence.LOW else sleep.confidence,
+                    )
+                }
+            }
+            window.sleepAfterEnd?.let { sleep ->
+                val s = maxOf(dayStart, sleep.startedAt)
+                val e = minOf(dayEnd, cut)
+                if (e > s) items += Item(s, e, false, "sleep-after-active-day") { a, b ->
+                    ClockSegment.Sleep("sleep-after-active-day", a, b, SleepPhase.AFTER_ACTIVE_DAY, sleep.confidence)
+                }
+            }
+        }
         journey.nodes.forEachIndexed { i, n ->
             val s = maxOf(n.arrivalAt, dayStart)
             val e = minOf(n.departureAt ?: cut, cut)
@@ -64,7 +87,7 @@ object DayClockAssembler {
         }
         items.sortWith(compareBy<Item> { it.s }.thenBy { if (it.stay) 0 else 1 })
 
-        // 2. Varredura: sem sobreposição; buracos viram mobilidade avulsa ou Unknown.
+        // 2. Varredura: sono explícito, visitas e deslocamentos vencem; os demais buracos ficam Unknown.
         val out = mutableListOf<ClockSegment>()
         var moveK = 0
         var unknownK = 0

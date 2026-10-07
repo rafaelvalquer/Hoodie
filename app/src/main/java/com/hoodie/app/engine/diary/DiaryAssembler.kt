@@ -17,8 +17,8 @@ object DiaryAssembler {
         val dayContexts = contexts.filter { it.startedAt < minOf(dayEnd, now) && (it.endedAt == null || it.endedAt > dayStart) }
         val dayEvents = events.filter { it.timestamp >= dayStart && it.timestamp < dayEnd && it.timestamp <= now }
         val dayActivities = activities.filter { it.startedAt < minOf(dayEnd, now) && it.endedAt > dayStart }
-        val timeline = DailyTimelineBuilder.build(dayContexts, dayEvents, dayActivities, dayStart, dayEnd, now, window.activeStartAt)
-        val visits = PlaceVisitBuilder.build(dayContexts, places, dayStart, dayEnd, now, timeline, dayActivities, window.activeStartAt)
+        val timeline = DailyTimelineBuilder.build(dayContexts, dayEvents, dayActivities, dayStart, dayEnd, now, window.activeStartAt, window.activeEndAt)
+        val visits = PlaceVisitBuilder.build(dayContexts, places, dayStart, dayEnd, now, timeline, dayActivities, window.activeStartAt, window.activeEndAt)
         val enriched = timeline.map { item ->
             val context = clippedContexts.lastOrNull { item.timestamp >= it.startedAt && (it.endedAt == null || item.timestamp < it.endedAt) }
             val activity = dayActivities.lastOrNull {

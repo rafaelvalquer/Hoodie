@@ -53,9 +53,18 @@ class RestaurantSeatedOrientationTest {
                 if (state.currentIntent == RestaurantNpcIntent.ENTER && movement.seated) {
                     assertEquals(Facing.FRONT, NpcMotionController.frame(seededSlot, time, movement).pose.facing)
                 }
+                if (state.currentIntent == RestaurantNpcIntent.ENTER && movement.animation == NpcAnimation.TURN_LEFT) {
+                    val expectedFacing = if (movement.localTimeMs < 240L) Facing.SIDE else Facing.FRONT
+                    assertEquals(expectedFacing, NpcMotionController.frame(seededSlot, time, movement).pose.facing)
+                }
+                if (state.currentIntent == RestaurantNpcIntent.LEAVE && movement.animation == NpcAnimation.STAND_UP) {
+                    assertEquals(Facing.FRONT, NpcMotionController.frame(seededSlot, time, movement).pose.facing)
+                }
                 if (state.currentIntent == RestaurantNpcIntent.LEAVE && state.currentSpot != RestaurantNpcSpot.DOOR &&
                     state.mealState != RestaurantMealState.WAITING && movement.animation == NpcAnimation.TURN_RIGHT) {
-                    assertEquals("$seed/$time/${movement.localTimeMs}", Facing.FRONT, NpcMotionController.frame(seededSlot, time, movement).pose.facing)
+                    val expectedFacing = if (movement.localTimeMs < 240L) Facing.FRONT else Facing.SIDE
+                    assertEquals("$seed/$time/${movement.localTimeMs}", expectedFacing,
+                        NpcMotionController.frame(seededSlot, time, movement).pose.facing)
                 }
                 if (movement.animation == NpcAnimation.WALK) assertEquals(Facing.SIDE, NpcMotionController.frame(seededSlot, time, movement).pose.facing)
             }

@@ -13,6 +13,13 @@ import com.hoodie.app.domain.diary.model.DiaryMapData
 import com.hoodie.app.domain.diary.model.DiaryMovement
 import com.hoodie.app.domain.diary.model.PlaceVisit
 import com.hoodie.app.domain.diary.model.ReplaySequence
+import com.hoodie.app.domain.daycycle.DailyActivityWindow
+import com.hoodie.app.domain.daycycle.InferredSleepOnset
+import com.hoodie.app.domain.daycycle.InferredSleepSpan
+import com.hoodie.app.domain.daycycle.SleepConfidence
+import com.hoodie.app.domain.daycycle.SleepOnsetReason
+import com.hoodie.app.domain.daycycle.WakeConfidence
+import com.hoodie.app.domain.daycycle.WakeReason
 import com.hoodie.app.engine.diary.SyntheticClockDays.Kind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -150,5 +157,44 @@ class DayClockAssemblerTest {
         assertEquals(1500, long.dayLengthMinutes)
         assertEquals(7 * 60, long.hourMarks.single { it.hour == 6 }.minute)
         assertCoverage(short); assertCoverage(long)
+    }
+
+    @Test fun inferredSleepIsExplicitAndDoesNotInflatePlaceTotals() {
+        val wake = at(7)
+        val onset = at(22)
+        val activeEnd = at(21)
+        val window = DailyActivityWindow(
+            civilStartAt = at(0), civilEndAt = at(0, d = date.plusDays(1)),
+            activeStartAt = wake, activeEndAt = activeEnd,
+            sleepBeforeStart = InferredSleepSpan(at(23, d = date.minusDays(1)), wake, SleepConfidence.HIGH),
+            wakeReason = WakeReason.PHONE_SUSTAINED, wakeConfidence = WakeConfidence.HIGH, provisional = false,
+            sleepAfterEnd = InferredSleepOnset(onset, SleepOnsetReason.CORROBORATED, SleepConfidence.HIGH),
+        )
+        val base = diary(listOf(visit("Trabalho", PlaceType.WORK, at(9), at(17))))
+        val data = DayClockAssembler.build(base.copy(activityWindow = window), date, zone, at(23))
+
+        val sleep = data.segments.filterIsInstance<ClockSegment.Sleep>()
+        assertEquals(2, sleep.size)
+        assertEquals(0, sleep.first().startMinute)
+        assertEquals(7 * 60, sleep.first().endMinute)
+        assertEquals(22 * 60, sleep.last().startMinute)
+        assertEquals(23 * 60, sleep.last().endMinute)
+        assertEquals(8 * 60, data.totals.getValue(ClockCategory.WORK))
+        assertCoverage(data)
+    }
+
+    @Test fun scheduleFallbackSleepIsMarkedLowAndOtherGapsStayUnknown() {
+        val window = DailyActivityWindow(
+            civilStartAt = at(0), civilEndAt = at(0, d = date.plusDays(1)),
+            activeStartAt = at(7), activeEndAt = at(17),
+            sleepBeforeStart = InferredSleepSpan(null, at(7), SleepConfidence.LOW),
+            wakeReason = WakeReason.SCHEDULE_FALLBACK, wakeConfidence = WakeConfidence.LOW, provisional = false,
+        )
+        val data = DayClockAssembler.build(diary(emptyList()).copy(activityWindow = window), date, zone, at(23))
+        val sleep = data.segments.filterIsInstance<ClockSegment.Sleep>().single()
+        assertEquals(SleepConfidence.LOW, sleep.confidence)
+        assertTrue(data.segments.any { it is ClockSegment.Unknown && it.startMinute <= 7 * 60 && it.endMinute >= 17 * 60 })
+        assertTrue(data.totals.isEmpty())
+        assertCoverage(data)
     }
 }

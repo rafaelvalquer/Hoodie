@@ -4,6 +4,7 @@ import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.domain.diary.clock.ClockSegment
 import com.hoodie.app.domain.diary.clock.DayClockData
+import com.hoodie.app.domain.daycycle.SleepConfidence
 import com.hoodie.app.pixel.diary.clock.DayClockGeometry.ACTIVITY_MID
 import com.hoodie.app.pixel.diary.clock.DayClockGeometry.FRACTION
 import com.hoodie.app.pixel.diary.clock.DayClockGeometry.RADIUS
@@ -163,6 +164,22 @@ object DayClockRenderer {
             f < 0f -> DayClockPalette.mode(s.mode)
             r >= DayClockGeometry.TRAIL.start && r < DayClockGeometry.TRAIL.endInclusive && trailOn(s.mode, f) -> DayClockPalette.mode(s.mode)
             else -> DayClockPalette.PATH
+        }
+        is ClockSegment.Sleep -> {
+            val step = if (f < 0f) 0 else floor(f * 2 * PI * ACTIVITY_MID).toInt()
+            when (s.confidence) {
+                SleepConfidence.HIGH -> if (r < INNER_EDGE_END || r >= OUTER_EDGE_START) DayClockPalette.SLEEP_EDGE else DayClockPalette.SLEEP
+                SleepConfidence.MEDIUM -> when {
+                    r < INNER_EDGE_END || r >= OUTER_EDGE_START -> DayClockPalette.SLEEP_EDGE
+                    f >= 0f && r >= 108.5f && r < 110.5f && step % 7 < 2 -> DayClockPalette.SLEEP_MARK
+                    else -> DayClockPalette.SLEEP
+                }
+                SleepConfidence.LOW -> when {
+                    r < INNER_EDGE_END || r >= OUTER_EDGE_START -> DayClockPalette.OUTLINE
+                    f >= 0f && r >= 108.5f && r < 110.5f && step % 5 == 0 -> DayClockPalette.SLEEP_MARK
+                    else -> DayClockPalette.TRACK
+                }
+            }
         }
         is ClockSegment.Unknown -> {
             val step = floor(f * 2 * PI * ACTIVITY_MID).toInt()

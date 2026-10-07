@@ -84,4 +84,22 @@ class DailyActivityWindowResolverTest {
         assertEquals(from, result.civilStartAt)
         assertTrue(to - from == 23 * 3_600_000L)
     }
+
+    @Test fun historicalSleepLookaheadClosesActiveDayWithoutMovingWakeIntoNextDay() {
+        val home = ContextEventEntity(id = 44, type = UserContextType.HOME, startedAt = day - 2 * 60 * 60_000L, endedAt = null,
+            confidence = 1f, placeId = 1, source = ContextSource.GEOFENCE)
+        val midnightUse = AppSession("reader", at(1, 30) + 24 * 60 * 60_000L, at(1, 34) + 24 * 60 * 60_000L)
+        val result = DailyActivityWindowResolver.resolve(
+            date = date, civilStartAt = day, civilEndAt = day + 24 * 60 * 60_000L,
+            now = day + 28 * 60 * 60_000L, zone = zone, sleepSchedule = SleepSchedule(),
+            contexts = listOf(home), activities = emptyList(),
+            appSessions = listOf(midnightUse),
+            timeline = listOf(TimelineEventEntity(id = 45, timestamp = at(22), actor = TimelineActor.USER, emoji = "📝", text = "Nota")),
+            analysisEnabled = true, evidenceEndAt = day + 28 * 60 * 60_000L,
+        )
+
+        assertEquals(at(7), result.activeStartAt)
+        assertEquals(at(22, 8), result.activeEndAt)
+        assertEquals(at(22, 8), result.sleepAfterEnd?.startedAt)
+    }
 }

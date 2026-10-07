@@ -59,6 +59,7 @@ import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.domain.diary.clock.ClockCategory
 import com.hoodie.app.domain.diary.clock.ClockSegment
+import com.hoodie.app.domain.daycycle.SleepConfidence
 import com.hoodie.app.domain.diary.clock.DayClockData
 import com.hoodie.app.pixel.diary.clock.ClockHit
 import com.hoodie.app.pixel.diary.clock.DayClockGeometry
@@ -220,6 +221,9 @@ private fun ClockCenter(state: DayClockUiState, widthPx: Int) {
     val label = when {
         state.selected is ClockSegment.Stay -> stringResource(R.string.clock2_label_stop, (focus as ClockSegment.Stay).stopIndex, data.stopCount)
         state.selected is ClockSegment.Move -> stringResource(R.string.clock2_label_move)
+        state.selected is ClockSegment.Sleep -> stringResource(
+            if ((focus as ClockSegment.Sleep).confidence == SleepConfidence.LOW) R.string.clock2_label_sleep_estimated else R.string.clock2_label_sleep,
+        )
         state.selected is ClockSegment.Unknown -> stringResource(R.string.clock2_label_unknown)
         state.mode == DayClockUiState.Mode.REPLAY -> stringResource(R.string.clock2_label_replay)
         state.nowMinute != null -> stringResource(R.string.clock2_label_now)
@@ -270,6 +274,11 @@ private fun centerLines(state: DayClockUiState, focus: ClockSegment?, maxChars: 
                 formatDuration(focus.minutes * 60_000L),
             )
         }
+        is ClockSegment.Sleep -> Triple(
+            if (focus.confidence == SleepConfidence.LOW) stringResource(R.string.clock2_sleep_estimated) else stringResource(R.string.clock2_sleeping),
+            null,
+            formatDuration(focus.minutes * 60_000L),
+        )
         is ClockSegment.Unknown -> Triple(stringResource(R.string.clock2_unknown), null, formatDuration(focus.minutes * 60_000L))
         null -> {
             val top = data.totals.maxByOrNull { it.value }

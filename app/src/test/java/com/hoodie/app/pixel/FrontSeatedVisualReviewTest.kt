@@ -8,6 +8,7 @@ import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcDirector
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcIntent
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.renderer.SceneRenderer
+import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.scene.OfficeScene
 import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.scene.SceneRegistry
@@ -25,6 +26,7 @@ class FrontSeatedVisualReviewTest {
         root.mkdirs()
         val renderer = SceneRenderer()
         val captures = mutableListOf<Pair<String, PixelBuffer>>()
+        val comparisons = mutableListOf<Triple<String, PixelBuffer, PixelBuffer>>()
 
         val officeCases = listOf(
             Triple("office-rabbit-work.png", "rabbit_analyst", NpcIntent.WORK),
@@ -44,9 +46,15 @@ class FrontSeatedVisualReviewTest {
             }
             assertTrue("office sample not found: $name", found != null)
             val scene = OfficeScene()
-            val frame = renderer.renderAmbientNpc(scene, found!!.first, found.second)
+            val rendered = renderer.renderAmbientNpc(scene, found!!.first, found.second)
+            val frame = PixelBuffer(rendered.width, rendered.height).also { it.copyFrom(rendered) }
             PreviewExport.write(File(root, name), frame, 2, 0xFF2B2E4A.toInt())
             captures += name to frame
+            if (name == "office-rabbit-work.png" || name == "office-cat-work.png") {
+                val side = renderer.renderAmbientNpc(scene, found.first, found.second, npcId to Facing.SIDE)
+                val before = PixelBuffer(side.width, side.height).also { it.copyFrom(side) }
+                comparisons += Triple(name.removeSuffix(".png"), before, frame)
+            }
         }
 
         val restaurantCases = listOf(
@@ -66,21 +74,34 @@ class FrontSeatedVisualReviewTest {
             }
             assertTrue("restaurant sample not found: $name", found != null)
             val scene = SceneRegistry[SceneId.RESTAURANT]
-            val frame = renderer.renderEmpty(scene, found!!.first, found.second)
+            val rendered = renderer.renderEmpty(scene, found!!.first, found.second)
+            val frame = PixelBuffer(rendered.width, rendered.height).also { it.copyFrom(rendered) }
             PreviewExport.write(File(root, name), frame, 2, 0xFF2B2E4A.toInt())
             captures += name to frame
+            if (name == "restaurant-eat.png") {
+                val side = renderer.renderEmpty(scene, found.first, found.second, facingOverride = RestaurantNpcDirector.GUEST_ID to Facing.SIDE)
+                val before = PixelBuffer(side.width, side.height).also { it.copyFrom(side) }
+                comparisons += Triple("restaurant-eat", before, frame)
+            }
         }
         val columns = 2
         val rows = (captures.size + columns - 1) / columns
         val sheet = PixelBuffer(columns * 240, rows * 320).also { it.fill(0xFF2B2E4A.toInt()) }
         captures.forEachIndexed { index, (_, frame) -> sheet.blit(frame, index % columns * 240, index / columns * 320) }
         PreviewExport.write(File(root, "front-seated-contact-sheet.png"), sheet, 1, 0xFF2B2E4A.toInt())
+        val comparisonSheet = PixelBuffer(480, comparisons.size * 320).also { it.fill(0xFF2B2E4A.toInt()) }
+        comparisons.forEachIndexed { index, (_, before, after) ->
+            comparisonSheet.blit(before, 0, index * 320)
+            comparisonSheet.blit(after, 240, index * 320)
+        }
+        PreviewExport.write(File(root, "front-seated-before-after.png"), comparisonSheet, 2, 0xFF2B2E4A.toInt())
         File(root, "index.html").writeText(buildString {
             appendLine("<!doctype html><meta charset=\"utf-8\"><title>Front seated review</title>")
-            appendLine("<style>body{font:16px system-ui;background:#242742;color:#eee;padding:2rem}img{image-rendering:pixelated;max-width:100%}</style>")
-            appendLine("<h1>Front seated candidates</h1><p>Visual review required; these are candidates, not approved goldens.</p>")
+            appendLine("<style>body{font:16px system-ui;background:#242742;color:#eee;padding:2rem}img{image-rendering:pixelated;max-width:100%}.legend{display:flex;gap:12rem}</style>")
+            appendLine("<h1>Front seated candidates</h1><p>Visual review required; these are candidates, not approved goldens. Restaurant table layering was revised on 2026-10-06.</p>")
             captures.forEach { (name, _) -> appendLine("<h2>$name</h2><img src=\"$name\">") }
             appendLine("<h2>Contact sheet</h2><img src=\"front-seated-contact-sheet.png\">")
+            appendLine("<h2>Before / after (SIDE / interaction-facing FRONT)</h2><p class=\"legend\"><span>BEFORE — SIDE</span><span>AFTER — FRONT</span></p><img src=\"front-seated-before-after.png\">")
         })
     }
 }

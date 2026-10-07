@@ -127,7 +127,6 @@ data class RestaurantNpcBrain(
                 return NpcMovement(door.x, door.floorY, true, NpcAnimation.IDLE, 0, phase = PathPhase.EXIT)
             }
             val elapsed = (time - state.intentStartedAt).coerceAtLeast(0)
-                .coerceAtMost(STAND_TRANSITION_MS + NpcPoseLibrary.TURN_MS)
             val seat = RestaurantNavigationGraph.spots.getValue(state.currentSpot)
             if (elapsed < STAND_TRANSITION_MS) return NpcMovement(
                 seat.x, seat.floorY, false, NpcAnimation.STAND_UP, elapsed,

@@ -36,6 +36,9 @@ object DayClockPalette {
     /** Leito dos deslocamentos (a trilha de terra da Jornada). */
     const val PATH = OverworldPalette.DIRT
     const val PATH_DARK = OverworldPalette.DIRT_DARK
+    const val SLEEP = HoodiePalette.EYE
+    const val SLEEP_MARK = HoodiePalette.STRING
+    const val SLEEP_EDGE = HoodiePalette.HOOD_DARK
 
     data class Fill(val fill: Int, val edge: Int)
 
@@ -56,7 +59,7 @@ object DayClockPalette {
 
     /** Sem o Hoodie: o que o mostrador pinta. */
     val DIAL: Set<Int> = buildSet {
-        addAll(listOf(OUTLINE, DEEP, TRACK, TRACK_MARK, PLATE, PLATE_RING, PLATE_EDGE, TICK, TICK_MAJOR, NOW, STAR, STAR_DIM, DIGIT, ICON_LIGHT, ICON_SHADE, PLAQUE_RIM, SELECTION, GLOW, GLOW_DIM, PATH, PATH_DARK))
+        addAll(listOf(OUTLINE, DEEP, TRACK, TRACK_MARK, PLATE, PLATE_RING, PLATE_EDGE, TICK, TICK_MAJOR, NOW, STAR, STAR_DIM, DIGIT, ICON_LIGHT, ICON_SHADE, PLAQUE_RIM, SELECTION, GLOW, GLOW_DIM, PATH, PATH_DARK, SLEEP, SLEEP_MARK, SLEEP_EDGE))
         ClockCategory.entries.forEach { add(category(it).fill); add(category(it).edge) }
         (MovementMode.entries + listOf(null)).forEach { add(mode(it)) }
         DayPeriod.entries.forEach { add(sky(it)) }

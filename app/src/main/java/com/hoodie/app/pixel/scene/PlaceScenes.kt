@@ -50,7 +50,7 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
             SceneArt.mug(b, 42, 103)
         },
         // Mesa do cliente: tampo/prato na profundidade do assento; pernas e cadeiras atrás.
-        Prop(218) { b, env, t -> drawGuestTableTop(b, env, t) },
+        Prop(224) { b, env, t -> drawGuestTableTop(b, env, t) },
         Prop(190) { b, _, _ -> SceneArt.plant(b, 14, 190, big = true) },
         Prop(220) { b, _, _ -> drawGuestChair(b) },
         Prop(260) { b, _, _ -> drawGuestTableFront(b) },
@@ -77,10 +77,10 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
 
     private fun drawGuestTableTop(b: PixelBuffer, env: SceneEnv, timeMs: Long) {
         // Tampo pequeno na direita; o centro do prato fica ao alcance da mão do gato.
-        b.outlined(176, 207, 228, 214, 0xFFF1DAB4.toInt(), P.OUTLINE)
-        b.box(178, 208, 226, 210, 0xFFFFE8C4.toInt())
-        b.vline(180, 214, 228, 0xFF6B3E2C.toInt()); b.vline(224, 214, 228, 0xFF6B3E2C.toInt())
-        b.outlined(178, 229, 226, 234, 0xFF8E5435.toInt(), P.OUTLINE)
+        b.outlined(176, 224, 228, 236, 0xFFF1DAB4.toInt(), P.OUTLINE)
+        b.box(178, 225, 226, 231, 0xFFFFE8C4.toInt())
+        b.vline(180, 237, 240, 0xFF6B3E2C.toInt()); b.vline(224, 237, 240, 0xFF6B3E2C.toInt())
+        b.outlined(178, 235, 226, 240, 0xFF8E5435.toInt(), P.OUTLINE)
         val state = env.restaurantGuestTable
         drawGuestPlate(b, state?.foodAmount ?: RestaurantFoodAmount.EMPTY, timeMs)
         drawGuestGlass(b, state?.drinkAmount ?: RestaurantDrinkAmount.FULL)
@@ -88,50 +88,50 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
             val steamFrame = (timeMs / 360L).toInt() % 3
             for (i in 0..1) {
                 val x = 199 + i * 5
-                val y = 198 - ((steamFrame + i) % 3) * 2
+                val y = 214 - ((steamFrame + i) % 3) * 2
                 b.set(x, y, 0xFFDCE6E8.toInt())
             }
         }
         if (state?.menuOpen == true) {
-            b.outlined(210, 202, 220, 207, 0xFFE9E0C8.toInt(), P.OUTLINE)
-            b.hline(212, 218, 204, 0xFF8B6B4D.toInt())
+            b.outlined(209, 225, 219, 230, 0xFFE9E0C8.toInt(), P.OUTLINE)
+            b.hline(211, 217, 227, 0xFF8B6B4D.toInt())
         }
         // Saleiro e guardanapo, detalhes discretos e fixos da mesa.
-        b.outlined(222, 201, 225, 205, P.WHITE, P.OUTLINE)
-        b.box(223, 199, 224, 200, P.YELLOW)
-        b.box(178, 203, 184, 205, P.WHITE)
+        b.outlined(222, 225, 225, 229, P.WHITE, P.OUTLINE)
+        b.box(223, 223, 224, 224, P.YELLOW)
+        b.box(178, 227, 184, 229, P.WHITE)
     }
 
     private fun drawGuestPlate(b: PixelBuffer, amount: RestaurantFoodAmount, timeMs: Long) {
-        b.outlined(195, 207, 212, 211, P.WHITE, P.OUTLINE)
+        b.outlined(200, 232, 217, 236, P.WHITE, P.OUTLINE)
         when (amount) {
             RestaurantFoodAmount.FULL -> {
-                b.box(198, 205, 209, 207, 0xFFF2CF5B.toInt())
-                b.box(200, 204, 202, 205, P.RED); b.box(205, 203, 207, 205, P.LEAF)
+                b.box(203, 230, 214, 232, 0xFFF2CF5B.toInt())
+                b.box(205, 229, 207, 230, P.RED); b.box(210, 228, 212, 230, P.LEAF)
             }
             RestaurantFoodAmount.PARTIAL -> {
-                b.box(200, 205, 207, 207, 0xFFF2CF5B.toInt()); b.set(204, 204, P.LEAF)
+                b.box(205, 230, 212, 232, 0xFFF2CF5B.toInt()); b.set(209, 229, P.LEAF)
             }
-            RestaurantFoodAmount.LOW -> b.box(202, 206, 205, 207, 0xFFF2CF5B.toInt())
-            RestaurantFoodAmount.EMPTY -> if (timeMs % 5_000L < 1_000L) b.set(203, 206, 0xFFE8E0D0.toInt())
+            RestaurantFoodAmount.LOW -> b.box(207, 233, 210, 234, 0xFFF2CF5B.toInt())
+            RestaurantFoodAmount.EMPTY -> if (timeMs % 5_000L < 1_000L) b.set(208, 233, 0xFFE8E0D0.toInt())
         }
     }
 
     private fun drawGuestGlass(b: PixelBuffer, amount: RestaurantDrinkAmount) {
-        b.outlined(213, 203, 218, 211, 0xFFDCECF4.toInt(), P.OUTLINE)
+        b.outlined(213, 229, 218, 237, 0xFFDCECF4.toInt(), P.OUTLINE)
         val top = when (amount) {
-            RestaurantDrinkAmount.FULL -> 205
-            RestaurantDrinkAmount.HALF -> 207
-            RestaurantDrinkAmount.EMPTY -> 210
+            RestaurantDrinkAmount.FULL -> 231
+            RestaurantDrinkAmount.HALF -> 233
+            RestaurantDrinkAmount.EMPTY -> 236
         }
-        if (amount != RestaurantDrinkAmount.EMPTY) b.box(215, top, 216, 209, 0xFFF29B4A.toInt())
-        b.set(214, 204, P.WHITE)
+        if (amount != RestaurantDrinkAmount.EMPTY) b.box(215, top, 216, 235, 0xFFF29B4A.toInt())
+        b.set(214, 230, P.WHITE)
     }
 
     private fun drawGuestTableFront(b: PixelBuffer) {
         // Borda frontal passa à frente do NPC, escondendo apenas pernas/parte inferior.
-        b.outlined(176, 229, 228, 235, 0xFFB87349.toInt(), P.OUTLINE)
-        b.hline(180, 224, 231, 0xFFE0A06B.toInt())
+        b.outlined(176, 240, 228, 246, 0xFFB87349.toInt(), P.OUTLINE)
+        b.hline(180, 224, 242, 0xFFE0A06B.toInt())
     }
 
     /** Pratos variam por dia: 🍜 🍔 🍕 🥗 🍛. */

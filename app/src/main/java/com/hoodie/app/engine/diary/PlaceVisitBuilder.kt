@@ -12,12 +12,14 @@ object PlaceVisitBuilder {
         contexts: List<ContextEventEntity>, places: List<PlaceEntity>, dayStart: Long, dayEnd: Long, now: Long,
         timeline: List<DiaryTimelineItem> = emptyList(), activities: List<HoodieActivityEntity> = emptyList(),
         activeStartAt: Long = dayStart,
+        activeEndAt: Long? = null,
     ): List<PlaceVisit> {
         val placeById = places.associateBy { it.id }
         val visits = contexts.asSequence().filter { it.type != com.hoodie.app.core.model.UserContextType.COMMUTING }
             .mapNotNull { event ->
                 val start = maxOf(event.startedAt, dayStart, activeStartAt)
-                val end = minOf(event.endedAt ?: now, dayEnd, now)
+                val visibleEnd = minOf(dayEnd, now, activeEndAt ?: dayEnd)
+                val end = minOf(event.endedAt ?: now, visibleEnd)
                 if (end <= start) return@mapNotNull null
                 val place = event.placeId?.let(placeById::get)
                 val type = place?.type ?: when (event.type) {
@@ -46,8 +48,13 @@ object PlaceVisitBuilder {
                     .groupBy { it.activity }
                     .mapValues { (_, spans) -> spans.sumOf { (minOf(it.endedAt, end) - maxOf(it.startedAt, start)).coerceAtLeast(0) } }
                     .maxByOrNull { it.value }?.key
-                val departure = event.endedAt?.takeIf { it > start && it < dayEnd && it <= now }
-                PlaceVisit(event.placeId, name, type, start, departure, (minOf(departure ?: now, dayEnd, now) - start).coerceAtLeast(0), 1, related.map { it.id }, dominant)
+                val recordedDeparture = event.endedAt?.takeIf { it > start && it < dayEnd && it <= now }
+                val departure = when {
+                    recordedDeparture != null -> minOf(recordedDeparture, visibleEnd)
+                    activeEndAt != null && activeEndAt < minOf(dayEnd, now) -> visibleEnd
+                    else -> null
+                }
+                PlaceVisit(event.placeId, name, type, start, departure, end - start, 1, related.map { it.id }, dominant)
             }.sortedBy { it.arrivalAt }.toList()
         fun key(visit: PlaceVisit): String = visit.placeId?.let { "place:$it" }
             ?: if (visit.placeType == PlaceType.OTHER) "unknown:${visit.arrivalAt}" else "type:${visit.placeType.name}"

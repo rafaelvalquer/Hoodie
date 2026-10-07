@@ -212,10 +212,10 @@ object NpcRenderer {
     private data class TurnWidthRatios(val intoFront: Float, val outOfFront: Float)
     private val turnSideFrontRatios = ConcurrentHashMap<String, TurnWidthRatios>()
 
-    fun draw(b: PixelBuffer, slot: AmbientNpcSlot, timeMs: Long) {
+    fun draw(b: PixelBuffer, slot: AmbientNpcSlot, timeMs: Long, movementOverride: NpcMovement? = null) {
         val restaurantBrain = slot.restaurantBrain
         val restaurantState = restaurantBrain?.stateAt(timeMs)
-        val movement = if (restaurantBrain != null && restaurantState != null) {
+        val movement = movementOverride ?: if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.movementAt(timeMs, restaurantState)
         } else NpcMotionController.movement(slot, timeMs)
         val frameData = NpcMotionController.frame(slot, timeMs, movement)

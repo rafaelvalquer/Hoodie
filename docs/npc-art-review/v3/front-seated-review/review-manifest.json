@@ -1,0 +1,40 @@
+{
+  "status": "VISUALLY_REVIEWED_CANDIDATE",
+  "reviewedAt": "2026-10-06",
+  "goldensPromoted": false,
+  "images": [
+    "office-rabbit-work.png",
+    "office-rabbit-phone.png",
+    "office-cat-work.png",
+    "office-cat-phone.png",
+    "restaurant-eat.png",
+    "restaurant-drink.png",
+    "restaurant-phone.png",
+    "restaurant-menu.png",
+    "restaurant-look.png",
+    "restaurant-talk.png"
+  ],
+  "contactSheets": [
+    "front-seated-contact-sheet.png",
+    "front-seated-before-after.png"
+  ],
+  "focusedTests": [
+    "NpcAnimationRegressionTest",
+    "NpcFrontSeatedPoseTest",
+    "OfficeSeatedOrientationTest",
+    "RestaurantSeatedOrientationTest",
+    "RestaurantNpcFurnitureAlignmentTest",
+    "FrontSeatedVisualReviewTest"
+  ],
+  "review": {
+    "officeFrontFacingAtDesks": true,
+    "chairsBehindNpc": true,
+    "keyboardsUnderMonitors": true,
+    "restaurantSeatCenteredAtX": 205,
+    "tabletopAndFrontEdgeOccludeLowerTorso": true,
+    "plateAndGlassWithinReach": true,
+    "restaurantSeatedInteractionsRemainFrontFacing": true,
+    "walkingRemainsSideFacing": true,
+    "departureTurnsFrontToSide": true
+  }
+}

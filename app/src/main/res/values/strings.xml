@@ -470,6 +470,10 @@
     <string name="clock2_label_move">DESLOCAMENTO</string>
     <string name="clock2_label_unknown">SEM REGISTRO</string>
     <string name="clock2_unknown">Sem registro</string>
+    <string name="clock2_label_sleep">SONO</string>
+    <string name="clock2_label_sleep_estimated">SONO ESTIMADO</string>
+    <string name="clock2_sleeping">Dormindo</string>
+    <string name="clock2_sleep_estimated">Sono estimado</string>
     <string name="clock2_return">Retorno #%1$d</string>
     <string name="clock2_move_to">até %1$s</string>
     <string name="clock2_move_generic">Deslocamento</string>
