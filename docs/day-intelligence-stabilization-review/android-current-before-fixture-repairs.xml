@@ -1,0 +1,677 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.database.DataStorePersistenceTest" tests="288" failures="3" errors="0" skipped="180" time="865.41" timestamp="2026-10-07T23:30:23" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_8(AVD) - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="valorSobreviveAReabertura" classname="com.hoodie.app.database.DataStorePersistenceTest" time="0.216" />
+  <testcase name="ctSec002_upgradeDeTextoPuroParaCifradoSemPerderDados" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="4.43" />
+  <testcase name="senhaIrrecuperavelNaoAbreNemRegeneraSenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="0.573" />
+  <testcase name="senhaErradaNaoAbre" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="1.109" />
+  <testcase name="ctSec003_reaberturaComNovaInstanciaUsaAMesmaSenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="1.034" />
+  <testcase name="ctSec001_instalacaoNovaJaNasceCifrada" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="0.599" />
+  <testcase name="ctSec004_deleteRemoveBancoESenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="0.624" />
+  <testcase name="timelineAntigaSobreviveEGanhaOrigem" classname="com.hoodie.app.database.Migration1To2InstrumentedTest" time="0.245" />
+  <testcase name="digitalV5HistorySurvivesEncryptedReopen" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="1.32" />
+  <testcase name="sqlCipherNativeLibraryLoads" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="0.017" />
+  <testcase name="encryptedPlaceCanBeInsertedReadAndReopened" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="1.038" />
+  <testcase name="canaisCriadosNaInicializacao" classname="com.hoodie.app.notifications.NotificationChannelsTest" time="0.016" />
+  <testcase name="validPositionSavesEncryptedHomeAndAdvancesWithLiveApp" classname="com.hoodie.app.onboarding.OnboardingHomeSaveInstrumentedTest" time="11.129" />
+  <testcase name="unavailablePositionKeepsHomeRecoverable" classname="com.hoodie.app.onboarding.OnboardingHomeSaveInstrumentedTest" time="4.274" />
+  <testcase name="databaseWriteFailureShowsMessageAndAllowsRetry" classname="com.hoodie.app.onboarding.OnboardingHomeSaveInstrumentedTest" time="5.817" />
+  <testcase name="estadoReflete_asPermissoesDoSistema" classname="com.hoodie.app.permissions.LocationPermissionManagerTest" time="0.024" />
+  <testcase name="intentDeConfiguracoesApontaParaOApp" classname="com.hoodie.app.permissions.LocationPermissionManagerTest" time="0.029" />
+  <testcase name="abreEChegaAUmaTelaPrincipal" classname="com.hoodie.app.ui.AppLaunchTest" time="6.135" />
+  <testcase name="labelsFitTheirTab[360dp f1]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="3.655" />
+  <testcase name="labelsFitTheirTab[360dp f1.3]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="3.031" />
+  <testcase name="labelsFitTheirTab[411dp f1]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="3.379" />
+  <testcase name="labelsFitTheirTab[411dp f1.3]" classname="com.hoodie.app.ui.BottomNavigationFitTest" time="3.911" />
+  <testcase name="tabClickPublishesItsRoute" classname="com.hoodie.app.ui.BottomNavigationTest" time="3.986" />
+  <testcase name="primaryTabsRemainVisibleSelectedAndAccessible" classname="com.hoodie.app.ui.BottomNavigationTest" time="4.008" />
+  <testcase name="secondaryDestinationsHideBarAndReturningRestoresIt" classname="com.hoodie.app.ui.BottomNavigationTest" time="3.862" />
+  <testcase name="pixelButtonHasButtonRoleAndMinimumTouchTarget" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="2.693" />
+  <testcase name="weekdaysExposeCheckboxRoleAndMinimumTarget" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="2.739" />
+  <testcase name="disabledMapButtonHasMinimumTouchTargetAndDisabledState" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="2.615" />
+  <testcase name="chipExposesSelectedRadioRoleAndMinimumTouchTarget" classname="com.hoodie.app.ui.CommonAccessibilityTest" time="2.65" />
+  <testcase name="exportReviewScreenshots" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="4.98" />
+  <testcase name="tappingTheRingSelectsTheSegment" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="2.529" />
+  <testcase name="largeFontDoesNotOverflowTheCenter" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="3.065" />
+  <testcase name="switchingBetweenJourneyAndClock" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="4.085" />
+  <testcase name="noPlaceListUnderTheClock" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="2.827" />
+  <testcase name="nowButtonAndCenterTapReturnToTheCurrentMoment" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="3.527" />
+  <testcase name="tappingAMoveOnTheRingShowsItInTheCenter" classname="com.hoodie.app.ui.DayClockPanelUiTest" time="3.495" />
+  <testcase name="pausedReplayOffersResumeAndAccessibleReset" classname="com.hoodie.app.ui.DiaryControlsTest" time="4.193" />
+  <testcase name="completedReplayOffersReplayAgain" classname="com.hoodie.app.ui.DiaryControlsTest" time="2.809" />
+  <testcase name="timelineScrollsToCurrentReplayEvent" classname="com.hoodie.app.ui.DiaryControlsTest" time="2.844" />
+  <testcase name="replaySpeedControlsSelectAllSupportedSpeeds" classname="com.hoodie.app.ui.DiaryControlsTest" time="4.553" />
+  <testcase name="dateSelectorChangesBetweenTodayAndYesterday" classname="com.hoodie.app.ui.DiaryControlsTest" time="3.071" />
+  <testcase name="permissionAloneNeverOptsIn" classname="com.hoodie.app.ui.DigitalConsentTest" time="0.47" />
+  <testcase name="deniedReturnAndCancelledRequestStayDisabled" classname="com.hoodie.app.ui.DigitalConsentTest" time="0.179" />
+  <testcase name="explicitRequestAndGrantedReturnSurviveReopening" classname="com.hoodie.app.ui.DigitalConsentTest" time="0.13" />
+  <testcase name="retrySurvivesLeavingPickerAndDoesNotSaveAgain" classname="com.hoodie.app.ui.GeofenceFeedbackTest" time="2.84" />
+  <testcase name="failedRegistrationCanBeRetriedAgain" classname="com.hoodie.app.ui.GeofenceFeedbackTest" time="2.951" />
+  <testcase name="replayControlsPlayNextPreviousAndSpeed" classname="com.hoodie.app.ui.JourneyMapUiTest" time="3.076" />
+  <testcase name="tappingACardOpensThatVisit" classname="com.hoodie.app.ui.JourneyMapUiTest" time="3.63" />
+  <testcase name="journeyShowsEveryVisitInOrderIncludingReturns" classname="com.hoodie.app.ui.JourneyMapUiTest" time="4.889" />
+  <testcase name="mapModeSelectorSwitchesBetweenJourneyAndClock" classname="com.hoodie.app.ui.JourneyMapUiTest" time="3.637" />
+  <testcase name="detailsSheetShowsReturnTotalsAndSeeAll" classname="com.hoodie.app.ui.JourneyMapUiTest" time="4.208" />
+  <testcase name="tappingABuildingOpensItsStop" classname="com.hoodie.app.ui.JourneyV3UiTest" time="3.337" />
+  <testcase name="tappingAClosedChapterOpensIt" classname="com.hoodie.app.ui.JourneyV3UiTest" time="3.546" />
+  <testcase name="tappingAClockArcOpensItsStop" classname="com.hoodie.app.ui.JourneyV3UiTest" time="2.811" />
+  <testcase name="playingReplayOpensTheChapterOfTheReplayTime" classname="com.hoodie.app.ui.JourneyV3UiTest" time="2.774" />
+  <testcase name="diarySummaryTile[f1]" classname="com.hoodie.app.ui.LabelSpacingTest" time="2.697" />
+  <testcase name="settingsCatName[f1]" classname="com.hoodie.app.ui.LabelSpacingTest" time="2.503" />
+  <testcase name="homeYouPanel[f1]" classname="com.hoodie.app.ui.LabelSpacingTest" time="4.358" />
+  <testcase name="hudStatTile[f1]" classname="com.hoodie.app.ui.LabelSpacingTest" time="2.695" />
+  <testcase name="diarySummaryTile[f1.3]" classname="com.hoodie.app.ui.LabelSpacingTest" time="2.543" />
+  <testcase name="settingsCatName[f1.3]" classname="com.hoodie.app.ui.LabelSpacingTest" time="2.898" />
+  <testcase name="homeYouPanel[f1.3]" classname="com.hoodie.app.ui.LabelSpacingTest" time="2.367" />
+  <testcase name="hudStatTile[f1.3]" classname="com.hoodie.app.ui.LabelSpacingTest" time="3.218" />
+  <testcase name="changingSpeciesUpdatesTheVisibleRenderedNpcPixels" classname="com.hoodie.app.ui.PixelLabNpcTest" time="5.584" />
+  <testcase name="scaleComparisonShowsProductionScalesAndKeepsLegacyValuesDiagnostic" classname="com.hoodie.app.ui.PixelLabNpcTest" time="4.695" />
+  <testcase name="inspectorStepsFrameByFrameAndShowsOnionSkin" classname="com.hoodie.app.ui.PixelLabNpcTest" time="5.114" />
+  <testcase name="npcTabShowsBothRendersPoseControlsAndOverlays" classname="com.hoodie.app.ui.PixelLabNpcTest" time="3.959" />
+  <testcase name="mapa_real_393x873_tela_da_imagem" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="4.896" />
+  <testcase name="mapa_real_360x640_fonte130" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="4.295" />
+  <testcase name="mapa_real_360x640" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="4.554" />
+  <testcase name="mapa_real_360x800" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="4.236" />
+  <testcase name="mapa_real_411x891" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="4.565" />
+  <testcase name="mapa_real_393x873_fonte130" classname="com.hoodie.app.ui.PlacePickerRealMapTest" time="3.931" />
+  <testcase name="edicao_mostra_mudar_local_e_tipo_resumido" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.689">
+    <failure>java.lang.AssertionError: Assert failed: The component is not displayed!
+at androidx.compose.ui.test.AssertionsKt.assertIsDisplayed(Assertions.kt:34)
+at com.hoodie.app.ui.PlacePickerScreenTest.edicao_mostra_mudar_local_e_tipo_resumido(PlacePickerScreenTest.kt:266)
+</failure>
+  </testcase>
+  <testcase name="grande_411x891" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.701" />
+  <testcase name="busca_de_endereco_sempre_visivel_ao_abrir_novo_local" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.513" />
+  <testcase name="foco_na_busca_reduz_o_mapa_e_buscar_reexpande" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.527" />
+  <testcase name="campo_nome_e_solido_alto_e_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.362" />
+  <testcase name="grande_411x891_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.802" />
+  <testcase name="tela_da_imagem_393x873_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.62" />
+  <testcase name="endereco_longo_fica_em_duas_linhas_sem_empurrar_o_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.237" />
+  <testcase name="pequeno_360x640" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.387" />
+  <testcase name="medio_360x800" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.834" />
+  <testcase name="teclado_nao_cobre_o_salvar_nem_o_campo" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.596" />
+  <testcase name="medio_360x800_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.592" />
+  <testcase name="altura_de_teclado_aberto_mantem_salvar_e_nome" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.91" />
+  <testcase name="tela_da_imagem_393x873" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.613" />
+  <testcase name="alterar_tipo_abre_e_selecionar_fecha_o_sheet" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="4.74">
+    <failure>java.lang.AssertionError: Assert failed: The component is not displayed!
+at androidx.compose.ui.test.AssertionsKt.assertIsDisplayed(Assertions.kt:34)
+at com.hoodie.app.ui.PlacePickerScreenTest.alterar_tipo_abre_e_selecionar_fecha_o_sheet(PlacePickerScreenTest.kt:286)
+</failure>
+  </testcase>
+  <testcase name="novo_lugar_mostra_todos_os_tipos_sem_sobreposicao_e_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.754" />
+  <testcase name="onboarding_esconde_o_tipo" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.701" />
+  <testcase name="detalhes_rolam_ate_a_privacidade_em_tela_pequena" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.546" />
+  <testcase name="privacidade_compacta_abre_detalhes" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.513" />
+  <testcase name="fluxo_de_busca_escolhe_endereco_e_habilita_salvar" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.783" />
+  <testcase name="pequeno_360x640_fonte130" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="2.519" />
+  <testcase name="raio_fica_inteiro_fora_do_mapa" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="3.634" />
+  <testcase name="novo_local_inicial_e_com_endereco" classname="com.hoodie.app.ui.PlacePickerScreenshotTest" time="10.487" />
+  <testcase name="selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="3.757">
+    <failure>java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + InputText + EditableText contains 'O que estou fazendo?' (ignoreCase: false))
+
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode$default(SemanticsNodeInteraction.kt:83)
+at com.hoodie.app.ui.PausedClockScrollKt.scrollWithPausedClock(PausedClockScroll.kt:16)
+at com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest.selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos(PlaceTypeSelectorIntegrationTest.kt:98)
+</failure>
+  </testcase>
+  <testcase name="selecao_manual_da_home_exibe_todos_os_tipos_fisicos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="3.158" />
+  <testcase name="dialogo_novo_lugar_exibe_o_mesmo_catalogo_fisico" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="4.526" />
+  <testcase name="optionalRestrictedHelpExplainsStepsAndOpensAppDetails" classname="com.hoodie.app.ui.ScreenStateTest" time="4.996" />
+  <testcase name="unavailablePermissionExplainsFailureWithoutActivationAction" classname="com.hoodie.app.ui.ScreenStateTest" time="3.039" />
+  <testcase name="homeReadFailureShowsLocalizedRetry" classname="com.hoodie.app.ui.ScreenStateTest" time="3.891" />
+  <testcase name="settingsReadFailureShowsLocalizedRetry" classname="com.hoodie.app.ui.ScreenStateTest" time="2.534" />
+  <testcase name="carArtLoadsFromTheApkAndRenders" classname="com.hoodie.app.ui.TransportSceneV3DeviceTest" time="0.522" />
+  <testcase name="monitoredPlacesUsesQuantity" classname="com.hoodie.app.ui.UiTextResourceTest" time="0.012" />
+  <testcase name="formattedLocationSummaryKeepsArguments" classname="com.hoodie.app.ui.UiTextResourceTest" time="0.011" />
+  <testcase name="nestedReasonResolvesAndKeepsLineBreak" classname="com.hoodie.app.ui.UiTextResourceTest" time="0.01" />
+  <testcase name="screenMatchesReviewedBaseline[home_normal_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.873">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_normal_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="4.326">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_normal_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.246">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_normal_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.366">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_normal_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.892">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_normal_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.473">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_loading_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.471">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_loading_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.664">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_loading_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.898">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_loading_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.375">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_loading_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.576">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_loading_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.32">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_error_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.458">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_error_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.401">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_error_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.0">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_error_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.505">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_error_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.982">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_error_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.637">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_empty_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.449">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_empty_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.481">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_empty_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.452">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_empty_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.473">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_empty_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.204">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_empty_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.553">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_full_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.249">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_full_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.686">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_full_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.422">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_full_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.16">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_full_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.66">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[home_full_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.486">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_normal_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.693">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_normal_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.887">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_normal_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.267">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_normal_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.728">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_normal_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.432">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_normal_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.268">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_loading_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.823">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_loading_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.394">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_loading_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.654">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_loading_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.499">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_loading_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.872">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_loading_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.37">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_error_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.259">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_error_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.54">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_error_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.483">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_error_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.204">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_error_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.951">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_error_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.64">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_empty_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.819">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_empty_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.748">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_empty_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.296">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_empty_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.323">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_empty_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.568">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_empty_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.709">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_full_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.531">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_full_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.684">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_full_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.552">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_full_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.912">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_full_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.551">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[diary_full_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.476">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_normal_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.58">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_normal_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.082">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_normal_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.361">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_normal_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.658">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_normal_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.942">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_normal_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.579">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_loading_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.76">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_loading_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.08">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_loading_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.627">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_loading_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.865">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_loading_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.452">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_loading_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.755">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_error_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.453">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_error_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.552">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_error_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.225">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_error_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.707">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_error_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.422">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_error_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.9">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_empty_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.679">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_empty_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.523">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_empty_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.695">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_empty_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.691">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_empty_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.737">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_empty_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.421">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_full_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.441">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_full_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.846">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_full_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.28">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_full_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.933">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_full_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.851">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[digital_full_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.527">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_normal_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.188">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_normal_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.98">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_normal_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.158">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_normal_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.321">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_normal_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.58">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_normal_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.192">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_loading_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.936">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_loading_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.662">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_loading_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.887">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_loading_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.192">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_loading_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.887">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_loading_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.574">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_error_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.637">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_error_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.712">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_error_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.517">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_error_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.947">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_error_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.235">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_error_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.345">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_empty_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.728">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_empty_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.868">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_empty_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.88">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_empty_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.36">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_empty_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.832">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_empty_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.606">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_full_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.712">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_full_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.584">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_full_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.856">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_full_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.807">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_full_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.555">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[onboarding_full_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.055">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_normal_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.646">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_normal_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.148">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_normal_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.033">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_normal_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.903">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_normal_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.679">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_normal_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.658">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_loading_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.197">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_loading_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.447">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_loading_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.678">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_loading_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.017">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_loading_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.494">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_loading_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.699">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_error_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.917">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_error_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.379">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_error_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.935">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_error_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.703">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_error_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="4.229">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_error_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.409">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_empty_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.855">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_empty_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.29">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_empty_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.077">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_empty_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.804">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_empty_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="4.002">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_empty_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.963">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_full_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.606">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_full_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.165">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_full_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.919">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_full_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.831">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_full_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.01">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[settings_full_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.391">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_normal_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.784">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_normal_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.115">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_normal_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.582">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_normal_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.033">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_normal_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.911">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_normal_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.523">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_loading_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.669">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_loading_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.236">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_loading_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.917">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_loading_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.661">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_loading_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.99">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_loading_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.414">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_error_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.942">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_error_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.506">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_error_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.918">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_error_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.186">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_error_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.711">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_error_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.634">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_empty_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.989">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_empty_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.646">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_empty_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.499">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_empty_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.498">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_empty_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.336">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_empty_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.058">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_full_360x640_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.496">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_full_360x640_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.955">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_full_360x800_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.828">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_full_360x800_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.961">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_full_411x891_f100]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="2.737">
+    <skipped />
+  </testcase>
+  <testcase name="screenMatchesReviewedBaseline[place_picker_full_411x891_f130]" classname="com.hoodie.app.ui.golden.ScreenGoldenMatrixTest" time="3.371">
+    <skipped />
+  </testcase>
+  <testcase name="reconciliacaoPeriodicaEstaAgendada" classname="com.hoodie.app.work.WorkSchedulingTest" time="0.091" />
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.ui.PlacePickerScreenTest" tests="3" failures="0" errors="0" skipped="0" time="18.572" timestamp="2026-10-07T23:34:36" hostname="localhost">
+  <properties>
+    <property name="device" value="Pixel_8(AVD) - 17" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="edicao_mostra_mudar_local_e_tipo_resumido" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="7.636" />
+  <testcase name="alterar_tipo_abre_e_selecionar_fecha_o_sheet" classname="com.hoodie.app.ui.PlacePickerScreenTest" time="5.553" />
+  <testcase name="selecionar_restaurante_fecha_seletor_e_mostra_contexto_e_cena_corretos" classname="com.hoodie.app.ui.PlaceTypeSelectorIntegrationTest" time="3.731" />
+</testsuite>

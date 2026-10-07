@@ -95,7 +95,7 @@ class PlaceTypeSelectorIntegrationTest {
         }
 
         rule.mainClock.advanceTimeBy(100L)
-        rule.scrollWithPausedClock(rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4))).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        rule.scrollWithPausedClock(rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4).uppercase())).performSemanticsAction(SemanticsActions.OnClick) { it() }
         rule.waitForIdle()
         rule.mainClock.advanceTimeBy(1_000L)
         rule.scrollWithPausedClock(rule.onNodeWithText("RESTAURANTE")).performSemanticsAction(SemanticsActions.OnClick) { it() }

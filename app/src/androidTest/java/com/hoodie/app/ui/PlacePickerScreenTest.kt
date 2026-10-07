@@ -27,6 +27,8 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -261,13 +263,16 @@ class PlacePickerScreenTest {
     fun edicao_mostra_mudar_local_e_tipo_resumido() {
         show(360.dp, 800.dp)
         rule.onNodeWithText("MUDAR LOCAL").assertIsDisplayed()
+        rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.TYPE_SUMMARY))
         rule.onNodeWithTag(PlacePickerTags.TYPE_SUMMARY).assertIsDisplayed()
         assertEquals(0, rule.onAllNodes(hasTestTag(PlacePickerTags.TYPE_GRID)).fetchSemanticsNodes().size)
-        rule.onNodeWithText("🏠 Casa").assertIsDisplayed()
-        rule.onNodeWithTag(PlacePickerTags.RADIUS_VALUE).assertIsDisplayed()
-        assertEquals("150 m", rule.onNodeWithTag(PlacePickerTags.RADIUS_VALUE).fetchSemanticsNode().config[SemanticsProperties.Text].joinToString())
+        rule.onNode(hasText("Casa") and hasAnyAncestor(hasTestTag(PlacePickerTags.TYPE_SUMMARY))).assertIsDisplayed()
         // Tipo resumido ocupa uma linha (não três de chips).
         assertTrue(bounds(PlacePickerTags.TYPE_SUMMARY).height < 100f)
+        // O raio fica abaixo do nome na lista de detalhes; a edição permite rolar até ele.
+        rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.RADIUS))
+        rule.onNodeWithTag(PlacePickerTags.RADIUS_VALUE).assertIsDisplayed()
+        assertEquals("150 m", rule.onNodeWithTag(PlacePickerTags.RADIUS_VALUE).fetchSemanticsNode().config[SemanticsProperties.Text].joinToString())
     }
 
     @Test
@@ -277,13 +282,15 @@ class PlacePickerScreenTest {
             var state by remember { mutableStateOf(editing()) }
             Picker(state, PlacePickerActions(onTypeChange = { chosen = it; state = state.copy(type = it) }))
         }
-        rule.onNodeWithTag(PlacePickerTags.TYPE_CHANGE).performClick()
+        rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.TYPE_SUMMARY))
+        rule.onNodeWithTag(PlacePickerTags.TYPE_CHANGE).assertIsDisplayed().performClick()
         rule.onNodeWithTag(PlacePickerTags.TYPE_SHEET).assertIsDisplayed()
         rule.onNodeWithTag(PlacePickerTags.sheetType(PlaceType.WORK)).performClick()
         rule.waitForIdle()
         assertEquals(PlaceType.WORK, chosen)
         assertEquals(0, rule.onAllNodes(hasTestTag(PlacePickerTags.TYPE_SHEET)).fetchSemanticsNodes().size)
-        rule.onNodeWithText("🏢 Trabalho").assertIsDisplayed()
+        rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.TYPE_SUMMARY))
+        rule.onNode(hasText("Trabalho") and hasAnyAncestor(hasTestTag(PlacePickerTags.TYPE_SUMMARY))).assertIsDisplayed()
         rule.onNodeWithText("SALVAR COMO TRABALHO").assertIsDisplayed()
     }
 
