@@ -21,8 +21,9 @@ correspondente em `TransportSceneQualityTest` (Marco 2); as outras são de revis
   vermelho, mostarda, verde-oliva, vinho. O azul fica restrito ao céu, que é recortado pela janela e distante.
 - ✔ **Contraste do Hoodie.** A diferença média de luminância e matiz entre o Hoodie e um anel de 3 px em volta
   dele precisa passar do limiar. Isso reprova carro azul e banco azul.
-- ✔ **Sem painel chapado.** Nenhuma região de cor única com mais de ~600 px fora do céu: textura, costura,
-  rebite, reflexo ou dithering.
+- ✔ **Sem painel chapado.** Nenhum retângulo de uma só cor com mais de ~600 px fora do céu, medido na cena como
+  o usuário vê: textura, costura, rebite, reflexo ou dithering. Sombra profunda e contorno (luma < 50) ficam de
+  fora — são sólidos por convenção.
 
 ## 4. Profundidade
 Três planos de paralaxe, mais o veículo, mais um oclusor:
@@ -80,6 +81,9 @@ De baixo para cima, com estes nomes exatos:
   o que é. Ele só exporta, não aprova.
 
 ## 9. Thumbnails (Marco 1)
+Escolha do Rafael (07/10/2026): **Carro B** (três quartos, carro inteiro na largura), **Trem A** (três lugares,
+Hoodie no meio) e **Metrô A** (sentado, túnel na janela).
+
 `docs/transport-art/thumbnails/` tem 3 propostas por cena, em 3 cinzas, com o sprite real do Hoodie em 1:1
 (`TransportThumbnailExportTest`, `-PtransportThumbs=true`). O Rafael escolhe uma letra por cena antes de qualquer
 arte.

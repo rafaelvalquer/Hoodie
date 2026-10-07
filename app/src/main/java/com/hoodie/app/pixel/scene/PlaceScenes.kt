@@ -408,7 +408,17 @@ object SceneRegistry {
         ).associateBy { it.id }
     }
 
-    operator fun get(id: SceneId): PixelScene = if (id == SceneId.BUS && com.hoodie.app.core.config.HoodieConfig.BUS_SCENE_V2) busV2 else scenes.getValue(id)
+    operator fun get(id: SceneId): PixelScene = when {
+        id == SceneId.BUS && com.hoodie.app.core.config.HoodieConfig.BUS_SCENE_V2 -> busV2
+        id == SceneId.CAR && com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3 -> carV3 ?: scenes.getValue(id)
+        else -> scenes.getValue(id)
+    }
+
+    /** Carro V3 em camadas (null se a arte compilada não estiver no APK). */
+    private val carV3: PixelScene? by lazy { com.hoodie.app.pixel.art.SceneArtStore.get("car")?.let { CarSceneV3(it) } }
+
+    /** Carro do Lab: V3 em camadas ou o legado, independente da flag. */
+    fun car(v3: Boolean): PixelScene = if (v3) carV3 ?: scenes.getValue(SceneId.CAR) else scenes.getValue(SceneId.CAR)
 
     private val busV2: PixelScene by lazy { BusSceneV2() }
 

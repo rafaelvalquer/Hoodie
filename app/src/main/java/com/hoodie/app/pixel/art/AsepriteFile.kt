@@ -182,11 +182,20 @@ object AsepriteFile {
                     }
                     0x2005 -> {
                         val layer = u16(); val x = s16(); val y = s16(); u8(); val celType = u16(); s16(); b.position(b.position() + 5)
-                        require(celType == 2) { "cel tipo $celType não suportado" }
+                        // Cel ligado (o Aseprite cria ao duplicar frames): reaproveita a imagem do frame indicado.
+                        if (celType == 1) {
+                            val linked = u16()
+                            frames.getOrNull(linked)?.cels?.firstOrNull { it.layer == layer }?.let { cels += it.copy(x = x, y = y) }
+                            b.position(cStart + cSize)
+                            return@repeat
+                        }
+                        require(celType == 0 || celType == 2) { "cel tipo $celType não suportado" }
                         val cw = u16(); val ch = u16()
-                        val z = ByteArray(cStart + cSize - b.position()); b.get(z)
                         val raw = ByteArray(cw * ch * 4)
-                        Inflater().apply { setInput(z); var off = 0; while (off < raw.size && !finished()) off += inflate(raw, off, raw.size - off); end() }
+                        if (celType == 0) b.get(raw) else {
+                            val z = ByteArray(cStart + cSize - b.position()); b.get(z)
+                            Inflater().apply { setInput(z); var off = 0; while (off < raw.size && !finished()) off += inflate(raw, off, raw.size - off); end() }
+                        }
                         val img = PixelBuffer(cw, ch)
                         for (i in 0 until cw * ch) {
                             img.pixels[i] = ((raw[i * 4 + 3].toInt() and 0xFF) shl 24) or ((raw[i * 4].toInt() and 0xFF) shl 16) or

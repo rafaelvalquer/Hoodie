@@ -11,6 +11,8 @@ import com.hoodie.app.core.time.MINUTE_MS
 object HoodieConfig {
     /** Nova composição da cena ferroviária; desligue para comparar com o vagão legado. */
     var TRAIN_SCENE_V2 = true
+    /** Cenas de transporte V3 em camadas (docs/transport-art-bible.md). Liga quando a cena tiver revisão humana (scene-art-status.json); sem a arte compilada, a cena antiga assume. */
+    @Volatile var TRANSPORT_SCENES_V3 = false
     // ── Geofence ──
     /** Raio padrão: 100–200 m absorve a imprecisão do GPS sem pegar o quarteirão inteiro. */
     const val DEFAULT_GEOFENCE_RADIUS_M = 150f

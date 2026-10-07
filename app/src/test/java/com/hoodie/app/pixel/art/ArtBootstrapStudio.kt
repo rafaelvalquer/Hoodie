@@ -34,6 +34,14 @@ object ArtBootstrapStudio {
         ).map { it to Facing.FRONT },
     )
 
+    /**
+     * Grupos em produção: só a FONTE é gerada (para o artista pintar); entram em [GROUPS], no
+     * art-status e no APK quando a arte for aprovada. Ver docs/transport-art-progress.md.
+     */
+    val PENDING_GROUPS: Map<String, List<Pair<AnimationId, Facing>>> = linkedMapOf(
+        "hoodie_transport" to listOf(AnimationId.CAR_IDLE, AnimationId.CAR_LOOK_WINDOW, AnimationId.CAR_LOOK_FRONT, AnimationId.CAR_BUMP).map { it to Facing.SIDE },
+    )
+
     const val BASELINE = AsepriteSourceCompiler.BASELINE_LAYER
     const val ANCHORS = AsepriteSourceCompiler.ANCHORS_LAYER
 
@@ -120,7 +128,7 @@ object ArtBootstrapStudio {
     }
 
     fun document(group: String): AsepriteFile.Document {
-        val clips = GROUPS.getValue(group)
+        val clips = GROUPS[group] ?: PENDING_GROUPS.getValue(group)
         val frames = mutableListOf<AsepriteFile.Frame>()
         val tags = mutableListOf<AsepriteFile.Tag>()
         val colors = linkedSetOf<Int>().apply { addAll(HoodiePalette.ALL) }

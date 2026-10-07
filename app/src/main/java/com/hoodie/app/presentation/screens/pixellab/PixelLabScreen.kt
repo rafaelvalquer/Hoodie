@@ -662,6 +662,13 @@ private fun TransportLab() {
     var speed by remember { mutableFloatStateOf(1f) }
     var trainV2 by remember { mutableStateOf(com.hoodie.app.core.config.HoodieConfig.TRAIN_SCENE_V2) }
     androidx.compose.runtime.SideEffect { com.hoodie.app.core.config.HoodieConfig.TRAIN_SCENE_V2 = trainV2 }
+    var transportV3 by remember { mutableStateOf(com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3) }
+    androidx.compose.runtime.SideEffect { com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3 = transportV3 }
+    // O V3 é rascunho: ao sair do Lab a flag volta ao valor de antes.
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        val before = com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3
+        onDispose { com.hoodie.app.core.config.HoodieConfig.TRANSPORT_SCENES_V3 = before }
+    }
     val profile = com.hoodie.app.pixel.transport.TransportVisualRegistry.profileFor(mode, com.hoodie.app.core.model.CommuteStyle.WALK)
     val visual = remember(mode, phase, energy, mood, direction) {
         val base = VisualDirector.resolve(HoodieActivity.COMMUTING, UserContextType.COMMUTING, mobilityMode = mode, energy = energy, mood = mood)
@@ -677,9 +684,16 @@ private fun TransportLab() {
         ChipRow(listOf("Cena legada", "Trem V2"), if (trainV2) 1 else 0, { trainV2 = it == 1 })
         Text("V2: bancos longitudinais, slots preferenciais, portas centrais, mapa de estações e balanço ferroviário.", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     }
+    if (mode == MovementMode.CAR) {
+        ChipRow(listOf("Carro legado", "Carro V3"), if (transportV3) 1 else 0, { transportV3 = it == 1 })
+        Text("V3: cena em camadas (assets-source/scenes/transport/car.aseprite). Rascunho até a revisão do Rafael.", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+    }
     Text("Perfil visual único · ${profile.journey.vehicle} · rota ${profile.journey.routeStyle}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
-    Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
-        HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = period)
+    // Recria a cena ao trocar de versão: o cache de fundo do renderer é por SceneId.
+    androidx.compose.runtime.key(transportV3, trainV2) {
+        Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
+            HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = period)
+        }
     }
     SectionLabel("Meio de transporte")
     ChipRow(modes.map { "${it.emoji} ${it.label}" }, modes.indexOf(mode), { mode = modes[it] })
