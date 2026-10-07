@@ -55,9 +55,10 @@ import org.osmdroid.views.overlay.Polygon
  * [recenterKey] muda quando o ponto vem de fora (busca, "minha localização");
  * aí o mapa é movido para [latitude]/[longitude].
  *
- * Dentro do mapa: "◎ Minha localização" no canto inferior esquerdo (vira
+ * Dentro do mapa: "◎ Minha localização" no canto SUPERIOR esquerdo (vira
  * "◌ Localizando..." com [loadingLocation]) e a atribuição do OpenStreetMap no
- * inferior direito — cantos opostos, nunca sobrepostos. O mapa não define a
+ * inferior direito — em bordas diferentes, então o botão nunca cobre o crédito,
+ * por mais estreita que seja a tela. O mapa não define a
  * própria altura: quem chama passa uma altura fixa (nada de weight).
  */
 @Composable
@@ -165,7 +166,7 @@ fun MapPicker(
                 if (loadingLocation) stringResource(R.string.map_locating) else stringResource(R.string.map_my_location),
                 enabled = !loadingLocation,
                 onClick = onMyLocation,
-                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp).testTag(MAP_MY_LOCATION_TAG),
+                modifier = Modifier.align(Alignment.TopStart).padding(8.dp).testTag(MAP_MY_LOCATION_TAG),
             )
         }
         Text(
@@ -173,12 +174,13 @@ fun MapPicker(
             style = MaterialTheme.typography.labelSmall,
             color = HoodieColors.Outline,
             maxLines = 1,
-            modifier = Modifier.align(Alignment.BottomEnd).background(Color(0xCCFFFFFF)).padding(horizontal = 4.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).background(Color(0xCCFFFFFF)).padding(horizontal = 4.dp).testTag(MAP_ATTRIBUTION_TAG),
         )
     }
 }
 
 const val MAP_MY_LOCATION_TAG = "map_my_location"
+const val MAP_ATTRIBUTION_TAG = "map_attribution"
 const val MAP_VIEW_TAG = "map_view"
 
 /** Botão compacto sobre o mapa (borda pixel de 2 dp, fundo do painel). */

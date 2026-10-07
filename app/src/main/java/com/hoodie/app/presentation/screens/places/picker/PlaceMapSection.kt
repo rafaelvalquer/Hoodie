@@ -15,9 +15,10 @@ import com.hoodie.app.presentation.theme.HoodieColors
 
 /**
  *     ┌──── área do mapa (altura fixa) ────┐
+ *     │ [◎ Minha localização]              │
  *     │              MapView               │
  *     │                📍                  │
- *     │ [◎ Minha localização]   © OSM      │
+ *     │                         © OSM      │
  *     └────────────────────────────────────┘
  *     ↓ fim do mapa — o formulário começa aqui
  *
