@@ -5,7 +5,7 @@ import com.hoodie.app.pixel.renderer.PixelBuffer
 
 /** Ícones 7×7 da placa de cada prédio ('#' = contorno, 'o' = cor do ícone). */
 object DiaryMapIcons {
-    private val ICONS: Map<PlaceType, List<String>> = mapOf(
+    internal val ICONS: Map<PlaceType, List<String>> = mapOf(
         PlaceType.HOME to listOf(
             "...#...",
             "..#o#..",

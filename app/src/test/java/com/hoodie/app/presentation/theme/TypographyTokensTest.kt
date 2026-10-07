@@ -67,4 +67,20 @@ class TypographyTokensTest {
         assertTrue(RetroFontStyles.HudNumberLarge.fontSize.value > HoodieTypographyTokens.DisplaySize.value)
         assertTrue(RetroFontStyles.HudNumber.fontSize.value > HoodieTypographyTokens.TitleLargeSize.value)
     }
+
+    @Test
+    fun `retro body styles share the theme reading scale`() {
+        assertEquals(HoodieTypography.bodyMedium.fontSize, RetroFontStyles.Body.fontSize)
+        assertEquals(HoodieTypography.bodyMedium.lineHeight, RetroFontStyles.Body.lineHeight)
+        assertEquals(HoodieTypography.bodySmall.fontSize, RetroFontStyles.Small.fontSize)
+        assertEquals(HoodieTypography.bodySmall.lineHeight, RetroFontStyles.Small.lineHeight)
+    }
+
+    @Test
+    fun `every style centers its text in the line box`() {
+        with(HoodieTypography) {
+            listOf(displaySmall, headlineSmall, titleLarge, titleMedium, labelLarge, labelSmall, bodyLarge, bodyMedium, bodySmall)
+        }.plus(listOf(RetroFontStyles.PanelTitle, RetroFontStyles.HudNumberLarge, RetroFontStyles.HudNumber, RetroFontStyles.HudLabel, RetroFontStyles.Body, RetroFontStyles.Small))
+            .forEach { assertEquals(HoodieLineHeightStyle, it.lineHeightStyle) }
+    }
 }

@@ -44,6 +44,8 @@ import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.navigation.Routes
+import com.hoodie.app.pixel.icons.IconLabel
+import com.hoodie.app.pixel.icons.PixelIcons
 import com.hoodie.app.presentation.theme.HoodieColors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,7 +113,7 @@ fun PlacesScreen(onOpen: (String) -> Unit, vm: PlacesViewModel = hiltViewModel()
         list.forEach { p ->
             PixelPanel(Modifier.fillMaxWidth(), onClick = { editing = p }) {
                 Row {
-                    Text("${p.type.emoji} ${p.name}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    IconLabel(PixelIcons.of(p.type), p.name, style = MaterialTheme.typography.titleMedium, iconSize = 20.dp, modifier = Modifier.weight(1f))
                     Text("${p.radiusMeters.toInt()} m", color = HoodieColors.Muted)
                 }
                 Text("${p.type.label} · ${p.confirmationCount} visitas", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
@@ -149,7 +151,7 @@ private fun PlaceTypeChips(selected: Int, onSelect: (Int) -> Unit) {
             androidx.compose.material3.FilterChip(
                 selected = selected == index,
                 onClick = { onSelect(index) },
-                label = { Text("${placeType.emoji} ${placeType.label}") },
+                label = { IconLabel(PixelIcons.of(placeType), placeType.label, iconSize = 18.dp) },
             )
         }
     }
@@ -167,7 +169,7 @@ internal fun AddPlaceDialog(onDismiss: () -> Unit, onHere: (PlaceType, String) -
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 PlaceTypeChips(type, { type = it })
-                PixelButton("🗺 Buscar endereço no mapa", { onMap(placeTypes[type]) }, Modifier.fillMaxWidth())
+                PixelButton("Buscar endereço no mapa", { onMap(placeTypes[type]) }, Modifier.fillMaxWidth(), leadingIcon = PixelIcons.MAP)
                 OutlinedTextField(name, { name = it }, label = { Text("Nome (opcional)") }, singleLine = true)
                 if (manual) OutlinedTextField(coords, { coords = it }, label = { Text("lat, lng") }, singleLine = true)
                 Text(
@@ -195,7 +197,7 @@ internal fun AddPlaceDialogContent() {
         Text("Novo lugar", style = MaterialTheme.typography.titleLarge)
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             PlaceTypeChips(type, { type = it })
-            PixelButton("🗺 Buscar endereço no mapa", {}, Modifier.fillMaxWidth())
+            PixelButton("Buscar endereço no mapa", {}, Modifier.fillMaxWidth(), leadingIcon = PixelIcons.MAP)
             OutlinedTextField(name, { name = it }, label = { Text("Nome (opcional)") }, singleLine = true)
             if (manual) OutlinedTextField(coords, { coords = it }, label = { Text("lat, lng") }, singleLine = true)
             Text(
@@ -214,14 +216,14 @@ private fun EditPlaceDialog(place: Place, onDismiss: () -> Unit, onSave: (Place)
     var confirmDelete by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("${place.type.emoji} ${place.name}") },
+        title = { IconLabel(PixelIcons.of(place.type), place.name, iconSize = 22.dp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(name, { name = it }, label = { Text("Nome") }, singleLine = true)
                 PlaceTypeChips(type, { type = it })
                 SectionLabel("Raio: ${radius.toInt()} m")
                 Slider(radius, { radius = it }, valueRange = 75f..400f)
-                PixelButton("🗺 Mudar local no mapa", onMap, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
+                PixelButton("Mudar local no mapa", onMap, Modifier.fillMaxWidth(), color = HoodieColors.Hood, leadingIcon = PixelIcons.MAP)
                 Spacer(Modifier.padding(2.dp))
                 Text(if (confirmDelete) "Toque de novo para apagar" else "Apagar lugar", color = HoodieColors.Coral,
                     modifier = Modifier.clickable { if (confirmDelete) onDelete() else confirmDelete = true }.padding(4.dp))

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.presentation.theme.HoodieColors
+import com.hoodie.app.presentation.theme.HoodieSpacing
 
 /**
  * Painel de HUD: contorno escuro, sombra dura, faixa de título com "rebites"
@@ -89,8 +91,9 @@ fun HudStatTile(value: String, label: String, color: Color, modifier: Modifier =
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(8.dp).background(color).border(1.dp, HoodieColors.Outline))
             Box(Modifier.width(6.dp))
-            Text(label.uppercase(), style = RetroFontStyles.HudLabel, color = HoodieColors.Muted, maxLines = 1)
+            Text(label.uppercase(), style = RetroFontStyles.HudLabel, color = HoodieColors.MutedStrong, maxLines = 1)
         }
+        Spacer(Modifier.height(HoodieSpacing.LabelToValue))
         Text(value, style = RetroFontStyles.HudNumber, color = HoodieColors.Ink, maxLines = 1)
     }
 }

@@ -4,13 +4,25 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
-private fun pixel(size: androidx.compose.ui.unit.TextUnit, lineHeight: androidx.compose.ui.unit.TextUnit) =
-    TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = size, lineHeight = lineHeight, letterSpacing = 0.sp)
+/**
+ * Entrelinha fixa com o texto centralizado na linha. Sem isso o glifo (e, pior, o emoji da fonte de
+ * fallback) encosta no rótulo/valor vizinho porque a sobra de altura vai toda para um lado.
+ */
+val HoodieLineHeightStyle = LineHeightStyle(alignment = LineHeightStyle.Alignment.Center, trim = LineHeightStyle.Trim.None)
 
-private fun body(size: androidx.compose.ui.unit.TextUnit, lineHeight: androidx.compose.ui.unit.TextUnit) =
-    TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = size, lineHeight = lineHeight, letterSpacing = 0.sp)
+fun pixelTextStyle(size: TextUnit, lineHeight: TextUnit, letterSpacing: TextUnit = 0.sp) =
+    TextStyle(fontFamily = PixelFont, fontWeight = FontWeight.Normal, fontSize = size, lineHeight = lineHeight, letterSpacing = letterSpacing, lineHeightStyle = HoodieLineHeightStyle)
+
+fun bodyTextStyle(size: TextUnit, lineHeight: TextUnit, letterSpacing: TextUnit = 0.sp) =
+    TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = size, lineHeight = lineHeight, letterSpacing = letterSpacing, lineHeightStyle = HoodieLineHeightStyle)
+
+private fun pixel(size: TextUnit, lineHeight: TextUnit) = pixelTextStyle(size, lineHeight)
+
+private fun body(size: TextUnit, lineHeight: TextUnit) = bodyTextStyle(size, lineHeight)
 
 /** Pixel nos títulos/botões/labels; fonte do sistema nos textos de leitura. */
 val HoodieTypography = Typography(

@@ -43,16 +43,16 @@ class ScreenStateTest {
 
     @Test fun homeReadFailureShowsLocalizedRetry() {
         var retries = 0
-        rule.setContent { HoodieTheme { HomeContent(HomeUiState(loading = false, error = DatabaseError.ReadFailed), false, ZoneId.of("UTC"), {}, actions = HomeActions(retryLoad = { retries++ })) } }
+        rule.setContent { HoodieTheme { CompositionLocalProvider(LocalPixelRenderFrame provides PixelRenderFrame()) { HomeContent(HomeUiState(loading = false, error = DatabaseError.ReadFailed), false, ZoneId.of("UTC"), {}, actions = HomeActions(retryLoad = { retries++ })) } } }
         rule.onNodeWithText(context.appErrorText(DatabaseError.ReadFailed)).assertIsDisplayed()
         rule.onNodeWithText(label(R.string.place_retry_load).uppercase()).performClick()
         rule.runOnIdle { assertEquals(1, retries) }
     }
     @Test fun settingsReadFailureShowsLocalizedRetry() {
         var retries = 0
-        rule.setContent { HoodieTheme { SettingsContent(AppSettings(), error = DatabaseError.ReadFailed,
+        rule.setContent { HoodieTheme { CompositionLocalProvider(LocalPixelRenderFrame provides PixelRenderFrame()) { SettingsContent(AppSettings(), error = DatabaseError.ReadFailed,
             permission = LocationPermissionState.NONE, geofenceResult = null, usagePermission = UsagePermissionState.DENIED,
-            activityPermission = ActivityRecognitionPermissionState.GRANTED, onOpen = {}, actions = SettingsActions(retryLoad = { retries++ })) } }
+            activityPermission = ActivityRecognitionPermissionState.GRANTED, onOpen = {}, actions = SettingsActions(retryLoad = { retries++ })) } } }
         rule.onNodeWithText(context.appErrorText(DatabaseError.ReadFailed)).assertIsDisplayed()
         rule.onNodeWithText(label(R.string.place_retry_load).uppercase()).performClick()
         rule.runOnIdle { assertEquals(1, retries) }
