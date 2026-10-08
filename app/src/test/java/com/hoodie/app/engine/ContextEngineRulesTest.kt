@@ -31,27 +31,27 @@ class ContextEngineRulesTest {
     }
 
     @Test
-    fun `CT-CONTEXT-002 saida do trabalho as 12h05 gera candidato LUNCH e pergunta`() {
+    fun `CT-CONTEXT-002 saida do trabalho as 12h05 aceita LUNCH provisoriamente sem pergunta`() {
         val c = ContextScorer.score(input(ContextSignal.Exit(WORK_PLACE), at(MONDAY, 12, 5)))
         assertEquals(UserContextType.LUNCH, c.type)
-        assertEquals(ContextDecision.APPLY_AND_ASK, c.decision)
-        // Após o tempo mínimo fora, confiança 80 → continua perguntando (não infere sozinho).
+        assertEquals(ContextDecision.APPLY, c.decision)
+        // Após o tempo mínimo fora, confiança 80 permanece provisória e sem interrupção.
         val later = ContextScorer.score(input(ContextSignal.Exit(WORK_PLACE, minutesOutside = 15), at(MONDAY, 12, 20)))
         assertEquals(80, later.score)
-        assertEquals(ContextDecision.APPLY_AND_ASK, later.decision)
+        assertEquals(ContextDecision.APPLY, later.decision)
     }
 
     @Test
-    fun `CT-CONTEXT-003 domingo 09h no trabalho pede confirmacao`() {
+    fun `CT-CONTEXT-003 domingo 09h no trabalho permanece desconhecido com 40 por cento`() {
         val c = ContextScorer.score(input(ContextSignal.Enter(WORK_PLACE), at(SUNDAY, 9)))
         assertEquals(UserContextType.WORK, c.type)
-        assertEquals(ContextDecision.APPLY_AND_ASK, c.decision)
+        assertEquals(ContextDecision.UNKNOWN, c.decision)
     }
 
     @Test
-    fun `dia marcado como folga tambem pede confirmacao no trabalho`() {
+    fun `dia marcado como folga tambem permanece desconhecido sem evidencia suficiente`() {
         val c = ContextScorer.score(input(ContextSignal.Enter(WORK_PLACE), at(MONDAY, 9), dayOff = true))
-        assertEquals(ContextDecision.APPLY_AND_ASK, c.decision)
+        assertEquals(ContextDecision.UNKNOWN, c.decision)
     }
 
     @Test

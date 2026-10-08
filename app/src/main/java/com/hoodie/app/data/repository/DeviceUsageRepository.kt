@@ -62,6 +62,7 @@ class DeviceUsageRepositoryImpl @Inject constructor(
     private val contexts: ContextEventDao,
     private val settings: SettingsRepository,
     private val clock: ClockProvider,
+    private val transactions: com.hoodie.app.core.database.TransactionRunner? = null,
 ) : DeviceUsageRepository {
     private val mutex = Mutex()
 
@@ -93,7 +94,10 @@ class DeviceUsageRepositoryImpl @Inject constructor(
 
     override suspend fun storedSessionCount(): Int = withContext(Dispatchers.IO) { dao.sessionCount() }
 
-    private suspend fun refreshLocked(date: LocalDate, digital: DigitalSettings): DailyPhoneInsights {
+    private suspend fun refreshLocked(date: LocalDate, digital: DigitalSettings): DailyPhoneInsights =
+        transactions?.run { refreshCanonicalLocked(date, digital) } ?: refreshCanonicalLocked(date, digital)
+
+    private suspend fun refreshCanonicalLocked(date: LocalDate, digital: DigitalSettings): DailyPhoneInsights {
         val zone = clock.zone()
         val now = clock.nowMillis()
         val from = startOfDay(date, zone)

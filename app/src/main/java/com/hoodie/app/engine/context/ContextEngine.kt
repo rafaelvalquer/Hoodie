@@ -54,10 +54,11 @@ class ContextEngine @Inject constructor(
     cipher: CoordinateCipher,
     private val clock: ClockProvider,
     log: DebugEventLogger,
+    intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
 ) {
     private val mutex = Mutex()
 
-    private val processor = ContextSignalProcessor(contextDao, transitions, confirmationDao, questionDao, locationEventDao, places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, cipher, clock, log)
+    private val processor = ContextSignalProcessor(contextDao, transitions, confirmationDao, questionDao, locationEventDao, places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, cipher, clock, log, intelligence)
     private val geofenceContextHandler = GeofenceContextHandler(processor)
     private val contextQuestionHandler = ContextQuestionHandler(processor)
     private val routineFallbackHandler = RoutineFallbackHandler(processor)

@@ -7,7 +7,7 @@ import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
 
 object ContextWakeEvidenceBuilder {
-    private val realSources = setOf(ContextSource.GEOFENCE, ContextSource.MANUAL, ContextSource.CONFIRMATION, ContextSource.MOBILITY, ContextSource.LOCATION_CHECK)
+    private val realSources = setOf(ContextSource.GEOFENCE, ContextSource.MANUAL, ContextSource.CONFIRMATION, ContextSource.MOBILITY, ContextSource.LOCATION_CHECK, ContextSource.USER_CORRECTION)
 
     fun build(contexts: List<ContextEventEntity>, from: Long, until: Long): List<WakeEvidence> = buildList {
         contexts.filter { it.source in realSources }.forEach { event ->

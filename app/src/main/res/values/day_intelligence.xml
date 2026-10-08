@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diary_edit_event">Editar evento</string>
+    <string name="diary_edit_context">Contexto</string>
+    <string name="diary_edit_place">Local</string>
+    <string name="diary_edit_transport">Transporte</string>
+    <string name="diary_edit_no_place">Sem local definido</string>
+    <string name="diary_edit_keep_transport">Manter transporte atual</string>
+    <string name="diary_edit_start">Início</string>
+    <string name="diary_edit_end">Fim</string>
+    <string name="diary_edit_time_hint">AAAA-MM-DD HH:MM. Fim vazio para evento em andamento.</string>
+    <string name="diary_edit_invalid_time">Confira a data e o horário.</string>
+    <string name="diary_edit_cancel">Cancelar</string>
+    <string name="diary_edit_save">Salvar</string>
+    <string name="day_state_sleeping">Dormindo</string>
+    <string name="day_state_waking">Acordando</string>
+    <string name="day_state_active">Em atividade</string>
+    <string name="day_state_commuting">Em deslocamento</string>
+    <string name="day_state_winding_down">Desacelerando</string>
+    <string name="day_state_provisional">%1$s · provável</string>
+</resources>

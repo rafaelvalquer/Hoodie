@@ -82,7 +82,7 @@ class MobilityRulesTest {
         assertEquals(85, MobilityConfidenceScorer.score(ev(exit = true, sustained = true)))
         assertEquals(100, MobilityConfidenceScorer.score(ev(exit = true, sustained = true, time = true, history = true)))
         assertEquals(MobilityDecision.IGNORE, MobilityConfidenceScorer.decide(ev()))
-        assertEquals(MobilityDecision.ASK, MobilityConfidenceScorer.decide(ev(exit = true)))
+        assertEquals(MobilityDecision.APPLY, MobilityConfidenceScorer.decide(ev(exit = true)))
         assertEquals(MobilityDecision.APPLY, MobilityConfidenceScorer.decide(ev(exit = true, sustained = true)))
     }
 

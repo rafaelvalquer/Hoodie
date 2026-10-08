@@ -1,0 +1,106 @@
+{
+  "finalCorrectionRecheck": {
+    "android": {
+      "api": 37,
+      "failures": 0,
+      "tests": 1
+    },
+    "apkSha256": "C7E681482E8906D9724B5E3D1E3D0659DDB6B3CE30D1A839960054F6BE7D0089",
+    "jvm": {
+      "errors": 0,
+      "skipped": 0,
+      "failures": 0,
+      "tests": 100
+    },
+    "lint": {
+      "warnings": 70,
+      "errors": 0
+    },
+    "log": "day-intelligence-release-check.log",
+    "emulatorSettingsRestored": true,
+    "scope": "All integration suites, confidence, day state, routine, transport classifier and README; DiaryCorrectionUiTest",
+    "assemble": "passed",
+    "result": "BUILD SUCCESSFUL"
+  },
+  "fullGate": {
+    "assemble": "passed",
+    "lint": {
+      "warnings": 70,
+      "errors": 0
+    },
+    "android": {
+      "failures": 0,
+      "skipped": 0,
+      "excluded": "ScreenGoldenMatrixTest (API 34 reference)",
+      "errors": 0,
+      "tests": 109,
+      "api": 37
+    },
+    "result": "BUILD SUCCESSFUL",
+    "jvm": {
+      "errors": 0,
+      "skipped": 6,
+      "tests": 793,
+      "failures": 0
+    },
+    "requiredSuites": [
+      {
+        "name": "com.hoodie.app.engine.daystate.DayStateEngineTest",
+        "timestamp": "2026-10-08T00:35:32.116Z",
+        "errors": 0,
+        "tests": 5,
+        "failures": 0
+      },
+      {
+        "name": "com.hoodie.app.engine.detection.ConfidenceEngineTest",
+        "timestamp": "2026-10-08T00:35:32.152Z",
+        "errors": 0,
+        "tests": 6,
+        "failures": 0
+      },
+      {
+        "name": "com.hoodie.app.engine.mobility.TransportClassifierTest",
+        "timestamp": "2026-10-08T00:35:33.552Z",
+        "errors": 0,
+        "tests": 4,
+        "failures": 0
+      },
+      {
+        "name": "com.hoodie.app.engine.routine.RoutineLearnerTest",
+        "timestamp": "2026-10-08T00:35:33.582Z",
+        "errors": 0,
+        "tests": 4,
+        "failures": 0
+      },
+      {
+        "name": "com.hoodie.app.integration.DiaryCorrectionIntegrationTest",
+        "timestamp": "2026-10-08T00:35:43.999Z",
+        "errors": 0,
+        "tests": 3,
+        "failures": 0
+      },
+      {
+        "name": "com.hoodie.app.integration.FullDayIntelligenceIntegrationTest",
+        "timestamp": "2026-10-08T00:35:47.72Z",
+        "errors": 0,
+        "tests": 1,
+        "failures": 0
+      },
+      {
+        "name": "com.hoodie.app.integration.Migration7To8Test",
+        "timestamp": "2026-10-08T00:35:55.509Z",
+        "errors": 0,
+        "tests": 2,
+        "failures": 0
+      },
+      {
+        "name": "com.hoodie.app.integration.mobility.TransportIntelligenceIntegrationTest",
+        "timestamp": "2026-10-08T00:36:07.766Z",
+        "errors": 0,
+        "tests": 1,
+        "failures": 0
+      }
+    ],
+    "log": "day-intelligence-final-gates.log"
+  }
+}

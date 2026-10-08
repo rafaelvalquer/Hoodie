@@ -1,6 +1,6 @@
 # Integração com a história canônica
 
-Base: `d21cfa43`, banco v7. Esta nota registra os pontos concretos de integração do plano; não representa funcionalidades concluídas.
+Base da análise: `d21cfa43`, banco v7. Esta nota registra os pontos de integração que orientaram a implementação. O banco atual é v8; implementação, flags e resultados de validação estão no [registro de progresso](day-intelligence-progress.md).
 
 ## Confiança e decisões
 

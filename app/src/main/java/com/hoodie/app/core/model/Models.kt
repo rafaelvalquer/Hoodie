@@ -42,7 +42,7 @@ data class SleepSchedule(
     val sleepMinute: Int = 23 * 60,
 )
 
-enum class ContextSource { GEOFENCE, MANUAL, CONFIRMATION, ROUTINE, ONBOARDING, LOCATION_CHECK, MOBILITY }
+enum class ContextSource { GEOFENCE, MANUAL, CONFIRMATION, ROUTINE, ONBOARDING, LOCATION_CHECK, MOBILITY, USER_CORRECTION }
 
 /** Contexto do usuário vigente num intervalo. endedAt == null → ainda ativo. */
 data class ContextEvent(

@@ -57,7 +57,7 @@ class MobilityLearningIntegrationTest {
     fun `perguntas diminuem ate o trajeto ficar automatico`() {
         val asked = workdays.take(6).map { commute(it) }
         // Dia 1: tudo é novo — movimento, transporte e chegada.
-        assertEquals(setOf(QuestionKind.CONFIRM_MOVEMENT, QuestionKind.SELECT_TRANSPORT_MODE, QuestionKind.CONFIRM_ARRIVAL), asked[0].toSet())
+        assertEquals(setOf(QuestionKind.SELECT_TRANSPORT_MODE, QuestionKind.CONFIRM_ARRIVAL), asked[0].toSet())
         // O total de perguntas nunca cresce de um dia para o outro…
         val counts = asked.map { it.size }
         assertTrue("perguntas por dia: $asked", counts.zipWithNext().all { (a, b) -> b <= a })

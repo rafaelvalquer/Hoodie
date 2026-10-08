@@ -40,7 +40,7 @@ class MobilityRepository @Inject constructor(
      * Candidatos (ainda sem confirmação) não mudam a cena.
      */
     val activeMode: Flow<MovementMode?> = sessions.observeOpen().map { s ->
-        s?.takeIf { it.confirmed && it.state in ACTIVE_STATES }?.currentMode
+        s?.takeIf { (it.confirmed || HoodieConfig.UNIFIED_CONFIDENCE_ENGINE && it.confidence >= .60f) && it.state in ACTIVE_STATES }?.currentMode
     }.distinctUntilChanged()
 
     /** Histórico para o aprendizado (deslocamentos confirmados e encerrados). */
@@ -48,7 +48,7 @@ class MobilityRepository @Inject constructor(
         val list = sessions.finishedSince(now - lookbackDays * DAY_MS)
         if (list.isEmpty()) return emptyList()
         val bySession = segments.forSessions(list.map { it.id }).groupBy { it.sessionId }
-        return list.map { s ->
+        return list.filter { s -> bySession[s.id].orEmpty().any { it.mode != MovementMode.NONE } }.map { s ->
             val segs = bySession[s.id].orEmpty()
             TripRecord(
                 startedAt = s.startedAt,

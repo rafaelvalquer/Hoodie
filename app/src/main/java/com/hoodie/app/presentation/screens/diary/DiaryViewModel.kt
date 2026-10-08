@@ -27,7 +27,57 @@ class DiaryViewModel @Inject constructor(
     private val loadDiary: LoadDiaryUseCase,
     private val clock: ClockProvider,
     private val settings: com.hoodie.app.core.datastore.SettingsRepository,
+    private val database: dagger.Lazy<com.hoodie.app.core.database.HoodieDatabase>? = null,
+    private val corrections: dagger.Lazy<com.hoodie.app.engine.correction.DiaryCorrectionService>? = null,
 ) : ViewModel() {
+    private val _editState = MutableStateFlow<DiaryEditState?>(null)
+    val editState = _editState.asStateFlow()
+
+    fun dismissCorrection() { if (_editState.value?.saving != true) _editState.value = null }
+
+    fun beginCorrection(item: com.hoodie.app.domain.diary.model.DiaryTimelineItem) {
+        if (!com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS) return
+        viewModelScope.launch {
+            val edit = withContext(Dispatchers.IO) {
+                val db = database?.get() ?: return@withContext null
+                val movementId = item.id.removePrefix("mobility-").takeIf { item.id.startsWith("mobility-") }?.toLongOrNull()
+                val context = db.contextEventDao().overlapping(item.timestamp, item.timestamp + 1).lastOrNull()
+                val segment = movementId?.let { db.mobilitySegmentDao().getById(it) } ?: if (item.id.startsWith("edit@") && context?.type == com.hoodie.app.core.model.UserContextType.COMMUTING) {
+                    val sessions = db.mobilitySessionDao().overlapping(item.timestamp, item.timestamp + 1)
+                    if (sessions.isEmpty()) null else db.mobilitySegmentDao().forSessions(sessions.map { it.id }).lastOrNull { it.startedAt <= item.timestamp && (it.endedAt == null || it.endedAt > item.timestamp) }
+                } else null
+                val request = if (segment != null) {
+                    val session = db.mobilitySessionDao().getById(segment.sessionId)
+                    com.hoodie.app.domain.correction.DiaryCorrection(com.hoodie.app.domain.correction.CorrectionTargetType.MOBILITY_SEGMENT,
+                        segment.id, com.hoodie.app.core.model.UserContextType.COMMUTING, session?.destinationPlaceId, segment.startedAt, segment.endedAt, segment.mode)
+                } else context?.let {
+                    com.hoodie.app.domain.correction.DiaryCorrection(com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT, it.id, it.type, it.placeId, it.startedAt, it.endedAt)
+                }
+                DiaryEditState(request, db.placeDao().getAll(), error = if (request == null) "Não há um evento de contexto neste horário." else null)
+            }
+            _editState.value = edit
+        }
+    }
+
+    fun beginCorrectionAt(timestamp: Long) = beginCorrection(com.hoodie.app.domain.diary.model.DiaryTimelineItem(
+        id = "edit@$timestamp", timestamp = timestamp, type = com.hoodie.app.domain.diary.model.DiaryTimelineType.CONTEXT_CHANGE,
+        actor = com.hoodie.app.domain.diary.model.DiaryActor.USER, title = "",
+    ))
+
+    fun saveCorrection(request: com.hoodie.app.domain.correction.DiaryCorrection) {
+        val before = _editState.value ?: return
+        if (before.saving) return
+        _editState.value = before.copy(saving = true, error = null)
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) { requireNotNull(corrections?.get()).save(request) }
+                _editState.value = null
+                dayCache.clear()
+                load(_state.value.selectedDate)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (failure: Exception) { _editState.value = before.copy(error = failure.message ?: "Não foi possível salvar a correção.") }
+        }
+    }
     val nowMillis: Long get() = clock.nowMillis()
     val zone get() = clock.zone()
     private var observedToday = clock.today()
@@ -47,6 +97,12 @@ class DiaryViewModel @Inject constructor(
     private val dayCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.domain.diary.model.DailyDiary>()
 
     init {
+        if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS && database != null) viewModelScope.launch {
+            database.get().invalidationTracker.createFlow("context_events", "mobility_segments", "diary_corrections", emitInitialState = false).collect {
+                dayCache.clear()
+                load(_state.value.selectedDate)
+            }
+        }
         load(_state.value.selectedDate)
         viewModelScope.launch {
             settings.settings.collect { s ->

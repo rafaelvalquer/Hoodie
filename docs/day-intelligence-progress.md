@@ -12,6 +12,25 @@ Objetivo: interpretar a rotina com evidências explicáveis, reconhecer incertez
 5. Transporte determinístico com agregados sem trilha GPS, padrões, hysteresis e segmentos multimodais.
 6. Migração aditiva v7→v8, integração de um dia completo, UX e ativação ordenada por flags.
 
+## Implementação atual — 07/10/2026
+
+**Implementação concluída e flags ativas.** Validação local: suíte completa com 793 testes JVM (zero falhas, seis exportadores opcionais ignorados), 109 testes funcionais Android, lint sem erros e APK debug. Revalidação da versão final: 100 testes JVM e um teste Android do editor, todos aprovados; lint e APK novamente aprovados. Evidência consolidada em [day-intelligence-validation.json](day-intelligence-validation.json).
+
+- Branch atual: `codex/day-intelligence-foundation`; fase zero registrada no commit `1cc3598e`.
+- Confiança unificada, estado do dia persistente, formulário de correção, auditoria transacional, recálculo digital, aprendizado diário e transporte integrados. Cinco flags ativadas na ordem prevista, após os respectivos testes focados.
+- Room v8 exportado, quatro tabelas adicionadas sem substituir a rotina manual. Testes verificam caminhos v1–v7 e preservação de dados.
+- Correções invalidam o cache do Diário; Jornada e Relógio continuam derivados da mesma fonte. Viagens provisórias com confiança de pelo menos 60% também entram nessa história.
+- `day-intelligence-full-validation.log`: 791 testes, 21 falhas em expectativas antigas de perguntas/provisório e contagem do README, seis exportadores opcionais ignorados. O teste novo do dia completo passou. Lint: zero erros, 70 avisos; assemble aprovado. Esta rodada não é aprovação final.
+- Ajustes posteriores: proteção contra flap/enriquecimento de evento corrigido; padrão de transporte confirmado antes da chegada; limpeza de padrões ao apagar histórico; auditoria do transporte invalidado por correção de contexto; migração com lugares/contextos/viagens e reabertura do banco. Revalidação em `day-intelligence-integration-validation.log`.
+- Reexecução focada: 98 testes; um auxiliar consultava apenas viagens confirmadas ao conferir uma viagem provisória encerrada. Consulta de fixture corrigida para o histórico canônico do Diário.
+- `day-intelligence-final-gates.log`: suíte JVM completa com 793 testes, zero falhas/erros e seis exportadores opcionais ignorados; lint zero erros/70 avisos; APK aprovado. 109 testes funcionais Android aprovados no Pixel_8/API 37, excluindo a matriz de screenshots cujo ambiente de referência é API 34.
+- O E2E agora inclui academia e ônibus de retorno, além das transições reais via coordinator: despertar/atividade/deslocamento/chegada/desaceleração/sono. Cenário aprovado na suíte completa.
+- Ajuste final de aprendizado: corrigir o destino rejeita o padrão no destino original e confirma no novo destino. Suítes afetadas revalidadas e APK recompilado na rodada final.
+- `day-intelligence-release-check.log`: BUILD SUCCESSFUL; 100 testes JVM, zero falhas/erros/ignorados; DiaryCorrectionUiTest aprovado com horários contendo segundos/milissegundos; lint zero erros/70 avisos; assembleDebug aprovado.
+- Correção de deslocamento inexistente encerra o movimento e não alimenta o aprendizado. Encerrar o último trecho também encerra a viagem. Perguntas supersedidas são canceladas no banco e suas notificações são canceladas somente após o commit da transação.
+- Configurações do emulador conferidas ao terminar: `show_ime_with_hard_keyboard=0`, `stylus_handwriting_enabled=null`, iguais aos valores originais.
+- Limitação de validação: matriz de screenshots API 34 não executada no AVD API 37; revisão artística permanece PENDING. As três baselines técnicas autorizadas pertencem à fase zero e não constituem aprovação artística.
+
 ## Estado inicial
 
 - Árvore de trabalho limpa, branch main; banco Room v7.
@@ -37,14 +56,14 @@ Objetivo: interpretar a rotina com evidências explicáveis, reconhecer incertez
 
 | Entrega | Implementação e verificação esperadas | Estado |
 | --- | --- | --- |
-| Estabilização | Relatórios atuais de JVM/lint/assemble/instrumentação; corrigir regressões antes de DayState | Em execução |
-| Confiança | ConfidenceScore e bandas; EvidenceEngine/DetectionEvidence; decisões 45/60/85%; precedência de fontes; QuestionPolicy 30 min e uma pergunta de transporte por sessão | Pendente |
-| Estado do dia | DayState/Reason/Snapshot; máquina restrita; Wake/Sleep existentes; coordinator persistente e Flow; retomada após morte do processo | Pendente |
-| Correção | Formulário contexto/lugar/início/fim/transporte; DiaryCorrectionService + auditoria em TransactionRunner; timeline e derivados atualizados; impedir sobrescrita | Pendente |
-| Rotina | Modelo separado da rotina manual; 28 dias com decaimento; mediana/MAD; exclusão de exceções/dias incompletos/contradições; peso manual; execução diária | Pendente |
-| Transporte | FeatureBuilder sem rota GPS; classifier explicável; padrões de origem/destino/dia/horário; confirmação e rejeição; hysteresis 15 pontos por 30–60 s; multimodal | Pendente |
-| Banco | Quatro tabelas novas; migração 7→8 aditiva, índices e schema exportado; preservação de contextos, lugares, mobilidade e histórico digital | Pendente |
-| Integração e rollout | Flags inicialmente desligadas, ativação Confidence→DayState→Corrections→Routine→Transport; UI e uma história canônica compartilhada | Pendente |
+| Estabilização | Relatórios atuais de JVM/lint/assemble/instrumentação; corrigir regressões antes de DayState | Aprovada — evidência abaixo |
+| Confiança | ConfidenceScore e bandas; EvidenceEngine/DetectionEvidence; decisões 45/60/85%; precedência de fontes; QuestionPolicy 30 min e uma pergunta de transporte por sessão | Implementado e validado |
+| Estado do dia | DayState/Reason/Snapshot; máquina restrita; Wake/Sleep existentes; coordinator persistente e Flow; retomada após morte do processo | Implementado e validado |
+| Correção | Formulário contexto/lugar/início/fim/transporte; DiaryCorrectionService + auditoria em TransactionRunner; timeline e derivados atualizados; impedir sobrescrita | Implementado e validado |
+| Rotina | Modelo separado da rotina manual; 28 dias com decaimento; mediana/MAD; exclusão de exceções/dias incompletos/contradições; peso manual; execução diária | Implementado e validado |
+| Transporte | FeatureBuilder sem rota GPS; classifier explicável; padrões de origem/destino/dia/horário; confirmação e rejeição; hysteresis 15 pontos por 30–60 s; multimodal | Implementado e validado |
+| Banco | Quatro tabelas novas; migração 7→8 aditiva, índices e schema exportado; preservação de contextos, lugares, mobilidade e histórico digital | Implementado e validado |
+| Integração e rollout | Flags inicialmente desligadas, ativação Confidence→DayState→Corrections→Routine→Transport; UI e uma história canônica compartilhada | Implementado e validado |
 
 Suítes requeridas: ConfidenceEngineTest, DayStateEngineTest, DiaryCorrectionIntegrationTest, RoutineLearnerTest, TransportClassifierTest e FullDayIntelligenceIntegrationTest. A suíte do dia completo deve conferir Context/Place/Mobility/Confidence/Diary/Journey/Clock/aprendizado, incluindo correção de almoço e segmentos caminhada→ônibus→caminhada.
 

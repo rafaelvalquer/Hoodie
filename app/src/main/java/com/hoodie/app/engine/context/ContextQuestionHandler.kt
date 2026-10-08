@@ -6,6 +6,7 @@ import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.QuestionKind
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.engine.memory.Milestone
+import com.hoodie.app.core.config.HoodieConfig
 
 /** Internal handler; synchronization belongs exclusively to ContextEngine. */
 internal class ContextQuestionHandler(private val processor: ContextSignalProcessor) {
@@ -18,11 +19,14 @@ internal class ContextQuestionHandler(private val processor: ContextSignalProces
         questionDao.update(q.copy(answeredAt = now, answer = if (yes) "YES" else "NO"))
         notifier.cancelQuestion(questionId)
         val candidate = q.candidate ?: return@with
-        recordConfirmation(candidate, q.placeId, q.askedAt, accepted = yes)
         val event = q.contextEventId?.let { contextDao.getById(it) }
+        if (event?.source == ContextSource.USER_CORRECTION) { hoodie.resolve(); return@with }
+        recordConfirmation(candidate, q.placeId, q.askedAt, accepted = yes)
         when {
             yes -> {
-                event?.let { transitions.confirm(it.id, 1f, ContextSource.CONFIRMATION) }
+                if (HoodieConfig.UNIFIED_CONFIDENCE_ENGINE && event != null && event.type != candidate) {
+                    if (event.endedAt == null) switchTo(candidate, now, 1f, q.placeId, ContextSource.CONFIRMATION, TransitionReason.NEW_PLACE_ANSWER)
+                } else event?.let { transitions.confirm(it.id, 1f, ContextSource.CONFIRMATION) }
                 memory.onContext(candidate, null, now)
                 hoodie.resolve()
             }

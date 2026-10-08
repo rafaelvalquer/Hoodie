@@ -105,7 +105,9 @@ class HomeViewModel @Inject constructor(
     mobilityRepo: com.hoodie.app.data.repository.MobilityRepository,
     contextDao: ContextEventDao,
     questionDao: QuestionDao,
+    dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
 ) : ViewModel() {
+    val dayState = if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStates?.get()?.snapshots ?: kotlinx.coroutines.flow.flowOf(null) else kotlinx.coroutines.flow.flowOf(null)
     val zone get() = clock.zone()
 
 

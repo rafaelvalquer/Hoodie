@@ -95,6 +95,8 @@ import java.util.Locale
 @Composable
 fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val edit by vm.editState.collectAsStateWithLifecycle()
+    edit?.let { DiaryCorrectionSheet(it, vm.zone, vm::dismissCorrection, vm::saveCorrection) }
     var selectedNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
     val selectedDate by rememberUpdatedState(state.selectedDate)
     CollectUiEvents(vm.events) { event ->
@@ -122,11 +124,15 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             openChapter = vm::openChapter,
             selectClockSegment = vm::selectClockSegment,
             refreshClock = vm::refreshClock,
+            editEvent = vm::beginCorrection,
+            editAt = vm::beginCorrectionAt,
         ),
     )
 }
 
 internal data class DiaryActions(
+    val editAt: (Long) -> Unit = {},
+    val editEvent: (com.hoodie.app.domain.diary.model.DiaryTimelineItem) -> Unit = {},
     val selectDate: (LocalDate) -> Unit = {},
     val retry: () -> Unit = {},
     val openPlace: (String) -> Unit = {},
@@ -233,6 +239,9 @@ internal fun DiaryContent(
                                     onSelect = actions.selectClockSegment,
                                     onMinuteTick = actions.refreshClock,
                                 )
+                                if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS) dayClock.segment(state.clockSelectedId)?.let { selected ->
+                                    PixelButton(stringResource(R.string.diary_edit_event), { actions.editAt(dayClock.instantOf(selected.startMinute)) }, Modifier.fillMaxWidth())
+                                }
                             } else clock?.let { data ->
                                 DayClockLegacyView(
                                     data, journey.data, state.replay, zone, overworld.seed, selectedJourneyNodeId,
@@ -248,7 +257,7 @@ internal fun DiaryContent(
                     DiaryReplayHud(state.replay.visual, zone)
                     JourneyReplayControls(state.replay, journey.data, zone, onToggle = toggleReplay, onSeek = actions.seek, onReset = actions.reset, onSpeed = actions.setSpeed)
                 }
-                TimelineSection(diary.timeline, state.replay.currentTimestamp, zone, state.replay.highlightedTimelineItemIds)
+                TimelineSection(diary.timeline, state.replay.currentTimestamp, zone, state.replay.highlightedTimelineItemIds, actions.editEvent)
             }
         }
     }
@@ -280,6 +289,7 @@ internal fun DiaryContent(
                     ?.let { onSelectedNodeChange(it.id) }
             },
             onDismiss = { selectedJourneyNodeId = null },
+            onEdit = if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS) ({ selectedJourneyNodeId = null; actions.editAt(journeyNode.arrivalAt) }) else null,
         )
     }
 }
@@ -363,7 +373,7 @@ internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset
 }
 
 @Composable
-internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, replayAt: Long?, zone: ZoneId, highlightedIds: Set<String> = emptySet()) {
+internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>, replayAt: Long?, zone: ZoneId, highlightedIds: Set<String> = emptySet(), onEdit: (com.hoodie.app.domain.diary.model.DiaryTimelineItem) -> Unit = {}) {
     val uiTextContext = LocalContext.current
     val activeIndex = if (replayAt == null) -1 else items.indexOfFirst { it.id in highlightedIds }
     val timelineScroll = rememberLazyListState()
@@ -387,7 +397,7 @@ internal fun TimelineSection(items: List<com.hoodie.app.domain.diary.model.Diary
                 com.hoodie.app.domain.diary.model.DiaryActor.HOODIE -> "Hoodie"
                 else -> uiTextContext.getString(R.string.ui_extra_diary_screen_17)
             }
-            Row(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
+            Row(Modifier.fillMaxWidth().clickable(enabled = com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS, role = Role.Button) { onEdit(item) }.semantics(mergeDescendants = true) {
                 selected = highlighted
                 contentDescription = "$actorLabel, ${formatClock(item.timestamp, zone)}, ${item.title}" +
                     (item.subtitle?.let { ", $it" } ?: "")

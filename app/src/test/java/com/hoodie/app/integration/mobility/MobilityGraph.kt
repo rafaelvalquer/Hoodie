@@ -53,7 +53,7 @@ class CountingLocation(private val inner: LocationSource) : LocationSource {
  * TestGraph + MobilityEngine real. Uma "nova instância" do engine simula um processo novo
  * (o estado tem de vir do banco, não da memória).
  */
-class MobilityGraph(startDay: Int = SUNDAY - 7) {
+class MobilityGraph(startDay: Int = SUNDAY - 7, private val intelligenceEnabled: Boolean = false) {
     val g = TestGraph(com.hoodie.app.engine.at(startDay, 20).ms())
     val scheduler = FakeMobilityScheduler()
     val arPermissions = FakeArPermissions()
@@ -77,6 +77,9 @@ class MobilityGraph(startDay: Int = SUNDAY - 7) {
     fun newEngine() = MobilityEngine(
         repo, g.engine, g.contextDao, g.places, g.routines, g.db.questionDao(), g.notifier, g.settings,
         location, scheduler, arPermissions, bus, g.clock, g.log,
+        transportFeatures = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportFeatureBuilder() else null,
+        transportPatterns = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportPatternLearner(g.db, com.hoodie.app.core.database.RoomTransactionRunner(g.db), g.clock) else null,
+        intelligence = if (intelligenceEnabled) g.db.intelligenceDao() else null,
     )
 
     /** "Reinicia o processo": engine novo, mesmo banco. */
@@ -96,7 +99,7 @@ class MobilityGraph(startDay: Int = SUNDAY - 7) {
     fun check() = runBlocking { engine.onCheck() }
 
     fun open() = runBlocking { repo.open() }
-    fun sessions() = runBlocking { g.db.mobilitySessionDao().finishedSince(0) }
+    fun sessions() = runBlocking { repo.tripsBetween(0, Long.MAX_VALUE).map { it.session }.filter { it.endedAt != null }.sortedByDescending { it.startedAt } }
     fun segmentsOf(id: Long) = runBlocking { repo.segmentsOf(id) }
     fun context() = runBlocking { g.contextDao.current() }
 

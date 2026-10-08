@@ -31,7 +31,7 @@ interface MobilitySessionDao {
     @Query("SELECT * FROM mobility_sessions WHERE endedAt IS NOT NULL ORDER BY endedAt DESC LIMIT 1")
     suspend fun lastFinished(): MobilitySessionEntity?
 
-    @Query("SELECT * FROM mobility_sessions WHERE confirmed = 1 AND startedAt < :to AND (endedAt IS NULL OR endedAt > :from) ORDER BY startedAt")
+    @Query("SELECT * FROM mobility_sessions WHERE (confirmed = 1 OR (confidence >= 0.6 AND state != 'MOVEMENT_CANDIDATE')) AND startedAt < :to AND (endedAt IS NULL OR endedAt > :from) ORDER BY startedAt")
     suspend fun overlapping(from: Long, to: Long): List<MobilitySessionEntity>
 
     @Query("DELETE FROM mobility_sessions WHERE id = :id")
@@ -49,6 +49,8 @@ interface MobilitySessionDao {
 
 @Dao
 interface MobilitySegmentDao {
+    @Query("SELECT * FROM mobility_segments WHERE id = :id")
+    suspend fun getById(id: Long): MobilitySegmentEntity?
     @Insert
     suspend fun insert(s: MobilitySegmentEntity): Long
 

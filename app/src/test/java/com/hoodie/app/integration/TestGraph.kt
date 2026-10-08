@@ -98,7 +98,7 @@ class TestGraph(startAt: Long) {
     val geofences = FakeGeofences()
     val engine = ContextEngine(
         db.contextEventDao(), transitions, db.confirmationDao(), db.questionDao(), db.locationEventDao(),
-        places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, PlainCipher, clock, log,
+        places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, PlainCipher, clock, log, db.intelligenceDao(),
     )
 
     val contextDao get() = db.contextEventDao()

@@ -39,6 +39,8 @@ class WorkScheduler @Inject constructor(@ApplicationContext private val context:
     private val wm get() = WorkManager.getInstance(context)
 
     fun schedulePeriodic() {
+        if (HoodieConfig.LEARNED_ROUTINE) wm.enqueueUniquePeriodicWork(RoutineLearningWorker.NAME, ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<RoutineLearningWorker>(24, TimeUnit.HOURS).build())
         wm.enqueueUniquePeriodicWork(
             ReconcileWorker.NAME, ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<ReconcileWorker>(HoodieConfig.RECONCILE_INTERVAL_MIN, TimeUnit.MINUTES).build(),

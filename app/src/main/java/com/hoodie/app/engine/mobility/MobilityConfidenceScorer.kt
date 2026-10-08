@@ -1,6 +1,9 @@
 package com.hoodie.app.engine.mobility
 
 import com.hoodie.app.core.config.HoodieConfig
+import com.hoodie.app.domain.detection.*
+import com.hoodie.app.engine.detection.ConfidenceEngine
+import com.hoodie.app.engine.detection.EvidenceEngine
 
 /** O que se sabe sobre um possível deslocamento. */
 data class MobilityEvidence(
@@ -31,6 +34,14 @@ enum class MobilityDecision { IGNORE, ASK, APPLY }
  */
 object MobilityConfidenceScorer {
 
+    fun detection(e: MobilityEvidence, timestamp: Long = 0L): DetectionResult = EvidenceEngine.evaluate(buildList {
+        if (e.movement) add(DetectionEvidence(EvidenceType.MOVEMENT, .30f, timestamp))
+        if (e.geofenceExit) add(DetectionEvidence(EvidenceType.GEOFENCE_EXIT, .40f, timestamp))
+        if (e.sustained) add(DetectionEvidence(EvidenceType.SUSTAINED_ACTIVITY, .15f, timestamp))
+        if (e.timeMatch) add(DetectionEvidence(EvidenceType.TIME_MATCH, .10f, timestamp))
+        if (e.history) add(DetectionEvidence(EvidenceType.HISTORY, .15f, timestamp))
+    }, timestamp)
+
     fun score(e: MobilityEvidence): Int {
         var s = 0
         if (e.movement) s += HoodieConfig.MOBILITY_SCORE_MOVEMENT
@@ -45,6 +56,11 @@ object MobilityConfidenceScorer {
         // Só geofence (sem movimento reconhecido) é o fluxo anterior do ContextEngine: nada a fazer aqui.
         if (!e.movement) return MobilityDecision.IGNORE
         if (e.insideKnownPlace && !e.geofenceExit) return MobilityDecision.IGNORE
+        if (HoodieConfig.UNIFIED_CONFIDENCE_ENGINE) return when (ConfidenceEngine.decide(detection(e))) {
+            DetectionDecision.UNKNOWN -> MobilityDecision.IGNORE
+            DetectionDecision.ASK_USER -> MobilityDecision.ASK
+            DetectionDecision.PROVISIONAL, DetectionDecision.AUTO_ACCEPT -> MobilityDecision.APPLY
+        }
         val s = score(e)
         return when {
             s >= HoodieConfig.MOBILITY_APPLY_SCORE -> MobilityDecision.APPLY

@@ -32,6 +32,10 @@ internal class GeofenceContextHandler(private val processor: ContextSignalProces
         scheduler.cancelChecks()
         places.markVisited(place.id, at)
         when (candidate.decision) {
+            ContextDecision.ASK_USER -> {
+                val r = switchTo(UserContextType.UNKNOWN, at, candidate.confidence, place.id, ContextSource.GEOFENCE, TransitionReason.GEOFENCE_ENTER)
+                ask(QuestionKind.CONFIRM_CONTEXT, candidate.type, place.id, r.event.id, detection = candidate.detection)
+            }
             ContextDecision.APPLY ->
                 switchTo(candidate.type, at, candidate.confidence, place.id, ContextSource.GEOFENCE, TransitionReason.GEOFENCE_ENTER)
             ContextDecision.APPLY_AND_ASK -> {
@@ -47,6 +51,7 @@ internal class GeofenceContextHandler(private val processor: ContextSignalProces
         val createdByExit = current.source == ContextSource.GEOFENCE && current.placeId == null
         if (!createdByExit || at - current.startedAt >= HoodieConfig.GPS_FLAP_MS) return@with false
         val prev = contextDao.previous() ?: return@with false
+        if (prev.source == ContextSource.USER_CORRECTION) return@with false
         if (prev.placeId != place.id || prev.endedAt != current.startedAt) return@with false
         transitions.revertFlap(current, prev)
         scheduler.cancelChecks()
@@ -82,6 +87,10 @@ internal class GeofenceContextHandler(private val processor: ContextSignalProces
         val candidate = ContextScorer.score(input(ContextSignal.Exit(place, minutes), current.type))
         if (candidate.type != UserContextType.LUNCH || candidate.decision == ContextDecision.UNKNOWN) {
             scheduler.scheduleCommuteCheck(current.id)
+            return@with
+        }
+        if (candidate.decision == ContextDecision.ASK_USER) {
+            ask(QuestionKind.CONFIRM_CONTEXT, UserContextType.LUNCH, placeId, current.id, detection = candidate.detection)
             return@with
         }
         val r = switchTo(UserContextType.LUNCH, now, candidate.confidence, null, ContextSource.GEOFENCE, TransitionReason.LUNCH_CHECK)

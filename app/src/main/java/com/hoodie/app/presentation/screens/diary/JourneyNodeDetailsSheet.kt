@@ -71,12 +71,14 @@ fun JourneyNodeDetailsSheet(
     zone: ZoneId,
     onSeeAll: () -> Unit,
     onDismiss: () -> Unit,
+    onEdit: (() -> Unit)? = null,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(), containerColor = HoodieColors.Panel) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp).testTag("journey_details"),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            onEdit?.let { PixelButton(stringResource(R.string.diary_edit_event), it, Modifier.fillMaxWidth()) }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "${node.placeType.emoji} ${node.placeName.uppercase()}", style = MaterialTheme.typography.headlineSmall,

@@ -57,6 +57,16 @@ class ContextTransitionService @Inject constructor(
         note: String? = null,
     ): TransitionResult = tx.run {
         val current = contextDao.current()
+        if (source != ContextSource.USER_CORRECTION) {
+            val protected = contextDao.overlapping(at, at + 1).lastOrNull { it.source == ContextSource.USER_CORRECTION }
+            if (protected != null && (protected.endedAt != null || at <= protected.startedAt || source == ContextSource.ROUTINE || source == ContextSource.ONBOARDING || confidence < .85f)) {
+                return@run TransitionResult(protected, current, changed = false)
+            }
+        }
+        // A delayed inference cannot replace an explicitly corrected interval.
+        if (current?.source == ContextSource.USER_CORRECTION && source != ContextSource.USER_CORRECTION && at <= current.startedAt) {
+            return@run TransitionResult(current, current, changed = false)
+        }
         keep(current, to, placeId, confidence, source)?.let { return@run it }
 
         // Um evento atrasado nunca fecha o atual antes de ele começar.
@@ -83,6 +93,7 @@ class ContextTransitionService @Inject constructor(
      */
     private suspend fun keep(current: ContextEventEntity?, to: UserContextType, placeId: Long?, confidence: Float, source: ContextSource): TransitionResult? {
         if (current == null || current.type != to) return null
+        if (current.source == ContextSource.USER_CORRECTION && source != ContextSource.USER_CORRECTION) return TransitionResult(current, current, changed = false)
         return when {
             placeId == null || placeId == current.placeId -> TransitionResult(current, current, changed = false)
             current.placeId == null -> {
@@ -97,6 +108,7 @@ class ContextTransitionService @Inject constructor(
     /** Usuário confirmou o contexto atual: só a confiança/origem mudam. */
     suspend fun confirm(eventId: Long, confidence: Float, source: ContextSource): ContextEventEntity? {
         val event = contextDao.getById(eventId) ?: return null
+        if (event.source == ContextSource.USER_CORRECTION && source != ContextSource.USER_CORRECTION) return event
         val confirmed = event.copy(confidence = confidence, source = source)
         contextDao.update(confirmed)
         return confirmed
@@ -105,6 +117,7 @@ class ContextTransitionService @Inject constructor(
     /** O lugar do evento foi salvo depois (pergunta "salvar este lugar?"). */
     suspend fun attachPlace(eventId: Long, placeId: Long) {
         val event = contextDao.getById(eventId)?.takeIf { it.endedAt == null } ?: return
+        if (event.source == ContextSource.USER_CORRECTION) return
         contextDao.update(event.copy(placeId = placeId))
     }
 
@@ -113,6 +126,7 @@ class ContextTransitionService @Inject constructor(
      * reabre o contexto anterior e apaga da timeline o que foi contado — tudo junto.
      */
     suspend fun revertFlap(flap: ContextEventEntity, previous: ContextEventEntity): ContextEventEntity = tx.run {
+        if (flap.source == ContextSource.USER_CORRECTION || previous.source == ContextSource.USER_CORRECTION) return@run flap
         contextDao.delete(flap.id)
         val reopened = previous.copy(endedAt = null)
         contextDao.update(reopened)

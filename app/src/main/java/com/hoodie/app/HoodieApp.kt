@@ -28,6 +28,8 @@ class HoodieApp : Application(), Configuration.Provider {
     @Inject lateinit var scheduler: WorkScheduler
     @Inject lateinit var debugLog: DebugEventLogger
     @Inject lateinit var mobilityRegistration: com.hoodie.app.core.mobility.MobilityRegistration
+    @Inject lateinit var databaseGate: com.hoodie.app.core.database.DatabaseGate
+    @Inject lateinit var dayStateCoordinator: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -40,6 +42,9 @@ class HoodieApp : Application(), Configuration.Provider {
         // Activity Recognition: registro idempotente (some em reboot/atualização/limpeza do Play Services).
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
             runCatching { mobilityRegistration.sync() }
+            if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE && databaseGate.isReady()) {
+                dayStateCoordinator.get().start(this)
+            }
         }
         configureMap()
         // Sprite sheets do Aseprite (assets/pixel/hoodie) por cima do procedural.

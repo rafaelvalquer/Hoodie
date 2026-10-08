@@ -83,6 +83,7 @@ import java.time.ZoneId
 fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val dayState by vm.dayState.collectAsStateWithLifecycle(initialValue = null)
     val zone = vm.zone
     val snackbar = remember { SnackbarHostState() }
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
@@ -117,6 +118,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         ),
         reactions = reactions,
         snackbar = snackbar,
+        dayState = dayState,
     )
 }
 
@@ -143,6 +145,7 @@ internal fun HomeContent(
     actions: HomeActions = HomeActions(),
     reactions: kotlinx.coroutines.flow.Flow<AnimationId>? = null,
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
+    dayState: com.hoodie.app.domain.daystate.DayStateSnapshot? = null,
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
@@ -173,6 +176,17 @@ internal fun HomeContent(
         }
 
         // Cena viva.
+        dayState?.let { snapshot ->
+            val label = when (snapshot.state) {
+                com.hoodie.app.domain.daystate.DayState.SLEEPING -> stringResource(R.string.day_state_sleeping)
+                com.hoodie.app.domain.daystate.DayState.WAKING -> stringResource(R.string.day_state_waking)
+                com.hoodie.app.domain.daystate.DayState.ACTIVE -> stringResource(R.string.day_state_active)
+                com.hoodie.app.domain.daystate.DayState.COMMUTING -> stringResource(R.string.day_state_commuting)
+                com.hoodie.app.domain.daystate.DayState.WINDING_DOWN -> stringResource(R.string.day_state_winding_down)
+            }
+            Text(if (snapshot.provisional) stringResource(R.string.day_state_provisional, label) else label,
+                style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag("home_day_state"))
+        }
         // A altura é a da própria cena (escala inteira pela largura): sem caixa 3:4 sobrando abaixo dela,
         // o texto "Hoodie está…" fica logo embaixo do cenário.
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {

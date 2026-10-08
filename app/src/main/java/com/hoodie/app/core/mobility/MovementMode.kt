@@ -65,7 +65,7 @@ enum class DetectedMovement {
 }
 
 /** De onde veio a informação de uma sessão/segmento. */
-enum class MobilitySource { ACTIVITY_RECOGNITION, GEOFENCE, CONFIRMATION, LEARNED, PREFERENCE, LOCATION_CHECK }
+enum class MobilitySource { ACTIVITY_RECOGNITION, GEOFENCE, CONFIRMATION, LEARNED, PREFERENCE, LOCATION_CHECK, USER_CORRECTION }
 
 /**
  * Uma leitura do Activity Recognition. [entering] = começou (ENTER); false = terminou (EXIT).

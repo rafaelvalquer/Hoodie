@@ -19,7 +19,7 @@ import kotlin.math.abs
 class SleepOnsetDetector {
     private val realContextSources = setOf(
         ContextSource.GEOFENCE, ContextSource.MANUAL, ContextSource.CONFIRMATION,
-        ContextSource.MOBILITY, ContextSource.LOCATION_CHECK,
+        ContextSource.MOBILITY, ContextSource.LOCATION_CHECK, ContextSource.USER_CORRECTION,
     )
 
     fun detect(

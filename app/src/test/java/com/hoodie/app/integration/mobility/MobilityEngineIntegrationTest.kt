@@ -59,8 +59,7 @@ class MobilityEngineIntegrationTest {
         // Sai de casa: primeiras vezes → pergunta.
         m.at(MONDAY, 7, 48); m.geofence(m.home, GeofenceTransition.EXIT)
         assertEquals(UserContextType.COMMUTING, m.context()!!.type)
-        assertTrue(m.g.notifier.questions.any { "Casa" in it.second && "saiu" in it.second.lowercase() })
-        m.answer(QuestionKind.CONFIRM_MOVEMENT, yes = true)
+        assertEquals("evidência de saída aplica provisoriamente sem interromper", 0, m.asked(QuestionKind.CONFIRM_MOVEMENT))
         assertEquals(MobilityState.WALKING, m.open()!!.state)
         assertEquals(SceneId.STREET, scene())
 
@@ -150,7 +149,7 @@ class MobilityEngineIntegrationTest {
     fun `saida e volta para casa em 2 min com caminhada e revertida`() {
         m.at(MONDAY, 9, 0); m.move(DetectedMovement.WALKING)
         m.at(MONDAY, 9, 0); m.geofence(m.home, GeofenceTransition.EXIT)
-        assertNotNull(m.pending(QuestionKind.CONFIRM_MOVEMENT))
+        assertNull(m.pending(QuestionKind.CONFIRM_MOVEMENT))
         m.at(MONDAY, 9, 2); m.geofence(m.home, GeofenceTransition.ENTER)
         assertNull(m.open())
         assertTrue(m.sessions().isEmpty())
@@ -160,8 +159,9 @@ class MobilityEngineIntegrationTest {
 
     @Test
     fun `usuario diz que nao saiu - candidato descartado e nada no diario`() {
+        runBlocking { m.g.engine.setManual(UserContextType.LEISURE) }
         m.at(MONDAY, 9, 0); m.move(DetectedMovement.WALKING)
-        m.geofence(m.home, GeofenceTransition.EXIT)
+        m.at(MONDAY, 9, 3); m.check()
         m.answer(QuestionKind.CONFIRM_MOVEMENT, yes = false)
         assertNull(m.open())
         assertTrue(m.sessions().isEmpty())
@@ -194,7 +194,7 @@ class MobilityEngineIntegrationTest {
     private fun startConfirmedWalk() {
         m.at(MONDAY, 7, 47); m.move(DetectedMovement.WALKING)
         m.geofence(m.home, GeofenceTransition.EXIT)
-        m.answer(QuestionKind.CONFIRM_MOVEMENT, yes = true)
+        assertEquals(0, m.asked(QuestionKind.CONFIRM_MOVEMENT))
         assertEquals(MobilityState.WALKING, m.open()!!.state)
     }
 }

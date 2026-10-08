@@ -31,6 +31,9 @@ import com.hoodie.app.engine.memory.MemoryEngine
 import com.hoodie.app.engine.routine.RoutineEngine
 import com.hoodie.app.worker.CheckScheduler
 import java.time.DayOfWeek
+import com.hoodie.app.domain.detection.DetectionResult
+import com.hoodie.app.engine.detection.DetectionQuestion
+import com.hoodie.app.engine.detection.QuestionPolicy
 
 /** Shared scoring, questions and transition reactions. Called under the facade lock. */
 internal class ContextSignalProcessor(
@@ -52,13 +55,18 @@ internal class ContextSignalProcessor(
     val cipher: CoordinateCipher,
     val clock: ClockProvider,
     val log: DebugEventLogger,
+    val intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
 ) {
     suspend fun input(signal: ContextSignal, previous: UserContextType?): ContextInput {
         val now = clock.now()
         val confirmations = confirmationDao.since(clock.nowMillis() - HoodieConfig.CONFIRMATION_LOOKBACK_MS).map {
             ConfirmationRecord(it.type, it.placeId, DayOfWeek.of(it.dayOfWeek), it.minuteOfDay, it.accepted, it.timestamp)
         }
-        return ContextInput(signal, now, routines.get(), routines.isDayOff(now.toLocalDate()), previous, confirmations)
+        val learnedLunch = if (HoodieConfig.LEARNED_ROUTINE) intelligence?.routineSlots()?.filter { it.type == "LUNCH_START" }?.let { slots ->
+            slots.firstOrNull { it.dayGroup == now.dayOfWeek.name } ?: slots.firstOrNull { it.dayGroup == com.hoodie.app.domain.routine.routineDayGroup(now.dayOfWeek) }
+        }?.let { com.hoodie.app.domain.routine.LearnedRoutineSlot(it.dayGroup, com.hoodie.app.domain.routine.RoutineEventType.LUNCH_START,
+            it.medianMinute, it.deviationMinutes, it.sampleCount, com.hoodie.app.domain.detection.ConfidenceScore(it.confidence)) } else null
+        return ContextInput(signal, now, routines.get(), routines.isDayOff(now.toLocalDate()), previous, confirmations, learnedLunch)
     }
 
     suspend fun inferredContextFor(type: PlaceType, now: Long): UserContextType = when {
@@ -104,9 +112,14 @@ internal class ContextSignalProcessor(
         }
     }
 
-    suspend fun ask(kind: QuestionKind, candidate: UserContextType?, placeId: Long?, eventId: Long?, coords: String? = null): Long? {
+    suspend fun ask(kind: QuestionKind, candidate: UserContextType?, placeId: Long?, eventId: Long?, coords: String? = null, detection: DetectionResult? = null): Long? {
         val now = clock.nowMillis()
-        val recent = questionDao.since(now - DAY_MS).map { AskedQuestion(it.kind, it.candidate, it.askedAt) }
+        val history = questionDao.since(now - DAY_MS)
+        val recent = history.map { AskedQuestion(it.kind, it.candidate, it.askedAt) }
+        if (HoodieConfig.UNIFIED_CONFIDENCE_ENGINE && detection != null && !QuestionPolicy.canAsk(
+                detection, "${kind.name}:${candidate?.name}", now,
+                history.map { DetectionQuestion("${it.kind.name}:${it.candidate?.name}", it.askedAt) },
+            )) return null
         if (!ConfirmationPolicy.canAsk(now, clock.zone(), kind, candidate, recent)) return null
         val q = ContextQuestionEntity(kind = kind, candidate = candidate, placeId = placeId, encryptedCoordinates = coords, contextEventId = eventId, askedAt = now)
         val id = questionDao.insert(q)

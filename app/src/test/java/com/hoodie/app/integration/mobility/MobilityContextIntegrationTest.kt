@@ -112,7 +112,6 @@ class MobilityContextIntegrationTest {
     fun `nao estou no trabalho - volta para deslocamento e a viagem continua`() {
         m.at(MONDAY, 7, 47); m.move(DetectedMovement.WALKING)
         m.geofence(m.home, GeofenceTransition.EXIT)
-        m.answer(QuestionKind.CONFIRM_MOVEMENT, yes = true)
         m.at(MONDAY, 8, 30); m.geofence(m.work, GeofenceTransition.ENTER)
         assertEquals(UserContextType.WORK, m.context()!!.type)
         m.answer(QuestionKind.CONFIRM_ARRIVAL, yes = false)

@@ -31,6 +31,7 @@ interface LocationSource : CurrentPosition {
 class LocationProvider @Inject constructor(
     @ApplicationContext private val context: Context,
     private val permissions: LocationPermissionManager,
+    private val transportFeatures: com.hoodie.app.engine.mobility.TransportFeatureBuilder? = null,
 ) : LocationSource {
 
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(context) }
@@ -52,7 +53,10 @@ class LocationProvider @Inject constructor(
             withTimeoutOrNull(POSITION_TIMEOUT_MS) {
                 val cts = CancellationTokenSource()
                 fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token).await()
-            }?.let { it.latitude to it.longitude }
+            }?.let {
+                if (com.hoodie.app.core.config.HoodieConfig.TRANSPORT_CLASSIFIER_V2 && it.hasSpeed()) transportFeatures?.speed(it.speed, it.time)
+                it.latitude to it.longitude
+            }
         }.getOrNull()
     }
 

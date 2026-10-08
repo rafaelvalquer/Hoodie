@@ -81,9 +81,8 @@ class MobilityVisualIntegrationTest {
         val m = MobilityGraph()
         try {
             m.at(MONDAY, 7, 47); m.move(com.hoodie.app.core.mobility.DetectedMovement.WALKING)
-            m.geofence(m.home, com.hoodie.app.engine.context.GeofenceTransition.EXIT)
             assertEquals("candidato não muda a cena", null, runBlocking { m.repo.activeMode.first() })
-            m.answer(com.hoodie.app.core.model.QuestionKind.CONFIRM_MOVEMENT, yes = true)
+            m.geofence(m.home, com.hoodie.app.engine.context.GeofenceTransition.EXIT)
             assertEquals(MovementMode.WALKING, runBlocking { m.repo.activeMode.first() })
         } finally { m.close() }
     }

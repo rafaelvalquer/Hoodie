@@ -18,7 +18,7 @@ data class RealUserActivity(
 object RealUserActivityBuilder {
     private val realContextSources = setOf(
         ContextSource.GEOFENCE, ContextSource.MANUAL, ContextSource.CONFIRMATION,
-        ContextSource.MOBILITY, ContextSource.LOCATION_CHECK,
+        ContextSource.MOBILITY, ContextSource.LOCATION_CHECK, ContextSource.USER_CORRECTION,
     )
 
     fun build(

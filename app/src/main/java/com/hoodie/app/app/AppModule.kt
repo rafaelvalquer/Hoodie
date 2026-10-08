@@ -67,6 +67,7 @@ abstract class BindingsModule {
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+    @Provides fun intelligenceDao(db: HoodieDatabase) = db.intelligenceDao()
     @Provides @Singleton
     fun database(@ApplicationContext context: Context, gate: DatabaseGate): HoodieDatabase {
         SqlCipherNativeLoader.ensureLoaded()

@@ -29,7 +29,7 @@ class MobilityArrivalIntegrationTest {
     private fun walkFromHome() {
         m.at(MONDAY, 7, 47); m.move(DetectedMovement.WALKING)
         m.geofence(m.home, GeofenceTransition.EXIT)
-        m.answer(QuestionKind.CONFIRM_MOVEMENT, yes = true)
+        assertEquals(0, m.asked(QuestionKind.CONFIRM_MOVEMENT))
     }
 
     @Test

@@ -9,6 +9,13 @@ import com.hoodie.app.core.time.MINUTE_MS
  * referenciam estas constantes em vez de repetir valores soltos.
  */
 object HoodieConfig {
+    // Day Intelligence: activate in dependency order after each integration gate.
+    const val UNIFIED_CONFIDENCE_ENGINE = true
+    const val DAY_STATE_ENGINE = true
+    const val SMART_DIARY_CORRECTIONS = true
+    const val LEARNED_ROUTINE = true
+    const val TRANSPORT_CLASSIFIER_V2 = true
+
     // ── Geofence ──
     /** Raio padrão: 100–200 m absorve a imprecisão do GPS sem pegar o quarteirão inteiro. */
     const val DEFAULT_GEOFENCE_RADIUS_M = 150f

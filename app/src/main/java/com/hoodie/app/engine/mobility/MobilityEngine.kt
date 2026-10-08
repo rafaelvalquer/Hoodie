@@ -71,8 +71,13 @@ class MobilityEngine @Inject constructor(
     private val bus: MobilityEventBus,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
+    private val transportFeatures: TransportFeatureBuilder? = null,
+    private val transportPatterns: TransportPatternLearner? = null,
+    private val intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
 ) {
     private val mutex = Mutex()
+    private var lastClassification: TransportClassification? = null
+    private val pendingVehicleSwitches = mutableMapOf<Long, TransportSwitchCandidate>()
 
     /** O app está na tela: perguntas podem aparecer mesmo com o veículo andando (passageiro olhando). */
     @Volatile var appInForeground: Boolean = false
@@ -86,6 +91,12 @@ class MobilityEngine @Inject constructor(
         if (!enabled()) return@withLock
         log.log(DebugEventLogger.Category.CONTEXT, "MOV ${obs.activity}${if (obs.entering) "" else " (fim)"}")
         var s = housekeeping(repo.open(), obs.timestamp)
+        if (s != null && obs.timestamp < maxOf(s.startedAt, s.movingSince ?: s.startedAt, s.stillSince ?: s.startedAt, repo.openSegment(s.id)?.startedAt ?: s.startedAt)) return@withLock
+        if (s == null && (repo.lastFinished()?.endedAt ?: Long.MIN_VALUE) > obs.timestamp) return@withLock
+        if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && s != null) {
+            transportFeatures?.begin(s.id, s.startedAt)
+            if (obs.entering) transportFeatures?.movement(obs.activity, obs.timestamp)
+        }
 
         if (!obs.entering) {
             // Saiu do veículo: parado o bastante para a pergunta adiada aparecer.
@@ -131,6 +142,7 @@ class MobilityEngine @Inject constructor(
                 if (active.state == MobilityState.ARRIVING) active = active.copy(state = MobilityStateMachine.stateFor(active.currentMode))
                 repo.update(active)
                 if (MobilityStateMachine.isNewSegment(active.currentMode, mode)) newSegment(active, mode, obs.timestamp)
+                else if (mode.isVehicle) refreshVehicleClassification(active, obs.timestamp)
             }
         }
     }
@@ -163,6 +175,7 @@ class MobilityEngine @Inject constructor(
         if (!enabled()) return@withLock
         val now = clock.nowMillis()
         val s = housekeeping(repo.open(), now) ?: return@withLock
+        if (s.currentMode.isVehicle && s.state != MobilityState.MOVEMENT_CANDIDATE && s.stillSince == null) refreshVehicleClassification(s, now)
         when {
             s.state == MobilityState.MOVEMENT_CANDIDATE -> evaluate(s, now)
             MobilityStateMachine.isArrivalStill(s.stillSince, now) -> resolveStillArrival(s, now)
@@ -210,13 +223,15 @@ class MobilityEngine @Inject constructor(
         val q = markAnswered(questionId, mode.name) ?: return@withLock
         val s = q.mobilitySessionId?.let { repo.session(it) } ?: return@withLock
         val segment = repo.segmentsOf(s.id).lastOrNull { it.mode.isVehicle } ?: return@withLock
-        repo.updateSegment(segment.copy(mode = mode, confirmed = true, source = MobilitySource.CONFIRMATION))
+        if (segment.source == MobilitySource.USER_CORRECTION) return@withLock
+        repo.updateSegment(segment.copy(mode = mode, confidence = 1f, confirmed = true, source = MobilitySource.CONFIRMATION))
         var updated = s.copy(pendingModeQuestion = false)
         if (s.endedAt == null && s.currentMode.isVehicle) {
             updated = updated.copy(currentMode = mode, state = MobilityStateMachine.stateFor(mode))
             bus.emit(MobilityEvent.MovementModeChanged(s.id, clock.nowMillis(), s.currentMode, mode))
         }
         repo.update(updated)
+        if (HoodieConfig.TRANSPORT_CLASSIFIER_V2) transportPatterns?.record(updated, mode)
         log.log(DebugEventLogger.Category.CONTEXT, "Transporte escolhido: $mode")
     }
 
@@ -237,6 +252,7 @@ class MobilityEngine @Inject constructor(
     /** Settings › "Apagar histórico de deslocamentos". */
     suspend fun clearHistory(): Unit = mutex.withLock {
         repo.clearHistory()
+        intelligence?.clearTransportPatterns()
         scheduler.cancelMobilityCheck()
     }
 
@@ -268,13 +284,18 @@ class MobilityEngine @Inject constructor(
                 origin = current?.placeId
             }
         }
-        return repo.insert(
+        val candidate = repo.insert(
             MobilitySessionEntity(
                 startedAt = at, originPlaceId = origin, initialMode = mode, currentMode = mode,
                 state = MobilityState.MOVEMENT_CANDIDATE, confidence = 0f, source = MobilitySource.ACTIVITY_RECOGNITION,
                 leftOrigin = left, movingSince = if (mode != MovementMode.NONE) at else null,
             ),
         )
+        if (HoodieConfig.TRANSPORT_CLASSIFIER_V2) {
+            transportFeatures?.begin(candidate.id, at)
+            transportFeatures?.movement(if (mode.isVehicle) DetectedMovement.IN_VEHICLE else if (mode == MovementMode.WALKING) DetectedMovement.WALKING else DetectedMovement.UNKNOWN, at)
+        }
+        return candidate
     }
 
     /** Candidato: pontua a evidência e ignora, pergunta ou aplica. */
@@ -295,7 +316,7 @@ class MobilityEngine @Inject constructor(
         val approved = s.originPlaceId != null && m.approvedPatterns.any { it.startsWith("${s.originPlaceId}>") }
         // Primeiras vezes: mesmo com evidência forte, o Hoodie pergunta para aprender.
         val firstTimes = MobilityLearningEngine.confirmedFrom(trips, s.originPlaceId) < HoodieConfig.TRIP_PATTERN_MIN_COUNT && !approved
-        if (decision == MobilityDecision.APPLY && firstTimes && s.questionsAsked == 0) decision = MobilityDecision.ASK
+        if (!HoodieConfig.UNIFIED_CONFIDENCE_ENGINE && decision == MobilityDecision.APPLY && firstTimes && s.questionsAsked == 0) decision = MobilityDecision.ASK
         val withConfidence = s.copy(confidence = MobilityConfidenceScorer.confidence(evidence))
         repo.update(withConfidence)
         when (decision) {
@@ -324,16 +345,17 @@ class MobilityEngine @Inject constructor(
             state = MobilityStateMachine.stateFor(mode).takeIf { it != MobilityState.MOVEMENT_CANDIDATE } ?: MobilityState.WALKING,
             initialMode = if (s.initialMode == MovementMode.NONE) mode else s.initialMode,
             currentMode = mode,
-            confirmed = true,
+            confirmed = !HoodieConfig.UNIFIED_CONFIDENCE_ENGINE || source == MobilitySource.CONFIRMATION || s.confidence >= .85f,
             source = source,
-            confidence = if (source == MobilitySource.CONFIRMATION) 1f else maxOf(s.confidence, 0.8f),
+            confidence = if (source == MobilitySource.CONFIRMATION) 1f else if (HoodieConfig.UNIFIED_CONFIDENCE_ENGINE) s.confidence else maxOf(s.confidence, 0.8f),
         )
         repo.update(promoted)
         val start = s.movingSince?.let { minOf(it, s.startedAt) } ?: s.startedAt
         repo.insertSegment(
             MobilitySegmentEntity(
-                sessionId = s.id, mode = mode, startedAt = start, confidence = promoted.confidence,
-                confirmed = source == MobilitySource.CONFIRMATION || classified.second != null, source = classified.second ?: source,
+                sessionId = s.id, mode = mode, startedAt = start, confidence = lastClassification?.confidence?.value ?: promoted.confidence,
+                confirmed = if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && lastClassification != null) lastClassification!!.source == com.hoodie.app.domain.detection.DetectionSource.USER_CONFIRMATION || lastClassification!!.confidence.value >= .85f else source == MobilitySource.CONFIRMATION || classified.second != null,
+                source = classified.second ?: source,
             ),
         )
         log.log(DebugEventLogger.Category.CONTEXT, "Deslocamento iniciado: $mode ($source)")
@@ -345,12 +367,17 @@ class MobilityEngine @Inject constructor(
 
     /** Troca de trecho: a pé ⇄ veículo. */
     private suspend fun newSegment(s: MobilitySessionEntity, observed: MovementMode, at: Long) {
+        if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && observed.isVehicle && !s.currentMode.isVehicle) {
+            transportFeatures?.begin(s.id, at, newVehicleSegment = true)
+            transportFeatures?.movement(DetectedMovement.IN_VEHICLE, at)
+        }
         repo.openSegment(s.id)?.let { repo.updateSegment(it.copy(endedAt = at)) }
         val (mode, learnedSource) = classify(observed, s.originPlaceId, s.startedAt)
         repo.insertSegment(
             MobilitySegmentEntity(
-                sessionId = s.id, mode = mode, startedAt = at, confidence = s.confidence,
-                confirmed = learnedSource != null, source = learnedSource ?: MobilitySource.ACTIVITY_RECOGNITION,
+                sessionId = s.id, mode = mode, startedAt = at, confidence = lastClassification?.confidence?.value ?: s.confidence,
+                confirmed = if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && lastClassification != null) lastClassification!!.confidence.value >= .85f else learnedSource != null,
+                source = learnedSource ?: MobilitySource.ACTIVITY_RECOGNITION,
             ),
         )
         val updated = s.copy(currentMode = mode, state = MobilityStateMachine.stateFor(mode))
@@ -365,13 +392,44 @@ class MobilityEngine @Inject constructor(
      * fica VEHICLE_UNKNOWN (e a pergunta resolve). Retorna o modo e a origem da classificação.
      */
     private suspend fun classify(mode: MovementMode, originPlaceId: Long?, at: Long): Pair<MovementMode, MobilitySource?> {
+        lastClassification = null
         if (mode != MovementMode.VEHICLE_UNKNOWN) return mode to null
         val m = settings.current().mobility
         m.preferredMode?.takeIf { it.isVehicle }?.let { return it to MobilitySource.PREFERENCE }
+        if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && intelligence != null && transportFeatures != null) {
+            val result = vehicleClassification(originPlaceId, at)
+            lastClassification = result
+            return (if (result.confidence.value >= .60f) result.mode else MovementMode.VEHICLE_UNKNOWN) to
+                if (result.evidence[result.mode].orEmpty().any { it.type == com.hoodie.app.domain.detection.EvidenceType.LEARNED_PATTERN }) MobilitySource.LEARNED else MobilitySource.ACTIVITY_RECOGNITION
+        }
         if (m.learnTrips) {
             MobilityLearningEngine.learnedVehicleMode(repo.trips(at), originPlaceId, at, clock.zone())?.let { return it to MobilitySource.LEARNED }
         }
         return MovementMode.VEHICLE_UNKNOWN to null
+    }
+
+    private suspend fun vehicleClassification(origin: Long?, at: Long): TransportClassification {
+        val destination = if (origin != null && settings.current().mobility.learnTrips) MobilityLearningEngine.predictedDestination(repo.trips(clock.nowMillis()), origin, at, clock.zone()) else null
+        val local = at.atZone(clock.zone())
+        val patterns = if (origin != null && destination != null) intelligence?.transportPatterns(origin, destination,
+            com.hoodie.app.domain.routine.routineDayGroup(local.dayOfWeek), local.minuteOfDay() / 30).orEmpty() else emptyList()
+        return TransportClassifier.classify(requireNotNull(transportFeatures).build(clock.nowMillis()), patterns, clock.nowMillis())
+    }
+
+    private suspend fun refreshVehicleClassification(s: MobilitySessionEntity, at: Long) {
+        if (!HoodieConfig.TRANSPORT_CLASSIFIER_V2 || transportFeatures == null || intelligence == null) return
+        val segment = repo.openSegment(s.id) ?: return
+        if (segment.source == MobilitySource.CONFIRMATION || segment.source == MobilitySource.USER_CORRECTION || segment.source == MobilitySource.PREFERENCE) return
+        val incoming = vehicleClassification(s.originPlaceId, s.startedAt)
+        val verdict = TransportDecisionPolicy.resolve(segment.mode, com.hoodie.app.domain.detection.ConfidenceScore(segment.confidence), incoming,
+            pendingVehicleSwitches[s.id], at)
+        if (verdict.pending == null) pendingVehicleSwitches.remove(s.id) else pendingVehicleSwitches[s.id] = verdict.pending
+        if (verdict.mode == segment.mode) return
+        repo.updateSegment(segment.copy(endedAt = maxOf(at, segment.startedAt)))
+        repo.insertSegment(MobilitySegmentEntity(sessionId = s.id, mode = verdict.mode, startedAt = at, confidence = incoming.confidence.value,
+            confirmed = incoming.confidence.value >= .85f, source = MobilitySource.LEARNED))
+        repo.update(s.copy(currentMode = verdict.mode, state = MobilityStateMachine.stateFor(verdict.mode)))
+        bus.emit(MobilityEvent.MovementModeChanged(s.id, at, s.currentMode, verdict.mode))
     }
 
     /** Chegada (geofence ENTER, leitura pontual ou destino provável confirmado). */
@@ -401,6 +459,12 @@ class MobilityEngine @Inject constructor(
             destination = place.id, at = at, reason = if (auto) "chegada automática" else "chegada",
         )
         val ended = repo.session(session.id) ?: return
+        if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && session.destinationPlaceId == null) {
+            repo.segmentsOf(session.id).filter {
+                it.confirmed && it.mode.isVehicle &&
+                    it.source in setOf(MobilitySource.CONFIRMATION, MobilitySource.USER_CORRECTION)
+            }.map { it.mode }.distinct().forEach { transportPatterns?.record(ended, it) }
+        }
         bus.emit(MobilityEvent.PlaceArrived(session.id, at, place.id, auto))
         if (!byGeofence) contextEngine.arriveAt(place.id, at)
 
@@ -480,8 +544,11 @@ class MobilityEngine @Inject constructor(
 
     /** Encerra o deslocamento (trecho aberto fecha junto). */
     private suspend fun finish(s: MobilitySessionEntity, destination: Long?, at: Long, reason: String) {
+        pendingVehicleSwitches.remove(s.id)
         repo.openSegment(s.id)?.let { repo.updateSegment(it.copy(endedAt = maxOf(at, it.startedAt))) }
-        val ended = s.copy(endedAt = maxOf(at, s.startedAt), destinationPlaceId = destination, state = MobilityState.ARRIVED, stillSince = null)
+        val ended = s.copy(endedAt = maxOf(at, s.startedAt), destinationPlaceId = destination, state = MobilityState.ARRIVED, stillSince = null,
+            confirmed = s.confirmed || destination != null,
+            confidence = if (destination != null) maxOf(s.confidence, .85f) else s.confidence)
         repo.update(ended)
         scheduler.cancelMobilityCheck()
         bus.emit(MobilityEvent.MobilityEnded(s.id, ended.endedAt!!, destination, ended.endedAt - s.startedAt))
@@ -504,24 +571,37 @@ class MobilityEngine @Inject constructor(
     // ───────────────────────── Perguntas ─────────────────────────
 
     private suspend fun askTransport(s: MobilitySessionEntity, vehicleMoving: Boolean) {
-        val segment = repo.segmentsOf(s.id).lastOrNull { it.mode.isVehicle }
+        val segments = repo.segmentsOf(s.id)
+        val segment = segments.lastOrNull { it.mode.isVehicle }
         if (segment == null || segment.mode != MovementMode.VEHICLE_UNKNOWN) {
             if (s.pendingModeQuestion) repo.update(s.copy(pendingModeQuestion = false))
             return
         }
-        ask(QuestionKind.SELECT_TRANSPORT_MODE, s, null, null, vehicleMoving)
+        var realModeChange = false
+        if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && intelligence != null && transportFeatures != null) {
+            val result = vehicleClassification(s.originPlaceId, s.startedAt)
+            val history = questions.since(clock.nowMillis() - DAY_MS).filter { it.kind == QuestionKind.SELECT_TRANSPORT_MODE }
+            val previousQuestion = history.lastOrNull { it.mobilitySessionId == s.id }
+            realModeChange = previousQuestion != null && segment.startedAt > previousQuestion.askedAt && segments.any {
+                it.mode.isActive && it.startedAt > previousQuestion.askedAt && (it.endedAt ?: Long.MAX_VALUE) <= segment.startedAt
+            }
+            if (!com.hoodie.app.engine.detection.QuestionPolicy.canAsk(result.detection, "transport:${result.mode.name}", clock.nowMillis(),
+                    history.map { com.hoodie.app.engine.detection.DetectionQuestion("transport:${it.answer ?: result.mode.name}", it.askedAt, it.mobilitySessionId, it.answer) },
+                    transportSessionId = s.id, mode = result.mode.name, realModeChange = realModeChange)) return
+        }
+        ask(QuestionKind.SELECT_TRANSPORT_MODE, s, null, null, vehicleMoving, realModeChange)
     }
 
     /**
      * Pergunta pelo [MobilityConfirmationPolicy]. DEFER deixa marcada para depois (veículo
      * andando); retorna o id quando perguntou.
      */
-    private suspend fun ask(kind: QuestionKind, s: MobilitySessionEntity, candidate: UserContextType?, placeId: Long?, vehicleMoving: Boolean): Long? {
+    private suspend fun ask(kind: QuestionKind, s: MobilitySessionEntity, candidate: UserContextType?, placeId: Long?, vehicleMoving: Boolean, realModeChange: Boolean = false): Long? {
         val now = clock.nowMillis()
         val recent = questions.since(now - DAY_MS).map { AskedQuestion(it.kind, it.candidate, it.askedAt) }
         // Mesma pergunta já feita para este deslocamento: nunca repete.
-        if (questions.since(now - DAY_MS).any { it.mobilitySessionId == s.id && it.kind == kind }) return null
-        val verdict = MobilityConfirmationPolicy.evaluate(kind, s.questionsAsked, vehicleMoving, appInForeground, now, clock.zone(), candidate, recent)
+        if (!realModeChange && questions.since(now - DAY_MS).any { it.mobilitySessionId == s.id && it.kind == kind }) return null
+        val verdict = MobilityConfirmationPolicy.evaluate(kind, if (realModeChange) 0 else s.questionsAsked, vehicleMoving, appInForeground, now, clock.zone(), candidate, recent)
         val latest = repo.session(s.id) ?: s
         when (verdict) {
             MobilityConfirmationPolicy.Verdict.SKIP -> {

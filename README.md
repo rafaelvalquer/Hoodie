@@ -60,7 +60,7 @@ O plano e a evidência de implementação estão em
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v7 (21 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v8 (25 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
@@ -70,6 +70,18 @@ O plano e a evidência de implementação estão em
 | UI | `presentation.*` | MVVM com Hilt, Navigation Compose, Material 3 |
 | Diário Digital | `core.deviceusage`, `engine.deviceusage`, `domain.phoneinsights`, `pixel.phoneinsights`, `presentation.screens.phoneinsights` | Uso do celular (UsageStatsManager) → sessões → agregados por dia, cruzados com os contextos |
 | Mobilidade | `core.mobility`, `engine.mobility`, `receiver.ActivityTransitionReceiver` | Activity Recognition (transições, sem GPS contínuo) → `MobilityEngine` (estado, score, no máx. ~1 pergunta por trajeto, aprendizado, chegada) → `ContextEngine` e perfil visual (cena específica para carro, ônibus, trem, metrô, bicicleta, caminhada ou fallback genérico) |
+
+### Interpretação do dia e aprendizado
+
+O Day Intelligence separa o estado do dia (dormindo, acordando, ativo, em deslocamento e desacelerando) do contexto da pessoa. Reutiliza os detectores de sono/despertar e persiste o snapshot atual. A Home observa esse estado por Flow.
+
+A confiança usa uma escala única de 0 a 1: abaixo de 45% o resultado é desconhecido; entre 45% e 59% pode perguntar; de 60% a 84% aplica provisoriamente; a partir de 85% aceita automaticamente. Perguntas consultam o histórico persistido e respeitam cooldown por candidato e sessão de transporte.
+
+No Diário, toque no evento ou use **Editar evento** nos detalhes da Jornada/Relógio para corrigir contexto, local, horários ou transporte. A operação grava o original na auditoria e atualiza os dados canônicos e a distribuição digital por contexto em transação. Correções têm confiança 1 e prevalecem sobre inferências e respostas atrasadas.
+
+A rotina aprendida usa 28 dias, mediana ponderada e MAD, excluindo exceções e dias incompletos. A configuração manual continua prioritária. O trabalho diário e as correções recalculam os padrões. Transporte usa agregados de movimento/velocidade/paradas, confirmações e rejeições por origem/destino/dia/faixa horária, sem guardar uma rota GPS. Mudanças de classificação exigem vantagem de 15 pontos sustentada por 45 segundos; trechos multimodais permanecem separados.
+
+As cinco flags de `HoodieConfig` estão ativadas na ordem confiança → estado do dia → correções → rotina → transporte. Consulte [implementação e validações](docs/day-intelligence-progress.md).
 
 ### O princípio mais importante
 
@@ -86,7 +98,7 @@ e aprendizado de lugares. `ContextSignalProcessor` compartilha scoring e reaçõ
 `ContextTransitionService` mantém a escrita das transições em um só lugar.
 
 Confiança determinística: lugar conhecido +40, horário esperado +30, dia esperado +20, histórico +10..30.
-`≥ 85` aplica · `40–84` aplica e pergunta · `< 40` assume `UNKNOWN`.
+`≥ 85` aceita · `60–84` aplica provisoriamente · `45–59` pergunta quando relevante · `< 45` assume `UNKNOWN`.
 Perguntas: no máximo 4 por dia e nunca o mesmo contexto em menos de 60 min. Três almoços confirmados
 num horário parecido → classificação automática, sem perguntar.
 GPS oscilando na borda (saída + volta em < 5 min) desfaz a saída. Sem localização: **rotina provável**.
@@ -249,7 +261,7 @@ ANDROID USAGE STATS ─► UsageStatsSource (só foreground/background, tela, bl
         ▼
 AppSessionBuilder ─► ScreenSessionBuilder ─► AppCategoryResolver ─► ContextUsageCorrelator ─► DailyPhoneUsageCalculator
         ▼                                                                 (PhoneInsightsAssembler, puro)
-DeviceUsageRepository ─► Room v7 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
+DeviceUsageRepository ─► Room v8 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
 ```
 
 * **Permissão**: `PACKAGE_USAGE_STATS` é ligada pelo usuário em *Acesso ao uso*. Antes, a tela "Análise do celular" explica
@@ -259,7 +271,7 @@ DeviceUsageRepository ─► Room v7 (agregados, horas, timeline e sessões) ─
   Aparelhos sem esses eventos (API 26–27, alguns fabricantes) caem em estimativa a partir do uso de apps e a UI marca "≈".
   Launchers e a interface do sistema contam como tela ligada, não como app usado.
 * **Categorias**: escolha do usuário → mapa interno (YouTube → Vídeo, Spotify → Música, Teams → Trabalho...) → `ApplicationInfo.category` → Outros.
-* **Persistência**: Room v7 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
+* **Persistência**: Room v8 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
   totais em `daily_context_usage`, 24 horas em `daily_screen_hourly`, blocos em `daily_phone_timeline` e `phone_app_sessions`.
   Migrações 1→2→3→4→5 preservam os registros anteriores. Categorias manuais ficam em `app_category_overrides`.
   Eventos brutos nunca são salvos. O Android só guarda eventos por alguns dias: um recálculo "menor" de um dia antigo não sobrescreve o histórico.
@@ -343,7 +355,7 @@ instrumentados num emulador. Geofence real, reboot e homologação por aparelho 
 
 O plano técnico é acompanhado em [stability-architecture-progress.md](docs/stability-architecture-progress.md). A versão permanece dev enquanto os gates de teste, UI e revisão artística estão em andamento.
 
-O banco atual é Room v7: v5 completa o histórico digital, v6 adiciona mobilidade e v7 acrescenta índices compostos sem reescrever dados. Sessões individuais são mantidas por 365 dias; agregados diários permanecem. Ver [auditoria dos índices](docs/database-index-audit.md).
+O banco atual é Room v8: v5 completa o histórico digital, v6 adiciona mobilidade e v7 acrescenta índices compostos sem reescrever dados e v8 adiciona estado do dia, auditoria de correções, rotina aprendida e padrões de transporte. Sessões individuais são mantidas por 365 dias; agregados diários permanecem. Ver [auditoria dos índices](docs/database-index-audit.md).
 
 O Diário Digital começa desativado. Ativar solicita o acesso ao uso do Android; a análise só liga após a permissão. A ajuda de Configurações restritas está disponível na tela de ativação. A permissão Android sozinha não equivale a consentimento no app.
 

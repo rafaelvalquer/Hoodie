@@ -114,13 +114,13 @@ class ContextEngineIntegrationTest {
         assertTrue(g.notifier.events.any { "chegou ao trabalho" in it })
 
         step(MONDAY, 12, 5) { g.engine.onGeofence(workId, GeofenceTransition.EXIT) }
-        assertHoodieFollows(UserContextType.COMMUTING) // CT-004
-        assertEquals(at(MONDAY, 12, 5).ms() to workId, g.scheduler.lunchCheck)
+        assertHoodieFollows(UserContextType.LUNCH) // 60%: provisório, sem pergunta.
+        assertNull(g.scheduler.lunchCheck)
 
         step(MONDAY, 12, 20) { g.engine.onLunchCheck(at(MONDAY, 12, 5).ms(), workId) }
         assertHoodieFollows(UserContextType.LUNCH) // CT-005
         val lunch = current()!!
-        assertEquals(at(MONDAY, 12, 20).ms(), lunch.startedAt)
+        assertEquals(at(MONDAY, 12, 5).ms(), lunch.startedAt)
 
         step(MONDAY, 12, 55) { g.engine.onGeofence(workId, GeofenceTransition.ENTER) }
         assertHoodieFollows(UserContextType.WORK) // CT-006
@@ -139,7 +139,7 @@ class ContextEngineIntegrationTest {
         val types = events().filter { it.startedAt >= at(MONDAY, 0).ms() }.map { it.type }
         assertEquals(
             listOf(
-                UserContextType.COMMUTING, UserContextType.WORK, UserContextType.COMMUTING, UserContextType.LUNCH,
+                UserContextType.COMMUTING, UserContextType.WORK, UserContextType.LUNCH,
                 UserContextType.WORK, UserContextType.COMMUTING, UserContextType.HOME,
             ),
             types,
@@ -149,19 +149,19 @@ class ContextEngineIntegrationTest {
     }
 
     @Test
-    fun `CT-TRANSITION-001 COMMUTING para LUNCH cria dois eventos e nunca persiste COMMUTING`() {
+    fun `CT-TRANSITION-001 almoco provisorio preserva inicio sem boundary artificial`() {
         step(MONDAY, 8, 41) { g.engine.onGeofence(workId, GeofenceTransition.ENTER) }
         step(MONDAY, 12, 5) { g.engine.onGeofence(workId, GeofenceTransition.EXIT) }
         val commuting = current()!!
         step(MONDAY, 12, 20) { g.engine.onLunchCheck(at(MONDAY, 12, 5).ms(), workId) }
 
         val closed = runBlocking { g.contextDao.getById(commuting.id)!! }
-        assertEquals(UserContextType.COMMUTING, closed.type)
+        assertEquals(UserContextType.LUNCH, closed.type)
         assertEquals(at(MONDAY, 12, 5).ms(), closed.startedAt)
-        assertEquals(at(MONDAY, 12, 20).ms(), closed.endedAt)
+        assertNull(closed.endedAt)
         val lunch = current()!!
         assertEquals(UserContextType.LUNCH, lunch.type)
-        assertEquals(at(MONDAY, 12, 20).ms(), lunch.startedAt)
+        assertEquals(at(MONDAY, 12, 5).ms(), lunch.startedAt)
         assertNull(lunch.endedAt)
         // Aceite: impossível o estado persistido continuar COMMUTING.
         assertEquals(UserContextType.LUNCH, hoodieState().userContext)
@@ -170,11 +170,12 @@ class ContextEngineIntegrationTest {
 
     @Test
     fun `CT-TRANSITION-002 WORK para LEISURE apos Nao cria boundary`() {
-        // Domingo no trabalho → aplica e pergunta.
+        // Uma visita confirmada anterior eleva a entrada de domingo a ASK_USER (50%).
+        runBlocking { val dao = g.db.placeDao(); dao.update(dao.getById(workId)!!.copy(confirmationCount = 1)) }
         g.clock.millis = at(SUNDAY, 9).ms()
         step(SUNDAY, 9, 0) { g.engine.onGeofence(workId, GeofenceTransition.ENTER) }
         val work = current()!!
-        assertEquals(UserContextType.WORK, work.type)
+        assertEquals(UserContextType.UNKNOWN, work.type)
         val questionId = g.notifier.questions.single().first
 
         step(SUNDAY, 9, 30) { g.engine.answerYesNo(questionId, yes = false) }
@@ -182,7 +183,7 @@ class ContextEngineIntegrationTest {
         assertEquals(UserContextType.LEISURE, leisure.type)
         assertTrue(leisure.id != work.id)
         assertEquals(at(SUNDAY, 9, 30).ms(), leisure.startedAt)
-        assertEquals(UserContextType.WORK, runBlocking { g.contextDao.getById(work.id)!!.type })
+        assertEquals(UserContextType.UNKNOWN, runBlocking { g.contextDao.getById(work.id)!!.type })
         assertEquals(at(SUNDAY, 9, 30).ms(), runBlocking { g.contextDao.getById(work.id)!!.endedAt })
         assertHoodieFollows(UserContextType.LEISURE)
         assertTrue(g.timelineTexts().contains("Passeio (corrigido)"))
@@ -190,13 +191,15 @@ class ContextEngineIntegrationTest {
     }
 
     @Test
-    fun `resposta Sim so confirma o evento atual sem boundary`() {
+    fun `resposta Sim ao candidato desconhecido cria boundary confirmado`() {
+        runBlocking { val dao = g.db.placeDao(); dao.update(dao.getById(workId)!!.copy(confirmationCount = 1)) }
         step(SUNDAY, 9, 0) { g.engine.onGeofence(workId, GeofenceTransition.ENTER) }
         val work = current()!!
         val questionId = g.notifier.questions.single().first
         step(SUNDAY, 9, 10) { g.engine.answerYesNo(questionId, yes = true) }
         val after = current()!!
-        assertEquals(work.id, after.id)
+        assertTrue(work.id != after.id)
+        assertEquals(UserContextType.WORK, after.type)
         assertEquals(1f, after.confidence)
         assertEquals(ContextSource.CONFIRMATION, after.source)
     }
