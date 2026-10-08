@@ -98,7 +98,11 @@ class DiaryViewModel @Inject constructor(
 
     init {
         if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS && database != null) viewModelScope.launch {
-            database.get().invalidationTracker.createFlow("context_events", "mobility_segments", "diary_corrections", emitInitialState = false).collect {
+            database.get().invalidationTracker.createFlow(
+                "context_events", "mobility_sessions", "mobility_segments", "diary_corrections", "places", "hoodie_activities",
+                "daily_device_usage", "daily_app_usage", "daily_context_app_usage", "daily_screen_hourly", "daily_context_usage",
+                "daily_phone_timeline", "learned_routine_slots", emitInitialState = false,
+            ).collect {
                 dayCache.clear()
                 load(_state.value.selectedDate)
             }

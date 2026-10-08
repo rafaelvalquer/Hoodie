@@ -28,4 +28,16 @@ internal class ManualContextHandler(private val processor: ContextSignalProcesso
         switchTo(type, now, 1f, placeId, ContextSource.MANUAL, TransitionReason.MANUAL)
         recordConfirmation(type, placeId, now, accepted = true)
     }
+
+    suspend fun correctPlaceNow(placeType: PlaceType): Unit = with(processor) {
+        val now = clock.nowMillis()
+        val type = placeType.toContext()
+        val placeId = places.firstOfType(placeType)?.id
+        scheduler.cancelChecks()
+        val current = contextDao.current()
+        if (current?.type == type) transitions.confirm(current.id, 1f, ContextSource.USER_CORRECTION)
+        else switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL)
+        recordConfirmation(type, placeId, now, accepted = true)
+        hoodie.resolve()
+    }
 }

@@ -77,11 +77,17 @@ class ContextEngine @Inject constructor(
 
     suspend fun dismissQuestion(questionId: Long): Unit = mutex.withLock { contextQuestionHandler.dismissQuestion(questionId) }
 
+    /** Confirms only the still-current event; repeated taps are safe. */
+    suspend fun confirmCurrentContext(expectedEventId: Long, confirmedAt: Long = clock.nowMillis()): Boolean =
+        mutex.withLock { contextQuestionHandler.confirmCurrent(expectedEventId, confirmedAt) }
+
     suspend fun applyRoutineFallbackIfNeeded(): Unit = mutex.withLock { routineFallbackHandler.applyRoutineFallbackIfNeeded() }
 
     suspend fun setManual(type: UserContextType): Unit = mutex.withLock { manualContextHandler.setManual(type) }
 
     suspend fun setManualPlace(type: PlaceType): Unit = mutex.withLock { manualContextHandler.setManualPlace(type) }
+
+    suspend fun correctPlaceNow(type: PlaceType): Unit = mutex.withLock { manualContextHandler.correctPlaceNow(type) }
 
     suspend fun savePlaceHere(type: PlaceType, name: String, lat: Double, lng: Double): Place = mutex.withLock { placeLearningHandler.savePlaceHere(type, name, lat, lng) }
 

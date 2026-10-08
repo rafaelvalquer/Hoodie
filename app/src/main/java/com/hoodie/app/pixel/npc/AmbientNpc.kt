@@ -210,9 +210,10 @@ object NpcRenderer {
     fun draw(b: PixelBuffer, slot: AmbientNpcSlot, timeMs: Long, movementOverride: NpcMovement? = null) {
         val restaurantBrain = slot.restaurantBrain
         val restaurantState = restaurantBrain?.stateAt(timeMs)
+        val officeFrameState = slot.officeBrain?.frameStateAt(timeMs)
         val movement = movementOverride ?: if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.movementAt(timeMs, restaurantState)
-        } else NpcMotionController.movement(slot, timeMs)
+        } else officeFrameState?.movement ?: NpcMotionController.movement(slot, timeMs)
         val frameData = NpcMotionController.frame(slot, timeMs, movement)
         val restaurantLine = if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.speechLineAt(timeMs, restaurantState)
@@ -220,7 +221,12 @@ object NpcRenderer {
         val speechProfile = restaurantLine?.let {
             NpcSpeechProfile(listOf(it), visibleMs = RestaurantNpcBrain.SPEECH_VISIBLE_MS)
         } ?: slot.definition.speechProfile
-        val speechAllowed = if (restaurantBrain != null) restaurantLine != null else shouldSpeak(slot, timeMs)
+        val officeSpeech = officeFrameState?.speech
+        val speechAllowed = when {
+            restaurantBrain != null -> restaurantLine != null
+            slot.officeBrain != null -> officeSpeech != null
+            else -> shouldSpeak(slot, timeMs)
+        }
         val animation = if (
             movement.animation == NpcAnimation.TALK && speechProfile != null && !speechAllowed && slot.officeBrain == null
         ) {
@@ -274,12 +280,15 @@ object NpcRenderer {
                 (slot.definition.characterStyle.species.headHeight * slot.scale).roundToInt().coerceAtLeast(1),
             )
         }
-        if (movement.animation == NpcAnimation.TALK && speechAllowed) speechProfile?.let { speech ->
+        if (movement.animation == NpcAnimation.TALK && speechAllowed) {
+            val speech = officeSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) } ?: speechProfile
+            speech?.let { activeProfile ->
             NpcSpeechBubbleRenderer.draw(
-                b, speech, movement.x, movement.floorY, slot.seed, timeMs,
-                movement.localTimeMs, frame.anchors.head.y,
+                b, activeProfile, movement.x, movement.floorY, slot.seed, timeMs,
+                officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) } ?: movement.localTimeMs, frame.anchors.head.y,
                 (slot.definition.characterStyle.species.headHeight * slot.scale).roundToInt().coerceAtLeast(1),
             )
+            }
         }
     }
 

@@ -65,6 +65,8 @@ data class DiaryUiState(
     val selectedDate: LocalDate,
     val today: LocalDate = selectedDate,
     val diary: DailyDiary? = null,
+    val dayReport: com.hoodie.app.domain.dayreport.DailyReport? = null,
+    val dayReportError: Boolean = false,
     val isLoading: Boolean = false,
     val error: com.hoodie.app.core.error.AppError? = null,
     val replay: ReplayUiState = ReplayUiState(),

@@ -46,6 +46,9 @@ data class PlaceVisit(
     val visitsCount: Int,
     val relatedTimelineIds: List<String> = emptyList(),
     val dominantHoodieActivity: HoodieActivity? = null,
+    /** Confiança do evento canônico que originou a visita. */
+    val confidence: Float? = null,
+    val source: com.hoodie.app.core.model.ContextSource? = null,
 )
 
 enum class DiaryMapNodeType { HOME, WORK, RESTAURANT, GYM, SCHOOL, MARKET, LEISURE, FAMILY, OTHER }
@@ -135,6 +138,7 @@ data class DailyDiary(
     val movements: List<DiaryMovement> = emptyList(),
     /** Relógio civil para consultas e relógio ativo para Jornada/replay. */
     val activityWindow: DailyActivityWindow = DailyActivityWindow.EMPTY,
+    val isException: Boolean = false,
 )
 
 /** Um trecho de deslocamento: só modo e horários — nunca posição ou rota. */

@@ -165,6 +165,8 @@ private fun OfficeLiveLab() {
     var seed by remember { mutableIntStateOf(42) }
     var playing by remember { mutableStateOf(true) }
     var showTimeline by remember { mutableStateOf(false) }
+    var showDiagnosticsOverlay by remember { mutableStateOf(true) }
+    var selectedNpc by remember { mutableStateOf("rabbit_analyst") }
     var elapsed by remember { mutableLongStateOf(0L) }
     LaunchedEffect(playing, speed) {
         var last = -1L
@@ -174,6 +176,10 @@ private fun OfficeLiveLab() {
         }
     }
     val env = remember(seed) { SceneEnv(DayPeriod.DAY, 9 * 60, variant = seed, daySeed = seed) }
+    val slots = remember(env) { OfficeNpcDirector.plan(env) }
+    val frameStates = remember(slots, elapsed) {
+        slots.mapNotNull { slot -> slot.officeBrain?.frameStateAt(elapsed)?.let { slot.definition.id to it } }.toMap()
+    }
     val visual = remember(seed) {
         VisualState(scene = SceneId.OFFICE, spot = SpotId.DESK,
             actions = listOf(MicroAction(AnimationId.IDLE, 1, 60_000, 60_000)), variant = seed)
@@ -181,23 +187,69 @@ private fun OfficeLiveLab() {
     Text("Simulação determinística do escritório · seed $seed · ${(elapsed / 1_000)}s", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
     Box(Modifier.fillMaxWidth().aspectRatio(240f / 320f)) {
         HoodieSceneView(visual, Modifier.fillMaxSize(), greet = false, speed = speed, periodOverride = DayPeriod.DAY)
+        if (showDiagnosticsOverlay) {
+            val brain = slots.firstOrNull { it.definition.id == selectedNpc }?.officeBrain
+            val action = brain?.baseActionAt(elapsed)
+            val frame = frameStates[selectedNpc]
+            val state = frame?.brainState
+            val movement = frame?.movement
+            val route = if (state?.currentIntent == com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE) {
+                com.hoodie.app.pixel.npc.office.OfficeNavigationGraph.route(state.currentSpot, state.targetSpot ?: state.currentSpot)
+            } else action?.route.orEmpty()
+            val destination = state?.targetSpot ?: action?.destination
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                val sx = size.width / 240f
+                val sy = size.height / 320f
+                route.zipWithNext().forEach { (a, b) ->
+                    drawLine(
+                        color = androidx.compose.ui.graphics.Color.Cyan,
+                        start = androidx.compose.ui.geometry.Offset(a.x * sx, a.floorY * sy),
+                        end = androidx.compose.ui.geometry.Offset(b.x * sx, b.floorY * sy),
+                        strokeWidth = 2f,
+                    )
+                }
+                destination?.let {
+                    val target = com.hoodie.app.pixel.npc.office.OfficeNavigationGraph.spots.getValue(it)
+                    drawCircle(androidx.compose.ui.graphics.Color.Red, radius = 5f, center = androidx.compose.ui.geometry.Offset(target.x * sx, target.floorY * sy))
+                }
+                movement?.let {
+                    drawCircle(androidx.compose.ui.graphics.Color.Yellow, radius = 4f, center = androidx.compose.ui.geometry.Offset(it.x * sx, it.floorY * sy))
+                }
+            }
+        }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         PixelButton(if (playing) "Pausar" else "Play", { playing = !playing }, Modifier.weight(1f))
         PixelButton("Seed −", { seed--; elapsed = 0 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
         PixelButton("Seed +", { seed++; elapsed = 0 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
     }
-    ChipRow(listOf("1x", "5x", "10x", "30x"), listOf(1f, 5f, 10f, 30f).indexOf(speed), { speed = listOf(1f, 5f, 10f, 30f)[it] })
+    ChipRow(listOf("0.25x", "0.5x", "1x", "5x", "10x", "30x"), listOf(.25f, .5f, 1f, 5f, 10f, 30f).indexOf(speed).coerceAtLeast(0), { speed = listOf(.25f, .5f, 1f, 5f, 10f, 30f)[it] })
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        PixelButton("−33 ms", { playing = false; elapsed = (elapsed - 33).coerceAtLeast(0) }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+        PixelButton("+33 ms", { playing = false; elapsed += 33 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+    }
+    ChipRow(listOf("Coelho", "Gato", "Bulldog"), listOf("rabbit_analyst", "cat_colleague", "bulldog_exec").indexOf(selectedNpc), { selectedNpc = listOf("rabbit_analyst", "cat_colleague", "bulldog_exec")[it] })
+    PixelButton(if (showDiagnosticsOverlay) "Ocultar rota e destino" else "Mostrar rota e destino", { showDiagnosticsOverlay = !showDiagnosticsOverlay }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
     SectionLabel("Estado ao vivo")
-    val slots = OfficeNpcDirector.plan(env)
     slots.forEach { slot ->
         val brain = slot.officeBrain ?: return@forEach
-        val state = brain.stateAt(elapsed)
-        val movement = brain.movementAt(elapsed)
+        val frame = frameStates[slot.definition.id] ?: return@forEach
+        val state = frame.brainState
+        val movement = frame.movement
         Text("${slot.definition.id.uppercase()} · ${state.currentIntent} · ${state.currentSpot} → ${state.targetSpot} · decisão #${state.decisionIndex} · próximo em ${((state.nextDecisionAt - elapsed).coerceAtLeast(0) / 1_000)}s · ${movement.phase}",
             color = HoodieColors.Gold, style = MaterialTheme.typography.labelSmall)
         Text("cooldown · café ${((state.cooldowns.coffeeUntil - elapsed).coerceAtLeast(0) / 1_000)}s · celular ${((state.cooldowns.phoneUntil - elapsed).coerceAtLeast(0) / 1_000)}s · social ${((state.cooldowns.socialUntil - elapsed).coerceAtLeast(0) / 1_000)}s · fala ${((state.cooldowns.speechUntil - elapsed).coerceAtLeast(0) / 1_000)}s",
             color = HoodieColors.Muted, style = MaterialTheme.typography.labelSmall)
+    }
+    slots.firstOrNull { it.definition.id == selectedNpc }?.officeBrain?.let { brain ->
+        val frame = frameStates[brain.npcId] ?: return@let
+        val state = frame.brainState
+        val movement = frame.movement
+        val baseAction = brain.baseActionAt(elapsed)
+        Text("DIAGNÓSTICO · ${brain.npcId}\nAção: ${state.currentIntent} · fase: ${movement.phase}\nOrigem: ${state.currentSpot} → destino: ${state.targetSpot}\nPosição: x=${movement.x}, y=${movement.floorY} · fase há ${movement.localTimeMs} ms\nPróxima decisão: ${state.nextDecisionAt} ms · animação: ${movement.animation} · fala: ${if (frame.speech != null) "ATIVA" else "nenhuma"}",
+            color = HoodieColors.Gold, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
+        Text("Plano-base ${baseAction.id} · ${baseAction.origin} → ${baseAction.destination} · rota ${baseAction.route.joinToString(" → ") { "${it.x},${it.floorY}" }} · ${baseAction.startedAt}–${baseAction.finishedAt} ms",
+            color = HoodieColors.Muted, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
     }
     PixelButton(if (showTimeline) "Ocultar timeline" else "Mostrar timeline dos NPCs", { showTimeline = !showTimeline }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
     if (showTimeline) {

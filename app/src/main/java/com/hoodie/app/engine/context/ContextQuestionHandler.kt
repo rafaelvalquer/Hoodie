@@ -10,6 +10,17 @@ import com.hoodie.app.core.config.HoodieConfig
 
 /** Internal handler; synchronization belongs exclusively to ContextEngine. */
 internal class ContextQuestionHandler(private val processor: ContextSignalProcessor) {
+    suspend fun confirmCurrent(expectedEventId: Long, confirmedAt: Long): Boolean = with(processor) {
+        val current = contextDao.current() ?: return@with false
+        if (current.id != expectedEventId || current.endedAt != null) return@with false
+        if (current.source in setOf(ContextSource.MANUAL, ContextSource.CONFIRMATION, ContextSource.USER_CORRECTION)) return@with true
+        val confirmed = transitions.confirm(expectedEventId, 1f, ContextSource.CONFIRMATION) ?: return@with false
+        recordConfirmation(confirmed.type, confirmed.placeId, confirmedAt, accepted = true)
+        memory.onContext(confirmed.type, null, confirmedAt)
+        hoodie.resolve()
+        true
+    }
+
     suspend fun answerYesNo(questionId: Long, yes: Boolean): Unit = with(processor) {
         val q = questionDao.getById(questionId) ?: return@with
         if (q.answeredAt != null) return@with

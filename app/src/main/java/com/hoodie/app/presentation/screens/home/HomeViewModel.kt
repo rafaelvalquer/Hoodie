@@ -41,6 +41,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import com.hoodie.app.core.error.*
 import com.hoodie.app.presentation.common.runUiAction
 import com.hoodie.app.presentation.common.retryableUiState
@@ -50,12 +51,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.time.DayOfWeek
 import javax.inject.Inject
 import kotlin.random.Random
@@ -67,6 +73,7 @@ data class HomeUiState(
     val now: Long = 0,
     val period: DayPeriod = DayPeriod.DAY,
     val context: ContextEvent? = null,
+    val contextPlaceName: String? = null,
     val snapshot: HoodieSnapshot? = null,
     val visual: VisualState? = null,
     val next: UpcomingEvent? = null,
@@ -103,11 +110,14 @@ class HomeViewModel @Inject constructor(
     private val router: com.hoodie.app.engine.mobility.QuestionRouter,
     private val mobility: com.hoodie.app.engine.mobility.MobilityEngine,
     mobilityRepo: com.hoodie.app.data.repository.MobilityRepository,
-    contextDao: ContextEventDao,
+    private val contextDao: ContextEventDao,
     questionDao: QuestionDao,
     dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
+    private val corrections: dagger.Lazy<com.hoodie.app.engine.correction.DiaryCorrectionService>? = null,
 ) : ViewModel() {
-    val dayState = if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStates?.get()?.snapshots ?: kotlinx.coroutines.flow.flowOf(null) else kotlinx.coroutines.flow.flowOf(null)
+    private val dayStateCoordinator = if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStates?.get() else null
+    val dayState = dayStateCoordinator?.snapshots ?: kotlinx.coroutines.flow.flowOf(null)
+    private val wakeEvidence = dayStateCoordinator?.wakeEvidence ?: kotlinx.coroutines.flow.flowOf(null)
     val zone get() = clock.zone()
 
 
@@ -151,6 +161,8 @@ class HomeViewModel @Inject constructor(
     private var dialogueUntil = 0L
 
     private val reloadHome = MutableStateFlow(0L)
+    private val homeNowReconciled = MutableStateFlow(false)
+    private var homeResumeJob: Job? = null
     val state: StateFlow<HomeUiState> = retryableUiState(
         retries = reloadHome,
         loading = HomeUiState(),
@@ -164,6 +176,43 @@ class HomeViewModel @Inject constructor(
                 .combineWithQuestion()
         },
     ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+
+    val homeNow: StateFlow<com.hoodie.app.domain.home.HomeNowSnapshot?> = combine(state, dayState, wakeEvidence, homeNowReconciled) { home, day, wake, reconciled ->
+        if (!reconciled || home.loading || home.error != null) null else {
+            val todayWake = wake?.takeIf { java.time.Instant.ofEpochMilli(it.first).atZone(clock.zone()).toLocalDate() == clock.today() }
+            com.hoodie.app.engine.home.HomeNowAssembler.assemble(day, home.context, home.contextPlaceName,
+                todayWake?.first, todayWake?.second, home.now, home.locationStatus)
+        }
+    }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Hide the previous snapshot until canonical sources have been reconciled on every resume. */
+    fun onHomeStarted() {
+        homeResumeJob?.cancel()
+        homeNowReconciled.value = false
+        homeResumeJob = viewModelScope.launch {
+            try {
+                val reconciledDayState = withContext(Dispatchers.IO) { dayStateCoordinator?.reconcile() }
+                if (reconciledDayState != null) {
+                    withTimeout(10_000) { dayState.first { it == reconciledDayState } }
+                }
+                reloadHome.value += 1
+                val currentEventId = withContext(Dispatchers.IO) { contextDao.current()?.id }
+                withTimeout(10_000) {
+                    state.first { !it.loading && it.error == null && it.context?.id == currentEventId }
+                }
+                homeNowReconciled.value = true
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Log.e(TAG, "Failed to reconcile HomeNow on resume", error)
+            }
+        }
+    }
+
+    fun onHomeStopped() {
+        homeResumeJob?.cancel()
+        homeNowReconciled.value = false
+    }
 
     fun retryLoad() { reloadHome.value += 1 }
 
@@ -228,7 +277,8 @@ class HomeViewModel @Inject constructor(
         val canSaveHere = locationReady && (suggest == PlaceType.HOME || atWorkHours)
         return HomeUiState(
             loading = false, catName = i.settings.catName, now = now, period = DayPeriod.of(zoned.hour),
-            context = ctx, snapshot = snap, visual = visual, next = next, dialogue = dialogueText,
+            context = ctx, contextPlaceName = ctx?.placeId?.let { id -> i.places.firstOrNull { it.id == id }?.name },
+            snapshot = snap, visual = visual, next = next, dialogue = dialogueText,
             probableMode = probable, locationStatus = status, isWorkDay = i.routine.hasWork && zoned.dayOfWeek in i.routine.days,
             isDayOff = i.dayOff, suggestSavePlace = suggest, canSaveHere = canSaveHere,
         )
@@ -239,6 +289,32 @@ class HomeViewModel @Inject constructor(
         contextEngine.setManualPlace(type)
         // "Não estou no trabalho" logo após uma chegada automática: a mobilidade aprende a correção.
         mobility.onManualContext(context, clock.nowMillis())
+        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
+    }
+
+    fun confirmContext(expectedEventId: Long) = action {
+        val confirmed = contextEngine.confirmCurrentContext(expectedEventId, clock.nowMillis())
+        if (confirmed) _events.send(HomeUiEvent.React(AnimationId.HAPPY))
+        else _events.send(HomeUiEvent.ShowMessage("O contexto mudou. Confira a informação atualizada."))
+    }
+
+    fun correctCurrentContext(type: PlaceType, historical: Boolean, expectedEventId: Long?) = action {
+        val current = contextDao.current()
+        if (expectedEventId == null || current?.id != expectedEventId) {
+            _events.send(HomeUiEvent.ShowMessage("O contexto mudou. Confira a informação atualizada."))
+            return@action
+        }
+        if (historical) {
+            requireNotNull(corrections?.get()) { "Correções do Diário indisponíveis." }.save(
+                com.hoodie.app.domain.correction.DiaryCorrection(
+                    com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT, current.id,
+                    type.toContext(), places.firstOfType(type)?.id, current.startedAt, current.endedAt,
+                ),
+            )
+        } else {
+            contextEngine.correctPlaceNow(type)
+            mobility.onManualContext(type.toContext(), clock.nowMillis())
+        }
         _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 

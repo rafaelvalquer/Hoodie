@@ -36,6 +36,7 @@ class DiaryRepository @Inject constructor(
     private val settings: SettingsRepository? = null,
     /** Deslocamentos (Mobilidade Contextual): opcional, como a camada digital. */
     private val mobility: MobilityRepository? = null,
+    private val dayExceptions: com.hoodie.app.core.database.DayExceptionDao? = null,
 ) {
     suspend fun loadDiary(date: LocalDate): DailyDiary = withContext(Dispatchers.IO) {
         val zone = clock.zone()
@@ -113,5 +114,6 @@ class DiaryRepository @Inject constructor(
         }
         val visiblePhone = phone.takeIf { digitalSettings?.showInDiary == true }
         return@withContext DiaryMobilityMerger.merge(DiaryDigitalMerger.merge(diary, visiblePhone, zone), visibleMobilityTrips, from, to, now, zone)
+            .copy(isException = dayExceptions?.get(date.toEpochDay()) != null)
     }
 }

@@ -26,6 +26,8 @@ class DayStateCoordinator @Inject constructor(
     private val settings: SettingsRepository,
     private val clock: ClockProvider,
 ) {
+    private val _wakeEvidence = MutableStateFlow<Pair<Long, com.hoodie.app.domain.daycycle.WakeConfidence>?>(null)
+    val wakeEvidence: StateFlow<Pair<Long, com.hoodie.app.domain.daycycle.WakeConfidence>?> = _wakeEvidence.asStateFlow()
     private val mutex = Mutex()
     private var job: Job? = null
     val snapshots: Flow<DayStateSnapshot?> = db.intelligenceDao().observeDayState().map { it?.toSnapshot() }.distinctUntilChanged()
@@ -62,6 +64,8 @@ class DayStateCoordinator @Inject constructor(
             if (date != currentDate) db.deviceUsageDao().sessions(currentDate.toEpochDay()) else emptyList()).map { AppSession(it.packageName, it.startedAt, it.endedAt) } else emptyList()
         val window = DailyActivityWindowResolver.resolve(date, from, to, now, clock.zone(), s.sleep, contexts, activities, timeline, phone, mobility,
             analysisEnabled = s.digital.analysisEnabled, mobilityEnabled = s.mobility.detectionEnabled, evidenceEndAt = now + 1)
+        _wakeEvidence.value = window.takeIf { it.wakeReason != com.hoodie.app.domain.daycycle.WakeReason.SCHEDULE_FALLBACK && it.wakeConfidence != com.hoodie.app.domain.daycycle.WakeConfidence.LOW }
+            ?.let { it.activeStartAt to it.wakeConfidence }
         val currentContext = contexts.lastOrNull { it.startedAt <= now && (it.endedAt == null || it.endedAt > now) }
         val trip = mobility.lastOrNull { it.startedAt <= now && it.endedAt == null && it.state in com.hoodie.app.data.repository.MobilityRepository.ACTIVE_STATES && it.stillSince == null }
         val real = RealUserActivityBuilder.build(from, now + 1, phone, mobility, contexts, timeline, s.digital.analysisEnabled, s.mobility.detectionEnabled)

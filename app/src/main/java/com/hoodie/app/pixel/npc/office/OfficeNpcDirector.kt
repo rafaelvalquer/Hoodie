@@ -12,6 +12,9 @@ import com.hoodie.app.pixel.npc.brain.NpcSpeechScheduler
 
 /** Elenco da cena Office Live. Cada papel mantém memória determinística para a sessão. */
 object OfficeNpcDirector {
+    /** Keep Office motion rollout explicitly scoped and easy to switch during homologation. */
+    const val OFFICE_NPC_CONTINUOUS_TIMELINE = true
+
     private val socialSessions = object : LinkedHashMap<Int, OfficeSocialSession>(8, .75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, OfficeSocialSession>?): Boolean = size > 8
     }
@@ -44,15 +47,21 @@ object OfficeNpcDirector {
     ): AmbientNpcSlot {
         val anchor = OfficeNavigationGraph.spots.getValue(spot)
         val behavior = NpcBehaviorProfile(NpcAnimation.IDLE, SpeciesMotionProfiles.forCharacter(style), reactions = false)
+        val speechProfile = if (style.id in setOf(
+                NpcCharacterRegistry.RABBIT_ANALYST.id,
+                NpcCharacterRegistry.CAT_COLLEAGUE.id,
+                NpcCharacterRegistry.BULLDOG_EXEC.id,
+            )) NpcSpeechScheduler.profile(style.id, clockMinute, daySeed) else null
         return AmbientNpcSlot(
             definition = AmbientNpcDefinition(
                 style.id, style, behavior,
-                speechProfile = if (style.id == NpcCharacterRegistry.RABBIT_ANALYST.id || style.id == NpcCharacterRegistry.CAT_COLLEAGUE.id)
-                    NpcSpeechScheduler.profile(style.id, clockMinute, daySeed) else null,
+                speechProfile = speechProfile,
             ),
             x = anchor.x, floorY = anchor.floorY, baseline = anchor.floorY, seed = seed,
             depth = if (spot == OfficeNpcSpot.DOOR) NpcDepth.BACKGROUND else NpcDepth.SCENE,
-            officeBrain = OfficeAmbientBrain(style.id, personality, spot, daySeed),
+            officeBrain = if (OFFICE_NPC_CONTINUOUS_TIMELINE) {
+                OfficeAmbientBrain(style.id, personality, spot, daySeed, speechProfile, seed)
+            } else null,
         )
     }
 }

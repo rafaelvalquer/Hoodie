@@ -19,8 +19,9 @@ class OfficeSpeechSchedulerTest {
     @Test fun productionConversationOnlySpeaksDuringAnActiveSocialEvent() {
         val brains = OfficeNpcDirector.plan(SceneEnv(DayPeriod.DAY, 9 * 60, variant = 42)).mapNotNull { it.officeBrain }
         for (time in 0L..600_000L step 250) {
-            if (brains.any { it.shouldSpeak(time) }) {
-                assertTrue(brains.filter { it.npcId != "bulldog_exec" }.all {
+            val colleagues = brains.filter { it.npcId != "bulldog_exec" }
+            if (colleagues.any { it.shouldSpeak(time) }) {
+                assertTrue(colleagues.all {
                     it.stateAt(time).currentIntent == com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE
                 })
             }

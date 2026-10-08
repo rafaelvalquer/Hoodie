@@ -29,10 +29,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -84,17 +86,33 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val dayState by vm.dayState.collectAsStateWithLifecycle(initialValue = null)
+    val homeNow by vm.homeNow.collectAsStateWithLifecycle()
     val zone = vm.zone
     val snackbar = remember { SnackbarHostState() }
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(vm, lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> vm.onHomeStarted()
+                Lifecycle.Event.ON_STOP -> vm.onHomeStopped()
+                else -> Unit
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
+            vm.onHomeStopped()
+        }
+    }
     LaunchedEffect(vm, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             vm.events.collect { event ->
                 when (event) {
                     is HomeUiEvent.React -> reactions.emit(event.animation)
                     is HomeUiEvent.ShowError -> launch { snackbar.showSnackbar(context.appErrorText(event.error)) }
+                    is HomeUiEvent.ShowMessage -> launch { snackbar.showSnackbar(event.message) }
                 }
             }
         }
@@ -115,10 +133,13 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             answerTransportMode = { id, mode -> vm.answerTransportMode(id, mode) },
             dismissQuestion = { vm.dismissQuestion(it) },
             answerSavePlace = { id, save -> vm.answerSavePlace(id, save) },
+            confirmContext = vm::confirmContext,
+            correctContext = { type, historical -> vm.correctCurrentContext(type, historical, homeNow?.contextEventId) },
         ),
         reactions = reactions,
         snackbar = snackbar,
         dayState = dayState,
+        homeNow = homeNow,
     )
 }
 
@@ -132,6 +153,8 @@ internal data class HomeActions(
     val answerTransportMode: (Long, com.hoodie.app.core.mobility.MovementMode) -> Unit = { _, _ -> },
     val dismissQuestion: (Long) -> Unit = {},
     val answerSavePlace: (Long, Boolean) -> Unit = { _, _ -> },
+    val confirmContext: (Long) -> Unit = {},
+    val correctContext: (PlaceType, Boolean) -> Unit = { _, _ -> },
 )
 
 /** Production UI shared by the connected screen and deterministic visual fixtures. */
@@ -146,9 +169,11 @@ internal fun HomeContent(
     reactions: kotlinx.coroutines.flow.Flow<AnimationId>? = null,
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
     dayState: com.hoodie.app.domain.daystate.DayStateSnapshot? = null,
+    homeNow: com.hoodie.app.domain.home.HomeNowSnapshot? = null,
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
+    var correctionOpen by remember { mutableStateOf(false) }
     if (state.loading) {
         HomeLoadingSkeleton()
         return
@@ -195,8 +220,14 @@ internal fun HomeContent(
             HoodieSceneView(state.visual, Modifier.fillMaxWidth(), reactions = reactions)
         }
 
+        if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                HomeNowCard(homeNow, state.now, zone, actions.confirmContext, { correctionOpen = true })
+            }
+        }
+
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            state.snapshot?.let { snap ->
+            if (!com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) state.snapshot?.let { snap ->
                 val a = snap.state.activity
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.home_activity, state.catName, a.label), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
@@ -243,7 +274,7 @@ internal fun HomeContent(
             }
 
             // Você.
-            PixelPanel(Modifier.fillMaxWidth()) {
+            if (!com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) PixelPanel(Modifier.fillMaxWidth()) {
                 SectionLabel(stringResource(R.string.ui_home_screen_2))
                 val ctx = state.context
                 val type = ctx?.type ?: UserContextType.UNKNOWN
@@ -279,6 +310,11 @@ internal fun HomeContent(
             }
         }
     }
+    if (correctionOpen) HomeNowCorrectionSheet(
+        onDismiss = { correctionOpen = false },
+        onSave = { type, historical -> actions.correctContext(type, historical); correctionOpen = false },
+        saving = busy,
+    )
 }
 
 /** Opções do seletor "O que estou fazendo?", compartilhando o catálogo de Novo Lugar. */

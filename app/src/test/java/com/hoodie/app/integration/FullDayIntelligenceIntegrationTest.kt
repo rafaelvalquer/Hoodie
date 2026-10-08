@@ -6,11 +6,16 @@ import com.hoodie.app.core.model.*
 import com.hoodie.app.core.mobility.*
 import com.hoodie.app.domain.correction.*
 import com.hoodie.app.domain.daystate.*
+import com.hoodie.app.domain.dayreport.*
 import com.hoodie.app.domain.detection.*
+import com.hoodie.app.domain.home.HomeNowStatus
 import com.hoodie.app.domain.routine.*
 import com.hoodie.app.engine.correction.*
 import com.hoodie.app.engine.context.*
 import com.hoodie.app.engine.daystate.*
+import com.hoodie.app.engine.dayreport.DayReportAssembler
+import com.hoodie.app.engine.dayreport.DayReportStatusResolver
+import com.hoodie.app.engine.home.HomeNowAssembler
 import com.hoodie.app.engine.diary.*
 import com.hoodie.app.engine.detection.ConfidenceEngine
 import com.hoodie.app.engine.mobility.*
@@ -46,6 +51,7 @@ class FullDayIntelligenceIntegrationTest {
             val transportLearner = TransportPatternLearner(g.db, tx, g.clock)
             val correction = DiaryCorrectionService(g.db, tx, PhoneContextRecalculator(g.db, g.clock), g.clock, dagger.Lazy { learner }, dagger.Lazy { transportLearner })
             var lastSession = 0L
+            var previousDayLunchId = 0L
             for (date in listOf(today.minusDays(1), today.minusDays(2), today.minusDays(5))) {
                 val closed = date != today.minusDays(1)
                 suspend fun context(type: UserContextType, start: Long, end: Long?, place: Long?) = g.contextDao.insert(ContextEventEntity(type = type,
@@ -54,6 +60,7 @@ class FullDayIntelligenceIntegrationTest {
                 context(UserContextType.COMMUTING, at(date, 7, 25), at(date, 8, 10), null)
                 context(UserContextType.WORK, at(date, 8, 10), at(date, 12, 8), work)
                 val lunch = context(UserContextType.WORK, at(date, 12, 8), at(date, 13, 4), work)
+                if (date == today.minusDays(1)) previousDayLunchId = lunch
                 context(UserContextType.WORK, at(date, 13, 4), at(date, 18, 2), work)
                 context(UserContextType.COMMUTING, at(date, 18, 2), at(date, 18, 25), null)
                 context(UserContextType.GYM, at(date, 18, 25), at(date, 19, 15), gym)
@@ -98,6 +105,33 @@ class FullDayIntelligenceIntegrationTest {
             val inferred = TransportClassifier.classify(TransportFeatures(31 * 60_000L, true, 25f, 50f, .3f, 5, 150_000, 30_000, false), patterns, g.clock.millis)
             assertEquals(MovementMode.BUS, inferred.mode)
             assertEquals(DetectionDecision.AUTO_ACCEPT, ConfidenceEngine.decide(inferred.detection))
+            val learnedSlots = g.db.intelligenceDao().routineSlots().mapNotNull { row -> runCatching {
+                LearnedRoutineSlot(row.dayGroup, RoutineEventType.valueOf(row.type), row.medianMinute,
+                    row.deviationMinutes, row.sampleCount, ConfidenceScore(row.confidence))
+            }.getOrNull() }
+            val report = DayReportAssembler().assemble(diary, learnedSlots,
+                DayReportStatusResolver.resolve(date, today, diary), g.clock.millis, zone)
+            assertEquals(diary.summary.workMs, report.workMs)
+            assertEquals(56 * 60_000L, report.lunchMs)
+            assertEquals(diary.summary.commutingMs, report.commutingMs)
+            assertEquals(diary.phoneInsights?.summary?.screenTimeMs, report.screenTimeMs)
+            assertTrue(report.journey.any { it.type == PlaceType.RESTAURANT })
+            assertEquals(DayHighlightType.GYM, report.highlight?.type)
+            val originalLunchStop = report.journey.single { it.type == PlaceType.RESTAURANT }
+            assertEquals(at(date, 12, 8), originalLunchStop.arrivedAt)
+
+            // A later historical correction must flow through the canonical Diary into both
+            // report metrics and the journey without duplicating the restaurant stop.
+            correction.save(DiaryCorrection(CorrectionTargetType.CONTEXT, previousDayLunchId,
+                UserContextType.LUNCH, restaurant, at(date, 12, 15), at(date, 12, 55)))
+            val correctedDiary = com.hoodie.app.data.repository.DiaryRepository(g.contextDao, g.db.timelineDao(), g.db.hoodieActivityDao(), g.db.placeDao(), g.clock,
+                mobility = com.hoodie.app.data.repository.MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())).loadDiary(date)
+            val correctedReport = DayReportAssembler().assemble(correctedDiary, learnedSlots,
+                DayReportStatusResolver.resolve(date, today, correctedDiary), g.clock.millis, zone)
+            assertEquals(40 * 60_000L, correctedReport.lunchMs)
+            assertEquals(at(date, 12, 15), correctedReport.journey.single { it.type == PlaceType.RESTAURANT }.arrivedAt)
+            assertEquals(at(date, 12, 55), correctedReport.journey.single { it.type == PlaceType.RESTAURANT }.departedAt)
+            assertEquals(report.journey.size, correctedReport.journey.size)
             val coordinator = DayStateCoordinator(g.db, g.settings, g.clock)
             g.db.intelligenceDao().saveDayState(DayStateSnapshot(DayState.SLEEPING, at(date, 4), ConfidenceScore(.9f), DayStateReason.SLEEP_INACTIVITY, false).toEntity())
             g.clock.millis = at(date, 6, 46)
@@ -124,7 +158,17 @@ class FullDayIntelligenceIntegrationTest {
             val sleeping = coordinator.reconcile()!!
             assertEquals(DayState.SLEEPING, sleeping.state)
             assertEquals(sleeping, DayStateCoordinator(g.db, g.settings, g.clock).snapshots.first())
-            assertEquals(6, g.db.intelligenceDao().correctionsSince(0).size)
+            val activeContextId = g.contextDao.insert(ContextEventEntity(type = UserContextType.HOME,
+                startedAt = at(today, 3, 30), endedAt = null, confidence = .96f, placeId = home, source = ContextSource.GEOFENCE))
+            val activeContext = g.contextDao.current()!!
+            val homeNow = HomeNowAssembler.assemble(sleeping,
+                ContextEvent(activeContextId, activeContext.type, activeContext.startedAt, activeContext.endedAt,
+                    activeContext.confidence, activeContext.placeId, activeContext.source),
+                "Casa", null, null, g.clock.millis)
+            assertEquals(DayState.SLEEPING, homeNow.dayState?.state)
+            assertEquals(UserContextType.HOME, homeNow.context)
+            assertEquals(HomeNowStatus.PROBABLE, homeNow.status)
+            assertEquals(7, g.db.intelligenceDao().correctionsSince(0).size)
         } finally { g.close() }
     }
 }

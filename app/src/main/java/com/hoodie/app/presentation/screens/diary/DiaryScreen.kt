@@ -95,6 +95,8 @@ import java.util.Locale
 @Composable
 fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val reportVm: DayReportViewModel = hiltViewModel()
+    val reportState by reportVm.state.collectAsStateWithLifecycle()
     val edit by vm.editState.collectAsStateWithLifecycle()
     edit?.let { DiaryCorrectionSheet(it, vm.zone, vm::dismissCorrection, vm::saveCorrection) }
     var selectedNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
@@ -105,8 +107,12 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
         }
     }
     val zone = vm.zone
+    LaunchedEffect(state.diary, state.selectedDate, state.today) {
+        if (com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT) state.diary?.let { reportVm.load(it, state.today) }
+        else reportVm.clear()
+    }
     DiaryContent(
-        state = state,
+        state = state.copy(dayReport = reportState.report, dayReportError = reportState.error),
         zone = zone,
         nowMillis = vm.nowMillis,
         selectedNodeId = selectedNodeId,
@@ -124,6 +130,7 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             openChapter = vm::openChapter,
             selectClockSegment = vm::selectClockSegment,
             refreshClock = vm::refreshClock,
+            openJourney = { vm.setMapMode(com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY) },
             editEvent = vm::beginCorrection,
             editAt = vm::beginCorrectionAt,
         ),
@@ -145,6 +152,7 @@ internal data class DiaryActions(
     val openChapter: (com.hoodie.app.domain.diary.journey.DayChapter?) -> Unit = {},
     val selectClockSegment: (String?) -> Unit = {},
     val refreshClock: () -> Unit = {},
+    val openJourney: () -> Unit = {},
 )
 
 @Composable
@@ -201,7 +209,14 @@ internal fun DiaryContent(
                     Text(stringResource(R.string.ui_diary_screen_6), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
                 }
             } else {
-                SummarySection(diary.summary, onContext = if (diary.phoneInsights != null) { ctx -> selectedContext = ctx } else null)
+                if (com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT) state.dayReport?.let { report ->
+                    DayReportSection(report, zone, actions.openJourney, Modifier.testTag("day_report_card"))
+                }
+                if (com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT && state.dayReportError) {
+                    PixelPanel(Modifier.fillMaxWidth()) { Text(stringResource(R.string.day_report_error), color = HoodieColors.Muted) }
+                }
+                SummarySection(diary.summary, onContext = if (diary.phoneInsights != null) { ctx -> selectedContext = ctx } else null,
+                    hideReportedMetrics = com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT)
                 if (diary.mobilityTotals.isNotEmpty()) {
                     // Deslocamentos do dia, sem trajeto: só quanto tempo em cada meio.
                     PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
@@ -323,7 +338,7 @@ private fun DateChip(label: String, selected: Boolean, onClick: () -> Unit) {
 private data class SummaryItem(val label: String, val icon: PixelSprite, val duration: Long, val context: UserContextType? = null)
 
 @Composable
-internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType) -> Unit)? = null) {
+internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType) -> Unit)? = null, hideReportedMetrics: Boolean = false) {
     val uiTextContext = LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionLabel(stringResource(R.string.ui_diary_screen_8))
@@ -331,7 +346,7 @@ internal fun SummarySection(summary: DailySummary, onContext: ((UserContextType)
             SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_3), PixelIcons.of(UserContextType.HOME), summary.homeMs, UserContextType.HOME), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_4), PixelIcons.of(UserContextType.WORK), summary.workMs, UserContextType.WORK),
             SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_5), PixelIcons.of(UserContextType.COMMUTING), summary.commutingMs, UserContextType.COMMUTING), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_6), PixelIcons.of(UserContextType.LUNCH), summary.lunchMs, UserContextType.LUNCH),
         SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_8), PixelIcons.of(UserContextType.GYM), summary.gymMs, UserContextType.GYM), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_10), PixelIcons.of(UserContextType.LEISURE), summary.leisureMs, UserContextType.LEISURE), SummaryItem(uiTextContext.getString(R.string.ui_extra_diary_screen_11), PixelIcons.of(UserContextType.UNKNOWN), summary.otherMs),
-        ).filter { it.duration > 0 }
+        ).filter { it.duration > 0 && !(hideReportedMetrics && it.context in setOf(UserContextType.WORK, UserContextType.COMMUTING, UserContextType.LUNCH, UserContextType.GYM)) }
         if (items.isEmpty()) PixelPanel(Modifier.fillMaxWidth()) { Text(stringResource(R.string.ui_diary_screen_9), color = HoodieColors.Muted) }
         items.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

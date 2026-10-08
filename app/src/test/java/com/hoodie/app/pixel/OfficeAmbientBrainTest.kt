@@ -45,6 +45,25 @@ class OfficeAmbientBrainTest {
         assertTrue("different seed must produce different NPC histories", first != histories(43))
     }
 
+    @Test fun deterministicActionsChainAtTheirPhysicalDestinations() {
+        val brains = OfficeNpcDirector.plan(SceneEnv(DayPeriod.DAY, 9 * 60, variant = 42))
+            .mapNotNull { it.officeBrain }
+        for (brain in brains.filter { it.npcId != "bulldog_exec" }) {
+            var action = brain.baseActionAt(0)
+            var cursor = 0L
+            while (cursor < 600_000L) {
+                assertEquals(action, brain.baseActionAt(cursor))
+                assertEquals(OfficeNavigationGraph.spots.getValue(action.origin), action.route.first())
+                assertEquals(OfficeNavigationGraph.spots.getValue(action.destination), action.route.last())
+                val next = brain.baseActionAt(action.finishedAt)
+                assertEquals(action.finishedAt, next.startedAt)
+                assertEquals("${brain.npcId} action chain", action.destination, next.origin)
+                action = next
+                cursor = action.startedAt
+            }
+        }
+    }
+
     @Test fun everyOfficeSpotHasAnInBoundsRouteToEveryOtherSpot() {
         OfficeNpcSpot.entries.forEach { from -> OfficeNpcSpot.entries.forEach { to ->
             val route = OfficeNavigationGraph.route(from, to)
@@ -65,12 +84,12 @@ class OfficeAmbientBrainTest {
             val details = activeOccupants.joinToString { (id, spot) -> "$id:$spot" }
             assertEquals("duplicate active spot at $time ms: $occupied ($details)", occupied.size, occupied.toSet().size)
             activeOccupants.map { it.second }.forEachIndexed { index, spot ->
-                activeOccupants.drop(index + 1).forEach { (_, otherSpot) ->
+                activeOccupants.drop(index + 1).forEach { (otherId, otherSpot) ->
                     val a = OfficeNavigationGraph.spots.getValue(spot)
                     val b = OfficeNavigationGraph.spots.getValue(otherSpot)
                     val dx = a.x - b.x
                     val dy = a.floorY - b.floorY
-                    assertTrue("overlapping reservations at $time ms: $spot/$otherSpot", dx * dx + dy * dy >= 36 * 36)
+                    assertTrue("overlapping reservations at $time ms: ${activeOccupants[index].first}:$spot/$otherId:$otherSpot", dx * dx + dy * dy >= 36 * 36)
                 }
             }
         }
@@ -83,6 +102,21 @@ class OfficeAmbientBrainTest {
         val entering = brain.movementAt(1_000)
         assertTrue(absent.x < 0)
         assertTrue(entering.phase == com.hoodie.app.pixel.npc.PathPhase.ENTER && entering.x > 239)
+    }
+
+    @Test fun bulldogWalksBackToDoorBeforeExitingAndSpeaksDuringVisit() {
+        val slot = OfficeNpcDirector.plan(SceneEnv(DayPeriod.DAY, 9 * 60, variant = 42))
+            .first { it.definition.id == "bulldog_exec" }
+        val brain = slot.officeBrain!!
+        val lastActivity = brain.movementAt(48_000)
+        val atDoor = brain.movementAt(59_000)
+        val exiting = brain.movementAt(61_000)
+        assertEquals(OfficeNavigationGraph.spots.getValue(OfficeNpcSpot.DOOR).x, atDoor.x)
+        assertTrue(lastActivity.x != atDoor.x)
+        assertTrue(exiting.x > atDoor.x)
+        assertTrue(brain.shouldSpeak(10_000))
+        assertTrue(brain.shouldSpeak(35_000))
+        assertTrue(slot.definition.speechProfile != null)
     }
 
     @Test fun socialEventsAreDeterministicSparseAndSpeechIsContextual() {
@@ -155,8 +189,8 @@ class OfficeAmbientBrainTest {
                     seenMeetings[eventEnd] = seenMeetings.getOrDefault(eventEnd, false) || colleagues.any { it.shouldSpeak(time) }
                     val rabbitTravel = OfficeNavigationGraph.route(OfficeNpcSpot.DESK_LEFT, OfficeNpcSpot.CENTER)
                         .zipWithNext().sumOf { (a, b) -> maxOf(kotlin.math.abs(b.x - a.x), kotlin.math.abs(b.floorY - a.floorY)) * 24L }
-                    meetingStarts[eventEnd] = states.first().intentStartedAt - rabbitTravel
-                    socialCooldowns[eventEnd] = colleagues.mapIndexed { index, brain -> brain.npcId to states[index].cooldowns.socialUntil }.toMap()
+                    meetingStarts.putIfAbsent(eventEnd, states.first().intentStartedAt - rabbitTravel - 1_000L)
+                    socialCooldowns.putIfAbsent(eventEnd, colleagues.mapIndexed { index, brain -> brain.npcId to states[index].cooldowns.socialUntil }.toMap())
                     colleagues.firstOrNull { it.shouldSpeak(time) }?.let { speaker ->
                         val speakerIndex = colleagues.indexOf(speaker)
                         meetingSpeakers[eventEnd] = speaker.npcId

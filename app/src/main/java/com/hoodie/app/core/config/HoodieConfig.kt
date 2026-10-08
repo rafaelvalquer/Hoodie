@@ -16,6 +16,14 @@ object HoodieConfig {
     const val LEARNED_ROUTINE = true
     const val TRANSPORT_CLASSIFIER_V2 = true
 
+    // Presentation release switches. Enabled after assembler and interaction gates pass.
+    const val HOME_NOW_V2 = true
+    const val DAILY_INTELLIGENT_REPORT = true
+    const val DAILY_HIGHLIGHT_ENGINE = true
+    const val DAY_HIGHLIGHT_MIN_SAMPLES = 5
+    const val DAY_HIGHLIGHT_MIN_CONFIDENCE = .70f
+    const val DAY_HIGHLIGHT_SIGNIFICANT_MINUTES = 20
+
     // ── Geofence ──
     /** Raio padrão: 100–200 m absorve a imprecisão do GPS sem pegar o quarteirão inteiro. */
     const val DEFAULT_GEOFENCE_RADIUS_M = 150f

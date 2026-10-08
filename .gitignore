@@ -43,3 +43,6 @@ desktop.ini
 # Trava de build entre sessoes
 build-lock.txt
 .gradle-user-home/
+
+# Cache Gradle local
+.gradle-user/

@@ -54,7 +54,7 @@ object PlaceVisitBuilder {
                     activeEndAt != null && activeEndAt < minOf(dayEnd, now) -> visibleEnd
                     else -> null
                 }
-                PlaceVisit(event.placeId, name, type, start, departure, end - start, 1, related.map { it.id }, dominant)
+                PlaceVisit(event.placeId, name, type, start, departure, end - start, 1, related.map { it.id }, dominant, event.confidence, event.source)
             }.sortedBy { it.arrivalAt }.toList()
         fun key(visit: PlaceVisit): String = visit.placeId?.let { "place:$it" }
             ?: if (visit.placeType == PlaceType.OTHER) "unknown:${visit.arrivalAt}" else "type:${visit.placeType.name}"
