@@ -403,7 +403,7 @@ object SceneRegistry {
         listOf(
             HomeScene(), OfficeScene(), StreetScene(), TransitScene(), RestaurantScene(), GymScene(),
             BicycleScene(), GenericRideScene(),
-            SchoolScene(), ShoppingScene(), FamilyScene(), LeisureScene(),
+            SchoolScene(), ShoppingScene(), StoreScene(), FamilyScene(), LeisureScene(),
             UnknownScene(), GenericIndoorScene(), GenericOutdoorScene(),
         ).associateBy { it.id }
     }

@@ -20,6 +20,7 @@ enum class AnimationEvent {
     ITEM_PICKED, ITEM_IN_CART, ITEM_AT_CHECKOUT, PAYMENT_DONE,
     SNACK_PICKED, SNACK_FINISHED,
     CAMERA_READY, PHOTO_TAKEN,
+    GARMENT_PICKED, GARMENT_RETURNED, CURTAIN_CLOSE, CURTAIN_OPEN, BAG_TAKEN,
 }
 
 /** Como uma animação reage quando o estado muda no meio dela. */

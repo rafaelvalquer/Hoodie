@@ -138,6 +138,13 @@ object NpcDirector {
             )
             SceneId.RESTAURANT -> RestaurantNpcDirector.plan(env)
             SceneId.SHOPPING -> ShoppingNpcDirector.plan(env)
+            // Loja de roupas: o mesmo comprador, com a planta e as falas da loja.
+            SceneId.STORE -> ShoppingNpcDirector.plan(
+                env,
+                com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph,
+                com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary,
+                com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph.BASELINE,
+            )
             SceneId.LEISURE -> listOf(
                 AmbientNpcSlot(walker, 204, 252, 254, 91, walkerPath()),
                 AmbientNpcSlot(cat, 38, 252, 254, 92, strollPath()),

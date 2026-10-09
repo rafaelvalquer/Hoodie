@@ -240,6 +240,8 @@ class HomeViewModel @Inject constructor(
             social = snap.liveNeeds.social,
             hunger = snap.liveNeeds.hunger,
             focus = snap.liveNeeds.focus,
+            // Mercado e Loja dividem o contexto SHOPPING; o tipo do lugar escolhe a cena.
+            placeType = ctx?.placeId?.let { id -> i.places.firstOrNull { it.id == id }?.type },
         )
         val userType = ctx?.type ?: UserContextType.HOME
         val next = RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)

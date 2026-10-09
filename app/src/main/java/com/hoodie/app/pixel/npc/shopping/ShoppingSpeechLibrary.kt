@@ -2,8 +2,14 @@ package com.hoodie.app.pixel.npc.shopping
 
 import com.hoodie.app.core.time.DayPeriod
 
-object ShoppingSpeechLibrary {
-    fun lines(intent: ShoppingNpcIntent, period: DayPeriod): List<String> = when (intent) {
+/** Falas do comprador por intenção (cada cena de compras tem as suas). */
+fun interface ShoppingSpeech {
+    fun lines(intent: ShoppingNpcIntent, period: DayPeriod): List<String>
+}
+
+/** Mercado. */
+object ShoppingSpeechLibrary : ShoppingSpeech {
+    override fun lines(intent: ShoppingNpcIntent, period: DayPeriod): List<String> = when (intent) {
         ShoppingNpcIntent.LOOK_PRODUCT -> listOf("Parece bom.", "Será que preciso?")
         ShoppingNpcIntent.COMPARE_PRODUCTS -> listOf("Qual dos dois?", "Esse tá caro.")
         ShoppingNpcIntent.LOOK_PROMOTION -> listOf("Tá na promoção.", "Boa.")
