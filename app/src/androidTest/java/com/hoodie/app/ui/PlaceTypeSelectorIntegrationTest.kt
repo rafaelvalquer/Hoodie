@@ -16,6 +16,7 @@ import com.hoodie.app.core.model.ContextSource
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.UserContextType
+import com.hoodie.app.engine.home.HomeNowAssembler
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.presentation.screens.home.HomeActions
@@ -73,12 +74,14 @@ class PlaceTypeSelectorIntegrationTest {
                     visual = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME),
                 ),
             ) }
+            var homeNow by remember { mutableStateOf(HomeNowAssembler.assemble(null, state.context, null, null, null, state.now)) }
             HoodieTheme {
                 HomeContent(
                     state = state,
                     busy = false,
                     zone = java.time.ZoneId.of("America/Sao_Paulo"),
                     onOpen = {},
+                    homeNow = homeNow,
                     actions = HomeActions(setManual = { place ->
                         selected = place
                         val context = place.toContext()
@@ -89,6 +92,7 @@ class PlaceTypeSelectorIntegrationTest {
                             context = state.context!!.copy(type = context),
                             visual = visual,
                         )
+                        homeNow = HomeNowAssembler.assemble(null, state.context, null, null, null, state.now)
                     }),
                 )
             }
@@ -106,7 +110,7 @@ class PlaceTypeSelectorIntegrationTest {
             assertEquals(UserContextType.DINING, selectedContext)
             assertEquals(SceneId.RESTAURANT, selectedScene)
         }
-        rule.onNodeWithText("Restaurante").assertExists()
+        rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.home_now_lunch)).assertExists()
         rule.onAllNodesWithText("RESTAURANTE").assertCountEquals(0)
     }
 }

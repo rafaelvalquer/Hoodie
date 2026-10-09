@@ -24,6 +24,7 @@ import com.hoodie.app.core.model.ContextEvent
 import com.hoodie.app.core.model.ContextSource
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.domain.diary.model.DailySummary
+import com.hoodie.app.engine.home.HomeNowAssembler
 import com.hoodie.app.pixel.phoneinsights.HudStatTile
 import com.hoodie.app.presentation.components.LocalPixelRenderFrame
 import com.hoodie.app.presentation.components.PixelRenderFrame
@@ -81,13 +82,15 @@ class LabelSpacingTest(private val fontScale: Float) {
     }
 
     @Test fun homeYouPanel() {
+        val homeContext = ContextEvent(type = UserContextType.HOME, startedAt = 1L, endedAt = null, confidence = 1f, placeId = null, source = ContextSource.MANUAL)
+        val homeNow = HomeNowAssembler.assemble(null, homeContext, null, null, null, 1L)
         content {
             HomeContent(
-                HomeUiState(loading = false, now = 1L, context = ContextEvent(type = UserContextType.HOME, startedAt = 1L, endedAt = null, confidence = 1f, placeId = null, source = ContextSource.MANUAL)),
-                busy = false, zone = java.time.ZoneId.of("America/Sao_Paulo"), onOpen = {},
+                HomeUiState(loading = false, now = 1L, context = homeContext),
+                busy = false, zone = java.time.ZoneId.of("America/Sao_Paulo"), onOpen = {}, homeNow = homeNow,
             )
         }
-        assertStacked("Você", rule.onNodeWithText(context.getString(R.string.ui_home_screen_2).uppercase(), useUnmergedTree = true), rule.onNodeWithText("Casa", useUnmergedTree = true))
+        assertStacked("Meu Dia Agora", rule.onNodeWithText(context.getString(R.string.home_now_title), useUnmergedTree = true), rule.onNodeWithText(context.getString(R.string.home_now_home), useUnmergedTree = true))
     }
 
     companion object {
