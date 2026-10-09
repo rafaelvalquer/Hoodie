@@ -15,7 +15,6 @@ import com.hoodie.app.R
 import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.domain.dayreport.*
-import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.theme.HoodieColors
@@ -24,7 +23,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-internal fun DayReportCard(report: DailyReport, zone: ZoneId, onOpenJourney: () -> Unit, modifier: Modifier = Modifier) {
+internal fun DayReportCard(report: DailyReport, zone: ZoneId, modifier: Modifier = Modifier) {
     val date = report.date.format(DateTimeFormatter.ofPattern("EEEE, dd/MM", Locale.getDefault()))
     PixelPanel(modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
         SectionLabel(stringResource(R.string.day_report_title))
@@ -51,12 +50,6 @@ internal fun DayReportCard(report: DailyReport, zone: ZoneId, onOpenJourney: () 
             val lunch = report.lunchMs?.let(::formatDuration) ?: "—"
             Text(stringResource(R.string.day_report_other_activities, gym, lunch), style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted)
         }
-        if (report.journey.isNotEmpty()) {
-            SectionLabel(stringResource(R.string.day_report_journey))
-            Text(journeyLine(report.journey.take(6)), style = MaterialTheme.typography.bodyMedium)
-            if (report.journey.size > 6) Text("… ${report.journey.size - 6} marcos", color = HoodieColors.Muted)
-            PixelButton(stringResource(R.string.day_report_more_journey), onOpenJourney, Modifier.fillMaxWidth())
-        }
         report.highlight?.let { highlight ->
             SectionLabel(stringResource(R.string.day_report_highlight))
             Text(highlightText(highlight), style = MaterialTheme.typography.bodyMedium, color = HoodieColors.Hood)
@@ -69,14 +62,6 @@ private fun Metric(label: Int, value: String?, modifier: Modifier = Modifier) {
     Column(modifier.padding(vertical = 4.dp)) {
         Text(stringResource(label).uppercase(), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
         Text(value ?: stringResource(R.string.day_report_unavailable), style = MaterialTheme.typography.titleSmall)
-    }
-}
-
-private fun journeyLine(stops: List<DayReportStop>): String = buildString {
-    stops.forEachIndexed { index, stop ->
-        if (index > 0) append(" → ")
-        if (index > 0) stops[index].transportBefore?.let { mode -> append(mode.emoji).append(' ').append(mode.label).append(" → ") }
-        append(stop.name)
     }
 }
 

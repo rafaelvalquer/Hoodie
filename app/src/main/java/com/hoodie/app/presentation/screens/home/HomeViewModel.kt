@@ -81,8 +81,6 @@ data class HomeUiState(
     val probableMode: Boolean = false,
     val locationStatus: LocationStatus = LocationStatus.OK,
     val question: ContextQuestion? = null,
-    val isWorkDay: Boolean = false,
-    val isDayOff: Boolean = false,
     val suggestSavePlace: PlaceType? = null,
     val canSaveHere: Boolean = false,
 )
@@ -113,7 +111,6 @@ class HomeViewModel @Inject constructor(
     private val contextDao: ContextEventDao,
     questionDao: QuestionDao,
     dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
-    private val corrections: dagger.Lazy<com.hoodie.app.engine.correction.DiaryCorrectionService>? = null,
 ) : ViewModel() {
     private val dayStateCoordinator = if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStates?.get() else null
     val dayState = dayStateCoordinator?.snapshots ?: kotlinx.coroutines.flow.flowOf(null)
@@ -154,7 +151,8 @@ class HomeViewModel @Inject constructor(
     ) { s, r, c, p, off -> Inputs(s, r, c, p, off) }
 
     private val pendingQuestion = questionDao.observePending(clock.nowMillis() - 12 * HOUR_MS).map { list ->
-        list.firstOrNull()?.let { ContextQuestion(it.id, it.kind, it.candidate, it.placeId, it.chosenPlaceType, it.contextEventId, it.askedAt, it.answeredAt, it.answer) }
+        list.firstOrNull { !(com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION && it.kind == com.hoodie.app.core.model.QuestionKind.CONFIRM_CONTEXT) }
+            ?.let { ContextQuestion(it.id, it.kind, it.candidate, it.placeId, it.chosenPlaceType, it.contextEventId, it.askedAt, it.answeredAt, it.answer) }
     }
 
     private var dialogueText: String? = null
@@ -191,6 +189,9 @@ class HomeViewModel @Inject constructor(
         homeNowReconciled.value = false
         homeResumeJob = viewModelScope.launch {
             try {
+                if (com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) {
+                    runCatching { withContext(Dispatchers.IO) { contextEngine.dismissPendingContextConfirmations() } }
+                }
                 val reconciledDayState = withContext(Dispatchers.IO) { dayStateCoordinator?.reconcile() }
                 if (reconciledDayState != null) {
                     withTimeout(10_000) { dayState.first { it == reconciledDayState } }
@@ -279,8 +280,8 @@ class HomeViewModel @Inject constructor(
             loading = false, catName = i.settings.catName, now = now, period = DayPeriod.of(zoned.hour),
             context = ctx, contextPlaceName = ctx?.placeId?.let { id -> i.places.firstOrNull { it.id == id }?.name },
             snapshot = snap, visual = visual, next = next, dialogue = dialogueText,
-            probableMode = probable, locationStatus = status, isWorkDay = i.routine.hasWork && zoned.dayOfWeek in i.routine.days,
-            isDayOff = i.dayOff, suggestSavePlace = suggest, canSaveHere = canSaveHere,
+            probableMode = probable, locationStatus = status,
+            suggestSavePlace = suggest, canSaveHere = canSaveHere,
         )
     }
 
@@ -299,22 +300,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun correctCurrentContext(type: PlaceType, historical: Boolean, expectedEventId: Long?) = action {
-        val current = contextDao.current()
-        if (expectedEventId == null || current?.id != expectedEventId) {
-            _events.send(HomeUiEvent.ShowMessage("O contexto mudou. Confira a informação atualizada."))
+        val corrected = contextEngine.correctCurrentContext(expectedEventId, type, historical)
+        if (!corrected) {
+            _events.send(HomeUiEvent.ShowMessage("O Hoodie identificou uma mudança. Confira sua atividade atual antes de salvar."))
             return@action
         }
-        if (historical) {
-            requireNotNull(corrections?.get()) { "Correções do Diário indisponíveis." }.save(
-                com.hoodie.app.domain.correction.DiaryCorrection(
-                    com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT, current.id,
-                    type.toContext(), places.firstOfType(type)?.id, current.startedAt, current.endedAt,
-                ),
-            )
-        } else {
-            contextEngine.correctPlaceNow(type)
-            mobility.onManualContext(type.toContext(), clock.nowMillis())
-        }
+        if (!historical) mobility.onManualContext(type.toContext(), clock.nowMillis())
         _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
@@ -340,12 +331,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun dismissQuestion(id: Long) = action { contextEngine.dismissQuestion(id) }
-
-    fun toggleDayOff() = action {
-        val today = clock.today()
-        routines.setDayOff(today, !routines.isDayOff(today), clock.nowMillis())
-        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
-    }
 
     /** "Chegou ao trabalho? Salvar este local." */
     fun savePlaceHere(type: PlaceType) = viewModelScope.launch {

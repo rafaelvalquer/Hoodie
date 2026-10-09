@@ -15,9 +15,16 @@ object HoodieConfig {
     const val SMART_DIARY_CORRECTIONS = true
     const val LEARNED_ROUTINE = true
     const val TRANSPORT_CLASSIFIER_V2 = true
+    // Diário: flags de implantação gradual das etapas de desempenho.
+    const val DIARY_DIGITAL_READ_ONLY = true
+    const val DIARY_LOAD_COORDINATOR_V2 = true
+    const val DIARY_PROGRESSIVE_LOADING = true
+    const val DIARY_JOURNEY_PRECOMPUTE = true
 
     // Presentation release switches. Enabled after assembler and interaction gates pass.
     const val HOME_NOW_V2 = true
+    /** Contexto é apresentado passivamente; só há alteração quando o usuário a solicita. */
+    const val PASSIVE_CONTEXT_CONFIRMATION = true
     const val DAILY_INTELLIGENT_REPORT = true
     const val DAILY_HIGHLIGHT_ENGINE = true
     const val DAY_HIGHLIGHT_MIN_SAMPLES = 5

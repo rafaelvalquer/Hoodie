@@ -62,6 +62,9 @@ interface DayExceptionDao {
 
     @Query("DELETE FROM day_exceptions WHERE epochDay = :epochDay")
     suspend fun delete(epochDay: Long)
+
+    @Query("DELETE FROM day_exceptions WHERE epochDay = :epochDay AND kind = 'DAY_OFF'")
+    suspend fun deleteDayOff(epochDay: Long)
 }
 
 @Dao

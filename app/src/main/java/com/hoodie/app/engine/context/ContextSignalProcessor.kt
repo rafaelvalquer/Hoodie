@@ -113,6 +113,7 @@ internal class ContextSignalProcessor(
     }
 
     suspend fun ask(kind: QuestionKind, candidate: UserContextType?, placeId: Long?, eventId: Long?, coords: String? = null, detection: DetectionResult? = null): Long? {
+        if (HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION && kind == QuestionKind.CONFIRM_CONTEXT) return null
         val now = clock.nowMillis()
         val history = questionDao.since(now - DAY_MS)
         val recent = history.map { AskedQuestion(it.kind, it.candidate, it.askedAt) }

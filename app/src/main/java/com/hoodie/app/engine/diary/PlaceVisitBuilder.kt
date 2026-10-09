@@ -15,6 +15,8 @@ object PlaceVisitBuilder {
         activeEndAt: Long? = null,
     ): List<PlaceVisit> {
         val placeById = places.associateBy { it.id }
+        val orderedTimeline = timeline.sortedBy { it.timestamp }
+        val orderedActivities = activities.sortedBy { it.startedAt }
         val visits = contexts.asSequence().filter { it.type != com.hoodie.app.core.model.UserContextType.COMMUTING }
             .mapNotNull { event ->
                 val start = maxOf(event.startedAt, dayStart, activeStartAt)
@@ -40,8 +42,13 @@ object PlaceVisitBuilder {
                     com.hoodie.app.core.model.UserContextType.DINING -> "Restaurante"
                     else -> if (type == PlaceType.OTHER) "Outro lugar" else type.label
                 }
-                val related = timeline.filter { it.timestamp in start..end && (it.relatedPlaceId == event.placeId || it.relatedContext == event.type) }
-                val dominant = activities.filter {
+                val firstTimelineItem = orderedTimeline.lowerBoundTimestamp(start)
+                val afterTimelineItems = orderedTimeline.upperBoundTimestamp(end)
+                val related = orderedTimeline.subList(firstTimelineItem, afterTimelineItems).filter {
+                    it.relatedPlaceId == event.placeId || it.relatedContext == event.type
+                }
+                val activityLimit = orderedActivities.lowerBoundStartedAt(end)
+                val dominant = orderedActivities.subList(0, activityLimit).filter {
                     it.startedAt < end && it.endedAt > start &&
                         (it.activity != com.hoodie.app.core.model.HoodieActivity.SLEEPING || it.startedAt >= activeStartAt)
                 }
@@ -60,5 +67,35 @@ object PlaceVisitBuilder {
             ?: if (visit.placeType == PlaceType.OTHER) "unknown:${visit.arrivalAt}" else "type:${visit.placeType.name}"
         val counts = visits.groupingBy(::key).eachCount()
         return visits.map { it.copy(visitsCount = counts[key(it)] ?: 1) }
+    }
+
+    private fun List<DiaryTimelineItem>.lowerBoundTimestamp(value: Long): Int {
+        var low = 0
+        var high = size
+        while (low < high) {
+            val middle = (low + high) ushr 1
+            if (this[middle].timestamp < value) low = middle + 1 else high = middle
+        }
+        return low
+    }
+
+    private fun List<DiaryTimelineItem>.upperBoundTimestamp(value: Long): Int {
+        var low = 0
+        var high = size
+        while (low < high) {
+            val middle = (low + high) ushr 1
+            if (this[middle].timestamp <= value) low = middle + 1 else high = middle
+        }
+        return low
+    }
+
+    private fun List<HoodieActivityEntity>.lowerBoundStartedAt(value: Long): Int {
+        var low = 0
+        var high = size
+        while (low < high) {
+            val middle = (low + high) ushr 1
+            if (this[middle].startedAt < value) low = middle + 1 else high = middle
+        }
+        return low
     }
 }

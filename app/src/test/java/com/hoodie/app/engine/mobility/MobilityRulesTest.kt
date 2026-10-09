@@ -120,7 +120,10 @@ class MobilityRulesTest {
 
     @Test
     fun `limite diario compartilhado - transporte espera, o resto pula`() {
-        val full = (0 until HoodieConfig.MAX_QUESTIONS_PER_DAY).map { AskedQuestion(QuestionKind.CONFIRM_CONTEXT, UserContextType.WORK, now - it * 1_000) }
+        val retiredContext = (0 until HoodieConfig.MAX_QUESTIONS_PER_DAY).map { AskedQuestion(QuestionKind.CONFIRM_CONTEXT, UserContextType.WORK, now - it * 1_000) }
+        assertEquals("old context confirmations do not block transport", MobilityConfirmationPolicy.Verdict.ASK,
+            policy(QuestionKind.CONFIRM_MOVEMENT, recent = retiredContext))
+        val full = (0 until HoodieConfig.MAX_QUESTIONS_PER_DAY).map { AskedQuestion(QuestionKind.SELECT_TRANSPORT_MODE, UserContextType.WORK, now - it * 1_000) }
         assertEquals(MobilityConfirmationPolicy.Verdict.SKIP, policy(QuestionKind.CONFIRM_MOVEMENT, recent = full))
         assertEquals(MobilityConfirmationPolicy.Verdict.DEFER, policy(QuestionKind.SELECT_TRANSPORT_MODE, recent = full))
     }

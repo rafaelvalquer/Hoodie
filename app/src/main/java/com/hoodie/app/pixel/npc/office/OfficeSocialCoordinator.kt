@@ -43,12 +43,19 @@ object OfficeSocialCoordinator {
 
 /** Os colegas recebem o mesmo encontro calculado a partir da seed; ninguém fala sozinho. */
 class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContract {
+    private val cachedMeetingTravelMs: Long by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        maxOf(
+            routeDurationMs(OfficeNavigationGraph.route(OfficeNpcSpot.DESK_LEFT, OfficeNpcSpot.CENTER)),
+            routeDurationMs(OfficeNavigationGraph.route(OfficeNpcSpot.DESK_RIGHT, OfficeNpcSpot.WHITEBOARD)),
+        )
+    }
     private var plannedThrough = -1L
     private var nextPlannedStart = 22_000L + (NpcDeterministicRandom.value("office-social", daySeed, 0) * 20_000).toLong()
     private var scheduleIndex = 0L
     private var lastActualStart = Long.MIN_VALUE
     private val scheduledEvents = mutableListOf<OfficeSocialEvent>()
-    private val reservationsByDecision = mutableMapOf<Long, Map<String, OfficeSpotReservation>>()
+    private val reservationsByDecision = LinkedHashMap<Long, Map<String, OfficeSpotReservation>>(512, .75f, true)
+    private val reservationCacheLimit = RESERVATION_CACHE_LIMIT
     private val resolvingReservationTimes = mutableSetOf<Long>()
     private val socialCooldownUntil = mutableMapOf<String, Long>()
     private val speechCooldownUntil = mutableMapOf<String, Long>()
@@ -63,10 +70,36 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
         com.hoodie.app.pixel.npc.brain.NpcIntent.LOOK_WINDOW,
     )
 
+    @Synchronized internal fun dispose() {
+        brains.values.forEach { it.socialSession = null }
+        brains.clear()
+        scheduledEvents.clear()
+        reservationsByDecision.clear()
+        resolvingReservationTimes.clear()
+        socialCooldownUntil.clear()
+        speechCooldownUntil.clear()
+        socialCooldownsByEvent.clear()
+        speechCooldownsByEvent.clear()
+    }
+
+    /** Bounded reservation memoization; old decisions can be deterministically recalculated. */
+    @Synchronized internal fun cachedReservationCount(): Int = reservationsByDecision.size
+    internal fun reservationCacheCapacity(): Int = reservationCacheLimit
+
     @Synchronized override fun activeEventAt(timeMs: Long): OfficeSocialEvent? {
         val time = timeMs.coerceAtLeast(0)
         planThrough(time + maxDeferralMs)
-        return scheduledEvents.lastOrNull { time >= it.startAt && time < it.endsAt }
+        var low = 0
+        var high = scheduledEvents.lastIndex
+        var candidate = -1
+        while (low <= high) {
+            val middle = (low + high) ushr 1
+            if (scheduledEvents[middle].startAt <= time) {
+                candidate = middle
+                low = middle + 1
+            } else high = middle - 1
+        }
+        return scheduledEvents.getOrNull(candidate)?.takeIf { time < it.endsAt }
     }
 
     private fun planThrough(horizon: Long) {
@@ -135,20 +168,19 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
 
     private val brains = mutableMapOf<String, OfficeAmbientBrain>()
     @Synchronized fun attach(brain: OfficeAmbientBrain) {
+        if (brains[brain.npcId] === brain) return
+        brains[brain.npcId]?.socialSession = null
         brains[brain.npcId] = brain
-        brain.clearTimelineCache()
+        brain.socialSession = this
+        OfficePerformanceCounters.socialAttaches.incrementAndGet()
     }
 
     @Synchronized internal fun isResolvingReservationAt(timeMs: Long): Boolean = timeMs in resolvingReservationTimes
 
     fun stateAt(brain: OfficeAmbientBrain, timeMs: Long): com.hoodie.app.pixel.npc.brain.NpcBrainState {
         val raw = socialStateAt(brain, timeMs) ?: brain.baseStateAt(baseTimeAt(brain.npcId, timeMs))
-        val (visibleSocialUntil, visibleSpeechUntil) = cooldownsAt(brain.npcId, timeMs)
-        val base = raw.copy(cooldowns = raw.cooldowns.copy(
-            socialUntil = maxOf(raw.cooldowns.socialUntil, visibleSocialUntil),
-            speechUntil = maxOf(raw.cooldowns.speechUntil, visibleSpeechUntil),
-        ))
-        return base
+        val visibleCooldowns = withVisibleCooldowns(brain.npcId, timeMs, raw.cooldowns)
+        return if (visibleCooldowns === raw.cooldowns) raw else raw.copy(cooldowns = visibleCooldowns)
     }
 
     /** Destination reservation is resolved once when the action is generated, never per frame. */
@@ -157,6 +189,10 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
         // boundary's batch. Returning its preferred target here avoids re-entering the batch.
         if (decisionAt in resolvingReservationTimes) return preferred
         val reservation = reservationsByDecision.getOrPut(decisionAt) { assignedSpots(decisionAt) }
+        while (reservationsByDecision.size > reservationCacheLimit) {
+            val eldest = reservationsByDecision.entries.iterator()
+            if (eldest.hasNext()) { eldest.next(); eldest.remove() } else break
+        }
         return reservation[npcId]?.spot ?: preferred
     }
 
@@ -231,12 +267,20 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
         return action.startedAt + routeMs + transitions + interactionMs
     }
 
-    private fun meetingTravelMs(): Long = listOf(
-        OfficeNavigationGraph.route(OfficeNpcSpot.DESK_LEFT, OfficeNpcSpot.CENTER),
-        OfficeNavigationGraph.route(OfficeNpcSpot.DESK_RIGHT, OfficeNpcSpot.WHITEBOARD),
-    ).maxOf { route -> route.zipWithNext().sumOf { (a, b) -> maxOf(kotlin.math.abs(b.x - a.x), kotlin.math.abs(b.floorY - a.floorY)) * 24L } }
+    private fun meetingTravelMs(): Long = cachedMeetingTravelMs
+
+    private fun routeDurationMs(route: List<OfficeSpot>): Long {
+        var duration = 0L
+        for (index in 0 until route.lastIndex) {
+            val a = route[index]
+            val b = route[index + 1]
+            duration += maxOf(kotlin.math.abs(b.x - a.x), kotlin.math.abs(b.floorY - a.floorY)) * 24L
+        }
+        return duration
+    }
 
     private companion object {
+        const val RESERVATION_CACHE_LIMIT = 512
         const val APPROACH_TRANSITION_MS = 640L + com.hoodie.app.pixel.npc.NpcPoseLibrary.TURN_MS
         const val INTERACTION_PREP_MS = 300L
         const val RETURN_TRANSITION_MS = com.hoodie.app.pixel.npc.NpcPoseLibrary.TURN_MS + 640L
@@ -258,25 +302,39 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
             maxOf(kotlin.math.abs(b.x - a.x), kotlin.math.abs(b.floorY - a.floorY))
         }
 
-    private fun cooldownsAt(npcId: String, timeMs: Long): Pair<Long, Long> {
-        val past = scheduledEvents.filter { it.startAt <= timeMs }
-        val social = past.mapNotNull { socialCooldownsByEvent[it.startAt]?.get(npcId) }.maxOrNull() ?: 0L
-        val speech = past.mapNotNull { event -> speechCooldownsByEvent[event.startAt]?.takeIf { it.first == npcId }?.second }.maxOrNull() ?: 0L
-        return social to speech
+    /** Resolve cooldowns without allocating filtered/mapped lists on the frame path. */
+    private fun withVisibleCooldowns(
+        npcId: String,
+        timeMs: Long,
+        current: com.hoodie.app.pixel.npc.brain.NpcCooldowns,
+    ): com.hoodie.app.pixel.npc.brain.NpcCooldowns {
+        var social = current.socialUntil
+        var speech = current.speechUntil
+        for (event in scheduledEvents) {
+            if (event.startAt > timeMs) continue
+            social = maxOf(social, socialCooldownsByEvent[event.startAt]?.get(npcId) ?: 0L)
+            val speechCooldown = speechCooldownsByEvent[event.startAt]
+            if (speechCooldown?.first == npcId) speech = maxOf(speech, speechCooldown.second)
+        }
+        return if (social == current.socialUntil && speech == current.speechUntil) current
+        else current.copy(socialUntil = social, speechUntil = speech)
     }
 
     private fun socialStateAt(brain: OfficeAmbientBrain, timeMs: Long): NpcBrainState? {
-        if (brain.npcId !in setOf("rabbit_analyst", "cat_colleague")) return null
+        if (brain.npcId != "rabbit_analyst" && brain.npcId != "cat_colleague") return null
         val event = activeEventAt(timeMs) ?: return null
         val base = brain.baseStateAt(baseTimeAt(brain.npcId, event.startAt))
         val origin = base.currentSpot
         val target = if (brain.npcId == "rabbit_analyst") OfficeNpcSpot.CENTER else OfficeNpcSpot.WHITEBOARD
         val route = OfficeNavigationGraph.route(origin, target)
-        val travelMs = route.zipWithNext().sumOf { (a, b) ->
-            maxOf(kotlin.math.abs(b.x - a.x), kotlin.math.abs(b.floorY - a.floorY)) * 24L
+        var travelMs = 0L
+        for (index in 0 until route.lastIndex) {
+            val a = route[index]
+            val b = route[index + 1]
+            travelMs += maxOf(kotlin.math.abs(b.x - a.x), kotlin.math.abs(b.floorY - a.floorY)) * 24L
         }
         val arrivedAt = event.startAt + travelMs + APPROACH_TRANSITION_MS
-        val sharedTravelMs = meetingTravelMs()
+        val sharedTravelMs = cachedMeetingTravelMs
         val interactionStartsAt = event.startAt + sharedTravelMs + APPROACH_TRANSITION_MS + INTERACTION_PREP_MS
         val interactionEndsAt = event.endsAt - sharedTravelMs - RETURN_TRANSITION_MS
         val returning = timeMs >= interactionEndsAt
@@ -285,7 +343,7 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
         // the 300 ms preparation delay belongs after arrival and must not shorten the walk.
         val phaseStart = if (returning) interactionEndsAt else arrivedAt
         val phaseEnd = if (returning) event.endsAt else interactionEndsAt
-        val (scheduledSocialUntil, scheduledSpeechUntil) = cooldownsAt(brain.npcId, timeMs)
+        val visibleCooldowns = withVisibleCooldowns(brain.npcId, timeMs, base.cooldowns)
         return NpcBrainState(
             currentIntent = com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE,
             currentSpot = if (arrived) target else origin,
@@ -295,18 +353,20 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
             targetSpot = if (returning) origin else target,
             socialTargetId = if (brain.npcId == "rabbit_analyst") "cat_colleague" else "rabbit_analyst",
             decisionIndex = base.decisionIndex,
-            cooldowns = base.cooldowns.copy(
-                socialUntil = maxOf(base.cooldowns.socialUntil, scheduledSocialUntil, event.endsAt + 45_000),
-                speechUntil = maxOf(base.cooldowns.speechUntil, scheduledSpeechUntil),
+            cooldowns = visibleCooldowns.copy(
+                socialUntil = maxOf(visibleCooldowns.socialUntil, event.endsAt + 45_000),
             ),
         )
     }
 
     /** Pausa o relógio da rotina-base durante encontros e retoma a atividade suspensa ao voltar. */
     internal fun baseTimeAt(npcId: String, timeMs: Long): Long {
-        val elapsedSocial = scheduledEvents.asSequence()
-            .filter { it.startAt < timeMs && npcId in setOf("rabbit_analyst", "cat_colleague") }
-            .sumOf { event -> (minOf(timeMs, event.endsAt) - event.startAt).coerceAtLeast(0) }
+        if (npcId != "rabbit_analyst" && npcId != "cat_colleague") return timeMs.coerceAtLeast(0)
+        var elapsedSocial = 0L
+        for (event in scheduledEvents) {
+            if (event.startAt >= timeMs) break
+            elapsedSocial += (minOf(timeMs, event.endsAt) - event.startAt).coerceAtLeast(0)
+        }
         return (timeMs - elapsedSocial).coerceAtLeast(0)
     }
 
@@ -352,12 +412,13 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
         if (!event.withSpeechBubble || event.speakerId != npcId) return false
         val state = brains[npcId]?.let { stateAt(it, timeMs) } ?: return false
         if (state.currentIntent != com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE) return false
-        val colleaguesArrived = setOf("rabbit_analyst", "cat_colleague").all { id ->
-            val colleague = brains[id]?.let { stateAt(it, timeMs) } ?: return@all false
-            colleague.currentIntent == com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE &&
-                colleague.currentSpot == colleague.targetSpot
-        }
-        if (!colleaguesArrived) return false
+        val rabbit = brains["rabbit_analyst"]?.let { stateAt(it, timeMs) } ?: return false
+        val cat = brains["cat_colleague"]?.let { stateAt(it, timeMs) } ?: return false
+        if (rabbit.currentIntent != com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE ||
+            rabbit.currentSpot != rabbit.targetSpot ||
+            cat.currentIntent != com.hoodie.app.pixel.npc.brain.NpcIntent.SOCIALIZE ||
+            cat.currentSpot != cat.targetSpot
+        ) return false
         val bubbleStartedAt = event.startAt + meetingTravelMs() + APPROACH_TRANSITION_MS + INTERACTION_PREP_MS
         return timeMs >= bubbleStartedAt && timeMs < bubbleStartedAt + 1_700 && timeMs < event.endsAt
     }

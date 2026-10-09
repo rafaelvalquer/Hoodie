@@ -37,12 +37,12 @@ enum class GeofenceTransition { ENTER, EXIT, DWELL }
  */
 @Singleton
 class ContextEngine @Inject constructor(
-    contextDao: ContextEventDao,
+    private val contextDao: ContextEventDao,
     transitions: ContextTransitionService,
     confirmationDao: ConfirmationDao,
     questionDao: QuestionDao,
     locationEventDao: LocationEventDao,
-    places: PlaceRepository,
+    private val places: PlaceRepository,
     routines: RoutineRepository,
     settings: SettingsRepository,
     memory: MemoryEngine,
@@ -55,6 +55,7 @@ class ContextEngine @Inject constructor(
     private val clock: ClockProvider,
     log: DebugEventLogger,
     intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
+    private val corrections: dagger.Lazy<com.hoodie.app.engine.correction.DiaryCorrectionService>? = null,
 ) {
     private val mutex = Mutex()
 
@@ -77,6 +78,11 @@ class ContextEngine @Inject constructor(
 
     suspend fun dismissQuestion(questionId: Long): Unit = mutex.withLock { contextQuestionHandler.dismissQuestion(questionId) }
 
+    /** Retires legacy location confirmations and their notifications without touching mobility questions. */
+    suspend fun dismissPendingContextConfirmations(): Unit = mutex.withLock {
+        if (HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) contextQuestionHandler.dismissPendingContextConfirmations()
+    }
+
     /** Confirms only the still-current event; repeated taps are safe. */
     suspend fun confirmCurrentContext(expectedEventId: Long, confirmedAt: Long = clock.nowMillis()): Boolean =
         mutex.withLock { contextQuestionHandler.confirmCurrent(expectedEventId, confirmedAt) }
@@ -88,6 +94,21 @@ class ContextEngine @Inject constructor(
     suspend fun setManualPlace(type: PlaceType): Unit = mutex.withLock { manualContextHandler.setManualPlace(type) }
 
     suspend fun correctPlaceNow(type: PlaceType): Unit = mutex.withLock { manualContextHandler.correctPlaceNow(type) }
+
+    /** Validates the snapshot and applies a requested current or whole-event correction under the engine lock. */
+    suspend fun correctCurrentContext(expectedEventId: Long?, type: PlaceType, sinceActivityStart: Boolean): Boolean = mutex.withLock {
+        val current = contextDao.current()
+        if (current?.id != expectedEventId) return@withLock false
+        if (!sinceActivityStart) return@withLock manualContextHandler.correctCurrentPlace(expectedEventId, type)
+        val event = current ?: return@withLock false
+        requireNotNull(corrections) { "Correções do Diário indisponíveis." }.get().save(
+            com.hoodie.app.domain.correction.DiaryCorrection(
+                com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT, event.id,
+                type.toContext(), places.firstOfType(type)?.id, event.startedAt, event.endedAt,
+            ),
+        )
+        true
+    }
 
     suspend fun savePlaceHere(type: PlaceType, name: String, lat: Double, lng: Double): Place = mutex.withLock { placeLearningHandler.savePlaceHere(type, name, lat, lng) }
 

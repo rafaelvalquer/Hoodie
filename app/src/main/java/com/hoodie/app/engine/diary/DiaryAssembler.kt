@@ -27,12 +27,36 @@ object DiaryAssembler {
             }
             item.copy(relatedContext = item.relatedContext ?: context?.type, subtitle = item.subtitle ?: activity?.activity?.label)
         }
+        // Timeline is ordered, so each visit only examines the items inside its interval.
         val visitEnriched = visits.map { visit ->
-            visit.copy(relatedTimelineIds = enriched.filter { it.timestamp in visit.arrivalAt..(visit.departureAt ?: now) }.map { it.id })
+            val end = visit.departureAt ?: now
+            val first = enriched.lowerBoundTimestamp(visit.arrivalAt)
+            val last = enriched.upperBoundTimestamp(end)
+            visit.copy(relatedTimelineIds = enriched.subList(first, last).map { it.id })
         }
         val summary = DailySummaryCalculator.compute(clippedContexts, date, dayStart, dayEnd, now)
         val map = DailyMapBuilder.build(visitEnriched)
         val replay = ReplaySequenceBuilder.build(visitEnriched, enriched, dayStart, minOf(dayEnd, now), dayContexts, dayActivities, now, map, window.activeStartAt, activityWindow?.activeEndAt)
         return DailyDiary(summary, enriched, visitEnriched, map, replay, activityWindow = window)
+    }
+
+    private fun List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>.lowerBoundTimestamp(timestamp: Long): Int {
+        var low = 0
+        var high = size
+        while (low < high) {
+            val middle = (low + high) ushr 1
+            if (this[middle].timestamp < timestamp) low = middle + 1 else high = middle
+        }
+        return low
+    }
+
+    private fun List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>.upperBoundTimestamp(timestamp: Long): Int {
+        var low = 0
+        var high = size
+        while (low < high) {
+            val middle = (low + high) ushr 1
+            if (this[middle].timestamp <= timestamp) low = middle + 1 else high = middle
+        }
+        return low
     }
 }

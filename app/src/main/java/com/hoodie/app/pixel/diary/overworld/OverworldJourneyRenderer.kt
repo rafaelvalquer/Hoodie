@@ -7,6 +7,7 @@ import com.hoodie.app.engine.diary.HoodieAt
 import com.hoodie.app.engine.diary.OverworldReplayState
 import com.hoodie.app.engine.diary.StopPhase
 import com.hoodie.app.engine.diary.journey.OverworldLayout
+import com.hoodie.app.engine.diary.journey.OverworldStopLayout
 import com.hoodie.app.pixel.diary.DiaryHoodieMarker
 import com.hoodie.app.pixel.diary.DiaryMapPerf
 import com.hoodie.app.pixel.diary.MarkerDirection
@@ -33,7 +34,13 @@ data class OverworldScene(
 )
 
 /** Camadas 1–3 (chão, decoração, trilhas no estado "futuro") por layout + seed. */
-class OverworldRenderCache private constructor(val key: Int, val staticLayer: PixelBuffer, val decor: List<OverworldDecor>) {
+class OverworldRenderCache private constructor(
+    val key: Int,
+    val staticLayer: PixelBuffer,
+    val decor: List<OverworldDecor>,
+    /** Ordem de profundidade calculada uma vez junto às camadas estáticas. */
+    val depthSortedStops: List<OverworldStopLayout>,
+) {
     fun matches(scene: OverworldScene) = key == keyOf(scene)
 
     companion object {
@@ -48,7 +55,7 @@ class OverworldRenderCache private constructor(val key: Int, val staticLayer: Pi
             layout.links.forEach { OverworldTrailPainter.paintBed(buf, it.path, modeOf(scene.plan, it.legId)) }
             layout.stops.forEach { OverworldTrailPainter.paintPlaza(buf, it.point) }
             decor.forEach { OverworldDecorPlacer.paintStatic(buf, it) }
-            return OverworldRenderCache(keyOf(scene), buf, decor)
+            return OverworldRenderCache(keyOf(scene), buf, decor, layout.stops.sortedBy { it.point.y })
         }
 
         fun modeOf(plan: JourneyPlan, legId: String?): MovementMode? = plan.leg(legId)?.mode
@@ -77,7 +84,7 @@ object OverworldJourneyRenderer {
         // 6a. Vida do cenário (água, copas).
         c.decor.forEach { OverworldDecorPlacer.paintAnimated(b, it, scene.timeMs) }
         // 5. Construções e placas, de cima para baixo (profundidade).
-        layout.stops.sortedBy { it.point.y }.forEach { s ->
+        c.depthSortedStops.forEach { s ->
             val stop = scene.plan.stop(s.stopId) ?: return@forEach
             val state = stateOf(scene.replay.phases[s.stopId])
             val biome = OverworldBiomeCatalog.biomeOf(stop, scene.plan)

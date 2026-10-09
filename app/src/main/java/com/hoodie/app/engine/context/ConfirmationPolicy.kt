@@ -25,8 +25,12 @@ object ConfirmationPolicy {
         candidate: UserContextType?,
         recent: List<AskedQuestion>,
     ): Boolean {
+        if (HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION && kind == QuestionKind.CONFIRM_CONTEXT) return false
         val today = now.atZone(zone).toLocalDate()
-        val askedToday = recent.count { it.askedAt.atZone(zone).toLocalDate() == today }
+        val askedToday = recent.count {
+            it.askedAt.atZone(zone).toLocalDate() == today &&
+                !(HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION && it.kind == QuestionKind.CONFIRM_CONTEXT)
+        }
         if (askedToday >= MAX_PER_DAY) return false
         val cooldownStart = now - SAME_CONTEXT_COOLDOWN_MIN * MINUTE_MS
         return recent.none { it.kind == kind && it.candidate == candidate && it.askedAt >= cooldownStart }

@@ -72,4 +72,20 @@ class HomeNowAssemblerTest {
         assertEquals(HomeNowStatus.PROBABLE, absentStart.status)
         assertEquals(null, absentStart.contextStartedAt)
     }
+
+    @Test fun automaticConfidenceAndHumanConfirmationRemainSeparate() {
+        val automatic = HomeNowAssembler.assemble(null,
+            ContextEvent(11, UserContextType.WORK, 1, null, .95f, null, ContextSource.GEOFENCE), null, null, null, 2)
+        val probable = HomeNowAssembler.assemble(null,
+            ContextEvent(12, UserContextType.WORK, 1, null, .78f, null, ContextSource.GEOFENCE), null, null, null, 2)
+        val unknown = HomeNowAssembler.assemble(null,
+            ContextEvent(13, UserContextType.WORK, 1, null, .40f, null, ContextSource.GEOFENCE), null, null, null, 2)
+
+        assertEquals(HomeNowStatus.IDENTIFIED, automatic.status)
+        assertEquals(.95f, automatic.contextConfidence!!.value, 0f)
+        assertEquals(HomeNowStatus.PROBABLE, probable.status)
+        assertEquals(.78f, probable.contextConfidence!!.value, 0f)
+        assertEquals(HomeNowStatus.UNKNOWN, unknown.status)
+        assertEquals(.40f, unknown.contextConfidence!!.value, 0f)
+    }
 }

@@ -88,22 +88,25 @@ class JourneyMapUiTest {
     @Test fun replayControlsPlayNextPreviousAndSpeed() {
         var seeks = mutableListOf<Long>()
         var toggles = 0
-        var speed = ReplaySpeed.NORMAL
+        var speed = ReplaySpeed.FAST
         var replay by mutableStateOf(ReplayUiState(state = ReplayState.PAUSED, currentTimestamp = t(10)))
         rule.setContent {
             HoodieTheme {
-                JourneyReplayControls(replay, model.data, zone, onToggle = { toggles++ }, onSeek = { seeks += it; replay = replay.copy(currentTimestamp = it) }, onReset = {}, onSpeed = { speed = it })
+                JourneyReplayControls(replay, model.data, zone, onToggle = { toggles++ }, onSeek = { seeks += it; replay = replay.copy(currentTimestamp = it) }, onReset = {}, onSpeed = { speed = it; replay = replay.copy(speed = it) })
             }
         }
         rule.onNodeWithTag("journey_play").performClick()
         rule.onNodeWithContentDescription("Próximo evento").performClick()
         rule.onNodeWithContentDescription("Evento anterior").performClick()
+        val timestampBeforeSpeedChange = replay.currentTimestamp
         rule.onNodeWithContentDescription(ReplaySpeed.FAST.label).performClick()
         rule.runOnIdle {
             assertEquals(1, toggles)
             assertEquals(JourneyReplayAssembler.next(model.data, t(10)), seeks[0])
             assertEquals(JourneyReplayAssembler.previous(model.data, seeks[0]), seeks[1])
             assertEquals(ReplaySpeed.FAST, speed)
+            assertEquals(ReplayState.PAUSED, replay.state)
+            assertEquals(timestampBeforeSpeedChange, replay.currentTimestamp)
         }
     }
 

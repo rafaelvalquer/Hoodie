@@ -15,23 +15,38 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.R
 import com.hoodie.app.core.model.PlaceType
+import com.hoodie.app.domain.home.HomeNowSnapshot
 import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.theme.HoodieColors
 
 @Composable
 @androidx.compose.material3.ExperimentalMaterial3Api
-internal fun HomeNowCorrectionSheet(onDismiss: () -> Unit, onSave: (PlaceType, Boolean) -> Unit, saving: Boolean) {
+internal fun HomeNowCorrectionSheet(snapshot: HomeNowSnapshot?, onDismiss: () -> Unit, onSave: (PlaceType, Boolean) -> Unit, saving: Boolean) {
     var selected by remember { mutableStateOf<PlaceType?>(null) }
     var historical by remember { mutableStateOf(false) }
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss, containerColor = HoodieColors.Panel) {
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = HoodieColors.Panel,
+    ) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(stringResource(R.string.home_now_correct_title), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+            PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
+                Text(stringResource(R.string.home_now_current_context, snapshot?.context?.label ?: stringResource(R.string.home_now_unknown)))
+                snapshot?.contextEventId?.let { Text(stringResource(R.string.home_now_event_id, it)) }
+                    ?: Text(stringResource(R.string.home_now_no_event))
+            }
             PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
                 Text(stringResource(R.string.home_now_correct_scope))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = !historical, onClick = { historical = false }, label = { Text(stringResource(R.string.home_now_from_now)) })
-                    FilterChip(selected = historical, onClick = { historical = true }, label = { Text(stringResource(R.string.home_now_since_start)) })
+                    FilterChip(
+                        selected = historical,
+                        enabled = snapshot?.contextEventId != null,
+                        onClick = { historical = true },
+                        label = { Text(stringResource(R.string.home_now_since_start)) },
+                    )
                 }
             }
             PlaceType.physicalPlaceOptions.forEach { type ->

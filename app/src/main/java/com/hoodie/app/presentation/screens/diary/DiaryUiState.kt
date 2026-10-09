@@ -4,15 +4,26 @@ import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.domain.diary.model.DailyDiary
+import com.hoodie.app.domain.diary.clock.DayClockData
+import com.hoodie.app.domain.dayreport.DailyReport
+import com.hoodie.app.engine.diary.PreparedJourney
 import com.hoodie.app.domain.diary.model.ReplayPhoneApp
 import com.hoodie.app.domain.diary.model.ReplayVisualState
 import java.time.LocalDate
 
 enum class ReplayState { IDLE, PLAYING, PAUSED, FINISHED }
 
+data class DiaryLoadKey(val date: LocalDate, val requestId: Long)
+
+sealed interface SectionState<out T> {
+    data object Loading : SectionState<Nothing>
+    data object Empty : SectionState<Nothing>
+    data class Ready<T>(val data: T) : SectionState<T>
+    data class Failed(val reason: String? = null) : SectionState<Nothing>
+}
+
 /** Quantos minutos do dia passam por segundo de replay. */
 enum class ReplaySpeed(val minutesPerSecond: Int, val label: String) {
-    NORMAL(1, "1 min/s"),
     FAST(5, "5 min/s"),
     VERY_FAST(10, "10 min/s"),
 }
@@ -24,7 +35,7 @@ enum class ReplaySpeed(val minutesPerSecond: Int, val label: String) {
 data class ReplayUiState(
     val state: ReplayState = ReplayState.IDLE,
     val currentTimestamp: Long? = null,
-    val speed: ReplaySpeed = ReplaySpeed.NORMAL,
+    val speed: ReplaySpeed = ReplaySpeed.FAST,
     val activeNodeId: String? = null,
     val activeEdgeId: String? = null,
     /** Quanto do deslocamento atual já foi andado (0..1). */
@@ -78,4 +89,10 @@ data class DiaryUiState(
     val dayClock: com.hoodie.app.domain.diary.clock.DayClockData? = null,
     /** Trecho escolhido no mostrador ou na lista (null = acompanha o agora). */
     val clockSelectedId: String? = null,
+    /** Data e versão que autorizam publicar resultados assíncronos na tela. */
+    val loadKey: DiaryLoadKey = DiaryLoadKey(selectedDate, 0),
+    val summaryState: SectionState<DailyDiary> = SectionState.Loading,
+    val reportState: SectionState<DailyReport> = SectionState.Loading,
+    val journeyState: SectionState<PreparedJourney> = SectionState.Loading,
+    val clockState: SectionState<DayClockData> = SectionState.Loading,
 )

@@ -92,13 +92,20 @@ class TestGraph(startAt: Long) {
     val memory = MemoryEngine(db.memoryDao(), settings, timeline, clock)
     val hoodie = HoodieEngine(db.hoodieStateDao(), db.hoodieActivityDao(), db.contextEventDao(), routines, settings, timeline, clock, log)
     val transitions = ContextTransitionService(db.contextEventDao(), timeline, places, RoomTransactionRunner(db), log)
+    private val diaryCorrections by lazy {
+        com.hoodie.app.engine.correction.DiaryCorrectionService(
+            db, RoomTransactionRunner(db), com.hoodie.app.engine.correction.PhoneContextRecalculator(db, clock), clock,
+            notifier = notifier,
+        )
+    }
     val notifier = FakeNotifier()
     val scheduler = FakeScheduler()
     val location = FakeLocation()
     val geofences = FakeGeofences()
     val engine = ContextEngine(
         db.contextEventDao(), transitions, db.confirmationDao(), db.questionDao(), db.locationEventDao(),
-        places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, PlainCipher, clock, log, db.intelligenceDao(),
+        places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, PlainCipher, clock, log,
+        db.intelligenceDao(), dagger.Lazy { diaryCorrections },
     )
 
     val contextDao get() = db.contextEventDao()

@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.hoodie.app.core.database.ContextEventEntity
 import com.hoodie.app.core.database.HoodieDatabase
+import com.hoodie.app.core.database.RoomTransactionRunner
 import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.deviceusage.RawUsageEvent
 import com.hoodie.app.core.deviceusage.UsageAccessChecker
@@ -68,7 +69,7 @@ class DeviceUsageRepositoryTest {
         settings = SettingsRepository(context)
         settings.clear()
         settings.setDigital(settings.current().digital.copy(analysisEnabled = true))
-        repo = DeviceUsageRepositoryImpl(source, FakeAppMetadata(), UsageAccessChecker { granted }, db.deviceUsageDao(), db.contextEventDao(), settings, clock)
+        repo = DeviceUsageRepositoryImpl(source, FakeAppMetadata(), UsageAccessChecker { granted }, db.deviceUsageDao(), db.contextEventDao(), settings, clock, RoomTransactionRunner(db))
         db.contextEventDao().insert(ContextEventEntity(type = UserContextType.WORK, startedAt = mon(8, 49), endedAt = mon(12, 16), confidence = 1f, placeId = null, source = ContextSource.GEOFENCE))
         db.contextEventDao().insert(ContextEventEntity(type = UserContextType.LUNCH, startedAt = mon(12, 16), endedAt = mon(13), confidence = 1f, placeId = null, source = ContextSource.GEOFENCE))
         Unit
@@ -114,6 +115,32 @@ class DeviceUsageRepositoryTest {
         val before = source.calls
         assertNotNull(repo.insightsFor(monday))
         assertEquals(before, source.calls)
+    }
+
+    @Test
+    fun `insightsFor e leitura pura mesmo com permissao e analise ativas`() = runBlocking {
+        val readsBefore = source.calls
+        assertNull(repo.insightsFor(monday))
+        assertEquals(readsBefore, source.calls)
+        assertNull(db.deviceUsageDao().day(monday.toString()))
+
+        repo.refreshDay(monday)
+        val persisted = db.deviceUsageDao().day(monday.toString())!!
+        val readsAfterRefresh = source.calls
+        assertNotNull(repo.insightsFor(monday))
+        assertEquals(readsAfterRefresh, source.calls)
+        assertEquals(persisted, db.deviceUsageDao().day(monday.toString()))
+    }
+
+    @Test
+    fun `refresh de conteudo igual nao regrava o agregado`() = runBlocking {
+        repo.refreshDay(monday)
+        val original = db.deviceUsageDao().day(monday.toString())!!
+        clock.millis += 60 * MINUTE_MS
+
+        repo.refreshDay(monday)
+
+        assertEquals(original, db.deviceUsageDao().day(monday.toString()))
     }
 
     /** use() deixa o app na frente 2 s a menos que a tela ligada. */

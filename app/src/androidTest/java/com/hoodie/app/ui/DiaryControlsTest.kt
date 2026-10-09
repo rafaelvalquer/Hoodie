@@ -2,21 +2,33 @@ package com.hoodie.app.ui
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import com.hoodie.app.presentation.screens.diary.DateSelector
 import com.hoodie.app.presentation.screens.diary.ReplaySpeed
 import java.time.LocalDate
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.hoodie.app.presentation.screens.diary.ReplayControls
+import com.hoodie.app.presentation.screens.diary.ReplaySpeedSelector
 import com.hoodie.app.presentation.screens.diary.ReplayState
 import com.hoodie.app.presentation.screens.diary.ReplayUiState
 import com.hoodie.app.presentation.screens.diary.TimelineSection
@@ -47,8 +59,9 @@ class DiaryControlsTest {
         rule.runOnIdle { assertEquals(today, chosen) }
     }
 
-    @Test fun replaySpeedControlsSelectAllSupportedSpeeds() {
-        var speed by mutableStateOf(ReplaySpeed.NORMAL)
+    @Test fun replaySpeedControlsSelectBothSupportedSpeedsAndDefaultToFive() {
+        var speed by mutableStateOf(ReplayUiState().speed)
+        assertEquals(ReplaySpeed.FAST, speed)
         rule.setContent {
             HoodieTheme { Column { ReplayControls(ReplayUiState(speed = speed), {}, {}, { speed = it }) } }
         }
@@ -56,6 +69,41 @@ class DiaryControlsTest {
             rule.onNodeWithText(expected.label).performClick().assertIsSelected()
             rule.runOnIdle { assertEquals(expected, speed) }
         }
+        rule.onNodeWithText("5 min/s").performClick().assertIsSelected()
+        rule.runOnIdle { assertEquals(ReplaySpeed.FAST, speed) }
+        rule.onNodeWithText("1 min/s").assertDoesNotExist()
+    }
+
+    @Test fun replaySpeedSelectorStaysOnOneRowAt320Dp() {
+        rule.setContent {
+            HoodieTheme {
+                Box(Modifier.width(320.dp)) { ReplaySpeedSelector(ReplaySpeed.FAST, onSpeed = {}) }
+            }
+        }
+        val five = rule.onNodeWithContentDescription("5 min/s")
+        val ten = rule.onNodeWithContentDescription("10 min/s")
+        five.assertIsDisplayed()
+        ten.assertIsDisplayed()
+        five.assertHeightIsAtLeast(48.dp)
+        ten.assertHeightIsAtLeast(48.dp)
+        five.assertTopPositionInRootIsEqualTo(0.dp)
+        ten.assertTopPositionInRootIsEqualTo(0.dp)
+        rule.onAllNodesWithText("5 min/s").assertCountEquals(1)
+        rule.onAllNodesWithText("10 min/s").assertCountEquals(1)
+        rule.onNodeWithText("VELOCIDADE").assertIsDisplayed()
+    }
+
+    @Test fun replaySpeedSelectorStaysOnOneRowAt320DpWithLargeText() {
+        rule.setContent {
+            HoodieTheme {
+                val density = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides Density(density.density, 1.6f)) {
+                    Box(Modifier.width(320.dp)) { ReplaySpeedSelector(ReplaySpeed.FAST, onSpeed = {}) }
+                }
+            }
+        }
+        rule.onNodeWithContentDescription("5 min/s").assertIsDisplayed().assertTopPositionInRootIsEqualTo(0.dp)
+        rule.onNodeWithContentDescription("10 min/s").assertIsDisplayed().assertTopPositionInRootIsEqualTo(0.dp)
     }
 
     @Test fun pausedReplayOffersResumeAndAccessibleReset() {

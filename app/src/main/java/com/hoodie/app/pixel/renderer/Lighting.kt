@@ -25,7 +25,8 @@ object Lighting {
     }
 
     fun map(scene: PixelScene, env: SceneEnv): IntArray? {
-        if (!scene.usesLighting) return null
+        // Daylight has no tint, so skip both scene light-list creation and cache-key work.
+        if (!scene.usesLighting || tint(env.period) == null) return null
         val lights = scene.lights(env)
         val key = Key(scene.id, env.period, lights)
         return synchronized(cache) { cache.getOrPut(key) { build(scene, env.period, lights) } }
@@ -84,7 +85,9 @@ object Lighting {
             val r = (((c shr 16) and 0xFF) * (f ushr 20)) shr 8
             val g = (((c shr 8) and 0xFF) * ((f shr 10) and 0x3FF)) shr 8
             val b = ((c and 0xFF) * (f and 0x3FF)) shr 8
-            px[i] = (0xFF shl 24) or (r.coerceAtMost(255) shl 16) or (g.coerceAtMost(255) shl 8) or b.coerceAtMost(255)
+            // Factors are packed/clamped to 0..256 and each source channel is <=255,
+            // so the fixed-point products shifted by eight already fit in 0..255.
+            px[i] = (0xFF shl 24) or (r shl 16) or (g shl 8) or b
         }
     }
 

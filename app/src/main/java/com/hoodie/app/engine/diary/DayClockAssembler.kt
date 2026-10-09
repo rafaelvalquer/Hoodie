@@ -86,6 +86,13 @@ object DayClockAssembler {
             if (e > s) items += Item(s, e, false, seg.id) { a, b -> ClockSegment.Move(seg.id, a, b, seg.movementMode, seg.fromNodeId, seg.toNodeId) }
         }
         items.sortWith(compareBy<Item> { it.s }.thenBy { if (it.stay) 0 else 1 })
+        val movementsByStart = diary.movements.sortedBy { it.startedAt }
+        val nextStayByItem = arrayOfNulls<String>(items.size)
+        var nextStay: String? = null
+        for (index in items.indices.reversed()) {
+            if (items[index].stay) nextStay = items[index].id
+            nextStayByItem[index] = nextStay
+        }
 
         // 2. Varredura: sono explícito, visitas e deslocamentos vencem; os demais buracos ficam Unknown.
         val out = mutableListOf<ClockSegment>()
@@ -94,7 +101,7 @@ object DayClockAssembler {
         fun lastStayId() = out.lastOrNull { it is ClockSegment.Stay }?.id
         fun fillGap(from: Long, to: Long, nextStopId: String?) {
             var cursor = from
-            diary.movements.sortedBy { it.startedAt }.forEach { mv ->
+            movementsByStart.forEach { mv ->
                 val s = maxOf(mv.startedAt, cursor)
                 val e = minOf(mv.endedAt, to)
                 if (e <= s) return@forEach
@@ -109,7 +116,7 @@ object DayClockAssembler {
         items.forEachIndexed { idx, it ->
             val s = maxOf(it.s, cursor)
             if (it.e <= s) return@forEachIndexed
-            if (s > cursor) fillGap(cursor, s, items.drop(idx).firstOrNull { x -> x.stay }?.id)
+            if (s > cursor) fillGap(cursor, s, nextStayByItem[idx])
             out += it.build(minute(s), minute(it.e))
             cursor = it.e
         }

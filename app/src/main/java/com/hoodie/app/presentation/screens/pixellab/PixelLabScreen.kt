@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontFamily
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.config.HoodieConfig
+import com.hoodie.app.BuildConfig
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.pixel.animation.AnimGroup
@@ -69,6 +70,7 @@ import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.npc.office.OfficeNpcDirector
+import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
 import com.hoodie.app.pixel.sprite.AndroidSpriteSheets
 import com.hoodie.app.pixel.sprite.CompositeSpriteProvider
 import com.hoodie.app.pixel.sprite.Direction
@@ -168,17 +170,37 @@ private fun OfficeLiveLab() {
     var showDiagnosticsOverlay by remember { mutableStateOf(true) }
     var selectedNpc by remember { mutableStateOf("rabbit_analyst") }
     var elapsed by remember { mutableLongStateOf(0L) }
+    var performance by remember { mutableStateOf(ScenePerformanceMonitor.snapshot()) }
     LaunchedEffect(playing, speed) {
-        var last = -1L
+        var lastFrame = -1L
+        var lastPublish = -1L
+        var simulationTime = elapsed
         while (playing) withFrameMillis { now ->
-            if (last >= 0) elapsed += ((now - last) * speed).toLong()
-            last = now
+            if (lastFrame >= 0) simulationTime += ((now - lastFrame) * speed).toLong()
+            lastFrame = now
+            // Diagnostic text and brain snapshots do not need a Compose recomposition per display frame.
+            if (lastPublish < 0 || now - lastPublish >= 100L) {
+                elapsed = simulationTime
+                lastPublish = now
+            }
         }
     }
     val env = remember(seed) { SceneEnv(DayPeriod.DAY, 9 * 60, variant = seed, daySeed = seed) }
-    val slots = remember(env) { OfficeNpcDirector.plan(env) }
+    val officeSession = remember(env.daySeed, env.variant) { OfficeNpcDirector.createSession(env) }
+    val slots = remember(officeSession, env.clockMinute) { officeSession.npcSlots(env.clockMinute) }
     val frameStates = remember(slots, elapsed) {
         slots.mapNotNull { slot -> slot.officeBrain?.frameStateAt(elapsed)?.let { slot.definition.id to it } }.toMap()
+    }
+    LaunchedEffect(BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
+            var lastSample = -1L
+            while (true) withFrameMillis { now ->
+                if (lastSample < 0L || now - lastSample >= 1_000L) {
+                    lastSample = now
+                    performance = ScenePerformanceMonitor.snapshot()
+                }
+            }
+        }
     }
     val visual = remember(seed) {
         VisualState(scene = SceneId.OFFICE, spot = SpotId.DESK,
@@ -227,6 +249,15 @@ private fun OfficeLiveLab() {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         PixelButton("−33 ms", { playing = false; elapsed = (elapsed - 33).coerceAtLeast(0) }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
         PixelButton("+33 ms", { playing = false; elapsed += 33 }, Modifier.weight(1f), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+    }
+    if (BuildConfig.DEBUG) {
+        val cache = performance.spriteCache
+        Text(
+            "OFFICE LIVE — PERFORMANCE\nFPS ${"%.1f".format(performance.fps)} · Frame P50/P95/P99 ${"%.1f".format(performance.frameP50Ms)}/${"%.1f".format(performance.frameP95Ms)}/${"%.1f".format(performance.frameP99Ms)} ms · >33 ms ${performance.slowFrames}\nNPC plan P95 ${"%.1f".format(performance.planningP95Ms)} · state ${"%.1f".format(performance.stateP95Ms)} · NPC draw ${"%.1f".format(performance.npcDrawingP95Ms)} · scene draw ${"%.1f".format(performance.sceneDrawingP95Ms)} · bitmap ${"%.1f".format(performance.bitmapP95Ms)} ms\nNPC stages pose/paint/turn/scale/composite/speech ${"%.1f".format(performance.npcPoseP95Ms)}/${"%.1f".format(performance.npcPaintP95Ms)}/${"%.1f".format(performance.npcTurnP95Ms)}/${"%.1f".format(performance.npcScaleP95Ms)}/${"%.1f".format(performance.npcCompositeP95Ms)}/${"%.1f".format(performance.npcSpeechP95Ms)} ms\nScene stages copy/objects/hoodie/light/post ${"%.1f".format(performance.sceneCopyP95Ms)}/${"%.1f".format(performance.sceneObjectsP95Ms)}/${"%.1f".format(performance.sceneHoodieP95Ms)}/${"%.1f".format(performance.sceneLightingP95Ms)}/${"%.1f".format(performance.scenePostP95Ms)} ms\nSessions ${performance.sessionsCreated} · brains ${performance.brainsCreated} · attaches ${performance.socialAttaches} · timeline builds ${performance.timelineRebuilds} / resets ${performance.timelineResets}\nSprite cache ${cache.hits} hits · ${cache.entries}/${cache.capacity} · ${cache.evictions} evictions · heap ${performance.heapUsedBytes / (1024 * 1024)} MB (Δ ${performance.heapDeltaBytes / (1024 * 1024)} · pico ${performance.heapPeakBytes / (1024 * 1024)}) · GC ${performance.gcCount}/${performance.gcTimeMs} ms · render thread ${performance.renderThreadName.ifBlank { "—" }} · amostras ${performance.frames}",
+            color = HoodieColors.Mint,
+            style = MaterialTheme.typography.labelSmall,
+            fontFamily = FontFamily.Monospace,
+        )
     }
     ChipRow(listOf("Coelho", "Gato", "Bulldog"), listOf("rabbit_analyst", "cat_colleague", "bulldog_exec").indexOf(selectedNpc), { selectedNpc = listOf("rabbit_analyst", "cat_colleague", "bulldog_exec")[it] })
     PixelButton(if (showDiagnosticsOverlay) "Ocultar rota e destino" else "Mostrar rota e destino", { showDiagnosticsOverlay = !showDiagnosticsOverlay }, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)

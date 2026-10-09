@@ -31,17 +31,18 @@ class RoutineRepository @Inject constructor(
         ),
     )
 
-    suspend fun isDayOff(date: LocalDate): Boolean = exceptionDao.get(date.toEpochDay()) != null
+    suspend fun isDayOff(date: LocalDate): Boolean = exceptionDao.get(date.toEpochDay())?.kind == DAY_OFF_KIND
 
-    fun observeDayOff(date: LocalDate): Flow<Boolean> = exceptionDao.observe(date.toEpochDay()).map { it != null }
+    fun observeDayOff(date: LocalDate): Flow<Boolean> = exceptionDao.observe(date.toEpochDay()).map { it?.kind == DAY_OFF_KIND }
 
     suspend fun setDayOff(date: LocalDate, off: Boolean, now: Long) {
-        if (off) exceptionDao.upsert(DayExceptionEntity(date.toEpochDay(), "DAY_OFF", now))
-        else exceptionDao.delete(date.toEpochDay())
+        if (off) exceptionDao.upsert(DayExceptionEntity(date.toEpochDay(), DAY_OFF_KIND, now))
+        else exceptionDao.deleteDayOff(date.toEpochDay())
     }
 
     suspend fun daysOff(from: LocalDate, to: LocalDate): Set<LocalDate> =
-        exceptionDao.range(from.toEpochDay(), to.toEpochDay()).map { LocalDate.ofEpochDay(it.epochDay) }.toSet()
+        exceptionDao.range(from.toEpochDay(), to.toEpochDay())
+            .asSequence().filter { it.kind == DAY_OFF_KIND }.map { LocalDate.ofEpochDay(it.epochDay) }.toSet()
 
     private fun RoutineEntity.toDomain() = Routine(
         workMode = workMode,
@@ -49,4 +50,8 @@ class RoutineRepository @Inject constructor(
         startMinute = startMinute, endMinute = endMinute,
         lunchStartMinute = lunchStartMinute, lunchEndMinute = lunchEndMinute,
     )
+
+    private companion object {
+        const val DAY_OFF_KIND = "DAY_OFF"
+    }
 }

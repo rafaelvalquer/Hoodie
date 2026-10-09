@@ -27,8 +27,12 @@ object JourneyMapAssembler {
         val keys = visits.map(::placeKey)
         val occurrences = keys.groupingBy { it }.eachCount()
         val totals = visits.indices.groupBy { keys[it] }.mapValues { (_, idx) -> idx.sumOf { visits[it].durationMs } }
+        val previousCounts = mutableMapOf<String, Int>()
 
         val nodes = visits.mapIndexed { i, v ->
+            val key = keys[i]
+            val revisitCount = previousCounts.getOrDefault(key, 0)
+            previousCounts[key] = revisitCount + 1
             JourneyNode(
                 id = nodeId(i),
                 visitIndex = i,
@@ -43,9 +47,9 @@ object JourneyMapAssembler {
                 phoneUsageMs = phone?.let {
                     VisitPhoneUsageCalculator.calculate(v.arrivalAt, v.departureAt, now, it.appSessions, it::labelOf, it::categoryOf)?.foregroundMs
                 } ?: 0L,
-                revisitCount = keys.subList(0, i).count { it == keys[i] },
-                placeOccurrences = occurrences.getValue(keys[i]),
-                placeTotalMs = totals.getValue(keys[i]),
+                revisitCount = revisitCount,
+                placeOccurrences = occurrences.getValue(key),
+                placeTotalMs = totals.getValue(key),
             )
         }
         val segments = visits.zipWithNext().mapIndexed { i, (from, to) ->

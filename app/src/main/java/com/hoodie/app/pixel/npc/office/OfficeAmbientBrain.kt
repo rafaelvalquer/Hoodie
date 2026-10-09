@@ -19,17 +19,24 @@ class OfficeAmbientBrain(
     val profile: NpcPersonalityProfile,
     val startSpot: OfficeNpcSpot,
     val daySeed: Int,
-    val speechProfile: NpcSpeechProfile? = null,
+    speechProfile: NpcSpeechProfile? = null,
     internal val speechSeed: Int = 0,
 ) : NpcAmbientBrain {
+    @Volatile internal var speechProfile: NpcSpeechProfile? = speechProfile
     internal var socialSession: OfficeSocialSession? = null
     private data class PlannedStep(
         val action: OfficeNpcAction,
         val intentIndex: Long,
-        val recentBefore: List<NpcIntent>,
+        val recentIntents: List<NpcIntent>,
         val cooldownsBefore: NpcCooldowns,
     )
     private val coordinatedTimeline = mutableListOf<PlannedStep>()
+    /** Reservation planning also asks for the uncoordinated action at historical times. */
+    private val rawTimeline = mutableListOf<PlannedStep>()
+    private var bulldogReturnStartX = Int.MIN_VALUE
+    private var bulldogReturnStartY = Int.MIN_VALUE
+    private var bulldogReturnRouteCache: List<OfficeSpot>? = null
+    private var bulldogReturnDistance = 0
 
     override fun stateAt(timeMs: Long): NpcBrainState = socialSession?.stateAt(this, timeMs) ?: baseStateAt(timeMs)
 
@@ -43,57 +50,30 @@ class OfficeAmbientBrain(
 
     private fun plannedActionAndStateAt(timeMs: Long, coordinated: Boolean): Pair<OfficeNpcAction, NpcBrainState> {
         val t = timeMs.coerceAtLeast(0)
-        if (coordinated && socialSession != null && !socialSession!!.isResolvingReservationAt(t)) {
+        if (coordinated && socialSession != null) {
             return coordinatedActionAndStateAt(t)
         }
-        var spot = startSpot
-        var cursor = 0L
-        var recent = emptyList<NpcIntent>()
-        var cooldowns = NpcCooldowns()
-        var index = 0L
-        while (true) {
-            val seedState = NpcBrainState(NpcIntent.WORK, spot, cursor, cursor, recent, decisionIndex = index, cooldowns = cooldowns)
-            val intent = OfficeBehaviorPlanner.choose(npcId, daySeed, seedState, profile, cursor)
-            val preferredTarget = OfficeBehaviorPlanner.target(intent, spot, startSpot)
-            val target = if (coordinated) socialSession?.reservedSpotAt(npcId, cursor, preferredTarget) ?: preferredTarget else preferredTarget
-            val route = OfficeNavigationGraph.route(spot, target)
-            val routeMs = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L }
-            val leavingDesk = isDesk(spot) && spot != target
-            val arrivingDesk = isDesk(target) && spot != target
-            val travelMs = routeMs + when { leavingDesk -> STAND_MS + NpcPoseLibrary.TURN_MS; arrivingDesk -> NpcPoseLibrary.TURN_MS + SIT_MS; else -> 0L }
-            val startedAt = cursor
-            val arrivedAt = startedAt + travelMs
-            val duration = OfficeBehaviorPlanner.durationMs(npcId, daySeed, index, profile, intent)
-            val end = arrivedAt + duration
-            val action = OfficeNpcAction(
-                id = "$npcId:$index:$startedAt", npcId = npcId, intent = intent,
-                origin = spot, destination = target, startedAt = startedAt, arrivedAt = arrivedAt,
-                interactionEndsAt = end, finishedAt = end, route = route,
-            )
-            val state = NpcBrainState(intent, if (t >= arrivedAt) action.destination else action.origin, arrivedAt, end,
-                (listOf(intent) + recent).take(4), targetSpot = target, decisionIndex = index, cooldowns = cooldowns)
-            if (t < end) return action to state
-            spot = target
-            cursor = end
-            recent = (listOf(intent) + recent).take(4)
-            val nextIndex = index + 1
-            cooldowns = com.hoodie.app.pixel.npc.brain.NpcCooldownManager.afterIntent(
-                npcId, daySeed, nextIndex, intent, cursor, cooldowns,
-            )
-            index++
-        }
+        return actionAndStateFromTimeline(t, rawTimeline, coordinated = false)
     }
 
     /** Builds each immutable base action once; render frames then resolve it with a short lookup. */
     private fun coordinatedActionAndStateAt(timeMs: Long): Pair<OfficeNpcAction, NpcBrainState> {
-        val cached = coordinatedTimeline.firstOrNull { timeMs >= it.action.startedAt && timeMs < it.action.finishedAt }
+        return actionAndStateFromTimeline(timeMs, coordinatedTimeline, coordinated = true)
+    }
+
+    private fun actionAndStateFromTimeline(
+        timeMs: Long,
+        timeline: MutableList<PlannedStep>,
+        coordinated: Boolean,
+    ): Pair<OfficeNpcAction, NpcBrainState> {
+        val cached = cachedStepAt(timeline, timeMs)
         val step = cached ?: run {
-            while (coordinatedTimeline.isEmpty() || coordinatedTimeline.last().action.finishedAt <= timeMs) {
-                val previous = coordinatedTimeline.lastOrNull()
+            while (timeline.isEmpty() || timeline.last().action.finishedAt <= timeMs) {
+                val previous = timeline.lastOrNull()
                 val index = previous?.let { it.intentIndex + 1 } ?: 0L
                 val cursor = previous?.action?.finishedAt ?: 0L
                 val spot = previous?.action?.destination ?: startSpot
-                val recent = previous?.let { (listOf(it.action.intent) + it.recentBefore).take(4) }.orEmpty()
+                val recent = previous?.recentIntents.orEmpty()
                 val cooldowns = previous?.let {
                     com.hoodie.app.pixel.npc.brain.NpcCooldownManager.afterIntent(
                         npcId, daySeed, index, it.action.intent, cursor, it.cooldownsBefore,
@@ -102,7 +82,7 @@ class OfficeAmbientBrain(
                 val seedState = NpcBrainState(NpcIntent.WORK, spot, cursor, cursor, recent, decisionIndex = index, cooldowns = cooldowns)
                 val intent = OfficeBehaviorPlanner.choose(npcId, daySeed, seedState, profile, cursor)
                 val preferredTarget = OfficeBehaviorPlanner.target(intent, spot, startSpot)
-                val target = socialSession?.reservedSpotAt(npcId, cursor, preferredTarget) ?: preferredTarget
+                val target = if (coordinated) socialSession?.reservedSpotAt(npcId, cursor, preferredTarget) ?: preferredTarget else preferredTarget
                 val route = OfficeNavigationGraph.route(spot, target)
                 val routeMs = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L }
                 val leavingDesk = isDesk(spot) && spot != target
@@ -119,9 +99,15 @@ class OfficeAmbientBrain(
                     origin = spot, destination = target, startedAt = cursor, arrivedAt = arrivedAt,
                     interactionEndsAt = finishedAt, finishedAt = finishedAt, route = route,
                 )
-                coordinatedTimeline += PlannedStep(action, index, recent, cooldowns)
+                timeline += PlannedStep(
+                    action = action,
+                    intentIndex = index,
+                    recentIntents = (listOf(intent) + recent).take(4),
+                    cooldownsBefore = cooldowns,
+                )
+                if (coordinated) OfficePerformanceCounters.timelineRebuilds.incrementAndGet()
             }
-            coordinatedTimeline.last()
+            timeline.last()
         }
         val action = step.action
         val state = NpcBrainState(
@@ -129,7 +115,7 @@ class OfficeAmbientBrain(
             if (timeMs >= action.arrivedAt) action.destination else action.origin,
             action.arrivedAt,
             action.finishedAt,
-            (listOf(action.intent) + step.recentBefore).take(4),
+            step.recentIntents,
             targetSpot = action.destination,
             decisionIndex = step.intentIndex,
             cooldowns = step.cooldownsBefore,
@@ -137,7 +123,26 @@ class OfficeAmbientBrain(
         return action to state
     }
 
-    @Synchronized internal fun clearTimelineCache() { coordinatedTimeline.clear() }
+    /** The timeline is append-only and time ordered, so backwards/seek access is logarithmic. */
+    private fun cachedStepAt(timeline: List<PlannedStep>, timeMs: Long): PlannedStep? {
+        var low = 0
+        var high = timeline.lastIndex
+        var candidate = -1
+        while (low <= high) {
+            val middle = (low + high) ushr 1
+            if (timeline[middle].action.startedAt <= timeMs) {
+                candidate = middle
+                low = middle + 1
+            } else high = middle - 1
+        }
+        return timeline.getOrNull(candidate)?.takeIf { timeMs < it.action.finishedAt }
+    }
+
+    @Synchronized internal fun clearTimelineCache() {
+        if (coordinatedTimeline.isNotEmpty()) OfficePerformanceCounters.timelineResets.incrementAndGet()
+        coordinatedTimeline.clear()
+        rawTimeline.clear()
+    }
 
     override fun movementAt(timeMs: Long): NpcMovement = movementAt(timeMs, null)
 
@@ -224,16 +229,19 @@ class OfficeAmbientBrain(
             val movement = regularMovement(cycle - enterMs)
             val visitElapsed = cycle - enterMs
             val speaking = visitElapsed in 2_500L until 4_300L || visitElapsed in 27_000L until 28_800L
-            return if (speaking) movement.copy(animation = NpcAnimation.TALK, localTimeMs = visitElapsed % 2_500L) else movement
+            val visitMovement = if (speaking) movement.copy(animation = NpcAnimation.TALK, localTimeMs = visitElapsed % 2_500L) else movement
+            return standingBulldogMovement(visitMovement)
         }
-        val activityEnd = regularMovement(OfficeExecutiveTimeline.RETURN_START_MS - enterMs)
+        val activityEnd = standingBulldogMovement(regularMovement(OfficeExecutiveTimeline.RETURN_START_MS - enterMs))
         val route = executiveReturnRoute(activityEnd.x, activityEnd.floorY)
         val returnDuration = (OfficeExecutiveTimeline.DOOR_OPEN_MS - OfficeExecutiveTimeline.RETURN_START_MS)
         val returnElapsed = (cycle - OfficeExecutiveTimeline.RETURN_START_MS).coerceAtLeast(0)
         if (cycle < OfficeExecutiveTimeline.DOOR_OPEN_MS) {
-            val distance = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) }
+            val distance = bulldogReturnDistance
             val progress = (distance.toFloat() * returnElapsed.toFloat() / returnDuration.toFloat()).coerceIn(0f, distance.toFloat())
-            val (x, y) = sampleRoute(route, progress)
+            val position = sampleRoute(route, progress)
+            val x = (position shr 32).toInt()
+            val y = position.toInt()
             return NpcMovement(x, y, facingRight = x < door.x, animation = NpcAnimation.WALK,
                 localTimeMs = returnElapsed, walkedPx = progress, phase = PathPhase.WALK)
         }
@@ -243,32 +251,73 @@ class OfficeAmbientBrain(
             NpcAnimation.WALK, exitElapsed, walkedPx = (264 - door.x) * f, phase = PathPhase.EXIT)
     }
 
+    /** The executive has no chair in the office scene, so resolve any desk pose as standing. */
+    private fun standingBulldogMovement(movement: NpcMovement): NpcMovement = movement.copy(
+        animation = when (movement.animation) {
+            NpcAnimation.SIT -> NpcAnimation.STAND
+            NpcAnimation.SIT_PHONE -> NpcAnimation.STAND_PHONE
+            NpcAnimation.SIT_LOOK -> NpcAnimation.LOOK
+            NpcAnimation.SIT_READ_MENU -> NpcAnimation.STAND_READ
+            NpcAnimation.SIT_EAT, NpcAnimation.SIT_DRINK -> NpcAnimation.STAND
+            else -> movement.animation
+        },
+        seated = false,
+    )
+
     private fun executiveReturnRoute(x: Int, y: Int): List<OfficeSpot> {
+        bulldogReturnRouteCache?.let { cached ->
+            if (x == bulldogReturnStartX && y == bulldogReturnStartY) return cached
+        }
         val nearest = OfficeNpcSpot.entries.minBy { spot ->
             val point = OfficeNavigationGraph.spots.getValue(spot)
             (point.x - x) * (point.x - x) + (point.floorY - y) * (point.floorY - y)
         }
         val path = OfficeNavigationGraph.route(nearest, OfficeNpcSpot.DOOR)
-        return if (path.size == 1) listOf(OfficeSpot(x, y, Facing.SIDE), path.single())
-        else listOf(OfficeSpot(x, y, Facing.SIDE)) + path.drop(1)
+        val result = ArrayList<OfficeSpot>(path.size + 1).apply {
+            add(OfficeSpot(x, y, Facing.SIDE))
+            if (path.size == 1) add(path[0]) else for (index in 1 until path.size) add(path[index])
+        }
+        var distance = 0
+        for (index in 0 until result.lastIndex) {
+            val a = result[index]
+            val b = result[index + 1]
+            distance += maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY))
+        }
+        bulldogReturnStartX = x
+        bulldogReturnStartY = y
+        bulldogReturnDistance = distance
+        return result.also { bulldogReturnRouteCache = it }
     }
 
-    private fun sampleRoute(route: List<OfficeSpot>, distance: Float): Pair<Int, Int> {
+    /** Packs the sampled x/y into a Long to avoid allocating a Pair on every return frame. */
+    private fun sampleRoute(route: List<OfficeSpot>, distance: Float): Long {
         var remaining = distance
-        for ((a, b) in route.zipWithNext()) {
+        var index = 0
+        while (index < route.lastIndex) {
+            val a = route[index]
+            val b = route[index + 1]
             val length = maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)).toFloat()
             if (remaining <= length) {
                 val f = if (length == 0f) 1f else remaining / length
-                return ((a.x + (b.x - a.x) * f).toInt()) to ((a.floorY + (b.floorY - a.floorY) * f).toInt())
+                val x = (a.x + (b.x - a.x) * f).toInt()
+                val y = (a.floorY + (b.floorY - a.floorY) * f).toInt()
+                return (x.toLong() shl 32) or (y.toLong() and 0xFFFF_FFFFL)
             }
             remaining -= length
+            index++
         }
-        return route.last().x to route.last().floorY
+        val end = route.last()
+        return (end.x.toLong() shl 32) or (end.floorY.toLong() and 0xFFFF_FFFFL)
     }
 
     private fun regularMovement(timeMs: Long, state: NpcBrainState = stateAt(timeMs)): NpcMovement {
         val route = OfficeNavigationGraph.route(state.currentSpot, state.targetSpot ?: state.currentSpot)
-        val routeLength = route.zipWithNext().sumOf { (a, b) -> maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L }
+        var routeLength = 0L
+        for (index in 0 until route.lastIndex) {
+            val a = route[index]
+            val b = route[index + 1]
+            routeLength += maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY)) * 24L
+        }
         val leavingDesk = isDesk(state.currentSpot) && state.currentSpot != (state.targetSpot ?: state.currentSpot)
         val arrivingDesk = isDesk(state.targetSpot ?: state.currentSpot) && state.currentSpot != (state.targetSpot ?: state.currentSpot)
         val preTransition = if (leavingDesk) STAND_MS + NpcPoseLibrary.TURN_MS else 0L
@@ -296,7 +345,10 @@ class OfficeAmbientBrain(
                     phase = PathPhase.STOP, seated = true, facing = Facing.FRONT)
             }
             var walked = 0f
-            for ((a, b) in route.zipWithNext()) {
+            var index = 0
+            while (index < route.lastIndex) {
+                val a = route[index]
+                val b = route[index + 1]
                 val distance = maxOf(abs(b.x - a.x), abs(b.floorY - a.floorY))
                 val segment = (distance * 24L).coerceAtLeast(1)
                 if (left < segment) {
@@ -305,10 +357,14 @@ class OfficeAmbientBrain(
                         b.x >= a.x, NpcAnimation.WALK, left.coerceAtLeast(0), walked + distance * f, PathPhase.WALK)
                 }
                 left -= segment; walked += distance
+                index++
             }
         }
         val point = OfficeNavigationGraph.spots.getValue(state.currentSpot)
-        val seated = isDesk(state.currentSpot) && state.currentIntent in setOf(NpcIntent.WORK, NpcIntent.CHECK_PHONE, NpcIntent.IDLE, NpcIntent.STRETCH)
+        val seated = isDesk(state.currentSpot) && when (state.currentIntent) {
+            NpcIntent.WORK, NpcIntent.CHECK_PHONE, NpcIntent.IDLE, NpcIntent.STRETCH -> true
+            else -> false
+        }
         val animation = when (state.currentIntent) {
             NpcIntent.WORK -> NpcAnimation.TYPE
             NpcIntent.GET_COFFEE -> NpcAnimation.STAND_COFFEE

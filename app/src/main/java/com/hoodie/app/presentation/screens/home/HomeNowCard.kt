@@ -1,8 +1,5 @@
 package com.hoodie.app.presentation.screens.home
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +17,6 @@ import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.domain.daystate.DayState
 import com.hoodie.app.domain.home.HomeNowSnapshot
 import com.hoodie.app.domain.home.HomeNowStatus
-import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.theme.HoodieColors
@@ -30,7 +26,6 @@ import kotlin.math.roundToInt
 @Composable
 internal fun HomeNowCard(
     snapshot: HomeNowSnapshot?, now: Long, zone: ZoneId,
-    onConfirm: (Long) -> Unit, onCorrect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (snapshot == null) return
@@ -51,21 +46,23 @@ internal fun HomeNowCard(
         HomeNowStatus.UNKNOWN -> stringResource(R.string.home_now_unknown)
         HomeNowStatus.UNAVAILABLE -> stringResource(R.string.home_now_location_unavailable)
         HomeNowStatus.PROBABLE -> stringResource(R.string.home_now_probable_context, contextTitle.lowercase())
+        HomeNowStatus.IDENTIFIED -> contextTitle
         HomeNowStatus.CONFIRMED -> contextTitle
     }
     val heading = stringResource(R.string.home_now_title)
     PixelPanel(modifier.fillMaxWidth().semantics { contentDescription = "$heading: $title" }, color = HoodieColors.PanelLight) {
         SectionLabel(heading)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = HoodieColors.Hood, modifier = Modifier.weight(1f))
-            snapshot.contextConfidence?.let { score ->
-                if (context != null && snapshot.status != HomeNowStatus.UNAVAILABLE) Text("${(score.value * 100).roundToInt()}%", style = MaterialTheme.typography.titleMedium)
-            }
-        }
+        Text(title, style = MaterialTheme.typography.titleLarge, color = HoodieColors.Hood)
+        if (snapshot.status == HomeNowStatus.IDENTIFIED) Text(stringResource(R.string.home_now_identified), color = HoodieColors.Muted)
         if (snapshot.status == HomeNowStatus.PROBABLE) Text(stringResource(R.string.home_now_probable), color = HoodieColors.Muted)
+        if (snapshot.status in setOf(HomeNowStatus.PROBABLE, HomeNowStatus.IDENTIFIED)) {
+            snapshot.contextConfidence?.let { score -> Text(stringResource(R.string.home_now_confidence, (score.value * 100).roundToInt()), color = HoodieColors.Muted) }
+        }
         if (snapshot.status == HomeNowStatus.CONFIRMED) Text(stringResource(R.string.home_now_confirmed), color = HoodieColors.Muted)
-        if (snapshot.placeName != null && snapshot.placeName != context?.label) Text(snapshot.placeName, style = MaterialTheme.typography.bodyMedium)
-        snapshot.contextStartedAt?.let { start ->
+        if (snapshot.status in setOf(HomeNowStatus.CONFIRMED, HomeNowStatus.IDENTIFIED, HomeNowStatus.PROBABLE) &&
+            snapshot.placeName != null && snapshot.placeName != context?.label
+        ) Text(snapshot.placeName, style = MaterialTheme.typography.bodyMedium)
+        snapshot.contextStartedAt?.takeIf { snapshot.status in setOf(HomeNowStatus.CONFIRMED, HomeNowStatus.IDENTIFIED, HomeNowStatus.PROBABLE) }?.let { start ->
             Text(stringResource(R.string.home_now_since, formatClock(start, zone)), color = HoodieColors.Muted)
             Text(stringResource(R.string.home_now_duration, formatDuration((now - start).coerceAtLeast(0))), color = HoodieColors.Muted)
         }
@@ -73,10 +70,5 @@ internal fun HomeNowCard(
             Text(stringResource(if (snapshot.wakeConfidence == com.hoodie.app.domain.daycycle.WakeConfidence.HIGH) R.string.home_now_woke_at else R.string.home_now_wake_estimated, formatClock(wake, zone)), color = HoodieColors.Muted)
         }
         Spacer(Modifier.height(4.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val eventId = snapshot.contextEventId
-            if (eventId != null && snapshot.status == HomeNowStatus.PROBABLE) PixelButton(stringResource(R.string.home_now_confirm), { onConfirm(eventId) }, Modifier.weight(1f))
-            PixelButton(stringResource(R.string.home_now_correct), onCorrect, Modifier.weight(1f), color = HoodieColors.Gold)
-        }
     }
 }

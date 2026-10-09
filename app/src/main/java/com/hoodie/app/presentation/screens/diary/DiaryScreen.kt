@@ -107,12 +107,23 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
         }
     }
     val zone = vm.zone
-    LaunchedEffect(state.diary, state.selectedDate, state.today) {
-        if (com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT) state.diary?.let { reportVm.load(it, state.today) }
-        else reportVm.clear()
+    LaunchedEffect(state.diary, state.selectedDate, state.today, state.loadKey, state.isLoading) {
+        when {
+            !com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT -> reportVm.clear()
+            state.diary == null -> reportVm.clear()
+            !state.isLoading -> state.diary?.let { reportVm.load(it, state.today, requestKey = state.loadKey) }
+        }
     }
     DiaryContent(
-        state = state.copy(dayReport = reportState.report, dayReportError = reportState.error),
+        state = state.copy(
+            dayReport = reportState.report,
+            dayReportError = reportState.error,
+            reportState = when {
+                reportState.loading -> SectionState.Loading
+                reportState.error -> SectionState.Failed()
+                else -> reportState.report?.let { SectionState.Ready(it) } ?: SectionState.Empty
+            },
+        ),
         zone = zone,
         nowMillis = vm.nowMillis,
         selectedNodeId = selectedNodeId,
@@ -130,7 +141,6 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             openChapter = vm::openChapter,
             selectClockSegment = vm::selectClockSegment,
             refreshClock = vm::refreshClock,
-            openJourney = { vm.setMapMode(com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY) },
             editEvent = vm::beginCorrection,
             editAt = vm::beginCorrectionAt,
         ),
@@ -152,7 +162,6 @@ internal data class DiaryActions(
     val openChapter: (com.hoodie.app.domain.diary.journey.DayChapter?) -> Unit = {},
     val selectClockSegment: (String?) -> Unit = {},
     val refreshClock: () -> Unit = {},
-    val openJourney: () -> Unit = {},
 )
 
 @Composable
@@ -171,22 +180,11 @@ internal fun DiaryContent(
     var selectedContext by remember { mutableStateOf<UserContextType?>(null) }
     var selectedJourneyNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
     var quickStops by remember(state.selectedDate) { mutableStateOf<List<com.hoodie.app.domain.diary.model.JourneyNode>>(emptyList()) }
-    // Jornada do dia: montada uma vez por dia carregado (layout e cache não mudam a cada quadro).
-    val journey = remember(state.diary) { state.diary?.let { JourneyMapModel.from(it, nowMillis) } }
-    // Jornada 3.0: plano + serpentina; a parada do replay e a selecionada nunca somem num "×k".
-    val protectedKey = journey?.let { protectedStops(null, it.data, state.replay, selectedJourneyNodeId) }
-    val overworld = remember(journey, protectedKey) {
-        journey?.let { com.hoodie.app.engine.diary.journey.JourneyOverworldModel.build(it.data, zone, protectedKey.orEmpty()) }
-    }
-    val clock = remember(journey) {
-        if (com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2) null
-        else journey?.let { com.hoodie.app.engine.diary.journey.DayClockLegacyAssembler.build(it.data, zone) }
-    }
-    // Relógio do Dia 2.0: vem do ViewModel; fixtures sem ViewModel montam aqui.
-    val dayClock = state.dayClock ?: remember(state.diary) {
-        state.diary?.takeIf { com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2 }
-            ?.let { com.hoodie.app.engine.diary.DayClockAssembler.build(it, state.selectedDate, zone, nowMillis) }
-    }
+    val preparedJourney = (state.journeyState as? SectionState.Ready)?.data
+    val journey = preparedJourney?.let { JourneyMapModel(it.data, it.legacyLayout) }
+    val overworld = preparedJourney?.overworld
+    val clock = preparedJourney?.legacyClock
+    val dayClock = state.dayClock
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("diary_scroll").padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -196,9 +194,9 @@ internal fun DiaryContent(
         DiaryTabs(tab, onSelect = { tab = it })
         if (tab == DiaryTab.DIGITAL) {
             digitalContent(state.selectedDate)
-        } else if (state.isLoading) {
+        } else if (state.diary == null && state.summaryState == SectionState.Loading) {
             DiaryLoadingSkeleton()
-        } else if (state.error != null) {
+        } else if (state.diary == null && state.error != null) {
             ErrorState(context.appErrorText(requireNotNull(state.error)), actions.retry, retryLabel = stringResource(R.string.ui_diary_screen_3))
         } else {
             val diary = state.diary
@@ -210,7 +208,10 @@ internal fun DiaryContent(
                 }
             } else {
                 if (com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT) state.dayReport?.let { report ->
-                    DayReportSection(report, zone, actions.openJourney, Modifier.testTag("day_report_card"))
+                    DayReportSection(report, zone, Modifier.testTag("day_report_card"))
+                }
+                if (com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT && state.reportState == SectionState.Loading) {
+                    VisualLoadingSection(stringResource(R.string.day_report_title))
                 }
                 if (com.hoodie.app.core.config.HoodieConfig.DAILY_INTELLIGENT_REPORT && state.dayReportError) {
                     PixelPanel(Modifier.fillMaxWidth()) { Text(stringResource(R.string.day_report_error), color = HoodieColors.Muted) }
@@ -236,20 +237,25 @@ internal fun DiaryContent(
                             if (cluster.isNotEmpty()) quickStops = cluster else overworld.nodeOf(stop.id)?.let { selectedJourneyNodeId = it.id }
                         }
                         when (state.mapMode) {
-                            com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY -> if (overworld.isChapters) {
+                        com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY -> if (overworld.isChapters) {
                                 JourneyChaptersView(
                                     overworld, state.replay, zone, state.manualChapter, state.selectedDate == today, nowMillis,
                                     selectedJourneyNodeId, onOpenChapter = actions.openChapter, onStop = onStop,
+                                    preparedCaches = preparedJourney?.overworldCaches.orEmpty(),
                                 )
                             } else overworld.single?.let { single ->
                                 PixelPanel(Modifier.fillMaxWidth().testTag("journey_map")) {
                                     SectionLabel(stringResource(R.string.journey_title))
-                                    JourneyOverworldMapView(overworld, single, state.replay, zone, selectedJourneyNodeId, onStop, modifier = Modifier.padding(top = 8.dp))
+                                    JourneyOverworldMapView(
+                                        overworld, single, state.replay, zone, selectedJourneyNodeId, onStop,
+                                        modifier = Modifier.padding(top = 8.dp),
+                                        preparedCache = preparedJourney?.overworldCaches?.get(single),
+                                    )
                                     Text(stringResource(R.string.journey_v3_footer), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
                                 }
                             }
                             com.hoodie.app.domain.diary.journey.DiaryMapMode.CLOCK -> if (dayClock != null) {
-                                com.hoodie.app.presentation.screens.diary.clock.DayClockPanel(
+                                    com.hoodie.app.presentation.screens.diary.clock.DayClockPanel(
                                     com.hoodie.app.presentation.screens.diary.clock.DayClockUiState.of(dayClock, state.clockSelectedId, state.replay),
                                     onSelect = actions.selectClockSegment,
                                     onMinuteTick = actions.refreshClock,
@@ -263,22 +269,60 @@ internal fun DiaryContent(
                                     onStop = { id -> selectedJourneyNodeId = id },
                                     onTick = { tick -> quickStops = tick.stopIds.mapNotNull { journey.data.node(it) } },
                                 )
+                            } ?: if (state.clockState == SectionState.Loading) {
+                                VisualLoadingSection(stringResource(R.string.day_clock_title))
+                            } else if (state.clockState is SectionState.Failed) {
+                                VisualFailureSection(stringResource(R.string.day_clock_title))
+                            } else {
+                                Unit
                             }
                         }
                     } else {
                         // Jornada 2.0 (zigue-zague) enquanto DIARY_JOURNEY_MAP_V3 = false.
-                        JourneyMapView(journey, state.replay, zone, selectedJourneyNodeId, onNode = { selectedJourneyNodeId = it.id })
+                        JourneyMapView(
+                            journey, state.replay, zone, selectedJourneyNodeId,
+                            onNode = { selectedJourneyNodeId = it.id },
+                            preparedCache = preparedJourney?.legacyCache,
+                        )
                     }
                     DiaryReplayHud(state.replay.visual, zone)
                     JourneyReplayControls(state.replay, journey.data, zone, onToggle = toggleReplay, onSeek = actions.seek, onReset = actions.reset, onSpeed = actions.setSpeed)
+                }
+                else if (state.journeyState == SectionState.Loading) {
+                    if (state.mapMode == com.hoodie.app.domain.diary.journey.DiaryMapMode.CLOCK && dayClock != null) {
+                        DiaryMapModeSelector(state.mapMode, onSelect = actions.setMapMode)
+                        com.hoodie.app.presentation.screens.diary.clock.DayClockPanel(
+                            com.hoodie.app.presentation.screens.diary.clock.DayClockUiState.of(dayClock, state.clockSelectedId, state.replay),
+                            onSelect = actions.selectClockSegment,
+                            onMinuteTick = actions.refreshClock,
+                        )
+                    } else {
+                        if (com.hoodie.app.core.config.HoodieConfig.DIARY_JOURNEY_MAP_V3) {
+                            DiaryMapModeSelector(state.mapMode, onSelect = actions.setMapMode)
+                        }
+                        VisualLoadingSection(
+                            stringResource(if (state.mapMode == com.hoodie.app.domain.diary.journey.DiaryMapMode.CLOCK) R.string.day_clock_title else R.string.journey_title),
+                        )
+                    }
+                } else if (state.journeyState is SectionState.Failed) {
+                    if (state.mapMode == com.hoodie.app.domain.diary.journey.DiaryMapMode.CLOCK && dayClock != null) {
+                        DiaryMapModeSelector(state.mapMode, onSelect = actions.setMapMode)
+                        com.hoodie.app.presentation.screens.diary.clock.DayClockPanel(
+                            com.hoodie.app.presentation.screens.diary.clock.DayClockUiState.of(dayClock, state.clockSelectedId, state.replay),
+                            onSelect = actions.selectClockSegment,
+                            onMinuteTick = actions.refreshClock,
+                        )
+                    } else {
+                        VisualFailureSection(stringResource(R.string.journey_title))
+                    }
                 }
                 TimelineSection(diary.timeline, state.replay.currentTimestamp, zone, state.replay.highlightedTimelineItemIds, actions.editEvent)
             }
         }
     }
     state.diary?.let { diary ->
-        val layout = remember(diary.visits) { DiaryMapLayoutEngine.layout(diary.visits) }
-        layout.node(selectedNodeId)?.let { node ->
+        val layout = preparedJourney?.takeIf { it.data === journey?.data || it.data == journey?.data }?.placeLayout
+        layout?.node(selectedNodeId)?.let { node ->
             val details = remember(diary, nowMillis) { com.hoodie.app.engine.diary.ReplayHudAssembler.visitDetails(diary, nowMillis) }
             PlaceDetailBottomSheet(node, details, zone) { onSelectedNodeChange(null) }
         }
@@ -299,7 +343,7 @@ internal fun DiaryContent(
             zone = zone,
             onSeeAll = {
                 selectedJourneyNodeId = null
-                DiaryMapLayoutEngine.layout(diaryForJourney.visits).nodes
+                preparedJourney?.placeLayout?.nodes.orEmpty()
                     .firstOrNull { journeyNode.visitIndex in it.visitIndices }
                     ?.let { onSelectedNodeChange(it.id) }
             },
@@ -379,11 +423,23 @@ internal fun ReplayControls(replay: ReplayUiState, onToggle: () -> Unit, onReset
         PixelButton(if (replay.state == ReplayState.PLAYING) uiTextContext.getString(R.string.ui_extra_diary_screen_12) else if (replay.state == ReplayState.FINISHED) uiTextContext.getString(R.string.ui_extra_diary_screen_13) else uiTextContext.getString(R.string.ui_extra_diary_screen_14), onToggle, modifier = Modifier.weight(1f).semantics { stateDescription = replayDescription }, color = HoodieColors.Mint)
         TextButton(onClick = onReset, modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = uiTextContext.getString(R.string.ui_extra_diary_screen_15) }) { Text(stringResource(R.string.ui_diary_screen_10), color = HoodieColors.Hood) }
     }
-    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(R.string.ui_diary_screen_11), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
-        ReplaySpeed.entries.forEach { speed ->
-            androidx.compose.material3.FilterChip(modifier = Modifier.heightIn(min = 48.dp).semantics { role = Role.RadioButton; contentDescription = speed.label }, selected = replay.speed == speed, onClick = { onSpeed(speed) }, label = { Text(speed.label, maxLines = 1, softWrap = false, style = MaterialTheme.typography.labelSmall) })
-        }
+    ReplaySpeedSelector(replay.speed, stringResource(R.string.ui_diary_screen_11), onSpeed)
+}
+
+@Composable
+private fun VisualLoadingSection(title: String) {
+    PixelPanel(Modifier.fillMaxWidth().testTag("diary_visual_loading")) {
+        SectionLabel(title)
+        Text(stringResource(R.string.diary_visualization_loading), color = HoodieColors.Muted)
+        LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 6.dp))
+    }
+}
+
+@Composable
+private fun VisualFailureSection(title: String) {
+    PixelPanel(Modifier.fillMaxWidth().testTag("diary_visual_error")) {
+        SectionLabel(title)
+        Text(stringResource(R.string.diary_visualization_error), color = HoodieColors.Muted)
     }
 }
 

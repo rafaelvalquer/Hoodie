@@ -32,7 +32,26 @@ data class CharacterAnchors(
     }
 }
 
-data class CharacterFrame(val image: PixelBuffer, val anchors: CharacterAnchors)
+data class CharacterFrame(val image: PixelBuffer, val anchors: CharacterAnchors) {
+    /** Row-wise opaque spans are stable for cached sprite frames and avoid scanning transparent padding on every draw. */
+    internal val opaqueRowBounds: IntArray by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        val bounds = IntArray(image.height * 2)
+        for (y in 0 until image.height) {
+            val row = y * image.width
+            var left = image.width
+            var right = -1
+            for (x in 0 until image.width) {
+                if (image.pixels[row + x] ushr 24 != 0) {
+                    left = minOf(left, x)
+                    right = x
+                }
+            }
+            bounds[y * 2] = left
+            bounds[y * 2 + 1] = right
+        }
+        bounds
+    }
+}
 
 data class CharacterRenderRequest(
     val style: CharacterStyle,

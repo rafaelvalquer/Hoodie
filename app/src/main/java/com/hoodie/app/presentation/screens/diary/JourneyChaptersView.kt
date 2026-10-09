@@ -36,6 +36,8 @@ import com.hoodie.app.domain.diary.journey.JourneyStop
 import com.hoodie.app.domain.diary.model.JourneyNode
 import com.hoodie.app.engine.diary.journey.JourneyChapterPlanner
 import com.hoodie.app.engine.diary.journey.JourneyOverworldModel
+import com.hoodie.app.engine.diary.journey.OverworldLayout
+import com.hoodie.app.pixel.diary.overworld.OverworldRenderCache
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.components.SectionLabel
 import com.hoodie.app.presentation.theme.HoodieColors
@@ -58,6 +60,7 @@ fun JourneyChaptersView(
     selectedStopId: String?,
     onOpenChapter: (DayChapter) -> Unit,
     onStop: (JourneyStop) -> Unit,
+    preparedCaches: Map<OverworldLayout, OverworldRenderCache> = emptyMap(),
     modifier: Modifier = Modifier,
 ) {
     val plan = model.plan as? JourneyPlan.Chapters ?: return
@@ -80,7 +83,7 @@ fun JourneyChaptersView(
                                 style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted,
                             )
                         }
-                        JourneyOverworldMapView(model, layout, replay, zone, selectedStopId, onStop, framed = true)
+                        JourneyOverworldMapView(model, layout, replay, zone, selectedStopId, onStop, framed = true, preparedCache = preparedCaches[layout])
                     }
                 } else {
                     JourneyChapterSummary(plan, chapter, onOpen = { onOpenChapter(chapter.chapter) })

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -15,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
@@ -26,8 +28,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.hoodie.app.core.time.DayPeriod
+import com.hoodie.app.BuildConfig
+import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.animation.AnimationStateMachine
+import com.hoodie.app.pixel.animation.RenderFrame
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.renderer.SceneRenderer
 import com.hoodie.app.pixel.scene.PixelScene
@@ -43,6 +48,10 @@ import com.hoodie.app.pixel.sprite.Posture
 import com.hoodie.app.pixel.sprite.SpriteRequest
 import com.hoodie.app.pixel.animation.IdleDirector
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import kotlin.math.floor
 import kotlin.math.max
@@ -64,7 +73,7 @@ data class PixelRenderFrame(
 val LocalPixelRenderFrame = staticCompositionLocalOf<PixelRenderFrame?> { null }
 
 /**
- * A cena viva. Um único relógio de frames (withFrameMillis) dirige a máquina de
+ * A cena viva. Um único relógio de frames (withFrameNanos) dirige a máquina de
  * estados e o renderer; cada animação tem seu próprio FPS. Quando a tela some,
  * a composição pausa e nada roda em background — o relógio real continua e o
  * estado é recalculado ao voltar.
@@ -84,6 +93,8 @@ fun HoodieSceneView(
         AnimationStateMachine(if (fixedFrame != null) Random(0) else Random(System.nanoTime()))
     }
     val renderer = remember { SceneRenderer() }
+    val officeRendererMutex = remember(renderer) { Mutex() }
+    DisposableEffect(renderer) { onDispose { renderer.dispose() } }
     val bitmap = remember { Bitmap.createBitmap(PixelScene.SCENE_W, PixelScene.SCENE_H, Bitmap.Config.ARGB_8888) }
     val image = remember { bitmap.asImageBitmap() }
     var frames by remember { mutableIntStateOf(0) }
@@ -99,30 +110,59 @@ fun HoodieSceneView(
     LaunchedEffect(fixedFrame, visual, sceneOverride) {
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
-                val buf = renderer.render(if (sceneOverride == null) f else f.copy(scene = sceneOverride), fixedFrame.animationMillis)
-                bitmap.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height)
-                frames++
+                val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
+                renderAndPresent(renderer, officeRendererMutex, bitmap, rendered, fixedFrame.animationMillis) { frames++ }
             }
             return@LaunchedEffect
         }
-        var last = -1L
+        var lastFrameNanos = -1L
         while (true) {
-            withFrameMillis {
-                val t = clock.now(currentSpeed)
-                if (t - last >= FRAME_MS) {
-                    last = t
-                    val time = LocalTime.now()
-                    val period = currentPeriod ?: DayPeriod.of(time.hour)
-                    machine.frame(t, time.hour * 60 + time.minute, period)?.let { f ->
-                        val buf = renderer.render(if (sceneOverride == null) f else f.copy(scene = sceneOverride), t)
-                        bitmap.setPixels(buf.pixels, 0, buf.width, 0, 0, buf.width, buf.height)
-                        frames++
-                    }
+            val frameNanos = withFrameNanos { it }
+            val t = clock.now(currentSpeed)
+            if (lastFrameNanos < 0L || frameNanos - lastFrameNanos >= FRAME_INTERVAL_NANOS) {
+                lastFrameNanos = frameNanos
+                val time = LocalTime.now()
+                val period = currentPeriod ?: DayPeriod.of(time.hour)
+                machine.frame(t, time.hour * 60 + time.minute, period)?.let { f ->
+                    val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
+                    renderAndPresent(renderer, officeRendererMutex, bitmap, rendered, t) { frames++ }
                 }
             }
         }
     }
     PixelImage(image, PixelScene.SCENE_W, PixelScene.SCENE_H, modifier) { frames }
+}
+
+/** Office pixel work runs away from the Compose frame callback; the lock prevents a cancelled
+ * scene effect from racing the next render and prevents a rendered buffer being changed while
+ * Bitmap.setPixels is copying it. No frame queue is built: the loop awaits each one. */
+private suspend fun renderAndPresent(
+    renderer: SceneRenderer,
+    officeRendererMutex: Mutex,
+    bitmap: Bitmap,
+    frame: RenderFrame,
+    timeMs: Long,
+    onPresented: () -> Unit,
+) {
+    fun present(buffer: PixelBuffer) {
+        val bitmapStart = if (BuildConfig.DEBUG && frame.scene.id == SceneId.OFFICE) ScenePerformanceMonitor.nowNanos() else 0L
+        if (bitmapStart > 0L) ScenePerformanceMonitor.traceBegin("Hoodie.Office.bitmapUpdate")
+        bitmap.setPixels(buffer.pixels, 0, buffer.width, 0, 0, buffer.width, buffer.height)
+        if (bitmapStart > 0L) {
+            ScenePerformanceMonitor.traceEnd()
+            ScenePerformanceMonitor.recordBitmapUpdate(ScenePerformanceMonitor.nowNanos() - bitmapStart)
+        }
+        onPresented()
+    }
+
+    if (frame.scene.id == SceneId.OFFICE) {
+        officeRendererMutex.withLock {
+            val buffer = withContext(Dispatchers.Default) { renderer.render(frame, timeMs) }
+            present(buffer)
+        }
+    } else {
+        present(renderer.render(frame, timeMs))
+    }
 }
 
 /** Tempo virtual (permite câmera lenta/rápida no Pixel Lab). */
@@ -137,7 +177,7 @@ private class VirtualClock {
     }
 }
 
-private const val FRAME_MS = 33L
+private const val FRAME_INTERVAL_NANOS = 33_000_000L
 
 /**
  * Desenha um bitmap lógico escalado por fator INTEIRO e sem filtro: nunca

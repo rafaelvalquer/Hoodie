@@ -14,6 +14,13 @@
     <string name="home_now_probable">Provavelmente</string>
     <string name="home_now_probable_context">Provavelmente %1$s</string>
     <string name="home_now_confirmed">Confirmado por você</string>
+    <string name="home_now_identified">Identificado automaticamente</string>
+    <string name="home_now_confidence">Confiança: %1$d%%</string>
+    <string name="home_more_menu">Mais ações</string>
+    <string name="home_adjust_activity">Ajustar atividade</string>
+    <string name="home_now_current_context">Atividade exibida: %1$s</string>
+    <string name="home_now_event_id">Evento: %1$d</string>
+    <string name="home_now_no_event">Nenhum evento atual</string>
     <string name="home_now_since">Desde %1$s</string>
     <string name="home_now_duration">Há %1$s</string>
     <string name="home_now_woke_at">Acordou às %1$s</string>
@@ -28,6 +35,9 @@
     <string name="home_now_confirm_stale">O contexto mudou. Atualizei a informação atual.</string>
     <string name="home_now_saved">Contexto atualizado.</string>
     <string name="day_report_title">MEU DIA</string>
+    <string name="day_clock_title">RELÓGIO DO DIA</string>
+    <string name="diary_visualization_loading">Preparando esta visualização…</string>
+    <string name="diary_visualization_error">Não foi possível montar esta visualização. O restante do Diário continua disponível.</string>
     <string name="day_report_today">Resumo até agora</string>
     <string name="day_report_partial">Resumo parcial</string>
     <string name="day_report_closing">Seu dia está quase pronto. Ainda estou consolidando o descanso.</string>
@@ -39,15 +49,27 @@
     <string name="day_report_phone">Uso do celular</string>
     <string name="day_report_unavailable">Dados indisponíveis</string>
     <string name="day_report_estimated">Estimado: %1$s</string>
-    <string name="day_report_journey">SUA JORNADA</string>
     <string name="day_report_highlight">DESTAQUE DO DIA</string>
-    <string name="day_report_more_journey">Ver Jornada Completa</string>
     <string name="day_report_other_activities">Academia %1$s · Almoço %2$s</string>
     <string name="day_report_incomplete">Algumas atividades não foram identificadas.</string>
     <string name="day_report_error">Não foi possível montar o resumo agora.</string>
     <string name="day_report_highlight_gym">Você passou %1$s minutos na academia.</string>
     <string name="day_report_highlight_return_early">Você chegou em casa %1$s minutos mais cedo que o habitual.</string>
     <string name="day_report_highlight_return_late">Você chegou em casa %1$s minutos mais tarde que o habitual.</string>
+    <string name="routine_exceptions_title">EXCEÇÕES DA ROTINA</string>
+    <string name="routine_day_off_status">Hoje é dia de folga: %1$s</string>
+    <string name="routine_day_off_description">Informe aqui quando não for seguir sua rotina habitual de trabalho.</string>
+    <string name="routine_day_off_loading">Carregando exceção de hoje…</string>
+    <string name="routine_day_off_saving">Salvando…</string>
+    <string name="routine_day_off_load_error">Não foi possível carregar a exceção de hoje.</string>
+    <string name="routine_day_off_work_check_error">Não foi possível verificar atividades de trabalho hoje. Tente novamente.</string>
+    <string name="routine_day_off_save_error">Não foi possível salvar a folga. A configuração anterior foi restaurada.</string>
+    <string name="routine_day_off_work_warning_title">Já há trabalho registrado hoje</string>
+    <string name="routine_day_off_work_warning_message">Marcar folga altera apenas a rotina prevista e mantém esses registros. Caso estejam incorretos, utilize a correção do Diário.</string>
+    <string name="routine_day_off_confirm">Marcar folga</string>
+    <string name="routine_day_off_cancel">Cancelar</string>
+    <string name="routine_yes">SIM</string>
+    <string name="routine_no">NÃO</string>
     <string name="error_database_unavailable">Não consegui abrir os dados do Hoodie. Tente novamente.</string>
     <string name="error_database_read">Não consegui carregar os dados. Tente novamente.</string>
     <string name="error_database_write">Não consegui salvar a alteração. Tente novamente.</string>
@@ -261,8 +283,6 @@
     <string name="ui_extra_home_screen_5" formatted="false">"🏠 Está em casa agora?"</string>
     <string name="ui_extra_home_screen_6" formatted="false">"🏢 Onde fica o seu trabalho?"</string>
     <string name="ui_extra_home_screen_7" formatted="false">"🏠 Onde fica a sua casa?"</string>
-    <string name="ui_extra_home_screen_8" formatted="false">"Hoje é dia normal de trabalho"</string>
-    <string name="ui_extra_home_screen_9" formatted="false">"Hoje não vou trabalhar"</string>
     <string name="ui_extra_settings_screen_1" formatted="false">"• Internet só ao buscar um endereço no mapa: o texto vai ao serviço de mapas do Android e o mapa vem do OpenStreetMap.\n"</string>
     <string name="ui_extra_settings_screen_2" formatted="false">"• Guardamos lugares (cifrados), horários, contextos, histórico e o estado do gato.\n"</string>
     <string name="ui_extra_settings_screen_3" formatted="false">"• Não guardamos trajeto GPS nem posição contínua.\n"</string>

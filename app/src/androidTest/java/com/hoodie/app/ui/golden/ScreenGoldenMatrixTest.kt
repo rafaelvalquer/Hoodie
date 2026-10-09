@@ -158,7 +158,6 @@ private fun GoldenScreen(case: ScreenGoldenCase) {
                     snapshot = if (empty || loading) null else homeSnapshot(),
                     context = if (empty || loading) null else ContextEvent(type = UserContextType.WORK, startedAt = at(9), endedAt = null, confidence = 0.95f, placeId = 2L, source = ContextSource.GEOFENCE),
                     next = if (full) com.hoodie.app.engine.routine.UpcomingEvent("🍽", "Almoço", 12 * 60, false) else null,
-                    isWorkDay = !empty,
                     question = if (full) ContextQuestion(1L, QuestionKind.CONFIRM_CONTEXT, UserContextType.LUNCH, 2L, PlaceType.WORK, 1L, at(10), null, null) else null,
                     loading = loading, error = if (error) DatabaseError.ReadFailed else null, now = at(10), catName = if (full) "Hoodie Companheiro" else "Hoodie",
                     visual = if (empty || loading) null else VisualDirector.resolve(HoodieActivity.WORKING, UserContextType.WORK),

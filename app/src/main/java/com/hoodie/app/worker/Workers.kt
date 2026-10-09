@@ -162,7 +162,7 @@ class MobilityCheckWorker @AssistedInject constructor(
 class PhoneInsightsWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val deviceUsageLazy: Lazy<DeviceUsageRepository>,
+    private val refreshCoordinatorLazy: Lazy<com.hoodie.app.engine.deviceusage.DeviceUsageRefreshCoordinator>,
     private val access: UsageAccessManager,
     private val gate: DatabaseGate,
     private val settings: SettingsRepository,
@@ -175,11 +175,11 @@ class PhoneInsightsWorker @AssistedInject constructor(
         if (!digital.analysisEnabled || !digital.saveHistory || !access.isGranted()) return Result.success()
         if (!gate.isReady()) return Result.retry()
         return runWorkerTask(onFailure = { log.log(DebugEventLogger.Category.WORKER, "PHONE_INSIGHTS_FAILED ${it.javaClass.simpleName}") }) {
-            val deviceUsage = deviceUsageLazy.get()
+            val refreshCoordinator = refreshCoordinatorLazy.get()
             log.log(DebugEventLogger.Category.WORKER, "phone insights")
             val today = clock.today()
-            deviceUsage.refreshDay(today.minusDays(1))
-            deviceUsage.refreshDay(today)
+            refreshCoordinator.refresh(today.minusDays(1), automatic = true)
+            refreshCoordinator.refresh(today, automatic = true)
         }
     }
 

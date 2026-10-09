@@ -10,6 +10,14 @@ import com.hoodie.app.core.config.HoodieConfig
 
 /** Internal handler; synchronization belongs exclusively to ContextEngine. */
 internal class ContextQuestionHandler(private val processor: ContextSignalProcessor) {
+    suspend fun dismissPendingContextConfirmations() = with(processor) {
+        val now = clock.nowMillis()
+        questionDao.since(0L).filter { it.kind == QuestionKind.CONFIRM_CONTEXT && it.answeredAt == null }.forEach { question ->
+            questionDao.update(question.copy(answeredAt = now, answer = "PASSIVE_POLICY"))
+            runCatching { notifier.cancelQuestion(question.id) }
+        }
+    }
+
     suspend fun confirmCurrent(expectedEventId: Long, confirmedAt: Long): Boolean = with(processor) {
         val current = contextDao.current() ?: return@with false
         if (current.id != expectedEventId || current.endedAt != null) return@with false

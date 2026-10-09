@@ -6,7 +6,7 @@ import com.hoodie.app.domain.daycycle.WakeConfidence
 import com.hoodie.app.domain.daystate.DayStateSnapshot
 import com.hoodie.app.domain.detection.ConfidenceScore
 
-enum class HomeNowStatus { CONFIRMED, PROBABLE, UNKNOWN, UNAVAILABLE }
+enum class HomeNowStatus { CONFIRMED, IDENTIFIED, PROBABLE, UNKNOWN, UNAVAILABLE }
 
 /** Presentation of canonical state only; this model never creates or persists events. */
 data class HomeNowSnapshot(

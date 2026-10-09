@@ -111,6 +111,8 @@ class ContextEngineIntegrationTest {
 
         step(MONDAY, 8, 41) { g.engine.onGeofence(workId, GeofenceTransition.ENTER) }
         assertHoodieFollows(UserContextType.WORK) // CT-003
+        assertEquals(ContextSource.GEOFENCE, current()!!.source)
+        assertTrue(runBlocking { g.db.questionDao().since(0).none { it.kind == com.hoodie.app.core.model.QuestionKind.CONFIRM_CONTEXT } })
         assertTrue(g.notifier.events.any { "chegou ao trabalho" in it })
 
         step(MONDAY, 12, 5) { g.engine.onGeofence(workId, GeofenceTransition.EXIT) }
@@ -169,39 +171,28 @@ class ContextEngineIntegrationTest {
     }
 
     @Test
-    fun `CT-TRANSITION-002 WORK para LEISURE apos Nao cria boundary`() {
-        // Uma visita confirmada anterior eleva a entrada de domingo a ASK_USER (50%).
+    fun `contexto de baixa confianca permanece desconhecido sem perguntar nem criar boundary`() {
+        // Uma visita confirmada anterior reduz a confiança da entrada, mas o modo passivo não pergunta.
         runBlocking { val dao = g.db.placeDao(); dao.update(dao.getById(workId)!!.copy(confirmationCount = 1)) }
         g.clock.millis = at(SUNDAY, 9).ms()
         step(SUNDAY, 9, 0) { g.engine.onGeofence(workId, GeofenceTransition.ENTER) }
         val work = current()!!
         assertEquals(UserContextType.UNKNOWN, work.type)
-        val questionId = g.notifier.questions.single().first
-
-        step(SUNDAY, 9, 30) { g.engine.answerYesNo(questionId, yes = false) }
-        val leisure = current()!!
-        assertEquals(UserContextType.LEISURE, leisure.type)
-        assertTrue(leisure.id != work.id)
-        assertEquals(at(SUNDAY, 9, 30).ms(), leisure.startedAt)
-        assertEquals(UserContextType.UNKNOWN, runBlocking { g.contextDao.getById(work.id)!!.type })
-        assertEquals(at(SUNDAY, 9, 30).ms(), runBlocking { g.contextDao.getById(work.id)!!.endedAt })
-        assertHoodieFollows(UserContextType.LEISURE)
-        assertTrue(g.timelineTexts().contains("Passeio (corrigido)"))
-        assertTrue(questionId in g.notifier.cancelled)
+        step(SUNDAY, 9, 30) { g.hoodie.resolve() }
+        assertEquals(work.id, current()!!.id)
+        assertNull(current()!!.endedAt)
+        assertTrue(g.notifier.questions.isEmpty())
+        assertTrue(runBlocking { g.db.questionDao().since(0).none { it.kind == com.hoodie.app.core.model.QuestionKind.CONFIRM_CONTEXT } })
     }
 
     @Test
-    fun `resposta Sim ao candidato desconhecido cria boundary confirmado`() {
+    fun `contexto desconhecido nao cria pergunta de confirmacao automatica`() {
         runBlocking { val dao = g.db.placeDao(); dao.update(dao.getById(workId)!!.copy(confirmationCount = 1)) }
         step(SUNDAY, 9, 0) { g.engine.onGeofence(workId, GeofenceTransition.ENTER) }
         val work = current()!!
-        val questionId = g.notifier.questions.single().first
-        step(SUNDAY, 9, 10) { g.engine.answerYesNo(questionId, yes = true) }
-        val after = current()!!
-        assertTrue(work.id != after.id)
-        assertEquals(UserContextType.WORK, after.type)
-        assertEquals(1f, after.confidence)
-        assertEquals(ContextSource.CONFIRMATION, after.source)
+        assertEquals(UserContextType.UNKNOWN, work.type)
+        assertTrue(g.notifier.questions.isEmpty())
+        assertTrue(runBlocking { g.db.questionDao().since(0).none { it.kind == com.hoodie.app.core.model.QuestionKind.CONFIRM_CONTEXT } })
     }
 
     @Test

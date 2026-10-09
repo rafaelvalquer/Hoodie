@@ -69,12 +69,51 @@ class PixelBuffer(val width: Int, val height: Int) {
     }
 
     fun blit(src: PixelBuffer, dx: Int, dy: Int, flipX: Boolean = false) {
-        for (sy in 0 until src.height) {
-            val ty = dy + sy
-            if (ty < 0 || ty >= height) continue
-            for (sx in 0 until src.width) {
-                val c = src.pixels[sy * src.width + (if (flipX) src.width - 1 - sx else sx)]
-                if (c ushr 24 != 0) set(dx + sx, ty, c)
+        val sourceX0 = maxOf(0, -dx)
+        val sourceY0 = maxOf(0, -dy)
+        val sourceX1 = minOf(src.width, width - dx)
+        val sourceY1 = minOf(src.height, height - dy)
+        if (sourceX0 >= sourceX1 || sourceY0 >= sourceY1) return
+
+        val source = src.pixels
+        val target = pixels
+        for (sy in sourceY0 until sourceY1) {
+            var sourceIndex = sy * src.width + if (flipX) src.width - 1 - sourceX0 else sourceX0
+            val targetIndex = (dy + sy) * width + dx + sourceX0
+            val step = if (flipX) -1 else 1
+            for (sx in sourceX0 until sourceX1) {
+                val color = source[sourceIndex]
+                val alpha = color ushr 24
+                if (alpha == 255) target[targetIndex + sx - sourceX0] = color
+                else if (alpha != 0) {
+                    val destinationIndex = targetIndex + sx - sourceX0
+                    target[destinationIndex] = blend(target[destinationIndex], color, alpha)
+                }
+                sourceIndex += step
+            }
+        }
+    }
+
+    /** Draws only cached opaque spans for an immutable sprite frame. */
+    internal fun blitOpaqueRows(src: PixelBuffer, dx: Int, dy: Int, rowBounds: IntArray) {
+        require(rowBounds.size >= src.height * 2)
+        val source = src.pixels
+        val target = pixels
+        val sourceY0 = maxOf(0, -dy)
+        val sourceY1 = minOf(src.height, height - dy)
+        for (sy in sourceY0 until sourceY1) {
+            val boundsIndex = sy * 2
+            val sourceX0 = maxOf(0, -dx, rowBounds[boundsIndex])
+            val sourceX1 = minOf(src.width, width - dx, rowBounds[boundsIndex + 1] + 1)
+            if (sourceX0 >= sourceX1) continue
+            val sourceRow = sy * src.width
+            val targetIndex = (dy + sy) * width + dx + sourceX0
+            for (sx in sourceX0 until sourceX1) {
+                val color = source[sourceRow + sx]
+                val alpha = color ushr 24
+                val destinationIndex = targetIndex + sx - sourceX0
+                if (alpha == 255) target[destinationIndex] = color
+                else if (alpha != 0) target[destinationIndex] = blend(target[destinationIndex], color, alpha)
             }
         }
     }

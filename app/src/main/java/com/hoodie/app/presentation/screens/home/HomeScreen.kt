@@ -26,6 +26,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
@@ -127,14 +129,12 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             retryLoad = vm::retryLoad,
             savePlaceHere = { vm.savePlaceHere(it) },
             setManual = { vm.setManual(it) },
-            toggleDayOff = { vm.toggleDayOff() },
             answerYesNo = { id, yes -> vm.answerYesNo(id, yes) },
             answerNewPlace = { id, type -> vm.answerNewPlace(id, type) },
             answerTransportMode = { id, mode -> vm.answerTransportMode(id, mode) },
             dismissQuestion = { vm.dismissQuestion(it) },
             answerSavePlace = { id, save -> vm.answerSavePlace(id, save) },
-            confirmContext = vm::confirmContext,
-            correctContext = { type, historical -> vm.correctCurrentContext(type, historical, homeNow?.contextEventId) },
+            correctContext = { type, historical, expectedEventId -> vm.correctCurrentContext(type, historical, expectedEventId) },
         ),
         reactions = reactions,
         snackbar = snackbar,
@@ -147,14 +147,12 @@ internal data class HomeActions(
     val retryLoad: () -> Unit = {},
     val savePlaceHere: (PlaceType) -> Unit = {},
     val setManual: (PlaceType) -> Unit = {},
-    val toggleDayOff: () -> Unit = {},
     val answerYesNo: (Long, Boolean) -> Unit = { _, _ -> },
     val answerNewPlace: (Long, PlaceType) -> Unit = { _, _ -> },
     val answerTransportMode: (Long, com.hoodie.app.core.mobility.MovementMode) -> Unit = { _, _ -> },
     val dismissQuestion: (Long) -> Unit = {},
     val answerSavePlace: (Long, Boolean) -> Unit = { _, _ -> },
-    val confirmContext: (Long) -> Unit = {},
-    val correctContext: (PlaceType, Boolean) -> Unit = { _, _ -> },
+    val correctContext: (PlaceType, Boolean, Long?) -> Unit = { _, _, _ -> },
 )
 
 /** Production UI shared by the connected screen and deterministic visual fixtures. */
@@ -174,6 +172,8 @@ internal fun HomeContent(
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
     var correctionOpen by remember { mutableStateOf(false) }
+    var correctionExpectedEventId by remember { mutableStateOf<Long?>(null) }
+    var correctionSnapshot by remember { mutableStateOf<com.hoodie.app.domain.home.HomeNowSnapshot?>(null) }
     if (state.loading) {
         HomeLoadingSkeleton()
         return
@@ -196,6 +196,17 @@ internal fun HomeContent(
             Spacer(Modifier.width(8.dp))
             IconLabel(PixelIcons.of(state.period), state.period.label, color = periodColor(state.period), style = MaterialTheme.typography.labelLarge, iconSize = 20.dp)
             Spacer(Modifier.weight(1f))
+            if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
+                HomeMoreMenu(onAdjust = {
+                    correctionSnapshot = homeNow ?: state.context?.let { current ->
+                        com.hoodie.app.engine.home.HomeNowAssembler.assemble(
+                            dayState, current, state.contextPlaceName, null, null, state.now, state.locationStatus,
+                        )
+                    }
+                    correctionExpectedEventId = correctionSnapshot?.contextEventId ?: state.context?.id
+                    correctionOpen = true
+                })
+            }
             HeaderIcon(PixelIcons.SPARKLE, HoodieColors.Gold, stringResource(R.string.home_memories)) { onOpen(Routes.MEMORIES) }
             HeaderIcon(PixelIcons.CAT, HoodieColors.Hood, stringResource(R.string.home_profile)) { onOpen(Routes.PROFILE) }
         }
@@ -217,12 +228,12 @@ internal fun HomeContent(
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
             state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp, bottom = 6.dp)) }
-            HoodieSceneView(state.visual, Modifier.fillMaxWidth(), reactions = reactions)
+            HoodieSceneView(state.visual, Modifier.fillMaxWidth().testTag("home_live_scene"), reactions = reactions)
         }
 
         if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
             Column(Modifier.padding(horizontal = 16.dp)) {
-                HomeNowCard(homeNow, state.now, zone, actions.confirmContext, { correctionOpen = true })
+                HomeNowCard(homeNow, state.now, zone)
             }
         }
 
@@ -287,12 +298,8 @@ internal fun HomeContent(
                 }
             }
 
-            PixelButton(stringResource(R.string.ui_home_screen_4), { manualOpen = true }, Modifier.fillMaxWidth(), color = HoodieColors.Gold)
-            if (state.isWorkDay) {
-                PixelButton(
-                    if (state.isDayOff) uiTextContext.getString(R.string.ui_extra_home_screen_8) else uiTextContext.getString(R.string.ui_extra_home_screen_9),
-                    actions.toggleDayOff, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink,
-                )
+            if (!com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
+                PixelButton(stringResource(R.string.ui_home_screen_4), { manualOpen = true }, Modifier.fillMaxWidth(), color = HoodieColors.Gold)
             }
         }
     }
@@ -311,10 +318,37 @@ internal fun HomeContent(
         }
     }
     if (correctionOpen) HomeNowCorrectionSheet(
+        snapshot = correctionSnapshot,
         onDismiss = { correctionOpen = false },
-        onSave = { type, historical -> actions.correctContext(type, historical); correctionOpen = false },
+        onSave = { type, historical -> actions.correctContext(type, historical, correctionExpectedEventId); correctionOpen = false },
         saving = busy,
     )
+}
+
+@Composable
+private fun HomeMoreMenu(onAdjust: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val moreLabel = stringResource(R.string.home_more_menu)
+    Box {
+        Box(
+            Modifier
+                .padding(start = 8.dp)
+                .background(HoodieColors.Panel)
+                .border(2.dp, HoodieColors.Outline)
+                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .clickable(role = Role.Button, onClick = { expanded = true })
+                .semantics { contentDescription = moreLabel }
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center,
+        ) { Text("⋯", style = MaterialTheme.typography.titleLarge) }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.home_adjust_activity)) },
+                onClick = { expanded = false; onAdjust() },
+                modifier = Modifier.testTag("home_adjust_activity"),
+            )
+        }
+    }
 }
 
 /** Opções do seletor "O que estou fazendo?", compartilhando o catálogo de Novo Lugar. */

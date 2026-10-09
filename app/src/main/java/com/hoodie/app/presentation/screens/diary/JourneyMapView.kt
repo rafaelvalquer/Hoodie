@@ -87,6 +87,7 @@ fun JourneyMapView(
     selectedNodeId: String?,
     onNode: (JourneyNode) -> Unit,
     modifier: Modifier = Modifier,
+    preparedCache: JourneyRenderCache? = null,
 ) {
     val data = model.data
     val layout = model.layout
@@ -95,7 +96,7 @@ fun JourneyMapView(
         Spacer(Modifier.height(8.dp))
         val time = rememberDiaryMapClock(activeReplay = replay.state == ReplayState.PLAYING)
         val scene = journeyScene(model, replay, selectedNodeId, zone, time)
-        val cache = remember(layout) { JourneyRenderCache.create(layout) }
+        val cache = remember(layout, preparedCache) { preparedCache?.takeIf { it.matches(layout) } ?: JourneyRenderCache.create(layout) }
         val buffer = remember(layout.width, layout.height) { PixelBuffer(layout.width, layout.height) }
         val bitmap = remember(layout.width, layout.height) { Bitmap.createBitmap(layout.width, layout.height, Bitmap.Config.ARGB_8888) }
         BoxWithConstraints(Modifier.fillMaxWidth()) {

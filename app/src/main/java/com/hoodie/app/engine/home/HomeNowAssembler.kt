@@ -21,6 +21,7 @@ object HomeNowAssembler {
             context == null && locationStatus != LocationStatus.OK -> HomeNowStatus.UNAVAILABLE
             context == null || context.type == UserContextType.UNKNOWN || confidence == null || confidence < .45f -> HomeNowStatus.UNKNOWN
             source in setOf(ContextSource.MANUAL, ContextSource.CONFIRMATION, ContextSource.USER_CORRECTION) -> HomeNowStatus.CONFIRMED
+            confidence >= .90f -> HomeNowStatus.IDENTIFIED
             confidence >= .60f -> HomeNowStatus.PROBABLE
             else -> HomeNowStatus.UNKNOWN
         }

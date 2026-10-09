@@ -2,6 +2,7 @@ package com.hoodie.app.integration
 
 import com.hoodie.app.core.location.LocationPermissionManager
 import com.hoodie.app.core.location.LocationProvider
+import com.hoodie.app.core.model.ContextSource
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.data.repository.DiaryRepository
@@ -23,7 +24,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.After
@@ -79,14 +79,12 @@ class HomeNowIntegrationTest {
             assertEquals(canonical.confidence, homeNow.contextConfidence?.value)
             assertNotNull(homeNow.contextStartedAt)
 
-            vm.onHomeStopped()
-            vm.setManual(PlaceType.RESTAURANT)
+            vm.correctCurrentContext(PlaceType.RESTAURANT, historical = true, expectedEventId = canonical.id)
             val correctedUi = withTimeout(10_000) { vm.state.first { it.context?.type == UserContextType.DINING } }
             assertEquals(UserContextType.DINING, correctedUi.context?.type)
-            assertEquals(null, vm.homeNow.value)
-            vm.onHomeStarted()
             val corrected = withTimeout(10_000) { vm.homeNow.filterNotNull().first { it.context == UserContextType.DINING } }
-            assertNotEquals(canonical.id, corrected.contextEventId)
+            assertEquals(canonical.id, corrected.contextEventId)
+            assertEquals(ContextSource.USER_CORRECTION, g.contextDao.current()!!.source)
             graph.at(MONDAY, 9, 1) // Let the corrected context become a non-zero diary interval.
             val diary = DiaryRepository(g.contextDao, g.db.timelineDao(), g.db.hoodieActivityDao(), g.db.placeDao(), g.clock,
                 mobility = MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())).loadDiary(g.clock.today())

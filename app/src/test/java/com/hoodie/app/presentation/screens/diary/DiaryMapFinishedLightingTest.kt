@@ -35,7 +35,8 @@ class DiaryMapFinishedLightingTest {
 
     @Test
     fun `velocidades dizem minutos por segundo`() {
-        assertEquals(listOf("1 min/s", "5 min/s", "10 min/s"), ReplaySpeed.entries.map { it.label })
+        assertEquals(listOf("5 min/s", "10 min/s"), ReplaySpeed.entries.map { it.label })
+        assertEquals(ReplaySpeed.FAST, ReplayUiState().speed)
         // 1 s real a 5 min/s = 5 minutos do dia.
         assertEquals(5 * 60_000L, advanceReplay(0, 1_000, ReplaySpeed.FAST, Long.MAX_VALUE))
         assertEquals(100L, advanceReplay(0, 1_000, ReplaySpeed.VERY_FAST, 100))

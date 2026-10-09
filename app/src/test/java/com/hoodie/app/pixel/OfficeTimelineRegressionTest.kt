@@ -8,6 +8,7 @@ import com.hoodie.app.pixel.npc.office.OfficeExecutiveTimeline
 import com.hoodie.app.pixel.scene.OfficeScene
 import com.hoodie.app.pixel.scene.SceneEnv
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -45,6 +46,18 @@ class OfficeTimelineRegressionTest {
         assertTrue(kotlin.math.abs(beforeDoor.floorY - atDoor.floorY) <= 1)
         assertEquals(door.x, atDoor.x)
         assertTrue(brain.movementAt(OfficeExecutiveTimeline.EXIT_END_MS + 1).x < 0)
+    }
+
+    @Test fun bulldogNeverUsesASeatedPoseWhileVisibleInTheOffice() {
+        val brain = OfficeScene().ambientNpcs(env()).single { it.definition.id == "bulldog_exec" }.officeBrain!!
+
+        for (time in 0L until 66_000L) {
+            val movement = brain.movementAt(time)
+            if (movement.x >= 0) {
+                assertFalse("bulldog seated pose at $time ms: ${movement.animation}", movement.animation.seated)
+                assertFalse("bulldog seated state at $time ms", movement.seated)
+            }
+        }
     }
 
     @Test fun frameTimelineIsIndependentOfQueryOrderForMultipleSeeds() {

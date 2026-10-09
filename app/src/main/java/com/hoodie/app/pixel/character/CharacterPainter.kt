@@ -16,6 +16,15 @@ import com.hoodie.app.pixel.sprite.Legs
 import com.hoodie.app.pixel.sprite.Point
 import com.hoodie.app.pixel.sprite.Posture
 import kotlin.math.roundToInt
+import java.util.LinkedHashMap
+
+internal data class CharacterFrameCacheStats(
+    val hits: Long,
+    val misses: Long,
+    val evictions: Long,
+    val entries: Int,
+    val capacity: Int,
+)
 
 /**
  * Painter V3 dos personagens. Ordem de pintura (frente):
@@ -30,6 +39,25 @@ object CharacterPainter {
     const val HEIGHT = CharacterCanvas.HEIGHT
     val FEET = CharacterCanvas.FEET
 
+    private class PaintKey(
+        val style: CharacterStyle,
+        val pose: CharacterPose,
+        val motion: CharacterRenderMotion,
+    ) {
+        // Registered styles are immutable singleton values in the runtime path. Identity avoids
+        // recursively hashing species/outfit palettes on every frame while remaining collision-safe.
+        override fun equals(other: Any?) = other is PaintKey && style === other.style && pose == other.pose && motion == other.motion
+        override fun hashCode(): Int = (31 * System.identityHashCode(style) + pose.hashCode()) * 31 + motion.hashCode()
+    }
+    private class CachedFrames(val canonical: CharacterFrame) {
+        var sideFacingLeft: CharacterFrame? = null
+    }
+    private val frameCache = LinkedHashMap<PaintKey, CachedFrames>(128, .75f, true)
+    private var cacheHits = 0L
+    private var cacheMisses = 0L
+    private var cacheEvictions = 0L
+    private const val FRAME_CACHE_LIMIT = 96
+
     fun render(request: CharacterRenderRequest): CharacterFrame = paint(request.style, request.pose, request.motion)
 
     /** O Hoodie continua chamando exatamente o renderer legado, sem recompor nenhum pixel. */
@@ -42,9 +70,53 @@ object CharacterPainter {
             val legacy = HoodiePainter.painted(pose)
             return CharacterFrame(legacy.image, CharacterAnchors.fromHoodie(legacy.anchors, pose.facing))
         }
-        val frame = paintV3(style, pose, motion)
-        // A pose lateral segue a mesma orientação canônica do Hoodie: perfil voltado à esquerda.
-        return if (pose.facing == Facing.SIDE) frame.mirrored() else frame
+        val cached = cachedFrames(style, pose, motion)
+        // The side profile is authored facing right and traditionally returned facing left.
+        return if (pose.facing == Facing.SIDE) sideFacingLeft(cached) else cached.canonical
+    }
+
+    /** NPC path can request either side orientation without allocating a mirror per frame. */
+    fun paintForNpc(
+        style: CharacterStyle,
+        pose: CharacterPose,
+        motion: CharacterRenderMotion,
+        facingRight: Boolean,
+    ): CharacterFrame {
+        if (style.id == CharacterStyle.HOODIE.id) {
+            val legacy = HoodiePainter.painted(pose)
+            val frame = CharacterFrame(legacy.image, CharacterAnchors.fromHoodie(legacy.anchors, pose.facing))
+            return if (pose.facing == Facing.SIDE && facingRight) frame.mirrored() else frame
+        }
+        val cached = cachedFrames(style, pose, motion)
+        return if (pose.facing == Facing.SIDE && !facingRight) sideFacingLeft(cached) else cached.canonical
+    }
+
+    private fun cachedFrames(style: CharacterStyle, pose: CharacterPose, motion: CharacterRenderMotion): CachedFrames {
+        val key = PaintKey(style, pose, motion)
+        val cached = synchronized(frameCache) {
+            frameCache[key].also { if (it == null) cacheMisses++ else cacheHits++ }
+        }
+        return cached ?: CachedFrames(paintV3(style, pose, motion)).also { painted ->
+            synchronized(frameCache) {
+                frameCache[key] = painted
+                if (frameCache.size > FRAME_CACHE_LIMIT) {
+                    val eldest = frameCache.entries.iterator()
+                    if (eldest.hasNext()) { eldest.next(); eldest.remove(); cacheEvictions++ }
+                }
+            }
+        }
+    }
+
+    private fun sideFacingLeft(cached: CachedFrames): CharacterFrame = synchronized(cached) {
+        cached.sideFacingLeft ?: cached.canonical.mirrored().also { cached.sideFacingLeft = it }
+    }
+
+    internal fun cacheStats(): CharacterFrameCacheStats = synchronized(frameCache) {
+        CharacterFrameCacheStats(cacheHits, cacheMisses, cacheEvictions, frameCache.size, FRAME_CACHE_LIMIT)
+    }
+
+    internal fun clearFrameCacheForTest() = synchronized(frameCache) {
+        frameCache.clear(); cacheHits = 0; cacheMisses = 0; cacheEvictions = 0
     }
 
     private fun paintV3(style: CharacterStyle, pose: CharacterPose, motion: CharacterRenderMotion): CharacterFrame {

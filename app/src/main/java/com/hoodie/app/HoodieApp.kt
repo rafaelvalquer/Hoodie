@@ -30,6 +30,7 @@ class HoodieApp : Application(), Configuration.Provider {
     @Inject lateinit var mobilityRegistration: com.hoodie.app.core.mobility.MobilityRegistration
     @Inject lateinit var databaseGate: com.hoodie.app.core.database.DatabaseGate
     @Inject lateinit var dayStateCoordinator: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>
+    @Inject lateinit var contextEngine: dagger.Lazy<com.hoodie.app.engine.context.ContextEngine>
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -42,8 +43,11 @@ class HoodieApp : Application(), Configuration.Provider {
         // Activity Recognition: registro idempotente (some em reboot/atualização/limpeza do Play Services).
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
             runCatching { mobilityRegistration.sync() }
-            if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE && databaseGate.isReady()) {
-                dayStateCoordinator.get().start(this)
+            if (databaseGate.isReady()) {
+                if (com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) {
+                    runCatching { contextEngine.get().dismissPendingContextConfirmations() }
+                }
+                if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStateCoordinator.get().start(this)
             }
         }
         configureMap()

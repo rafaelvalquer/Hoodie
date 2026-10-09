@@ -12,6 +12,8 @@ import com.hoodie.app.domain.diary.usecase.LoadDiaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +31,7 @@ class DiaryViewModel @Inject constructor(
     private val settings: com.hoodie.app.core.datastore.SettingsRepository,
     private val database: dagger.Lazy<com.hoodie.app.core.database.HoodieDatabase>? = null,
     private val corrections: dagger.Lazy<com.hoodie.app.engine.correction.DiaryCorrectionService>? = null,
+    private val performance: com.hoodie.app.engine.performance.DiaryPerformanceMonitor? = null,
 ) : ViewModel() {
     private val _editState = MutableStateFlow<DiaryEditState?>(null)
     val editState = _editState.asStateFlow()
@@ -72,8 +75,11 @@ class DiaryViewModel @Inject constructor(
             try {
                 withContext(Dispatchers.IO) { requireNotNull(corrections?.get()).save(request) }
                 _editState.value = null
-                dayCache.clear()
-                load(_state.value.selectedDate)
+                val date = _state.value.selectedDate
+                dayCache.remove(date)
+                dirtyDates += date
+                if (database != null) queueInvalidation(setOf("diary_corrections"))
+                else beginLoad(date, force = true, preserveCurrent = true, cancelPrevious = true)
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) { _editState.value = before.copy(error = failure.message ?: "Não foi possível salvar a correção.") }
         }
@@ -92,9 +98,18 @@ class DiaryViewModel @Inject constructor(
 
     private var replayJob: Job? = null
     private var loadJob: Job? = null
+    private var visualJob: Job? = null
+    private var invalidationJob: Job? = null
+    private var invalidationPending = false
+    private val pendingInvalidationTables = mutableSetOf<String>()
+    private val loadRequestGate = DiaryLoadRequestGate(clock.today())
     // Cache limitado à sessão da tela. Hoje permanece atualizável; dias passados
     // são reutilizados ao alternar datas sem reconstruir mapa e replay.
     private val dayCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.domain.diary.model.DailyDiary>()
+    private val preparedJourneyCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.engine.diary.PreparedJourney>()
+    private val dayClockCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.domain.diary.clock.DayClockData>()
+    private val journeyDataCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.domain.diary.model.JourneyMapData>()
+    private val dirtyDates = mutableSetOf<java.time.LocalDate>()
 
     init {
         if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS && database != null) viewModelScope.launch {
@@ -102,12 +117,9 @@ class DiaryViewModel @Inject constructor(
                 "context_events", "mobility_sessions", "mobility_segments", "diary_corrections", "places", "hoodie_activities",
                 "daily_device_usage", "daily_app_usage", "daily_context_app_usage", "daily_screen_hourly", "daily_context_usage",
                 "daily_phone_timeline", "learned_routine_slots", emitInitialState = false,
-            ).collect {
-                dayCache.clear()
-                load(_state.value.selectedDate)
-            }
+            ).collect(::queueInvalidation)
         }
-        load(_state.value.selectedDate)
+        beginLoad(_state.value.selectedDate, force = false, preserveCurrent = false, cancelPrevious = false)
         viewModelScope.launch {
             settings.settings.collect { s ->
                 val mode = com.hoodie.app.domain.diary.journey.DiaryMapMode.parse(s.diaryMapMode)
@@ -127,16 +139,16 @@ class DiaryViewModel @Inject constructor(
     }
 
     fun selectDate(date: java.time.LocalDate) {
-        if (date.isAfter(clock.today())) return
+        if (date.isAfter(clock.today()) || date == _state.value.selectedDate) return
         stopReplay()
-        _state.value = _state.value.copy(selectedDate = date, diary = null, isLoading = true, error = null, replay = ReplayUiState(), manualChapter = null, dayClock = null, clockSelectedId = null)
-        load(date)
+        beginLoad(date, force = date in dirtyDates, preserveCurrent = false, cancelPrevious = true)
     }
 
     fun retry() {
-        _state.value = _state.value.copy(isLoading = true, error = null)
-        dayCache.remove(_state.value.selectedDate)
-        load(_state.value.selectedDate)
+        val date = _state.value.selectedDate
+        dayCache.remove(date)
+        dirtyDates += date
+        beginLoad(date, force = true, preserveCurrent = false, cancelPrevious = true)
     }
 
     fun play() {
@@ -209,35 +221,289 @@ class DiaryViewModel @Inject constructor(
         val s = _state.value
         val diary = s.diary ?: return
         if (s.selectedDate != clock.today()) return
+        if (!com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2) return
+        val key = s.loadKey
         viewModelScope.launch {
-            val data = withContext(Dispatchers.Default) { assembleClock(diary, s.selectedDate) }
-            if (_state.value.diary === diary) _state.value = _state.value.copy(dayClock = data)
+            val journey = journeyDataCache[s.selectedDate] ?: return@launch
+            val data = withContext(Dispatchers.Default) { assembleClock(diary, s.selectedDate, journey) }
+            if (isActive(key) && _state.value.diary === diary) {
+                _state.value = _state.value.copy(dayClock = data, clockState = data?.let { SectionState.Ready(it) } ?: SectionState.Empty)
+            }
         }
     }
 
-    private fun assembleClock(diary: com.hoodie.app.domain.diary.model.DailyDiary, date: java.time.LocalDate) =
-        if (com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2) com.hoodie.app.engine.diary.DayClockAssembler.build(diary, date, zone, clock.nowMillis()) else null
+    private fun assembleClock(
+        diary: com.hoodie.app.domain.diary.model.DailyDiary,
+        date: java.time.LocalDate,
+        journey: com.hoodie.app.domain.diary.model.JourneyMapData,
+    ) = if (com.hoodie.app.core.config.HoodieConfig.DIARY_DAY_CLOCK_V2) {
+        com.hoodie.app.engine.diary.DayClockAssembler.build(diary, date, zone, clock.nowMillis(), journey)
+    } else null
 
     fun setSpeed(speed: ReplaySpeed) { _state.value = _state.value.copy(replay = _state.value.replay.copy(speed = speed)) }
     private fun stopReplay() { replayJob?.cancel(); replayJob = null }
 
-    private fun load(date: java.time.LocalDate) {
-        loadJob?.cancel()
+    private fun beginLoad(date: java.time.LocalDate, force: Boolean, preserveCurrent: Boolean, cancelPrevious: Boolean) {
+        val previous = _state.value
+        val sameDate = previous.selectedDate == date
+        val key = loadRequestGate.begin(date)
+        performance?.record(com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_LOAD_REQUESTED, date, key.requestId)
+        if (cancelPrevious) {
+            loadJob?.cancel()
+            visualJob?.cancel()
+        }
+
+        val cached = dayCache[date]?.takeIf {
+            date.isBefore(clock.today()) && !force && date !in dirtyDates
+        }
+        if (cached != null) {
+            dirtyDates.remove(date)
+            val prepared = preparedJourneyCache[date]
+            val dayClock = dayClockCache[date]
+            _state.value = previous.copy(
+                selectedDate = date,
+                diary = cached,
+                isLoading = false,
+                error = null,
+                replay = if (sameDate) previous.replay else ReplayUiState(),
+                manualChapter = if (sameDate) previous.manualChapter else null,
+                dayClock = dayClock,
+                clockSelectedId = if (sameDate) previous.clockSelectedId else null,
+                loadKey = key,
+                summaryState = summaryState(cached),
+                journeyState = prepared?.let { SectionState.Ready(it) } ?: SectionState.Loading,
+                clockState = dayClock?.let { SectionState.Ready(it) } ?: SectionState.Loading,
+                dayReport = if (sameDate) previous.dayReport else null,
+                reportState = if (sameDate) previous.reportState else SectionState.Loading,
+                dayReportError = false,
+            )
+            if (prepared == null || dayClock == null) prepareVisuals(key, cached)
+            return
+        }
+
+        val retainedDiary = previous.diary?.takeIf { sameDate && preserveCurrent }
+        _state.value = previous.copy(
+            selectedDate = date,
+            diary = retainedDiary,
+            isLoading = true,
+            error = null,
+            replay = if (sameDate && preserveCurrent) previous.replay else ReplayUiState(),
+            manualChapter = if (sameDate && preserveCurrent) previous.manualChapter else null,
+            dayClock = if (sameDate && preserveCurrent) previous.dayClock else null,
+            clockSelectedId = if (sameDate && preserveCurrent) previous.clockSelectedId else null,
+            loadKey = key,
+            summaryState = retainedDiary?.let(::summaryState) ?: SectionState.Loading,
+            reportState = SectionState.Loading,
+            journeyState = if (sameDate && preserveCurrent) previous.journeyState else SectionState.Loading,
+            clockState = if (sameDate && preserveCurrent) previous.clockState else SectionState.Loading,
+            dayReport = null,
+            dayReportError = false,
+        )
         loadJob = viewModelScope.launch {
             try {
-                val diary = dayCache[date]?.takeIf { date.isBefore(clock.today()) } ?: loadDiary(date)
+                val dbStarted = android.os.SystemClock.elapsedRealtime()
+                performance?.record(com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_DB_LOAD_STARTED, date, key.requestId)
+                val core = loadDiary.loadCore(date)
+                performance?.record(
+                    com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_DB_LOAD_FINISHED,
+                    date,
+                    key.requestId,
+                    android.os.SystemClock.elapsedRealtime() - dbStarted,
+                )
+                if (!isActive(key)) return@launch
+                performance?.record(com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_CORE_READY, date, key.requestId)
+                val coreDiary = core.diary
+                if (com.hoodie.app.core.config.HoodieConfig.DIARY_PROGRESSIVE_LOADING) {
+                    _state.value = _state.value.copy(
+                        diary = coreDiary,
+                        summaryState = summaryState(coreDiary),
+                        journeyState = SectionState.Loading,
+                        clockState = SectionState.Loading,
+                        dayClock = null,
+                    )
+                }
+
+                val diary = loadDiary.buildFullDiary(core)
+                if (!isActive(key)) return@launch
                 if (date.isBefore(clock.today())) {
                     dayCache[date] = diary
-                    if (dayCache.size > 7) dayCache.remove(dayCache.keys.first())
+                    trimCache()
                 }
-                val dayClock = withContext(Dispatchers.Default) { assembleClock(diary, date) }
-                if (_state.value.selectedDate == date) _state.value = _state.value.copy(diary = diary, isLoading = false, error = null, replay = ReplayUiState(), dayClock = dayClock)
+                preparedJourneyCache.remove(date)
+                dayClockCache.remove(date)
+                journeyDataCache.remove(date)
+                dirtyDates.remove(date)
+                _state.value = _state.value.copy(
+                    diary = diary,
+                    summaryState = summaryState(diary),
+                    isLoading = false,
+                    error = null,
+                    replay = ReplayUiState(),
+                    journeyState = SectionState.Loading,
+                    clockState = SectionState.Loading,
+                )
+                prepareVisuals(key, diary)
             } catch (cancelled: CancellationException) {
+                performance?.record(com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_LOAD_CANCELLED, date, key.requestId)
                 throw cancelled
             } catch (error: Exception) {
                 Log.e("DiaryViewModel", "Failed to load diary", error)
-                if (_state.value.selectedDate == date) _state.value = _state.value.copy(isLoading = false, error = DatabaseError.ReadFailed)
+                performance?.record(com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_LOAD_FAILED, date, key.requestId)
+                if (isActive(key)) {
+                    val current = _state.value
+                    _state.value = current.copy(
+                        isLoading = false,
+                        error = DatabaseError.ReadFailed,
+                        summaryState = if (current.diary == null) SectionState.Failed(error.message) else current.summaryState,
+                        journeyState = if (current.diary == null) SectionState.Failed(error.message) else current.journeyState,
+                        clockState = if (current.diary == null) SectionState.Failed(error.message) else current.clockState,
+                    )
+                }
+            } finally {
+                if (isActive(key) && invalidationPending) {
+                    invalidationPending = false
+                    val affected = _state.value.selectedDate
+                    viewModelScope.launch {
+                        delay(150)
+                        if (_state.value.selectedDate == affected) {
+                            dirtyDates += affected
+                            dayCache.remove(affected)
+                            preparedJourneyCache.remove(affected)
+                            dayClockCache.remove(affected)
+                            journeyDataCache.remove(affected)
+                            beginLoad(affected, force = true, preserveCurrent = true, cancelPrevious = false)
+                        }
+                    }
+                }
             }
+        }
+    }
+
+    private fun prepareVisuals(key: DiaryLoadKey, diary: com.hoodie.app.domain.diary.model.DailyDiary) {
+        visualJob?.cancel()
+        visualJob = viewModelScope.launch {
+            try {
+                val mapData = withContext(Dispatchers.Default) {
+                    com.hoodie.app.engine.diary.JourneyMapAssembler.build(diary, clock.nowMillis())
+                }
+                if (!isActive(key) || _state.value.diary !== diary) return@launch
+                journeyDataCache[key.date] = mapData
+                supervisorScope {
+                    val journeyStarted = android.os.SystemClock.elapsedRealtime()
+                    val clockStarted = android.os.SystemClock.elapsedRealtime()
+                    val journeyDeferred = async(Dispatchers.Default) {
+                        com.hoodie.app.engine.diary.PreparedJourneyBuilder.build(mapData, zone, diary.visits)
+                    }
+                    val clockDeferred = async(Dispatchers.Default) {
+                        assembleClock(diary, key.date, mapData)
+                    }
+                    launch {
+                        try {
+                            val prepared = journeyDeferred.await()
+                            if (isActive(key) && _state.value.diary === diary) {
+                                performance?.record(
+                                    com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_JOURNEY_READY,
+                                    key.date,
+                                    key.requestId,
+                                    android.os.SystemClock.elapsedRealtime() - journeyStarted,
+                                    prepared.data.nodes.size,
+                                )
+                                preparedJourneyCache[key.date] = prepared
+                                _state.value = _state.value.copy(journeyState = SectionState.Ready(prepared))
+                            }
+                        } catch (cancelled: CancellationException) { throw cancelled }
+                        catch (error: Exception) {
+                            Log.e("DiaryViewModel", "Failed to prepare journey", error)
+                            if (isActive(key)) _state.value = _state.value.copy(journeyState = SectionState.Failed(error.message))
+                        }
+                    }
+                    launch {
+                        try {
+                            val data = clockDeferred.await()
+                            if (isActive(key) && _state.value.diary === diary) {
+                                performance?.record(
+                                    com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_CLOCK_READY,
+                                    key.date,
+                                    key.requestId,
+                                    android.os.SystemClock.elapsedRealtime() - clockStarted,
+                                    data?.segments?.size ?: 0,
+                                )
+                                if (data != null) dayClockCache[key.date] = data
+                                _state.value = _state.value.copy(
+                                    dayClock = data,
+                                    clockState = data?.let { SectionState.Ready(it) } ?: SectionState.Empty,
+                                )
+                            }
+                        } catch (cancelled: CancellationException) { throw cancelled }
+                        catch (error: Exception) {
+                            Log.e("DiaryViewModel", "Failed to prepare day clock", error)
+                            if (isActive(key)) _state.value = _state.value.copy(clockState = SectionState.Failed(error.message))
+                        }
+                    }
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Log.e("DiaryViewModel", "Failed to assemble journey data", error)
+                if (isActive(key)) {
+                    _state.value = _state.value.copy(
+                        journeyState = SectionState.Failed(error.message),
+                        clockState = SectionState.Failed(error.message),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun summaryState(diary: com.hoodie.app.domain.diary.model.DailyDiary): SectionState<com.hoodie.app.domain.diary.model.DailyDiary> =
+        if (diary.summary.totalMs == 0L && diary.timeline.isEmpty()) SectionState.Empty else SectionState.Ready(diary)
+
+    private fun isActive(key: DiaryLoadKey): Boolean = loadRequestGate.isCurrent(key) && _state.value.loadKey == key && _state.value.selectedDate == key.date
+
+    private fun trimCache() {
+        while (dayCache.size > 7) {
+            val oldest = dayCache.keys.first()
+            dayCache.remove(oldest)
+            preparedJourneyCache.remove(oldest)
+            dayClockCache.remove(oldest)
+            journeyDataCache.remove(oldest)
+            dirtyDates.remove(oldest)
+        }
+    }
+
+    private fun queueInvalidation(tables: Set<String>) {
+        pendingInvalidationTables += tables
+        if (invalidationJob?.isActive == true) return
+        invalidationJob = viewModelScope.launch {
+            delay(250)
+            val changed = pendingInvalidationTables.toSet()
+            pendingInvalidationTables.clear()
+            val relevant = changed - "learned_routine_slots"
+            if (relevant.isEmpty()) return@launch
+
+            val today = clock.today()
+            val digitalOnly = relevant.all { it.startsWith("daily_") || it == "phone_app_sessions" }
+            val possiblyAffected = if (digitalOnly) setOf(today, today.minusDays(1)) else dayCache.keys.toSet() + _state.value.selectedDate
+            dirtyDates += possiblyAffected
+
+            val selected = _state.value.selectedDate
+            if (selected !in possiblyAffected) return@launch
+            performance?.record(
+                com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_DATA_INVALIDATED,
+                selected,
+                _state.value.loadKey.requestId,
+                count = relevant.size,
+            )
+            if (loadJob?.isActive == true) {
+                invalidationPending = true
+                return@launch
+            }
+            dayCache.remove(selected)
+            preparedJourneyCache.remove(selected)
+            dayClockCache.remove(selected)
+            journeyDataCache.remove(selected)
+            visualJob?.cancel()
+            beginLoad(selected, force = true, preserveCurrent = true, cancelPrevious = false)
         }
     }
 

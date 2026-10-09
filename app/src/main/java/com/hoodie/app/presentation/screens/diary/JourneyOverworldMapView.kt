@@ -68,10 +68,13 @@ fun JourneyOverworldMapView(
     modifier: Modifier = Modifier,
     framed: Boolean = false,
     animate: Boolean = true,
+    preparedCache: OverworldRenderCache? = null,
 ) {
     val time = if (animate) rememberDiaryMapClock(activeReplay = replay.state == ReplayState.PLAYING) else 0L
     val scene = overworldScene(model, layout, replay, selectedStopId, zone, time, framed)
-    val cache = remember(layout, model.seed) { OverworldRenderCache.create(scene) }
+    val cache = remember(layout, model.seed, preparedCache) {
+        preparedCache?.takeIf { it.matches(scene) } ?: OverworldRenderCache.create(scene)
+    }
     val buffer = remember(layout.width, layout.height) { PixelBuffer(layout.width, layout.height) }
     val bitmap = remember(layout.width, layout.height) { Bitmap.createBitmap(layout.width, layout.height, Bitmap.Config.ARGB_8888) }
     BoxWithConstraints(modifier.fillMaxWidth().testTag("journey_overworld")) {

@@ -6,6 +6,6 @@ import com.hoodie.app.domain.dayreport.DailyReport
 import java.time.ZoneId
 
 @Composable
-internal fun DayReportSection(report: DailyReport, zone: ZoneId, onOpenJourney: () -> Unit, modifier: Modifier = Modifier) {
-    DayReportCard(report, zone, onOpenJourney, modifier)
+internal fun DayReportSection(report: DailyReport, zone: ZoneId, modifier: Modifier = Modifier) {
+    DayReportCard(report, zone, modifier)
 }

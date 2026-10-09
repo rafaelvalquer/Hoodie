@@ -43,7 +43,7 @@ data class RoutineEntity(
     val updatedAt: Long,
 )
 
-/** "Hoje não vou trabalhar": feriado, folga, férias. */
+/** Exceção de rotina prevista para uma data; não modifica os eventos observados. */
 @Entity(tableName = "day_exceptions")
 data class DayExceptionEntity(
     @PrimaryKey val epochDay: Long,

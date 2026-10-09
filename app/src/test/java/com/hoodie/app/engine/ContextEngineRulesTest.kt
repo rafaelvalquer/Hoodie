@@ -1,5 +1,6 @@
 package com.hoodie.app.engine
 
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.model.QuestionKind
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.time.MINUTE_MS
@@ -93,13 +94,19 @@ class ContextEngineRulesTest {
     }
 
     @Test
-    fun `cooldown limita perguntas por dia e por contexto`() {
+    fun `cooldown limita perguntas de transporte e confirmacao de contexto fica passiva`() {
         val now = at(MONDAY, 15).ms()
-        val one = listOf(AskedQuestion(QuestionKind.CONFIRM_CONTEXT, UserContextType.LUNCH, now - 30 * MINUTE_MS))
-        assertFalse(ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.CONFIRM_CONTEXT, UserContextType.LUNCH, one))
-        assertTrue(ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.CONFIRM_CONTEXT, UserContextType.WORK, one))
-        val many = (1..4).map { AskedQuestion(QuestionKind.CONFIRM_CONTEXT, UserContextType.GYM, now - it * 2 * 60 * MINUTE_MS) }
-        assertFalse(ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.CONFIRM_CONTEXT, UserContextType.WORK, many))
+        val one = listOf(AskedQuestion(QuestionKind.SELECT_TRANSPORT_MODE, UserContextType.WORK, now - 30 * MINUTE_MS))
+        assertFalse(ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.SELECT_TRANSPORT_MODE, UserContextType.WORK, one))
+        assertTrue(ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.SELECT_TRANSPORT_MODE, UserContextType.LUNCH, one))
+        assertFalse(ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.CONFIRM_CONTEXT, UserContextType.WORK, emptyList()))
+        val retiredContextQuestions = (1..HoodieConfig.MAX_QUESTIONS_PER_DAY).map {
+            AskedQuestion(QuestionKind.CONFIRM_CONTEXT, UserContextType.WORK, now - it * MINUTE_MS)
+        }
+        assertTrue("retired context confirmations do not consume the transport question budget",
+            ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.SELECT_TRANSPORT_MODE, null, retiredContextQuestions))
+        val many = (1..4).map { AskedQuestion(QuestionKind.SELECT_TRANSPORT_MODE, UserContextType.GYM, now - it * 2 * 60 * MINUTE_MS) }
+        assertFalse(ConfirmationPolicy.canAsk(now, ZONE, QuestionKind.SELECT_TRANSPORT_MODE, UserContextType.WORK, many))
     }
 
     @Test

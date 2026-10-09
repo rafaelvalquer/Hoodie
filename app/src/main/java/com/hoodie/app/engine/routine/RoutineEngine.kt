@@ -17,7 +17,7 @@ data class UpcomingEvent(val emoji: String, val label: String, val minuteOfDay: 
 
 /**
  * Regras determinísticas sobre a rotina configurada. Sem estado: tudo é função do
- * horário, da rotina e das exceções do dia ("Hoje não vou trabalhar").
+ * horário, da rotina e das exceções de trabalho configuradas para o dia.
  */
 object RoutineEngine {
 

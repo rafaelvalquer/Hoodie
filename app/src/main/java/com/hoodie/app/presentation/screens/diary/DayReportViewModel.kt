@@ -24,7 +24,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-data class DayReportUiState(val report: DailyReport? = null, val loading: Boolean = false, val error: Boolean = false)
+data class DayReportUiState(
+    val report: DailyReport? = null,
+    val loading: Boolean = false,
+    val error: Boolean = false,
+    val date: java.time.LocalDate? = null,
+    val loadKey: DiaryLoadKey? = null,
+)
 
 /** Own report lifecycle; consumes DiaryViewModel's canonical diary without loading it twice. */
 @HiltViewModel
@@ -33,28 +39,38 @@ class DayReportViewModel @Inject constructor(
     private val intelligence: IntelligenceDao,
     private val database: HoodieDatabase,
     private val getReport: GetDayReportUseCase,
+    private val performance: com.hoodie.app.engine.performance.DiaryPerformanceMonitor? = null,
 ) : ViewModel() {
     private val _state = MutableStateFlow(DayReportUiState())
     val state: StateFlow<DayReportUiState> = _state.asStateFlow()
     private var job: Job? = null
     private var source: DailyDiary? = null
+    private var sourceKey: DiaryLoadKey? = null
     private var today = clock.today()
 
     init {
         viewModelScope.launch {
             database.invalidationTracker.createFlow("learned_routine_slots", emitInitialState = false).collect {
-                source?.let { load(it, today, force = true) }
+                source?.let { load(it, today, force = true, requestKey = sourceKey) }
             }
         }
     }
 
-    fun load(diary: DailyDiary, currentDate: java.time.LocalDate = clock.today(), force: Boolean = false) {
-        if (!force && source === diary && today == currentDate && (_state.value.loading || _state.value.report?.date == diary.summary.date)) return
+    fun load(
+        diary: DailyDiary,
+        currentDate: java.time.LocalDate = clock.today(),
+        force: Boolean = false,
+        requestKey: DiaryLoadKey? = null,
+    ) {
+        if (!force && source === diary && sourceKey == requestKey && today == currentDate &&
+            (_state.value.loading || _state.value.report?.date == diary.summary.date)) return
         source = diary
+        sourceKey = requestKey
         today = currentDate
         job?.cancel()
-        _state.value = DayReportUiState(loading = true)
+        _state.value = DayReportUiState(loading = true, date = diary.summary.date, loadKey = requestKey)
         job = viewModelScope.launch {
+            val started = android.os.SystemClock.elapsedRealtime()
             try {
                 val slots = withContext(Dispatchers.IO) {
                     intelligence.routineSlots().mapNotNull { row -> runCatching {
@@ -63,11 +79,19 @@ class DayReportViewModel @Inject constructor(
                     }.getOrNull() }
                 }
                 val report = withContext(Dispatchers.Default) { getReport(diary, slots, currentDate, clock.nowMillis(), clock.zone()) }
-                if (source === diary) _state.value = DayReportUiState(report = report)
+                if (source === diary && sourceKey == requestKey) {
+                    performance?.record(
+                        com.hoodie.app.engine.performance.DiaryPerformanceMonitor.Event.DIARY_REPORT_READY,
+                        diary.summary.date,
+                        requestKey?.requestId ?: 0,
+                        android.os.SystemClock.elapsedRealtime() - started,
+                    )
+                    _state.value = DayReportUiState(report = report, date = diary.summary.date, loadKey = requestKey)
+                }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) {
                 Log.e("DayReportViewModel", "Failed to assemble report", error)
-                if (source === diary) _state.value = DayReportUiState(error = true)
+                if (source === diary && sourceKey == requestKey) _state.value = DayReportUiState(error = true, date = diary.summary.date, loadKey = requestKey)
             }
         }
     }
@@ -75,6 +99,7 @@ class DayReportViewModel @Inject constructor(
     fun clear() {
         job?.cancel()
         source = null
+        sourceKey = null
         _state.value = DayReportUiState()
     }
 }

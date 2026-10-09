@@ -4,7 +4,6 @@ import com.hoodie.app.pixel.character.CharacterAnchors
 import com.hoodie.app.pixel.character.CharacterFrame
 import com.hoodie.app.pixel.character.CharacterPainter
 import com.hoodie.app.pixel.character.CharacterStyle
-import com.hoodie.app.pixel.character.mirrored
 import com.hoodie.app.pixel.renderer.PixelBuffer
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.sprite.Facing
@@ -16,6 +15,7 @@ import kotlin.math.roundToInt
 import kotlin.math.PI
 import kotlin.math.sin
 import java.util.concurrent.ConcurrentHashMap
+import java.util.LinkedHashMap
 import com.hoodie.app.pixel.npc.office.OfficeAmbientBrain
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcBrain
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcDirector
@@ -23,6 +23,8 @@ import com.hoodie.app.pixel.npc.shopping.ShoppingNpcBrain
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcDirector
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.scene.SceneEnv
+import com.hoodie.app.BuildConfig
+import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
 
 /** Definição de cena seleciona identidade registrada, comportamento e fala — nunca anatomia. */
 data class AmbientNpcDefinition(
@@ -206,14 +208,37 @@ object NpcRenderer {
     private const val SHADOW = 0xFF1A1C33.toInt()
     private data class TurnWidthRatios(val intoFront: Float, val outOfFront: Float)
     private val turnSideFrontRatios = ConcurrentHashMap<String, TurnWidthRatios>()
+    private data class ScaledFrameKey(val frame: CharacterFrame, val scale: Float)
+    private val scaledFrameCache = LinkedHashMap<ScaledFrameKey, CharacterFrame>(128, .75f, true)
+    private const val SCALED_FRAME_CACHE_LIMIT = 96
 
-    fun draw(b: PixelBuffer, slot: AmbientNpcSlot, timeMs: Long, movementOverride: NpcMovement? = null) {
+    fun draw(
+        b: PixelBuffer,
+        slot: AmbientNpcSlot,
+        timeMs: Long,
+        movementOverride: NpcMovement? = null,
+        officeFrameStateOverride: com.hoodie.app.pixel.npc.office.OfficeNpcFrameState? = null,
+    ) {
+        val measureOffice = BuildConfig.DEBUG && slot.officeBrain != null
+        var stageStarted = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
+        var poseNanos = 0L
+        var paintNanos = 0L
+        var turnNanos = 0L
+        var scaleNanos = 0L
+        var compositeNanos = 0L
+        var speechNanos = 0L
         val restaurantBrain = slot.restaurantBrain
         val restaurantState = restaurantBrain?.stateAt(timeMs)
-        val officeFrameState = slot.officeBrain?.frameStateAt(timeMs)
+        val officeFrameState = officeFrameStateOverride ?: slot.officeBrain?.frameStateAt(timeMs)
         val movement = movementOverride ?: if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.movementAt(timeMs, restaurantState)
         } else officeFrameState?.movement ?: NpcMotionController.movement(slot, timeMs)
+        if (!NpcMotionController.visible(movement)) {
+            if (measureOffice) ScenePerformanceMonitor.recordNpcStages(
+                ScenePerformanceMonitor.nowNanos() - stageStarted, 0L, 0L, 0L, 0L, 0L,
+            )
+            return
+        }
         val frameData = NpcMotionController.frame(slot, timeMs, movement)
         val restaurantLine = if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.speechLineAt(timeMs, restaurantState)
@@ -249,18 +274,38 @@ object NpcRenderer {
                 postured.copy(bob = (postured.bob + body).coerceIn(-2, 2), headDy = (postured.headDy + delayedHead).coerceIn(-3, 3))
             } ?: postured
         }
-        val paintedFrame = CharacterPainter.paint(slot.definition.characterStyle, pose, frameData.motion).let {
-            if (movement.facingRight && pose.facing == Facing.SIDE) it.mirrored() else it
+        if (measureOffice) {
+            poseNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
+            stageStarted = ScenePerformanceMonitor.nowNanos()
+        }
+        val paintedFrame = CharacterPainter.paintForNpc(
+            slot.definition.characterStyle, pose, frameData.motion, movement.facingRight,
+        )
+        if (measureOffice) {
+            paintNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
+            stageStarted = ScenePerformanceMonitor.nowNanos()
         }
         val turnedFrame = if (movement.animation == NpcAnimation.TURN_LEFT || movement.animation == NpcAnimation.TURN_RIGHT) {
             turnPerspective(paintedFrame, slot.definition.characterStyle, movement.localTimeMs)
         } else paintedFrame
-        val frame = scaleFrameForAmbient(turnedFrame, slot.scale)
+        if (measureOffice) {
+            turnNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
+            stageStarted = ScenePerformanceMonitor.nowNanos()
+        }
+        val frame = scaledFrame(turnedFrame, slot.scale)
+        if (measureOffice) {
+            scaleNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
+            stageStarted = ScenePerformanceMonitor.nowNanos()
+        }
         val anchor = frame.anchors.seatHip ?: frame.anchors.feet
         val left = movement.x - anchor.x
         val top = movement.floorY - anchor.y
         if (frame.anchors.seatHip == null) drawGroundShadow(b, movement.x, movement.floorY, slot.definition.characterStyle, slot.scale)
-        b.blit(frame.image, left, top)
+        b.blitOpaqueRows(frame.image, left, top, frame.opaqueRowBounds)
+        if (measureOffice) {
+            compositeNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
+            stageStarted = ScenePerformanceMonitor.nowNanos()
+        }
         if (slot.shoppingBrain != null && (movement.x in 0..239 || movement.phase == PathPhase.ENTER || movement.phase == PathPhase.EXIT)) {
             val shoppingState = slot.shoppingBrain.stateAt(timeMs)
             val heldItem = if (shoppingState.currentIntent == com.hoodie.app.pixel.npc.shopping.ShoppingNpcIntent.EXIT_STORE) Item.SHOPPING_BAG else Item.BASKET
@@ -290,6 +335,25 @@ object NpcRenderer {
             )
             }
         }
+        if (measureOffice) {
+            speechNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
+            ScenePerformanceMonitor.recordNpcStages(poseNanos, paintNanos, turnNanos, scaleNanos, compositeNanos, speechNanos)
+        }
+    }
+
+    private fun scaledFrame(frame: CharacterFrame, scale: Float): CharacterFrame {
+        if (scale >= 0.999f) return frame
+        val key = ScaledFrameKey(frame, scale)
+        synchronized(scaledFrameCache) { scaledFrameCache[key]?.let { return it } }
+        val result = scaleFrameForAmbient(frame, scale)
+        synchronized(scaledFrameCache) {
+            scaledFrameCache[key] = result
+            if (scaledFrameCache.size > SCALED_FRAME_CACHE_LIMIT) {
+                val eldest = scaledFrameCache.entries.iterator()
+                if (eldest.hasNext()) { eldest.next(); eldest.remove() }
+            }
+        }
+        return result
     }
 
     /** Um ciclo elegível respeita o intervalo do perfil sem alterar a coreografia do NPC. */

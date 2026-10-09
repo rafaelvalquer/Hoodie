@@ -6,6 +6,13 @@ import com.hoodie.app.pixel.npc.office.OfficeNpcDirector
 
 class OfficeScene : PixelScene(SceneId.OFFICE) {
 
+    private val officeLights = listOf(
+        Light.Emissive(14, 20, 104, 92),
+        Light.Emissive(138, 208, 188, 240),
+        Light.Glow(80, 0, 110, 0.65f),
+        Light.Glow(190, 0, 110, 0.65f),
+    )
+
     override fun ambientNpcs(env: SceneEnv): List<AmbientNpcSlot> = OfficeNpcDirector.plan(env)
 
     override val spots = mapOf(
@@ -105,10 +112,5 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
         },
     )
 
-    override fun lights(env: SceneEnv): List<Light> = listOf(
-        Light.Emissive(14, 20, 104, 92),
-        Light.Emissive(138, 208, 188, 240),
-        Light.Glow(80, 0, 110, 0.65f),
-        Light.Glow(190, 0, 110, 0.65f),
-    )
+    override fun lights(env: SceneEnv): List<Light> = officeLights
 }

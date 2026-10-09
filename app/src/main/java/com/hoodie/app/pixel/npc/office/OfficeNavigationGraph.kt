@@ -1,5 +1,7 @@
 package com.hoodie.app.pixel.npc.office
 
+import java.util.concurrent.ConcurrentHashMap
+
 /** Corredores de circulação do escritório; rotas passam pelo corredor central. */
 object OfficeNavigationGraph {
     val spots = mapOf(
@@ -28,7 +30,17 @@ object OfficeNavigationGraph {
         OfficeNpcSpot.DOOR to listOf(OfficeNpcSpot.DOOR, OfficeNpcSpot.PRINTER),
     )
 
+    /** Immutable topology: route computation allocates, so cache by the collision-safe spot pair. */
+    private val routeCache = ConcurrentHashMap<Int, List<OfficeSpot>>(OfficeNpcSpot.entries.size * OfficeNpcSpot.entries.size)
+
     fun route(from: OfficeNpcSpot, to: OfficeNpcSpot): List<OfficeSpot> {
+        val key = from.ordinal * OfficeNpcSpot.entries.size + to.ordinal
+        return routeCache[key] ?: computeRoute(from, to).let { computed ->
+            routeCache.putIfAbsent(key, computed) ?: computed
+        }
+    }
+
+    private fun computeRoute(from: OfficeNpcSpot, to: OfficeNpcSpot): List<OfficeSpot> {
         if (from == to) return listOf(spots.getValue(to))
         if (from == OfficeNpcSpot.DESK_RIGHT && to == OfficeNpcSpot.WHITEBOARD) {
             return listOf(OfficeNpcSpot.DESK_RIGHT, OfficeNpcSpot.PRINTER, OfficeNpcSpot.WHITEBOARD).map(spots::getValue)
