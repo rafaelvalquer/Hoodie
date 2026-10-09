@@ -18,19 +18,10 @@ class StreetScene : PixelScene(SceneId.STREET) {
 
     override fun props(): List<Prop> = listOf(
         Prop(0) { b, env, t ->
-            SceneArt.city(b, 0, 239, 150, env.period, offset = (t / 140).toInt(), seed = 3)
-            // Prédios próximos, maiores.
+            // Cidade contínua em coordenadas de mundo: entra pela direita, sai pela esquerda, janelas fixas.
+            StreetSkyline.drawFar(b, 0, 239, 150, t / 140, env.period)
             val near = PixelBuffer.mix(SceneArt.sky(env.period).city, P.OUTLINE, 0.25f)
-            val off = ((t / 60) % 240).toInt()
-            for (i in -1..3) {
-                val x = i * 80 - off + 20
-                val h = 70 + (i * 37 % 3 + 3) % 3 * 18
-                b.outlined(x, 200 - h, x + 56, 200, near, P.OUTLINE)
-                val lit = if (env.period == DayPeriod.NIGHT || env.period == DayPeriod.EVENING) 0xFFFFD86B.toInt() else 0xFF9DB7DE.toInt()
-                for (wy in 200 - h + 6 until 194 step 10) for (wx in x + 6 until x + 50 step 12) {
-                    b.box(wx, wy, wx + 5, wy + 5, if ((wx * 7 + wy + i) % 4 == 0) near else lit)
-                }
-            }
+            StreetSkyline.drawNear(b, 0, 239, 200, t / 60, near, P.OUTLINE, env.period)
         },
         Prop(1) { b, _, t ->
             b.box(0, 200, 239, 262, 0xFFB7B2A8.toInt())
