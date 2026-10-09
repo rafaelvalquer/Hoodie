@@ -53,7 +53,7 @@ De baixo para cima, com estes nomes exatos:
 | Camada | Conteúdo |
 |---|---|
 | `bg_far`, `bg_mid`, `bg_near` | Tiles horizontais sem emenda, com largura de 240 px ou mais |
-| `vehicle_back` | Interior, vidro, banco de trás |
+| `vehicle_back` | Interior e vidro. **Só pode existir onde a frente do veículo deixa uma abertura fechada** (janelas): nada de interior fora da silhueta. Em veículo visto de fora (carro) isso é verificado por `TransportSceneQualityTest.interiorNeverLeaksOutsideTheWindows` |
 | `actors` | **Vazia.** O renderer insere o Hoodie e os NPCs aqui |
 | `vehicle_front` | Porta, encosto da frente, barras |
 | `foreground` | Oclusores soltos (NPC em pé, retrovisor) |

@@ -6,7 +6,7 @@ frente e barra no primeiro plano — enquadramento do plano, sem rodada de thumb
 
 | Cena | Estado | Fonte | Revisão humana |
 |---|---|---|---|
-| Carro | aprovado (bootstrap-v1) | `assets-source/scenes/transport/car.aseprite` | aprovado no chat em 07/10/2026 |
+| Carro | aprovado (bootstrap-v2) | `assets-source/scenes/transport/car.aseprite` | aprovado no chat em 07/10/2026; v2 aprovada em 09/10/2026 |
 | Trem | aprovado (bootstrap-v1) | `assets-source/scenes/transport/train.aseprite` | aprovado no chat em 07/10/2026 |
 | Metrô | aprovado (bootstrap-v1) | `assets-source/scenes/transport/metro.aseprite` | aprovado no chat em 07/10/2026 |
 | Ônibus | aprovado (bootstrap-v1) | `assets-source/scenes/transport/bus.aseprite` | aprovado no chat em 07/10/2026 |
@@ -39,3 +39,9 @@ em pé do primeiro plano é uma silhueta pintada na arte (`vehicle_front`), sem 
 - O Hoodie dirigindo (`assets-source/hoodie/hoodie_transport.aseprite`, CAR_* de lado) foi aprovado no chat e entrou
   no APK como o grupo `transport` (`ArtBootstrapStudio.GROUPS`, `RequiredShippedAnimations`, `art-status.json`, CI).
 - Goldens regravados com as cenas aprovadas: `transport-scenes-v1.sha256` e `car-scenes-v1.sha256`.
+- **Carro v2 (09/10/2026):** o interior (`vehicle_back`) passava do contorno da carroceria (teto, capô e coluna A) e
+  aparecia sobre o fundo; agora é recortado pelas janelas (`Car.FRONT_WINDOW`/`REAR_WINDOW`, a mesma geometria que abre os
+  vãos da carroceria) e o banco de trás foi retirado. Nova trava `interiorNeverLeaksOutsideTheWindows` (flood fill do
+  exterior da frente × `vehicle_back`). Trem, metrô e ônibus são interiores de quadro cheio (a frente toca a borda da
+  tela) e a trava não se aplica a eles. Goldens do carro regravados (12 hashes + `car_day`/`car_night` em
+  `transport-scenes-v1.sha256`) e imagens `docs/transport-art/review/car-*.png` atualizadas.

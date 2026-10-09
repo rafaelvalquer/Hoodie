@@ -56,6 +56,12 @@ object SceneBootstrapStudio {
             }
         }
         fun outlinePoly(c: Int, vararg p: Pair<Int, Int>) { for (i in p.indices) { val (a, b2) = p[i]; val (x1, y1) = p[(i + 1) % p.size]; line(a, b2, x1, y1, c) } }
+        /** Apaga tudo o que fica fora dos polígonos (mesma regra de preenchimento de [poly]): o que não está na janela nunca vira pixel de interior. */
+        fun clipTo(vararg polys: List<Pair<Int, Int>>) {
+            val keep = Canvas(PixelBuffer(b.width, b.height))
+            polys.forEach { keep.poly(1, *it.toTypedArray()) }
+            for (i in b.pixels.indices) if (keep.b.pixels[i] == 0) b.pixels[i] = 0
+        }
     }
 
     // ───────────── Paleta do carro (≤ 24 cores por período) ─────────────
@@ -101,6 +107,9 @@ object SceneBootstrapStudio {
         const val WHEEL_Y = 282
         const val WHEEL_R = 19
         val WHEELS = listOf(58, 188)
+        /** Vãos das janelas: usados pela carroceria (recorte) e pelo interior (recorte), para nunca saírem de sincronia. */
+        val FRONT_WINDOW = listOf(WIN_FRONT_X to WIN_TOP, WIN_MID_X to WIN_TOP, WIN_MID_X to BELT_Y - 2, 84 to BELT_Y - 2)
+        val REAR_WINDOW = listOf(WIN_MID_X + 6 to WIN_TOP, WIN_REAR_X to WIN_TOP, 212 to BELT_Y - 2, WIN_MID_X + 6 to BELT_Y - 2)
     }
 
     private fun hash(a: Int, b: Int): Int {
@@ -188,9 +197,7 @@ object SceneBootstrapStudio {
         // Encosto do motorista (atrás do Hoodie) e banco traseiro.
         rect(hoodieFeet.first + 6, Car.WIN_TOP + 8, hoodieFeet.first + 18, Car.BELT_Y, CarPalette.SEAT)
         vline(hoodieFeet.first + 6, Car.WIN_TOP + 8, Car.BELT_Y, CarPalette.SEAT_LIGHT)
-        rect(Car.WIN_MID_X + 10, Car.WIN_TOP + 14, Car.WIN_REAR_X + 4, Car.BELT_Y, CarPalette.SEAT)
-        for (x in Car.WIN_MID_X + 14..Car.WIN_REAR_X step 9) vline(x, Car.WIN_TOP + 16, Car.BELT_Y, CarPalette.INTERIOR)
-        hline(Car.WIN_MID_X + 10, Car.WIN_REAR_X + 4, Car.WIN_TOP + 14, CarPalette.SEAT_LIGHT)
+        // Sem banco traseiro: o interior visto pela janela traseira é só o forro escuro (decisão do usuário, 09/10/2026).
         // Janela do outro lado: céu recortado, pequeno e distante.
         rect(Car.WIN_MID_X + 12, Car.WIN_TOP + 3, Car.WIN_REAR_X - 6, Car.WIN_TOP + 10, CarPalette.GLASS_SHINE)
         // Forro do teto, retrovisor interno e borda do painel: o interior não fica chapado.
@@ -205,6 +212,8 @@ object SceneBootstrapStudio {
         ellipse(steering.first - 2, steering.second + 3, 5, 10, CarPalette.CHROME, ring = true)
         rect(Car.WIN_FRONT_X - 24, Car.BELT_Y - 8, steering.first - 6, Car.BELT_Y, CarPalette.TIRE)
         set(Car.WIN_FRONT_X - 16, Car.BELT_Y - 6, CarPalette.HEADLIGHT)
+        // O interior só pode aparecer pelas janelas: o que passava do contorno (teto, capô, coluna A) vazava sobre o fundo.
+        clipTo(Car.FRONT_WINDOW, Car.REAR_WINDOW)
     }
 
     /** Carroceria em três quartos com os vãos das janelas abertos (o interior aparece por baixo). */
@@ -219,8 +228,8 @@ object SceneBootstrapStudio {
         hline(94, 198, Car.ROOF_Y + 8, CarPalette.BODY_DARK)
         for (x in 94..198) if (x % 3 == 0) set(x, Car.ROOF_Y + 7, CarPalette.BODY_LIGHT)
         // Vãos das janelas (transparentes = interior).
-        poly(0, Car.WIN_FRONT_X to Car.WIN_TOP, Car.WIN_MID_X to Car.WIN_TOP, Car.WIN_MID_X to Car.BELT_Y - 2, 84 to Car.BELT_Y - 2)
-        poly(0, Car.WIN_MID_X + 6 to Car.WIN_TOP, Car.WIN_REAR_X to Car.WIN_TOP, 212 to Car.BELT_Y - 2, Car.WIN_MID_X + 6 to Car.BELT_Y - 2)
+        poly(0, *Car.FRONT_WINDOW.toTypedArray())
+        poly(0, *Car.REAR_WINDOW.toTypedArray())
         // Reflexo diagonal no vidro traseiro (luz da esquerda).
         for (k in 0..10) { set(Car.WIN_MID_X + 14 + k, Car.WIN_TOP + 26 - k * 2, CarPalette.GLASS_SHINE); set(Car.WIN_MID_X + 15 + k, Car.WIN_TOP + 26 - k * 2, CarPalette.GLASS_SHINE) }
         // Linha de cintura com brilho e vinco inferior.
@@ -263,8 +272,8 @@ object SceneBootstrapStudio {
         rect(0, 273, W - 1, H - 1, 0)
         // Contorno externo da silhueta.
         outlinePoly(o, 6 to 214, 14 to 200, 70 to 196, 92 to Car.ROOF_Y, 198 to Car.ROOF_Y, 218 to 198, 234 to 204, 234 to 272, 6 to 272)
-        outlinePoly(o, Car.WIN_FRONT_X to Car.WIN_TOP, Car.WIN_MID_X to Car.WIN_TOP, Car.WIN_MID_X to Car.BELT_Y - 2, 84 to Car.BELT_Y - 2)
-        outlinePoly(o, Car.WIN_MID_X + 6 to Car.WIN_TOP, Car.WIN_REAR_X to Car.WIN_TOP, 212 to Car.BELT_Y - 2, Car.WIN_MID_X + 6 to Car.BELT_Y - 2)
+        outlinePoly(o, *Car.FRONT_WINDOW.toTypedArray())
+        outlinePoly(o, *Car.REAR_WINDOW.toTypedArray())
     }
 
     /** Rodas e sombra: fixas no chão (não balançam com a carroceria). */
