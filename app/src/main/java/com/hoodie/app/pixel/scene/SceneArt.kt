@@ -81,24 +81,49 @@ object SceneArt {
         b.box(x, y + 2, x + 16, y + 5, c); b.box(x + 3, y, x + 9, y + 2, c); b.box(x + 9, y + 1, x + 13, y + 2, c)
     }
 
-    /** Silhuetas de prédios com janelas que acendem à noite. */
+    /** Trecho de cidade de um seed: posição (relativa ao início), largura e altura de cada prédio. */
+    class CityStrip(val xs: IntArray, val ws: IntArray, val hs: IntArray, val period: Int)
+
+    private const val CITY_BUILDINGS = 24
+    private val cityStrips = java.util.concurrent.ConcurrentHashMap<Int, CityStrip>()
+
+    /** Gerado uma vez por seed. 24 prédios (≥ 288 px) cobrem a cena inteira antes de repetir. */
+    fun cityStrip(seed: Int): CityStrip = cityStrips.getOrPut(seed) {
+        val xs = IntArray(CITY_BUILDINGS); val ws = IntArray(CITY_BUILDINGS); val hs = IntArray(CITY_BUILDINGS)
+        var x = 0
+        for (k in 0 until CITY_BUILDINGS) {
+            val i = seed + k
+            xs[k] = x; ws[k] = 10 + Math.floorMod(i * 7, 12); hs[k] = 12 + Math.floorMod(i * 13, 26)
+            x += ws[k] + 2
+        }
+        CityStrip(xs, ws, hs, x)
+    }
+
+    /**
+     * Silhuetas de prédios com janelas que acendem à noite. A cidade é um trecho contínuo em
+     * coordenadas de mundo: [offset] só a desloca, as cópias se encaixam sem emenda e cada janela
+     * depende da sua posição no trecho (não na tela), então nada pisca enquanto a cidade corre.
+     * Com `offset = 0` o desenho é o mesmo da versão anterior.
+     */
     fun city(b: PixelBuffer, x0: Int, x1: Int, baseY: Int, period: DayPeriod, offset: Int = 0, seed: Int = 1) {
         val s = sky(period)
-        var x = x0 - ((offset % 97) + 97) % 97
-        var i = seed
-        while (x <= x1) {
-            val w = 10 + (i * 7) % 12
-            val h = 12 + (i * 13) % 26
-            val bx0 = maxOf(x, x0); val bx1 = minOf(x + w, x1)
-            if (bx0 <= bx1) {
+        val strip = cityStrip(seed)
+        var base = x0 - Math.floorMod(offset, strip.period)
+        while (base <= x1) {
+            for (k in 0 until CITY_BUILDINGS) {
+                val x = base + strip.xs[k]
+                if (x > x1) break
+                val w = strip.ws[k]; val h = strip.hs[k]
+                val bx0 = maxOf(x, x0); val bx1 = minOf(x + w, x1)
+                if (bx0 > bx1) continue
                 b.box(bx0, baseY - h, bx1, baseY, s.city)
-                s.cityWindow?.let { lit ->
-                    for (wy in baseY - h + 3 until baseY - 1 step 4) for (wx in x + 2 until x + w - 1 step 3) {
-                        if (wx in x0..x1 && (wx * 31 + wy * 17 + i) % 3 != 0) b.set(wx, wy, lit)
-                    }
+                val lit = s.cityWindow ?: continue
+                for (wy in baseY - h + 3 until baseY - 1 step 4) for (wx in x + 2 until x + w - 1 step 3) {
+                    val world = x0 + strip.xs[k] + (wx - x)
+                    if (wx in x0..x1 && Math.floorMod(world * 31 + wy * 17 + seed + k, 3) != 0) b.set(wx, wy, lit)
                 }
             }
-            x += w + 2; i++
+            base += strip.period
         }
     }
 
