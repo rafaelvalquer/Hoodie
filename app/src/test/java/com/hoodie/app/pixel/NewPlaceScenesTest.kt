@@ -112,7 +112,7 @@ class NewPlaceScenesTest {
             newScenes.map { VisualDirector.locomotion(it, false) }
         AnimationId.entries.filter { it.group in newGroups }.forEach { assertTrue("$it órfã", it in reachable) }
         newGroups.forEach { g -> assertEquals("$g", 4, AnimationId.entries.count { it.group == g }) }
-        assertEquals(143, AnimationId.entries.size)
+        assertEquals(147, AnimationId.entries.size)
     }
 
     @Test

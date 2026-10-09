@@ -458,6 +458,11 @@ class AnimationStateMachine(
             AnimationEvent.SNACK_PICKED -> flags += SceneFlag.SNACK_IN_HAND
             AnimationEvent.SNACK_FINISHED -> flags -= SceneFlag.SNACK_IN_HAND
             AnimationEvent.CAMERA_READY -> flags += SceneFlag.CAMERA_ACTIVE
+            AnimationEvent.GARMENT_PICKED -> flags += SceneFlag.GARMENT_HELD
+            AnimationEvent.GARMENT_RETURNED -> flags -= SceneFlag.GARMENT_HELD
+            AnimationEvent.CURTAIN_CLOSE -> flags += SceneFlag.CURTAIN_CLOSED
+            AnimationEvent.CURTAIN_OPEN -> flags -= SceneFlag.CURTAIN_CLOSED
+            AnimationEvent.BAG_TAKEN -> { flags -= SceneFlag.GARMENT_HELD; flags += SceneFlag.BAG_HELD }
             AnimationEvent.PHOTO_TAKEN -> {
                 flags -= SceneFlag.CAMERA_ACTIVE
                 // Flash curto na mão que segura o celular.

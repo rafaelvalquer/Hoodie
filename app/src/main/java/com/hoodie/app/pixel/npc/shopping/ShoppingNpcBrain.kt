@@ -13,6 +13,10 @@ class ShoppingNpcBrain(
     val daySeed: Int,
     val period: DayPeriod,
     val profile: ShoppingNpcProfile = ShoppingNpcProfiles.CALM_INDECISIVE,
+    /** Onde ficam os pontos na cena (mercado por padrão; a loja de roupas tem a sua). */
+    val floor: ShoppingFloorPlan = ShoppingNavigationGraph,
+    /** O que o comprador fala em cada intenção. */
+    val speech: ShoppingSpeech = ShoppingSpeechLibrary,
 ) {
     private data class ActionSpec(val intent: ShoppingNpcIntent, val target: ShoppingNpcSpot)
     private data class TimedAction(
@@ -83,11 +87,11 @@ class ShoppingNpcBrain(
         val local = t % cycleMs
         val trip = trip(tripIndex)
         val action = trip.actions.firstOrNull { local < it.ends } ?: return NpcMovement(
-            -30, ShoppingNavigationGraph.spots.getValue(DOOR).floorY, false,
+            -30, floor.spots.getValue(DOOR).floorY, false,
             NpcAnimation.IDLE, local, phase = PathPhase.IDLE,
         )
         if (local < action.started && action.route.size > 1) return movementAlong(action, local)
-        val spot = ShoppingNavigationGraph.spots.getValue(action.target)
+        val spot = floor.spots.getValue(action.target)
         val elapsed = (local - action.started).coerceAtLeast(0)
         val animation = animation(action.intent)
         val productHeld = action.intent == ShoppingNpcIntent.PUT_IN_BASKET && action.basketAfter > action.basketBefore
@@ -192,8 +196,8 @@ class ShoppingNpcBrain(
         var speechCooldownUntil = 0L
         var lastPickStarted: Long? = null
         for ((index, spec) in specs.withIndex()) {
-            var route = ShoppingNavigationGraph.route(from, spec.target)
-            var travel = route.zipWithNext().sumOf { (a, b) -> ShoppingNavigationGraph.distance(a, b) * 25L }
+            var route = floor.route(from, spec.target)
+            var travel = route.zipWithNext().sumOf { (a, b) -> floor.distance(a, b) * 25L }
             val lastPick = lastPickStarted
             if (spec.intent == ShoppingNpcIntent.PICK_PRODUCT && lastPick != null) {
                 val proposedStart = cursor + travel
@@ -203,14 +207,14 @@ class ShoppingNpcBrain(
                     actions += TimedAction(ShoppingNpcIntent.IDLE, from, from, listOf(from), cursor, cursor,
                         cursor + cooldownRemainder, cooldownRemainder, basket, basket, null, 0, speechCooldownUntil, idleIndex)
                     cursor += cooldownRemainder
-                    route = ShoppingNavigationGraph.route(from, spec.target)
-                    travel = route.zipWithNext().sumOf { (a, b) -> ShoppingNavigationGraph.distance(a, b) * 25L }
+                    route = floor.route(from, spec.target)
+                    travel = route.zipWithNext().sumOf { (a, b) -> floor.distance(a, b) * 25L }
                 }
             }
             val started = cursor + travel
             val duration = durationMs(spec.intent, tripIndex, index.toLong())
             val after = if (spec.intent == ShoppingNpcIntent.PUT_IN_BASKET) (basket + 1).coerceAtMost(targetItems) else basket
-            val eligible = ShoppingSpeechLibrary.lines(spec.intent, period)
+            val eligible = speech.lines(spec.intent, period)
             val speechChoice = NpcDeterministicRandom.value(npcId, daySeed, tripIndex * 10_000 + index + 200) < 0.56f
             val cooldown = 45_000L + (NpcDeterministicRandom.value(npcId, daySeed, tripIndex * 10_000 + index + 201) * 75_000).toLong()
             val maySpeak = eligible.isNotEmpty() && speechChoice && started >= speechCooldownUntil
@@ -235,8 +239,8 @@ class ShoppingNpcBrain(
         var elapsed = (local - action.travelStart).coerceAtLeast(0)
         var walked = 0f
         for ((a, b) in action.route.zipWithNext()) {
-            val p = ShoppingNavigationGraph.spots.getValue(a); val q = ShoppingNavigationGraph.spots.getValue(b)
-            val distance = ShoppingNavigationGraph.distance(a, b).coerceAtLeast(1)
+            val p = floor.spots.getValue(a); val q = floor.spots.getValue(b)
+            val distance = floor.distance(a, b).coerceAtLeast(1)
             val segment = distance * 25L
             if (elapsed < segment) {
                 val f = (elapsed.toFloat() / segment).coerceIn(0f, 1f)
@@ -251,7 +255,7 @@ class ShoppingNpcBrain(
             elapsed -= segment
             walked += distance
         }
-        val p = ShoppingNavigationGraph.spots.getValue(action.target)
+        val p = floor.spots.getValue(action.target)
         return NpcMovement(p.x, p.floorY, p.facesRight, animation(action.intent), (local - action.started).coerceAtLeast(0), walked,
             shoppingBasketCount = action.basketAfter)
     }
