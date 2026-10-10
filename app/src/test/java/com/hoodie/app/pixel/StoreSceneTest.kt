@@ -40,7 +40,7 @@ import kotlin.random.Random
 class StoreSceneTest {
 
     private fun store(a: HoodieActivity, mood: Int = 70, energy: Int = 70) =
-        VisualDirector.resolve(a, UserContextType.SHOPPING, energy = energy, mood = mood, placeType = PlaceType.STORE)
+        VisualDirector.resolve(a, UserContextType.SHOPPING, energy = energy, mood = mood, shoppingVenue = PlaceType.STORE)
 
     /** Todos os estados visuais da loja (atividade × humor/energia extremos). */
     private fun storeVisuals(): List<VisualState> = HoodieActivity.entries.flatMap { a -> listOf(10, 90).map { store(a, it, it) } }
@@ -51,12 +51,12 @@ class StoreSceneTest {
     fun `loja abre a cena propria e o mercado continua no mercado`() {
         HoodieActivity.entries.forEach { a ->
             assertEquals("$a loja", SceneId.STORE, store(a).scene)
-            assertEquals("$a mercado", SceneId.SHOPPING, VisualDirector.resolve(a, UserContextType.SHOPPING, placeType = PlaceType.MARKET).scene)
+            assertEquals("$a mercado", SceneId.SHOPPING, VisualDirector.resolve(a, UserContextType.SHOPPING, shoppingVenue = PlaceType.MARKET).scene)
             // Sem lugar conhecido (compras manuais / rotina provável): mercado, como antes.
             assertEquals("$a sem lugar", SceneId.SHOPPING, VisualDirector.resolve(a, UserContextType.SHOPPING).scene)
         }
         // O tipo do lugar só muda a cena de compras.
-        assertEquals(SceneId.OFFICE, VisualDirector.resolve(HoodieActivity.WORKING, UserContextType.WORK, placeType = PlaceType.STORE).scene)
+        assertEquals(SceneId.OFFICE, VisualDirector.resolve(HoodieActivity.WORKING, UserContextType.WORK, shoppingVenue = PlaceType.STORE).scene)
         assertEquals(SpotId.RACK_A, store(HoodieActivity.SHOPPING).spot)
     }
 

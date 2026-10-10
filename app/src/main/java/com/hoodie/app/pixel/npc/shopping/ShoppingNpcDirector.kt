@@ -10,14 +10,26 @@ import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.scene.SceneEnv
 
 object ShoppingNpcDirector {
-    fun plan(env: SceneEnv): List<AmbientNpcSlot> {
-        return createSession(env).npcSlots
-    }
+    /**
+     * Comprador ambiente de uma cena de compras. [floor]/[speech]/[baseline] trocam o
+     * mercado pela loja de roupas sem mudar personagem nem comportamento.
+     */
+    fun plan(
+        env: SceneEnv,
+        floor: ShoppingFloorPlan = ShoppingNavigationGraph,
+        speech: ShoppingSpeech = ShoppingSpeechLibrary,
+        baseline: Int = 214,
+    ): List<AmbientNpcSlot> = createSession(env, floor, speech, baseline).npcSlots
 
-    fun createSession(env: SceneEnv): ShoppingNpcSession {
+    fun createSession(
+        env: SceneEnv,
+        floor: ShoppingFloorPlan = ShoppingNavigationGraph,
+        speech: ShoppingSpeech = ShoppingSpeechLibrary,
+        baseline: Int = 214,
+    ): ShoppingNpcSession {
         val style = NpcCharacterRegistry.DOG_SHOPPER
         val daySeed = env.daySeed * 31 + env.variant * 17 + env.period.ordinal
-        val brain = ShoppingNpcBrain(style.id, daySeed, env.period, ShoppingNpcProfiles.CALM_INDECISIVE)
+        val brain = ShoppingNpcBrain(style.id, daySeed, env.period, ShoppingNpcProfiles.CALM_INDECISIVE, floor, speech)
         val behavior = NpcBehaviorProfile(
             animation = NpcAnimation.IDLE,
             motion = SpeciesMotionProfiles.forCharacter(style),
@@ -33,7 +45,7 @@ object ShoppingNpcDirector {
             depth = NpcDepth.SCENE,
             shoppingBrain = brain,
         ))
-        return ShoppingNpcSession(daySeed, env.shoppingVenue, slots)
+        return ShoppingNpcSession(daySeed, env.shoppingVenue, slots, floor)
     }
 }
 
@@ -42,4 +54,6 @@ class ShoppingNpcSession internal constructor(
     val seed: Int,
     val venue: com.hoodie.app.core.model.PlaceType?,
     val npcSlots: List<AmbientNpcSlot>,
+    /** Planta da cena (mercado ou loja): uma sessão nunca é reaproveitada na outra cena. */
+    val floor: ShoppingFloorPlan = ShoppingNavigationGraph,
 )

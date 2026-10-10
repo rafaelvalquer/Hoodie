@@ -5,7 +5,6 @@ import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.UserContextType
-import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.mobility.MobilityVisualSnapshot
 import com.hoodie.app.pixel.transport.TransportVisualResolution
 import com.hoodie.app.pixel.animation.AnimationId
@@ -135,7 +134,8 @@ object VisualDirector {
         val mobilityVisual = if (context == UserContextType.COMMUTING) mobilitySnapshot?.let {
             TransportVisualRegistry.resolve(it, preferredMode, now, variant)
         } else null
-        val scene = mobilityVisual?.profile?.scene ?: sceneFor(activity, context, homeOffice, commute, variant, mobilityMode)
+        // Mercado e Loja dividem o contexto SHOPPING; o tipo do lugar de compras escolhe a cena.
+        val scene = mobilityVisual?.profile?.scene ?: sceneFor(activity, context, homeOffice, commute, variant, mobilityMode, shoppingVenue)
         val tired = if (energy < 20) Expression.TIRED else null
         val currentMood = Mood(energy, mood, social, hunger, focus)
         val base = if (context == UserContextType.COMMUTING) {
