@@ -162,7 +162,7 @@ class DayPresentationUiTest {
         var saved: Pair<PlaceType, Boolean>? = null
         rule.setContent {
             HoodieTheme {
-                HomeNowCorrectionSheet(null, onDismiss = {}, onSave = { type, historical -> saved = type to historical }, saving = false)
+                HomeNowCorrectionSheet(null, onDismiss = {}, onSave = { type, historical -> saved = type to historical; true }, saving = false)
             }
         }
         rule.onNodeWithText("A partir de agora").assertIsDisplayed()

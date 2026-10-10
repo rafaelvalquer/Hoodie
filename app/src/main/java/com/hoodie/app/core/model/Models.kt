@@ -53,6 +53,7 @@ data class ContextEvent(
     val confidence: Float,
     val placeId: Long?,
     val source: ContextSource,
+    val venueType: PlaceType? = null,
 )
 
 data class Needs(

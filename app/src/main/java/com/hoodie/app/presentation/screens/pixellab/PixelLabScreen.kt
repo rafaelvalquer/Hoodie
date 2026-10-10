@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -187,6 +188,7 @@ private fun OfficeLiveLab() {
     }
     val env = remember(seed) { SceneEnv(DayPeriod.DAY, 9 * 60, variant = seed, daySeed = seed) }
     val officeSession = remember(env.daySeed, env.variant) { OfficeNpcDirector.createSession(env) }
+    DisposableEffect(officeSession) { onDispose { officeSession.dispose() } }
     val slots = remember(officeSession, env.clockMinute) { officeSession.npcSlots(env.clockMinute) }
     val frameStates = remember(slots, elapsed) {
         slots.mapNotNull { slot -> slot.officeBrain?.frameStateAt(elapsed)?.let { slot.definition.id to it } }.toMap()
@@ -253,7 +255,7 @@ private fun OfficeLiveLab() {
     if (BuildConfig.DEBUG) {
         val cache = performance.spriteCache
         Text(
-            "OFFICE LIVE — PERFORMANCE\nFPS ${"%.1f".format(performance.fps)} · Frame P50/P95/P99 ${"%.1f".format(performance.frameP50Ms)}/${"%.1f".format(performance.frameP95Ms)}/${"%.1f".format(performance.frameP99Ms)} ms · >33 ms ${performance.slowFrames}\nNPC plan P95 ${"%.1f".format(performance.planningP95Ms)} · state ${"%.1f".format(performance.stateP95Ms)} · NPC draw ${"%.1f".format(performance.npcDrawingP95Ms)} · scene draw ${"%.1f".format(performance.sceneDrawingP95Ms)} · bitmap ${"%.1f".format(performance.bitmapP95Ms)} ms\nNPC stages pose/paint/turn/scale/composite/speech ${"%.1f".format(performance.npcPoseP95Ms)}/${"%.1f".format(performance.npcPaintP95Ms)}/${"%.1f".format(performance.npcTurnP95Ms)}/${"%.1f".format(performance.npcScaleP95Ms)}/${"%.1f".format(performance.npcCompositeP95Ms)}/${"%.1f".format(performance.npcSpeechP95Ms)} ms\nScene stages copy/objects/hoodie/light/post ${"%.1f".format(performance.sceneCopyP95Ms)}/${"%.1f".format(performance.sceneObjectsP95Ms)}/${"%.1f".format(performance.sceneHoodieP95Ms)}/${"%.1f".format(performance.sceneLightingP95Ms)}/${"%.1f".format(performance.scenePostP95Ms)} ms\nSessions ${performance.sessionsCreated} · brains ${performance.brainsCreated} · attaches ${performance.socialAttaches} · timeline builds ${performance.timelineRebuilds} / resets ${performance.timelineResets}\nSprite cache ${cache.hits} hits · ${cache.entries}/${cache.capacity} · ${cache.evictions} evictions · heap ${performance.heapUsedBytes / (1024 * 1024)} MB (Δ ${performance.heapDeltaBytes / (1024 * 1024)} · pico ${performance.heapPeakBytes / (1024 * 1024)}) · GC ${performance.gcCount}/${performance.gcTimeMs} ms · render thread ${performance.renderThreadName.ifBlank { "—" }} · amostras ${performance.frames}",
+            "OFFICE LIVE — PERFORMANCE\nFPS ${"%.1f".format(performance.fps)} · Frame P50/P95/P99 ${"%.1f".format(performance.frameP50Ms)}/${"%.1f".format(performance.frameP95Ms)}/${"%.1f".format(performance.frameP99Ms)} ms · >33 ms ${performance.slowFrames}\nNPC plan P95 ${"%.1f".format(performance.planningP95Ms)} · state ${"%.1f".format(performance.stateP95Ms)} · NPC draw ${"%.1f".format(performance.npcDrawingP95Ms)} · scene draw ${"%.1f".format(performance.sceneDrawingP95Ms)} · bitmap ${"%.1f".format(performance.bitmapP95Ms)} ms\nNPC stages pose/paint/turn/scale/composite/speech ${"%.1f".format(performance.npcPoseP95Ms)}/${"%.1f".format(performance.npcPaintP95Ms)}/${"%.1f".format(performance.npcTurnP95Ms)}/${"%.1f".format(performance.npcScaleP95Ms)}/${"%.1f".format(performance.npcCompositeP95Ms)}/${"%.1f".format(performance.npcSpeechP95Ms)} ms\nScene stages copy/objects/hoodie/light/post ${"%.1f".format(performance.sceneCopyP95Ms)}/${"%.1f".format(performance.sceneObjectsP95Ms)}/${"%.1f".format(performance.sceneHoodieP95Ms)}/${"%.1f".format(performance.sceneLightingP95Ms)}/${"%.1f".format(performance.scenePostP95Ms)} ms\nSessions ${performance.sessionsCreated} · brains ${performance.brainsCreated} · attaches ${performance.socialAttaches} · timeline builds ${performance.timelineRebuilds} / prunes ${performance.timelinePrunes} / resets ${performance.timelineResets}\nSprite cache ${cache.hits} hits · ${cache.entries}/${cache.capacity} · ${cache.evictions} evictions · heap ${performance.heapUsedBytes / (1024 * 1024)} MB (Δ ${performance.heapDeltaBytes / (1024 * 1024)} · pico ${performance.heapPeakBytes / (1024 * 1024)}) · GC ${performance.gcCount}/${performance.gcTimeMs} ms · render thread ${performance.renderThreadName.ifBlank { "—" }} · amostras ${performance.frames}",
             color = HoodieColors.Mint,
             style = MaterialTheme.typography.labelSmall,
             fontFamily = FontFamily.Monospace,

@@ -19,12 +19,15 @@ import com.hoodie.app.domain.home.HomeNowSnapshot
 import com.hoodie.app.presentation.components.PixelButton
 import com.hoodie.app.presentation.components.PixelPanel
 import com.hoodie.app.presentation.theme.HoodieColors
+import kotlinx.coroutines.launch
 
 @Composable
 @androidx.compose.material3.ExperimentalMaterial3Api
-internal fun HomeNowCorrectionSheet(snapshot: HomeNowSnapshot?, onDismiss: () -> Unit, onSave: (PlaceType, Boolean) -> Unit, saving: Boolean) {
+internal fun HomeNowCorrectionSheet(snapshot: HomeNowSnapshot?, onDismiss: () -> Unit, onSave: suspend (PlaceType, Boolean) -> Boolean, saving: Boolean) {
     var selected by remember { mutableStateOf<PlaceType?>(null) }
     var historical by remember { mutableStateOf(false) }
+    var localSaving by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -52,7 +55,12 @@ internal fun HomeNowCorrectionSheet(snapshot: HomeNowSnapshot?, onDismiss: () ->
             PlaceType.physicalPlaceOptions.forEach { type ->
                 FilterChip(modifier = Modifier.fillMaxWidth(), selected = selected == type, onClick = { selected = type }, label = { Text(type.label) })
             }
-            PixelButton(stringResource(R.string.home_now_save_correction), { selected?.let { onSave(it, historical) } }, Modifier.fillMaxWidth(), enabled = !saving && selected != null, color = HoodieColors.Gold)
+            PixelButton(stringResource(R.string.home_now_save_correction), {
+                selected?.let { type -> scope.launch {
+                    localSaving = true
+                    try { if (onSave(type, historical)) onDismiss() } finally { localSaving = false }
+                } }
+            }, Modifier.fillMaxWidth(), enabled = !saving && !localSaving && selected != null, color = HoodieColors.Gold)
         }
     }
 }

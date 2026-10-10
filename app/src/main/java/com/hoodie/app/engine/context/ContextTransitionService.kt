@@ -5,6 +5,7 @@ import com.hoodie.app.core.database.ContextEventEntity
 import com.hoodie.app.core.database.TransactionRunner
 import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.model.ContextSource
+import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.TimelineSourceType
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.data.repository.PlaceRepository
@@ -55,7 +56,9 @@ class ContextTransitionService @Inject constructor(
         source: ContextSource,
         reason: TransitionReason,
         note: String? = null,
+        venueType: PlaceType? = null,
     ): TransitionResult = tx.run {
+        val resolvedVenue = if (to == UserContextType.SHOPPING) venueType ?: placeId?.let { places.byId(it)?.type } else null
         val current = contextDao.current()
         if (source != ContextSource.USER_CORRECTION) {
             val protected = contextDao.overlapping(at, at + 1).lastOrNull { it.source == ContextSource.USER_CORRECTION }
@@ -67,7 +70,7 @@ class ContextTransitionService @Inject constructor(
         if (current?.source == ContextSource.USER_CORRECTION && source != ContextSource.USER_CORRECTION && at <= current.startedAt) {
             return@run TransitionResult(current, current, changed = false)
         }
-        keep(current, to, placeId, confidence, source)?.let { return@run it }
+        keep(current, to, placeId, confidence, source, resolvedVenue)?.let { return@run it }
 
         // Um evento atrasado nunca fecha o atual antes de ele começar.
         val start = if (current != null) maxOf(at, current.startedAt) else at
@@ -80,7 +83,7 @@ class ContextTransitionService @Inject constructor(
                 contextDao.closeOpen(start)
             }
         }
-        val draft = ContextEventEntity(type = to, startedAt = start, endedAt = null, confidence = confidence, placeId = placeId, source = source)
+        val draft = ContextEventEntity(type = to, startedAt = start, endedAt = null, confidence = confidence, placeId = placeId, source = source, venueType = resolvedVenue ?: current?.venueType?.takeIf { to == UserContextType.SHOPPING })
         val event = draft.copy(id = contextDao.insert(draft))
         timeline.recordContext(event.id, to.emoji, note ?: describe(to, placeId, current), start)
         log.log(DebugEventLogger.Category.CONTEXT, "${current?.type ?: "∅"} → $to ($reason, ${source.name}, ${(confidence * 100).toInt()}%)")
@@ -91,13 +94,14 @@ class ContextTransitionService @Inject constructor(
      * Mesmo contexto: preserva o evento. Se só agora soubermos o lugar (rotina →
      * geofence, por exemplo), o evento é enriquecido — o tipo não muda.
      */
-    private suspend fun keep(current: ContextEventEntity?, to: UserContextType, placeId: Long?, confidence: Float, source: ContextSource): TransitionResult? {
+    private suspend fun keep(current: ContextEventEntity?, to: UserContextType, placeId: Long?, confidence: Float, source: ContextSource, venueType: PlaceType?): TransitionResult? {
         if (current == null || current.type != to) return null
         if (current.source == ContextSource.USER_CORRECTION && source != ContextSource.USER_CORRECTION) return TransitionResult(current, current, changed = false)
+        if (venueType != null && current.venueType != venueType) return null
         return when {
             placeId == null || placeId == current.placeId -> TransitionResult(current, current, changed = false)
             current.placeId == null -> {
-                val enriched = current.copy(placeId = placeId, confidence = maxOf(current.confidence, confidence), source = source)
+                val enriched = current.copy(placeId = placeId, confidence = maxOf(current.confidence, confidence), source = source, venueType = venueType ?: current.venueType)
                 contextDao.update(enriched)
                 TransitionResult(enriched, current, changed = false)
             }

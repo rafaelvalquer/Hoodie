@@ -33,6 +33,8 @@ data class DiaryCorrectionEntity(
     val originalSource: String,
     val originalConfidence: Float,
     val createdAt: Long,
+    val originalVenueType: String? = null,
+    val correctedVenueType: String? = null,
 )
 
 @Entity(tableName = "learned_routine_slots", indices = [Index(value = ["dayGroup", "type"], unique = true)])

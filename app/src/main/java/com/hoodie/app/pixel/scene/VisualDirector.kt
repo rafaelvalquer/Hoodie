@@ -4,6 +4,9 @@ import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.HoodieActivity
 import com.hoodie.app.core.model.UserContextType
+import com.hoodie.app.core.model.PlaceType
+import com.hoodie.app.core.mobility.MobilityVisualSnapshot
+import com.hoodie.app.pixel.transport.TransportVisualResolution
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.animation.AnimationId.*
 import com.hoodie.app.pixel.renderer.EffectKind
@@ -74,6 +77,9 @@ data class VisualState(
     /** Props já "no estado" quando a cena abre direto no loop (sem tocar o enter). */
     val steadyFlags: Set<SceneFlag> = emptySet(),
     val transportAmbient: com.hoodie.app.pixel.transport.TransportAmbientProfile? = null,
+    val shoppingVenue: PlaceType? = null,
+    val manualTransition: Boolean = false,
+    val mobilityVisual: TransportVisualResolution? = null,
 )
 
 /** HoodieActivity + contexto do usuário → cena, âncora, sequências e microações. */
@@ -115,14 +121,32 @@ object VisualDirector {
         social: Int = 50,
         hunger: Int = 30,
         focus: Int = 60,
+        shoppingVenue: PlaceType? = null,
+        manualTransition: Boolean = false,
+        mobilitySnapshot: MobilityVisualSnapshot? = null,
+        preferredMode: MovementMode? = null,
+        now: Long = System.currentTimeMillis(),
     ): VisualState {
-        val scene = sceneFor(activity, context, homeOffice, commute, variant, mobilityMode)
+        val mobilityVisual = if (context == UserContextType.COMMUTING) mobilitySnapshot?.let {
+            TransportVisualRegistry.resolve(it, preferredMode, now, variant)
+        } else null
+        val scene = mobilityVisual?.profile?.scene ?: sceneFor(activity, context, homeOffice, commute, variant, mobilityMode)
         val tired = if (energy < 20) Expression.TIRED else null
         val currentMood = Mood(energy, mood, social, hunger, focus)
         val base = if (context == UserContextType.COMMUTING) {
-            transportState(TransportVisualRegistry.profileFor(mobilityMode, commute, variant), currentMood)
+            val profile = mobilityVisual?.profile ?: TransportVisualRegistry.profileFor(mobilityMode, commute, variant)
+            transportState(profile, currentMood).let { state ->
+                if (mobilityVisual?.profile?.scene == SceneId.GENERIC_OUTDOOR) state.copy(spot = SceneRegistry[SceneId.GENERIC_OUTDOOR].defaultSpot)
+                else state
+            }
         } else forScene(scene, activity, currentMood)
-        return base.copy(variant = variant, expression = base.expression ?: tired)
+        return base.copy(
+            variant = variant,
+            expression = base.expression ?: tired,
+            shoppingVenue = shoppingVenue,
+            manualTransition = manualTransition,
+            mobilityVisual = mobilityVisual,
+        )
     }
 
     private fun transportState(profile: TransportVisualProfile, mood: Mood): VisualState {

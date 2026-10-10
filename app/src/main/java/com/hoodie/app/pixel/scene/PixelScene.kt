@@ -76,6 +76,7 @@ data class SceneEnv(
     val shoppingNpc: ShoppingNpcVisualState = ShoppingNpcVisualState.EMPTY,
     /** Estado visual da refeição do cliente, independente das interações de Hoodie. */
     val restaurantGuestTable: RestaurantTableState? = null,
+    val shoppingVenue: com.hoodie.app.core.model.PlaceType? = null,
 ) {
     companion object {
         const val DOOR_OPEN = 3

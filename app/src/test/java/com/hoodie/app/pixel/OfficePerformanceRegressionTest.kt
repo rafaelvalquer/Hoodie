@@ -67,13 +67,18 @@ class OfficePerformanceRegressionTest {
     }
 
     @Test
-    fun `cache de reservas sociais permanece limitado apos simulacao longa`() {
-        val session = OfficeNpcDirector.createSession(env(37))
+    fun `caches temporais permanecem limitados apos simulacao longa`() {
+        val session = OfficeNpcDirector.createSession(env(37), 8_192, 512)
         val brains = session.npcSlots(9 * 60).mapNotNull { it.officeBrain }
+        val oldRawActions = brains.associate { it.npcId to it.rawBaseActionAt(5 * 60_000L) }
         val expected = brains.associate { it.npcId to it.frameStateAt(60 * 60_000L) }
+        brains.forEach { it.rawBaseActionAt(24 * 60 * 60_000L) }
 
         assertEquals(session.social.reservationCacheCapacity(), session.social.cachedReservationCount())
         brains.forEach { brain ->
+            assertTrue(brain.rawTimelineCacheSize() <= brain.rawTimelineCacheCapacity())
+            assertTrue(brain.rawTimelinePruneCount() > 0)
+            assertEquals(oldRawActions.getValue(brain.npcId), brain.rawBaseActionAt(5 * 60_000L))
             brain.frameStateAt(5 * 60_000L)
             assertEquals(expected.getValue(brain.npcId), brain.frameStateAt(60 * 60_000L))
         }
@@ -81,13 +86,71 @@ class OfficePerformanceRegressionTest {
     }
 
     @Test
+    fun `timeline coordenada tem limite e replay antigo preserva determinismo`() {
+        val prunesBefore = OfficePerformanceCounters.timelinePrunes.get()
+        val longTimeline = OfficeNpcDirector.createSession(env(52), coordinatedTimelineLimit = 1_024)
+        val expectedBrain = longTimeline.npcSlots(9 * 60).first().officeBrain!!
+        val expectedAtTwoMinutes = expectedBrain.frameStateAt(2 * 60_000L)
+        val expectedAtTenMinutes = expectedBrain.frameStateAt(10 * 60_000L)
+
+        val bounded = OfficeNpcDirector.createSession(env(52), coordinatedTimelineLimit = 16)
+        val boundedBrain = bounded.npcSlots(9 * 60).first().officeBrain!!
+        assertEquals(expectedAtTenMinutes, boundedBrain.frameStateAt(10 * 60_000L))
+        assertTrue(boundedBrain.coordinatedTimelineCacheSize() <= boundedBrain.coordinatedTimelineCacheCapacity())
+        assertTrue(boundedBrain.coordinatedTimelinePruneCount() > 0)
+        assertTrue(OfficePerformanceCounters.timelinePrunes.get() > prunesBefore)
+        assertEquals(expectedAtTwoMinutes, boundedBrain.frameStateAt(2 * 60_000L))
+    }
+
+    @Test
+    fun `busca antiga apos uma hora de timeline podada preserva resultado`() {
+        val reference = OfficeNpcDirector.createSession(env(53), 4_096, 24_576)
+        val referenceBrain = reference.npcSlots(9 * 60).first().officeBrain!!
+        val expected = referenceBrain.frameStateAt(10 * 60_000L)
+
+        val bounded = OfficeNpcDirector.createSession(env(53), 16, 24_576)
+        val brain = bounded.npcSlots(9 * 60).first().officeBrain!!
+        brain.frameStateAt(60 * 60_000L)
+        assertTrue(bounded.social.cachedReservationCount() > 512)
+        assertTrue(bounded.social.cachedReservationCount() <= bounded.social.reservationCacheCapacity())
+        assertEquals(expected, brain.frameStateAt(10 * 60_000L))
+    }
+
+    @Test
+    fun `busca no comeco do dia apos caches atingirem os limites permanece deterministica`() {
+        val expectedSession = OfficeNpcDirector.createSession(env(54))
+        val expectedBrain = expectedSession.npcSlots(9 * 60).first().officeBrain!!
+        val expected = expectedBrain.frameStateAt(60 * 60_000L)
+
+        val session = OfficeNpcDirector.createSession(env(54))
+        val brains = session.npcSlots(9 * 60).mapNotNull { it.officeBrain }
+        val dayStates = brains.associate { it.npcId to it.frameStateAt(24 * 60 * 60_000L) }
+        assertTrue(brains.any { it.coordinatedTimelinePruneCount() > 0 })
+        assertEquals(session.social.reservationCacheCapacity(), session.social.cachedReservationCount())
+
+        val replayStartedAt = System.nanoTime()
+        val replayed = brains.first().frameStateAt(60 * 60_000L)
+        val replayDurationMs = (System.nanoTime() - replayStartedAt) / 1_000_000.0
+        assertEquals(expected, replayed)
+        assertEquals(dayStates.keys, brains.map { it.npcId }.toSet())
+        println(
+            "OFFICE_DAY_BACKSEEK replay=${replayDurationMs}ms " +
+                "reservationCache=${session.social.cachedReservationCount()}/" +
+                session.social.reservationCacheCapacity()
+        )
+    }
+
+    @Test
     fun `troca de cena libera a sessao e reentrada cria um ciclo novo`() {
         val before = OfficePerformanceCounters.sessionsCreated.get()
+        val resetsBefore = OfficePerformanceCounters.timelineResets.get()
         val renderer = SceneRenderer()
         renderer.renderEmpty(OfficeScene(), env(42), 0L)
         renderer.renderEmpty(SceneRegistry[SceneId.HOME], env(42), 33L)
         renderer.renderEmpty(OfficeScene(), env(42), 66L)
+        renderer.dispose()
         assertEquals(2L, OfficePerformanceCounters.sessionsCreated.get() - before)
+        assertEquals(6L, OfficePerformanceCounters.timelineResets.get() - resetsBefore)
     }
 
     @Test

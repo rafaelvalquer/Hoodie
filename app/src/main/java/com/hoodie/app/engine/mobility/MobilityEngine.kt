@@ -9,6 +9,7 @@ import com.hoodie.app.core.database.QuestionDao
 import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.debug.DebugEventLogger
 import com.hoodie.app.core.location.LocationSource
+import com.hoodie.app.core.location.LocationPermissionState
 import com.hoodie.app.core.mobility.ActivityRecognitionPermissions
 import com.hoodie.app.core.mobility.DetectedMovement
 import com.hoodie.app.core.mobility.MobilitySource
@@ -89,12 +90,25 @@ class MobilityEngine @Inject constructor(
     /** Transição do Activity Recognition (vinda do ActivityTransitionReceiver). */
     suspend fun onMovement(obs: MovementObservation): Unit = mutex.withLock {
         if (!enabled()) return@withLock
-        log.log(DebugEventLogger.Category.CONTEXT, "MOV ${obs.activity}${if (obs.entering) "" else " (fim)"}")
+        log.log(DebugEventLogger.Category.MOBILITY, "MOV ${obs.activity}${if (obs.entering) "" else " (fim)"}")
         var s = housekeeping(repo.open(), obs.timestamp)
-        if (s != null && obs.timestamp < maxOf(s.startedAt, s.movingSince ?: s.startedAt, s.stillSince ?: s.startedAt, repo.openSegment(s.id)?.startedAt ?: s.startedAt)) return@withLock
+        if (s != null && obs.timestamp < maxOf(s.startedAt, s.movingSince ?: s.startedAt, s.stillSince ?: s.startedAt,
+                s.lastObservationAt ?: s.startedAt, repo.openSegment(s.id)?.startedAt ?: s.startedAt)) return@withLock
         if (s == null && (repo.lastFinished()?.endedAt ?: Long.MIN_VALUE) > obs.timestamp) return@withLock
+        if (s != null) {
+            s = s.copy(
+                lastObservedMovement = obs.activity,
+                lastObservationAt = obs.timestamp,
+                lastVehicleAt = if (obs.activity == DetectedMovement.IN_VEHICLE && obs.entering) obs.timestamp else s.lastVehicleAt,
+                vehicleExitAt = if (obs.activity == DetectedMovement.IN_VEHICLE && !obs.entering) obs.timestamp else s.vehicleExitAt,
+                pendingMovementMode = if (obs.activity == DetectedMovement.IN_VEHICLE && obs.entering) null else s.pendingMovementMode,
+                pendingMovementAt = if (obs.activity == DetectedMovement.IN_VEHICLE && obs.entering) null else s.pendingMovementAt,
+            )
+            repo.update(s)
+        }
         if (HoodieConfig.TRANSPORT_CLASSIFIER_V2 && s != null) {
             transportFeatures?.begin(s.id, s.startedAt)
+            transportFeatures?.restorePersisted(s.id, s.startedAt, s.speedSampleCount, s.meanSpeedKmh, s.maxSpeedKmh, s.speedVariation)
             if (obs.entering) transportFeatures?.movement(obs.activity, obs.timestamp)
         }
 
@@ -121,7 +135,12 @@ class MobilityEngine @Inject constructor(
         val mode = obs.activity.toMode()
         when {
             s == null -> {
-                s = newCandidate(mode, obs.timestamp, leftOrigin = false, originPlaceId = null)
+                s = newCandidate(mode, obs.timestamp, leftOrigin = false, originPlaceId = null).copy(
+                    lastObservedMovement = obs.activity, lastObservationAt = obs.timestamp,
+                    lastVehicleAt = obs.timestamp.takeIf { obs.activity == DetectedMovement.IN_VEHICLE },
+                )
+                repo.update(s)
+                if (obs.activity == DetectedMovement.IN_VEHICLE) sampleVehicleSpeed(s, obs.timestamp)
                 scheduler.scheduleMobilityCheck(MobilityStateMachine.sustainThreshold(mode))
                 evaluate(s, obs.timestamp)
             }
@@ -134,15 +153,33 @@ class MobilityEngine @Inject constructor(
                     stillSince = null,
                 )
                 repo.update(updated)
+                if (obs.activity == DetectedMovement.IN_VEHICLE) sampleVehicleSpeed(updated, obs.timestamp)
                 scheduler.scheduleMobilityCheck(MobilityStateMachine.sustainThreshold(updated.currentMode))
                 evaluate(updated, obs.timestamp)
             }
             else -> {
                 var active = s.copy(stillSince = null, movingSince = s.movingSince ?: obs.timestamp)
                 if (active.state == MobilityState.ARRIVING) active = active.copy(state = MobilityStateMachine.stateFor(active.currentMode))
+                if (active.currentMode.isVehicle && !mode.isVehicle && mode in setOf(MovementMode.WALKING, MovementMode.RUNNING)) {
+                    val confirmed = MobilityModeHysteresisPolicy.confirmVehicleToWalking(
+                        active.currentMode, mode, active.pendingMovementMode, active.pendingMovementAt, obs.timestamp,
+                    )
+                    if (!confirmed) {
+                        active = active.copy(
+                            pendingMovementMode = mode,
+                            pendingMovementAt = if (active.pendingMovementMode == mode) active.pendingMovementAt ?: obs.timestamp else obs.timestamp,
+                        )
+                        repo.update(active)
+                        scheduler.scheduleMobilityCheck(MobilityModeHysteresisPolicy.WALKING_CONFIRMATION_MS)
+                        return@withLock
+                    }
+                }
                 repo.update(active)
                 if (MobilityStateMachine.isNewSegment(active.currentMode, mode)) newSegment(active, mode, obs.timestamp)
-                else if (mode.isVehicle) refreshVehicleClassification(active, obs.timestamp)
+                else if (mode.isVehicle) {
+                    sampleVehicleSpeed(active, obs.timestamp)
+                    refreshVehicleClassification(active, obs.timestamp)
+                }
             }
         }
     }
@@ -175,11 +212,16 @@ class MobilityEngine @Inject constructor(
         if (!enabled()) return@withLock
         val now = clock.nowMillis()
         val s = housekeeping(repo.open(), now) ?: return@withLock
+        if (s.currentMode.isVehicle && s.stillSince == null) sampleVehicleSpeed(s, now)
         if (s.currentMode.isVehicle && s.state != MobilityState.MOVEMENT_CANDIDATE && s.stillSince == null) refreshVehicleClassification(s, now)
         when {
             s.state == MobilityState.MOVEMENT_CANDIDATE -> evaluate(s, now)
             MobilityStateMachine.isArrivalStill(s.stillSince, now) -> resolveStillArrival(s, now)
             s.stillSince != null -> scheduler.scheduleMobilityCheck(s.stillSince + HoodieConfig.STILL_ARRIVAL_MS - now)
+        }
+        val latest = repo.open()
+        if (latest?.currentMode?.isVehicle == true && latest.stillSince == null && latest.speedSampleAttempts < TransportSpeedSamplingPolicy.MAX_ATTEMPTS) {
+            scheduler.scheduleMobilityCheck(TransportSpeedSamplingPolicy.INTERVAL_MS)
         }
         repo.open()?.takeIf { it.pendingModeQuestion && it.stillSince != null }?.let { askTransport(it, vehicleMoving = false) }
     }
@@ -270,6 +312,42 @@ class MobilityEngine @Inject constructor(
         return s
     }
 
+    /** Explicit bounded point sample; position coordinates stay inside LocationProvider. */
+    private suspend fun sampleVehicleSpeed(session: MobilitySessionEntity, now: Long) {
+        if (!HoodieConfig.TRANSPORT_CLASSIFIER_V2 || transportFeatures == null) return
+        val current = repo.session(session.id) ?: return
+        if (current.endedAt != null || !current.currentMode.isVehicle || current.stillSince != null) return
+        val permission = location.permissionState()
+        if (current.speedSampleAttempts >= TransportSpeedSamplingPolicy.MAX_ATTEMPTS) return
+        if (!permission.canReadPosition || (!appInForeground && permission != LocationPermissionState.BACKGROUND)) {
+            log.log(DebugEventLogger.Category.MOBILITY, "Amostra de velocidade ignorada: permissão/localização indisponível")
+            return
+        }
+        if (!TransportSpeedSamplingPolicy.canAttempt(current.speedSampleAttempts, current.lastSpeedSampleAt, now, permission, appInForeground)) return
+        val attempted = current.copy(speedSampleAttempts = current.speedSampleAttempts + 1, lastSpeedSampleAt = now)
+        repo.update(attempted)
+        val sample = location.currentSpeed()
+        val valid = sample?.takeIf {
+            it.observedAt in current.startedAt..now && now - it.observedAt <= TransportSpeedSamplingPolicy.MAX_AGE_MS &&
+                it.metersPerSecond.isFinite() && it.metersPerSecond in 0f..100f
+        }
+        if (valid == null) {
+            log.log(DebugEventLogger.Category.MOBILITY, "Amostra de velocidade sem dado válido (${attempted.speedSampleAttempts}/${TransportSpeedSamplingPolicy.MAX_ATTEMPTS})")
+            return
+        }
+        transportFeatures.begin(current.id, current.startedAt)
+        transportFeatures.restorePersisted(current.id, current.startedAt, current.speedSampleCount, current.meanSpeedKmh, current.maxSpeedKmh, current.speedVariation)
+        transportFeatures.speed(valid.metersPerSecond, valid.observedAt)
+        val features = transportFeatures.build(now)
+        repo.update(attempted.copy(
+            speedSampleCount = current.speedSampleCount + 1,
+            meanSpeedKmh = features.meanSpeedKmh,
+            maxSpeedKmh = features.maxSpeedKmh,
+            speedVariation = features.speedVariation,
+        ))
+        log.log(DebugEventLogger.Category.MOBILITY, "Amostra de velocidade válida (${current.speedSampleCount + 1}/${TransportSpeedSamplingPolicy.MAX_ATTEMPTS})")
+    }
+
     private suspend fun newCandidate(mode: MovementMode, at: Long, leftOrigin: Boolean, originPlaceId: Long?): MobilitySessionEntity {
         // Origem: o lugar onde o contexto estava; se o ContextEngine já trocou para
         // deslocamento (a geofence chegou antes), o lugar anterior.
@@ -328,7 +406,10 @@ class MobilityEngine @Inject constructor(
                     if (MobilityConfidenceScorer.score(evidence) >= HoodieConfig.MOBILITY_APPLY_SCORE) promote(withConfidence, now, MobilitySource.ACTIVITY_RECOGNITION)
                     return
                 }
-                val asked = ask(QuestionKind.CONFIRM_MOVEMENT, withConfidence, originContext(withConfidence), null, vehicleMoving = false)
+                val asked = ask(
+                    QuestionKind.CONFIRM_MOVEMENT, withConfidence, originContext(withConfidence), null,
+                    vehicleMoving = withConfidence.currentMode.isVehicle && withConfidence.stillSince == null,
+                )
                 // Sem poder perguntar (limite do dia): só evidência forte vira deslocamento.
                 if (asked == null && MobilityConfidenceScorer.score(evidence) >= HoodieConfig.MOBILITY_APPLY_SCORE) {
                     promote(withConfidence, now, MobilitySource.ACTIVITY_RECOGNITION)
@@ -380,10 +461,11 @@ class MobilityEngine @Inject constructor(
                 source = learnedSource ?: MobilitySource.ACTIVITY_RECOGNITION,
             ),
         )
-        val updated = s.copy(currentMode = mode, state = MobilityStateMachine.stateFor(mode))
+        val updated = s.copy(currentMode = mode, state = MobilityStateMachine.stateFor(mode), pendingMovementMode = null, pendingMovementAt = null)
         repo.update(updated)
         bus.emit(MobilityEvent.MovementModeChanged(s.id, at, s.currentMode, mode))
         log.log(DebugEventLogger.Category.CONTEXT, "Trecho: ${s.currentMode} → $mode")
+        if (mode.isVehicle) sampleVehicleSpeed(updated, at)
         if (mode == MovementMode.VEHICLE_UNKNOWN) askTransport(updated, vehicleMoving = true)
     }
 

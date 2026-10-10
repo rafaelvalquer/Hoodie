@@ -5,6 +5,10 @@ import com.hoodie.app.core.database.MobilitySegmentDao
 import com.hoodie.app.core.database.MobilitySegmentEntity
 import com.hoodie.app.core.database.MobilitySessionDao
 import com.hoodie.app.core.database.MobilitySessionEntity
+import com.hoodie.app.core.mobility.DetectedMovement
+import com.hoodie.app.core.mobility.ModeCertainty
+import com.hoodie.app.core.mobility.MobilityPhase
+import com.hoodie.app.core.mobility.MobilityVisualSnapshot
 import com.hoodie.app.core.mobility.MobilityState
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.time.DAY_MS
@@ -41,6 +45,36 @@ class MobilityRepository @Inject constructor(
      */
     val activeMode: Flow<MovementMode?> = sessions.observeOpen().map { s ->
         s?.takeIf { (it.confirmed || HoodieConfig.UNIFIED_CONFIDENCE_ENGINE && it.confidence >= .60f) && it.state in ACTIVE_STATES }?.currentMode
+    }.distinctUntilChanged()
+
+    /** Visual evidence includes candidates, but `activeMode` keeps its confirmed-mode contract. */
+    val visualObservation: Flow<MobilityVisualSnapshot> = sessions.observeOpenVisual().map { row ->
+        val s = row?.session ?: return@map MobilityVisualSnapshot()
+        val mode = row.openSegmentMode ?: s.currentMode
+        val source = row.openSegmentSource ?: s.source
+        val certainty = when {
+            source == com.hoodie.app.core.mobility.MobilitySource.USER_CORRECTION ||
+                source == com.hoodie.app.core.mobility.MobilitySource.CONFIRMATION -> ModeCertainty.USER_SELECTED
+            source == com.hoodie.app.core.mobility.MobilitySource.PREFERENCE -> ModeCertainty.PREFERRED
+            s.state == MobilityState.MOVEMENT_CANDIDATE -> ModeCertainty.PROVISIONAL
+            row.openSegmentConfirmed == true || s.confirmed -> ModeCertainty.CONFIRMED
+            else -> ModeCertainty.PROVISIONAL
+        }
+        val phase = when (s.state) {
+            MobilityState.MOVEMENT_CANDIDATE -> MobilityPhase.CANDIDATE
+            MobilityState.ARRIVING -> MobilityPhase.ARRIVING
+            MobilityState.ARRIVED -> MobilityPhase.IDLE
+            MobilityState.STATIONARY -> MobilityPhase.IDLE
+            MobilityState.WALKING, MobilityState.IN_VEHICLE -> MobilityPhase.ACTIVE
+        }
+        MobilityVisualSnapshot(
+            sessionId = s.id, mode = mode.takeIf { it != MovementMode.NONE },
+            observedMovement = s.lastObservedMovement, confidence = row.openSegmentConfidence ?: s.confidence,
+            certainty = certainty, source = source, observedAt = s.lastObservationAt,
+            lastVehicleAt = s.lastVehicleAt, vehicleExitAt = s.vehicleExitAt, phase = phase,
+            speedSampleAttempts = s.speedSampleAttempts, speedSampleCount = s.speedSampleCount,
+            meanSpeedKmh = s.meanSpeedKmh, maxSpeedKmh = s.maxSpeedKmh,
+        )
     }.distinctUntilChanged()
 
     /** Histórico para o aprendizado (deslocamentos confirmados e encerrados). */

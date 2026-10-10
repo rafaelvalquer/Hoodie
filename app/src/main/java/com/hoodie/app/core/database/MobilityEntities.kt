@@ -1,6 +1,7 @@
 package com.hoodie.app.core.database
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -41,6 +42,18 @@ data class MobilitySessionEntity(
     /** Pergunta do meio de transporte adiada porque o veículo estava em movimento. */
     val pendingModeQuestion: Boolean = false,
     val questionsAsked: Int = 0,
+    val lastObservedMovement: com.hoodie.app.core.mobility.DetectedMovement? = null,
+    val lastObservationAt: Long? = null,
+    val lastVehicleAt: Long? = null,
+    val vehicleExitAt: Long? = null,
+    val pendingMovementMode: MovementMode? = null,
+    val pendingMovementAt: Long? = null,
+    @ColumnInfo(defaultValue = "0") val speedSampleAttempts: Int = 0,
+    val lastSpeedSampleAt: Long? = null,
+    @ColumnInfo(defaultValue = "0") val speedSampleCount: Int = 0,
+    val meanSpeedKmh: Float? = null,
+    val maxSpeedKmh: Float? = null,
+    @ColumnInfo(defaultValue = "0") val speedVariation: Float = 0f,
 )
 
 /** Trecho de um deslocamento com um único modo (caminhada → ônibus → caminhada). */

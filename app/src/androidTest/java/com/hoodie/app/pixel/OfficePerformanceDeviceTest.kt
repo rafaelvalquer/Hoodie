@@ -21,6 +21,7 @@ import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
 import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.SceneRegistry
+import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.scene.SpotId
 import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.pixel.renderer.SceneRenderer
@@ -323,6 +324,40 @@ class OfficePerformanceDeviceTest {
     }
 
     @Test
+    fun officeTwentyFourVirtualHoursPruneTimelinesAndKeepStateDeterministic() {
+        val session = OfficeNpcDirector.createSession(
+            SceneEnv(DayPeriod.DAY, 9 * 60, variant = 911, daySeed = 911),
+        )
+        try {
+            val brains = session.npcSlots(9 * 60).mapNotNull { it.officeBrain }
+            val targetTimeMs = 24 * 60 * 60_000L
+            val startedAt = SystemClock.elapsedRealtimeNanos()
+            val expected = brains.associate { it.npcId to it.frameStateAt(targetTimeMs) }
+            val elapsedMs = (SystemClock.elapsedRealtimeNanos() - startedAt) / 1_000_000.0
+            val repeated = brains.associate { it.npcId to it.frameStateAt(targetTimeMs) }
+
+            assertEquals(expected, repeated)
+            assertTrue("the long session exercises coordinated-timeline pruning", brains.any { it.coordinatedTimelinePruneCount() > 0 })
+            brains.forEach { brain ->
+                assertTrue(brain.coordinatedTimelineCacheSize() <= brain.coordinatedTimelineCacheCapacity())
+                assertTrue(brain.rawTimelineCacheSize() <= brain.rawTimelineCacheCapacity())
+            }
+            assertTrue(session.social.cachedReservationCount() <= session.social.reservationCacheCapacity())
+            println(
+                "OFFICE_24H duration=${elapsedMs}ms " +
+                    "coordinated=${brains.sumOf { it.coordinatedTimelineCacheSize() }}/" +
+                    "${brains.sumOf { it.coordinatedTimelineCacheCapacity() }} " +
+                    "prunes=${brains.sumOf { it.coordinatedTimelinePruneCount() }} " +
+                    "reservations=${session.social.cachedReservationCount()}/" +
+                    "${session.social.reservationCacheCapacity()}"
+            )
+            assertEquals(session.social.reservationCacheCapacity(), session.social.cachedReservationCount())
+        } finally {
+            session.dispose()
+        }
+    }
+
+    @Test
     fun office120FramesReuseSessionAndReportMeasuredStages() {
         val sessionsBefore = OfficePerformanceCounters.sessionsCreated.get()
         val brainsBefore = OfficePerformanceCounters.brainsCreated.get()
@@ -370,7 +405,7 @@ class OfficePerformanceDeviceTest {
                 "p95=${report.frameP95Ms}ms p99=${report.frameP99Ms}ms planningP95=${report.planningP95Ms}ms " +
                 "stateP95=${report.stateP95Ms}ms drawingP95=${report.drawingP95Ms}ms bitmapP95=${report.bitmapP95Ms}ms " +
                 "npcDrawP95=${report.npcDrawingP95Ms}ms sceneDrawP95=${report.sceneDrawingP95Ms}ms " +
-                "npcStages pose/paint/turn/scale/blit/speech=${report.npcPoseP95Ms}/${report.npcPaintP95Ms}/${report.npcTurnP95Ms}/${report.npcScaleP95Ms}/${report.npcCompositeP95Ms}/${report.npcSpeechP95Ms}ms " +
+            "npcStages pose/paint/turn/scale/blit/speech=${report.npcPoseP95Ms}/${report.npcPaintP95Ms}/${report.npcTurnP95Ms}/${report.npcScaleP95Ms}/${report.npcCompositeP95Ms}/${report.npcSpeechP95Ms}ms " +
             "sceneStages copy/objects/hoodie/light/post=${report.sceneCopyP95Ms}/${report.sceneObjectsP95Ms}/${report.sceneHoodieP95Ms}/${report.sceneLightingP95Ms}/${report.scenePostP95Ms}ms " +
             "rabbit/cat/bulldog=${report.rabbitDrawingP95Ms}/${report.catDrawingP95Ms}/${report.bulldogDrawingP95Ms}ms " +
             "heap=${report.heapUsedBytes} gc=${report.gcCount}/${report.gcTimeMs}ms " +
@@ -396,7 +431,7 @@ class OfficePerformanceDeviceTest {
         val coldStart = SystemClock.elapsedRealtimeNanos()
         coldRenderer.render(frame, 0L)
         val coldMs = (SystemClock.elapsedRealtimeNanos() - coldStart) / 1_000_000.0
-        val cold = ScenePerformanceMonitor.snapshot()
+            val cold = ScenePerformanceMonitor.snapshot()
         coldRenderer.dispose()
 
         // Keep the LRU empty to measure class/JIT warm-up independently of sprite hits.
@@ -435,7 +470,7 @@ class OfficePerformanceDeviceTest {
             exactRenderer.dispose()
             println(
                 "OFFICE_COLD_RENDER first=${coldMs}ms codeWarmEmptyCache=${codeWarmedMs}ms " +
-                    "exactPrewarm=${exactPrewarmMs}ms exactRender=${exactRenderMs}ms " +
+                "exactPrewarm=${exactPrewarmMs}ms exactRender=${exactRenderMs}ms " +
                     "npcPaint=${cold.npcPaintP95Ms}/${warmed.npcPaintP95Ms}/${exactWarm.npcPaintP95Ms}ms " +
                     "cacheMisses=${cold.spriteCache.misses}/${warmed.spriteCache.misses}/" +
                     "${exactRenderMisses}"
