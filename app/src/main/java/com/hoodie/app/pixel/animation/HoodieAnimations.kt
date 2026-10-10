@@ -11,7 +11,7 @@ import com.hoodie.app.pixel.sprite.Legs
 import com.hoodie.app.pixel.sprite.Mouth
 
 /** Grupos só para organizar o Pixel Lab. */
-enum class AnimGroup { LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION, STUDY, SHOPPING, VISIT, LEISURE, TRANSPORT }
+enum class AnimGroup { LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION, STUDY, SHOPPING, STORE, VISIT, LEISURE, TRANSPORT }
 
 /**
  * Identificador estável de animação. É o contrato entre o motor (VisualDirector,
@@ -184,6 +184,12 @@ enum class AnimationId(val label: String, val group: AnimGroup) {
     SHOP_PICK("Pegar um produto", AnimGroup.SHOPPING),
     SHOP_CART("Empurrar o carrinho", AnimGroup.SHOPPING),
     SHOP_PAY("Pagar no caixa", AnimGroup.SHOPPING),
+
+    // Loja (roupas)
+    STORE_BROWSE_RACK("Passar os cabides da arara", AnimGroup.STORE),
+    STORE_HOLD_GARMENT("Provar a roupa no espelho", AnimGroup.STORE),
+    STORE_FITTING_ROOM("Entrar no provador", AnimGroup.STORE),
+    STORE_BAG_EXIT("Sair com a sacola", AnimGroup.STORE),
 
     // Família
     VISIT_CHAT("Conversar", AnimGroup.VISIT),

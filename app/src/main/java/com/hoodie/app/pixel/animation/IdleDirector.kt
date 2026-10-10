@@ -166,6 +166,8 @@ object ReactionDirector {
         AnimGroup.STUDY -> listOf(AnimationId.GLANCE, AnimationId.NOD)
         // Compras: percebe o usuário entre as prateleiras.
         AnimGroup.SHOPPING -> listOf(AnimationId.NOTICE, AnimationId.SMILE)
+        // Loja: mostra a roupa escolhida, todo animado.
+        AnimGroup.STORE -> listOf(AnimationId.SMILE, AnimationId.HAPPY)
         // Visita: não larga a conversa, só acena.
         AnimGroup.VISIT -> listOf(AnimationId.WAVE)
         // Passeio: chama para ver a paisagem.

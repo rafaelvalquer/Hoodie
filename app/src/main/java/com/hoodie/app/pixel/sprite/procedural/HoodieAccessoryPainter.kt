@@ -105,6 +105,17 @@ internal object HoodieAccessoryPainter {
                 b.line(rx - 3, ry - 7, rx - 2, ry - 10, o); b.line(rx + 3, ry - 7, rx + 2, ry - 10, o)
                 b.hline(rx - 2, rx + 2, ry - 5, 0xFFF2CF5B.toInt())
             }
+            Item.GARMENT -> {
+                // Camiseta no cabide: gancho, cabide, mangas, corpo e uma estampa.
+                val shirt = 0xFF7FE0C2.toInt()
+                b.line(rx + 2, ry - 16, rx + 3, ry - 18, o); b.set(rx + 4, ry - 18, o)
+                b.line(rx - 4, ry - 12, rx + 2, ry - 15, o); b.line(rx + 2, ry - 15, rx + 8, ry - 12, o)
+                b.outlined(rx - 7, ry - 12, rx + 11, ry - 6, shirt, o)
+                b.outlined(rx - 4, ry - 7, rx + 8, ry + 4, shirt, o)
+                b.box(rx - 6, ry - 11, rx + 10, ry - 7, shirt)
+                b.hline(rx - 1, rx + 5, ry - 11, PixelBuffer.mix(shirt, o, 0.4f))
+                b.box(rx, ry - 3, rx + 4, ry, 0xFFF2CF5B.toInt())
+            }
             Item.SNACK -> {
                 // Biscoito com gotas.
                 b.disc(rx + 2, ry - 3, 3, o)

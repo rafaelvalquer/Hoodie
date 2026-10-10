@@ -26,9 +26,9 @@ object ShoppingNpcDirector {
         val definition = AmbientNpcDefinition(style.id, style, behavior)
         val slots = listOf(AmbientNpcSlot(
             definition = definition,
-            x = ShoppingNavigationGraph.spots.getValue(ShoppingNpcSpot.OFFSCREEN).x,
-            floorY = ShoppingNavigationGraph.spots.getValue(ShoppingNpcSpot.OFFSCREEN).floorY,
-            baseline = 214,
+            x = floor.spots.getValue(ShoppingNpcSpot.OFFSCREEN).x,
+            floorY = floor.spots.getValue(ShoppingNpcSpot.OFFSCREEN).floorY,
+            baseline = baseline,
             seed = daySeed,
             depth = NpcDepth.SCENE,
             shoppingBrain = brain,

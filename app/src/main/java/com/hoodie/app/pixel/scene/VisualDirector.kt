@@ -3,6 +3,7 @@ package com.hoodie.app.pixel.scene
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.HoodieActivity
+import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.mobility.MobilityVisualSnapshot
@@ -92,7 +93,11 @@ object VisualDirector {
     fun commuteScene(mobilityMode: MovementMode?, commute: CommuteStyle, variant: Int): SceneId =
         TransportVisualRegistry.profileFor(mobilityMode, commute, variant).scene
 
-    fun sceneFor(activity: HoodieActivity, context: UserContextType, homeOffice: Boolean, commute: CommuteStyle, variant: Int, mobilityMode: MovementMode? = null): SceneId =
+    /**
+     * [placeType] diferencia lugares que dividem o mesmo contexto: Mercado e Loja são
+     * ambos SHOPPING, mas a Loja (roupas) tem cena própria. Sem lugar conhecido = mercado.
+     */
+    fun sceneFor(activity: HoodieActivity, context: UserContextType, homeOffice: Boolean, commute: CommuteStyle, variant: Int, mobilityMode: MovementMode? = null, placeType: PlaceType? = null): SceneId =
         when (context) {
             UserContextType.HOME -> if (activity == HoodieActivity.WALKING) SceneId.GENERIC_OUTDOOR else SceneId.HOME
             UserContextType.WORK -> if (homeOffice) SceneId.HOME else SceneId.OFFICE
@@ -101,7 +106,7 @@ object VisualDirector {
             UserContextType.DINING -> SceneId.RESTAURANT
             UserContextType.GYM -> SceneId.GYM
             UserContextType.STUDY -> SceneId.SCHOOL
-            UserContextType.SHOPPING -> SceneId.SHOPPING
+            UserContextType.SHOPPING -> if (placeType == PlaceType.STORE) SceneId.STORE else SceneId.SHOPPING
             UserContextType.VISITING -> SceneId.FAMILY
             UserContextType.LEISURE -> SceneId.LEISURE
             // Viagem ainda não tem cena própria: o exterior genérico é o fallback.
@@ -262,6 +267,8 @@ object VisualDirector {
     )
     /** Prateleira de cima → de baixo → carrinho. */
     private val shelfGaze = listOf(GazeStep(Eyes.LOOK_UP, 1_200, 2_500), GazeStep(Eyes.OPEN, 800, 1_500), GazeStep(Eyes.LOOK_DOWN, 600, 1_200))
+    /** Arara → espelho → etiqueta. */
+    private val rackGaze = listOf(GazeStep(Eyes.LOOK_RIGHT, 1_200, 2_500), GazeStep(Eyes.OPEN, 800, 1_500), GazeStep(Eyes.LOOK_LEFT, 700, 1_400))
     /** A outra pessoa está à esquerda; às vezes o prato. */
     private val visitGaze = listOf(GazeStep(Eyes.LOOK_LEFT, 3_000, 6_000), GazeStep(Eyes.OPEN, 600, 1_200), GazeStep(Eyes.LOOK_DOWN, 500, 900))
     /** Paisagem: horizonte, céu, caminho. */
@@ -291,6 +298,21 @@ object VisualDirector {
         add(MicroAction(SHOP_CART, 14, 2_500, 4_500, SpotId.CART))
         add(MicroAction(SHOP_PAY, if (m.tired) 20 else 10, spot = SpotId.CHECKOUT, once = true))
         add(MicroAction(THINK_STAND, 6, 2_000, 4_000, SpotId.AISLE_B))
+        add(MicroAction(IDLE_LOOK, 5, spot = SpotId.CENTER, once = true))
+    }
+
+    /**
+     * Loja de roupas: arara A/B, espelho, provador e sacola no caixa. Humor alto puxa
+     * espelho e provador; cansaço encurta o passeio e vai direto pagar.
+     */
+    private fun storeActions(m: Mood) = buildList {
+        add(MicroAction(STORE_BROWSE_RACK, 24, spot = SpotId.RACK_A, once = true))
+        add(MicroAction(SHOP_LOOK, 16, 3_000, 6_000, SpotId.RACK_B))
+        add(MicroAction(STORE_HOLD_GARMENT, if (m.cheerful) 18 else 10, 3_000, 5_000, SpotId.MIRROR, direction = Direction.LEFT))
+        add(MicroAction(STORE_FITTING_ROOM, if (m.cheerful) 12 else 6, spot = SpotId.FITTING_ROOM, once = true))
+        add(MicroAction(SHOP_PAY, if (m.tired) 20 else 8, spot = SpotId.CHECKOUT, once = true))
+        add(MicroAction(STORE_BAG_EXIT, if (m.tired) 12 else 6, spot = SpotId.CHECKOUT, once = true))
+        add(MicroAction(THINK_STAND, 6, 2_000, 4_000, SpotId.RACK_B))
         add(MicroAction(IDLE_LOOK, 5, spot = SpotId.CENTER, once = true))
     }
 
@@ -486,6 +508,18 @@ object VisualDirector {
                 expression = Expression.SLEEPY,
             )
             else -> VisualState(scene, SpotId.AISLE_A, shopActions(m), approach = listOf(LOOK_AROUND), gaze = shelfGaze)
+        }
+        SceneId.STORE -> when (a) {
+            HoodieActivity.PHONE -> VisualState(scene, SpotId.CENTER, phone(1))
+            HoodieActivity.COFFEE, HoodieActivity.EATING -> VisualState(
+                scene, SpotId.CENTER, listOf(coffee(m, 60), MicroAction(SHOP_LOOK, 40, 3_000, 5_000, SpotId.RACK_B)), gaze = rackGaze,
+            )
+            HoodieActivity.SLEEPING, HoodieActivity.RESTING -> VisualState(
+                scene, SpotId.CENTER,
+                listOf(MicroAction(IDLE, 60, spot = SpotId.CENTER), MicroAction(YAWN, 20, spot = SpotId.CENTER, once = true), MicroAction(STORE_HOLD_GARMENT, 20, 2_500, 4_000, SpotId.MIRROR)),
+                expression = Expression.SLEEPY,
+            )
+            else -> VisualState(scene, SpotId.RACK_A, storeActions(m), approach = listOf(LOOK_AROUND), gaze = rackGaze)
         }
         SceneId.FAMILY -> when (a) {
             HoodieActivity.WATCHING_TV -> familySofa(
