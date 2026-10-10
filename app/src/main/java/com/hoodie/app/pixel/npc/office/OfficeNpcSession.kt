@@ -12,6 +12,7 @@ object OfficePerformanceCounters {
     val brainsCreated = AtomicLong()
     val socialAttaches = AtomicLong()
     val timelineRebuilds = AtomicLong()
+    val timelinePrunes = AtomicLong()
     val timelineResets = AtomicLong()
 }
 

@@ -33,11 +33,13 @@ import com.hoodie.app.core.database.HoodieStateDao
 import com.hoodie.app.core.database.HoodieStateEntity
 import com.hoodie.app.core.database.TimelineDao
 import com.hoodie.app.core.debug.DebugEventLogger
+import com.hoodie.app.core.datastore.SettingsRepository
 import com.hoodie.app.core.geofence.GeofenceRegistrar
 import com.hoodie.app.core.geofence.GeofenceRegistrationResult
 import com.hoodie.app.core.location.LocationPermissionManager
 import com.hoodie.app.core.location.LocationPermissionState
 import com.hoodie.app.core.model.Place
+import com.hoodie.app.core.mobility.MobilityVisualSnapshot
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.core.time.DAY_MS
 import com.hoodie.app.core.time.HOUR_MS
@@ -46,6 +48,9 @@ import com.hoodie.app.core.time.SystemClockProvider
 import com.hoodie.app.core.time.formatClock
 import com.hoodie.app.core.time.formatDuration
 import com.hoodie.app.data.repository.PlaceRepository
+import com.hoodie.app.data.repository.MobilityRepository
+import com.hoodie.app.pixel.transport.TransportVisualRegistry
+import com.hoodie.app.pixel.transport.TransportVisualResolution
 import com.hoodie.app.engine.context.ContextEngine
 import com.hoodie.app.engine.hoodie.HoodieEngine
 import com.hoodie.app.presentation.components.ChipRow
@@ -84,6 +89,8 @@ class DeveloperLabViewModel @Inject constructor(
     private val geofences: GeofenceRegistrar,
     private val contextEngine: ContextEngine,
     private val hoodie: HoodieEngine,
+    private val mobility: MobilityRepository,
+    private val settings: SettingsRepository,
     private val clock: ClockProvider,
     logger: DebugEventLogger,
 ) : ViewModel() {
@@ -92,6 +99,17 @@ class DeveloperLabViewModel @Inject constructor(
     val permission: StateFlow<LocationPermissionState> = permissions.state
     val geofenceResult: StateFlow<GeofenceRegistrationResult?> = geofences.lastResult
     val log: StateFlow<List<DebugEventLogger.Entry>> = logger.entries
+    private val _transport = MutableStateFlow(TransportDiagnostics())
+    val transport: StateFlow<TransportDiagnostics> = _transport.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            mobility.visualObservation.collect { snapshot ->
+                val preferred = settings.current().mobility.preferredMode
+                _transport.value = TransportDiagnostics(snapshot, TransportVisualRegistry.resolve(snapshot, preferred, clock.nowMillis(), 0))
+            }
+        }
+    }
 
     fun refresh() = viewModelScope.launch {
         permissions.refresh()
@@ -134,7 +152,7 @@ class DeveloperLabViewModel @Inject constructor(
     }
 }
 
-private val tabs = listOf("PIXEL", "CONTEXT", "GEOFENCE", "SIMULATOR", "DATABASE", "DIARY", "LOG")
+private val tabs = listOf("PIXEL", "CONTEXT", "GEOFENCE", "TRANSPORT", "SIMULATOR", "DATABASE", "DIARY", "LOG")
 
 @Composable
 fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: DeveloperLabViewModel = hiltViewModel()) {
@@ -143,6 +161,7 @@ fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: Develop
     val permission by vm.permission.collectAsStateWithLifecycle()
     val geofence by vm.geofenceResult.collectAsStateWithLifecycle()
     val log by vm.log.collectAsStateWithLifecycle()
+    val transport by vm.transport.collectAsStateWithLifecycle()
     LaunchedEffect(tab) { vm.refresh() }
     val zone = java.time.ZoneId.systemDefault()
 
@@ -159,11 +178,36 @@ fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: Develop
             "PIXEL" -> PixelLabTab(onOpen)
             "CONTEXT" -> ContextTab(snap, zone)
             "GEOFENCE" -> GeofenceTab(snap, permission, geofence, vm::reregister)
+            "TRANSPORT" -> TransportTab(transport)
             "SIMULATOR" -> SimulatorTab(snap, zone, vm::advance, vm::resetClock)
             "DATABASE" -> DatabaseTab(snap)
             "DIARY" -> DiaryLabScreen(Modifier.fillMaxWidth())
             "LOG" -> LogTab(log, zone)
         }
+    }
+}
+
+data class TransportDiagnostics(
+    val snapshot: MobilityVisualSnapshot = MobilityVisualSnapshot(),
+    val visual: TransportVisualResolution = TransportVisualRegistry.resolve(MobilityVisualSnapshot(), null, 0L, 0),
+)
+
+@Composable
+private fun TransportTab(data: TransportDiagnostics) {
+    val s = data.snapshot
+    PixelPanel(Modifier.fillMaxWidth()) {
+        SectionLabel("Evidência atual")
+        Mono("fase=${s.phase} · sessão=${s.sessionId ?: "—"}")
+        Mono("modo=${s.mode ?: "—"} · observação=${s.observedMovement ?: "—"}")
+        Mono("certeza=${s.certainty} · origem=${s.source ?: "—"} · confiança=${(s.confidence * 100).toInt()}%")
+        Mono("veículo=${s.lastVehicleAt?.let { formatClock(it, java.time.ZoneId.systemDefault()) } ?: "—"} · saída=${s.vehicleExitAt?.let { formatClock(it, java.time.ZoneId.systemDefault()) } ?: "—"}")
+        Mono("amostras=${s.speedSampleCount}/${s.speedSampleAttempts} · média=${s.meanSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"} · pico=${s.maxSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"}")
+    }
+    PixelPanel(Modifier.fillMaxWidth()) {
+        SectionLabel("Resolução visual usada pela Home")
+        Mono("cena=${data.visual.profile.scene} · modo=${data.visual.profile.mode ?: "—"}")
+        Mono("certeza=${data.visual.certainty} · origem=${data.visual.source ?: "—"}")
+        Mono(data.visual.reason)
     }
 }
 

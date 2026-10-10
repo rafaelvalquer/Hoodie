@@ -21,7 +21,7 @@ class DebugEventLogger(private val clock: ClockProvider, private val enabled: Bo
 
     @Inject constructor(clock: ClockProvider) : this(clock, BuildConfig.DEBUG)
 
-    enum class Category { DATABASE, ONBOARDING, PLACE, GEOFENCE, CONTEXT, HOODIE, WORKER, SYSTEM }
+    enum class Category { DATABASE, ONBOARDING, PLACE, GEOFENCE, MOBILITY, CONTEXT, HOODIE, WORKER, SYSTEM }
 
     data class Entry(val at: Long, val category: Category, val message: String)
 

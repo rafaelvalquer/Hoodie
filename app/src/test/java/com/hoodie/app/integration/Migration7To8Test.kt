@@ -46,6 +46,13 @@ class Migration7To8Test {
             listOf("places", "context_events", "mobility_sessions", "mobility_segments").forEach { table ->
                 db.query("SELECT COUNT(*) FROM `$table` WHERE id = 1").use { cursor -> assertTrue(cursor.moveToFirst()); assertEquals(1, cursor.getInt(0)) }
             }
+            db.query("SELECT venueType FROM context_events WHERE id = 1").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertTrue("legacy context must migrate without inventing a venue", cursor.isNull(0))
+            }
+            db.query("SELECT originalVenueType, correctedVenueType FROM diary_corrections LIMIT 0").use { cursor ->
+                assertEquals(2, cursor.columnCount)
+            }
             listOf("day_state", "diary_corrections", "learned_routine_slots", "transport_patterns").forEach { table ->
                 db.query("SELECT COUNT(*) FROM `$table`").use { cursor -> assertTrue(cursor.moveToFirst()); assertEquals(0, cursor.getInt(0)) }
             }
@@ -86,6 +93,26 @@ class Migration7To8Test {
             try { assertEquals("from v$version", HOODIE_DATABASE_VERSION, room.openHelper.writableDatabase.version) }
             finally { room.close() }
         }
+    }
+
+    @Test fun mobilityV9MigrationKeepsSessionAndInitializesPrivacySafeCounters() {
+        createVersion(9) { db ->
+            db.execSQL("INSERT INTO mobility_sessions (id, startedAt, initialMode, currentMode, state, confidence, confirmed, source, leftOrigin, arrivalAutoConfirmed, pendingModeQuestion, questionsAsked) VALUES (41, 1000, 'VEHICLE_UNKNOWN', 'VEHICLE_UNKNOWN', 'IN_VEHICLE', 0.7, 0, 'ACTIVITY_RECOGNITION', 1, 0, 1, 0)")
+        }
+        val room = openCurrent()
+        try {
+            val db = room.openHelper.writableDatabase
+            assertEquals(HOODIE_DATABASE_VERSION, db.version)
+            db.query("SELECT startedAt, currentMode, speedSampleAttempts, speedSampleCount, speedVariation, lastObservationAt FROM mobility_sessions WHERE id = 41").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(1_000L, cursor.getLong(0))
+                assertEquals("VEHICLE_UNKNOWN", cursor.getString(1))
+                assertEquals(0, cursor.getInt(2))
+                assertEquals(0, cursor.getInt(3))
+                assertEquals(0f, cursor.getFloat(4))
+                assertTrue(cursor.isNull(5))
+            }
+        } finally { room.close() }
     }
 
     private fun openCurrent() = Room.databaseBuilder(context, HoodieDatabase::class.java, DB)

@@ -69,6 +69,7 @@ data class ContextEventEntity(
     val confidence: Float,
     val placeId: Long?,
     val source: ContextSource,
+    val venueType: PlaceType? = null,
 )
 
 @Entity(tableName = "context_confirmations", indices = [Index("timestamp")])

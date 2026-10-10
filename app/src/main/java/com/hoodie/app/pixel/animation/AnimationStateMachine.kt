@@ -143,7 +143,7 @@ class AnimationStateMachine(
         }
         if (v == (pending ?: visual)) return
         pending = v
-        pendingAt = interruptBoundary(now)
+        pendingAt = if (v.manualTransition) now else interruptBoundary(now)
     }
 
     fun react(anim: AnimationId, now: Long) = react(listOf(anim), now)
@@ -222,7 +222,7 @@ class AnimationStateMachine(
         transients.removeAll { it.until < now }
         transients.forEach { effects += it.kind to (it.x to it.y) }
 
-        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = v.variant)
+        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = v.variant, shoppingVenue = v.shoppingVenue)
         return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects, animation, direction, idx)
     }
 

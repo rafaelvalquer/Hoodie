@@ -118,8 +118,8 @@ class HomeViewModel @Inject constructor(
     val zone get() = clock.zone()
 
 
-    /** Modo real do deslocamento em andamento (null = sem sessão confirmada → preferência). */
-    private val activeMobilityMode = mobilityRepo.activeMode
+    /** Provisório e confirmado são ambos visíveis à Home; activeMode mantém seu contrato para os demais consumidores. */
+    private val mobilityVisualObservation = mobilityRepo.visualObservation
 
     private val _events = Channel<HomeUiEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -169,8 +169,8 @@ class HomeViewModel @Inject constructor(
             HomeUiState(loading = false, error = cause.appErrorOr(DatabaseError.ReadFailed))
         },
         source = {
-            combine(inputs, ticker, activeMobilityMode) { i, now, mode -> Triple(i, now, mode) }
-                .mapLatest { (i, now, mode) -> build(i, now, hoodie.resolve(), mode) }
+            combine(inputs, ticker, mobilityVisualObservation) { i, now, mobility -> Triple(i, now, mobility) }
+                .mapLatest { (i, now, mobility) -> build(i, now, hoodie.resolve(), mobility) }
                 .combineWithQuestion()
         },
     ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
@@ -220,7 +220,7 @@ class HomeViewModel @Inject constructor(
     private fun kotlinx.coroutines.flow.Flow<HomeUiState>.combineWithQuestion() =
         combine(this, pendingQuestion) { s, q -> s.copy(question = q) }
 
-    private fun build(i: Inputs, now: Long, snap: HoodieSnapshot, mobilityMode: com.hoodie.app.core.mobility.MovementMode? = null): HomeUiState {
+    private fun build(i: Inputs, now: Long, snap: HoodieSnapshot, mobility: com.hoodie.app.core.mobility.MobilityVisualSnapshot): HomeUiState {
         val zoned = clock.now()
         val minute = zoned.minuteOfDay()
         val ctx = i.context
@@ -230,18 +230,23 @@ class HomeViewModel @Inject constructor(
         val variant = (zoned.toLocalDate().toEpochDay() + (ctx?.id ?: 0)).toInt()
         val visual = VisualDirector.resolve(
             activity = snap.state.activity,
-            context = snap.state.userContext,
+            // A correção manual é persistida em context_events antes do snapshot do simulador.
+            // A cena deve refletir imediatamente o evento canônico observado pela Home.
+            context = ctx?.type ?: snap.state.userContext,
             homeOffice = i.routine.workMode == WorkMode.HOME_OFFICE,
             commute = i.settings.commuteStyle,
-            mobilityMode = mobilityMode,
+            mobilityMode = mobility.mode,
             variant = variant,
             energy = snap.liveNeeds.energy,
             mood = snap.liveNeeds.mood,
             social = snap.liveNeeds.social,
             hunger = snap.liveNeeds.hunger,
             focus = snap.liveNeeds.focus,
-            // Mercado e Loja dividem o contexto SHOPPING; o tipo do lugar escolhe a cena.
-            placeType = ctx?.placeId?.let { id -> i.places.firstOrNull { it.id == id }?.type },
+            shoppingVenue = ctx?.venueType,
+            manualTransition = ctx?.source == ContextSource.MANUAL || ctx?.source == ContextSource.USER_CORRECTION,
+            mobilitySnapshot = mobility,
+            preferredMode = i.settings.mobility.preferredMode,
+            now = now,
         )
         val userType = ctx?.type ?: UserContextType.HOME
         val next = RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)
@@ -301,14 +306,28 @@ class HomeViewModel @Inject constructor(
         else _events.send(HomeUiEvent.ShowMessage("O contexto mudou. Confira a informação atualizada."))
     }
 
-    fun correctCurrentContext(type: PlaceType, historical: Boolean, expectedEventId: Long?) = action {
-        val corrected = contextEngine.correctCurrentContext(expectedEventId, type, historical)
-        if (!corrected) {
-            _events.send(HomeUiEvent.ShowMessage("O Hoodie identificou uma mudança. Confira sua atividade atual antes de salvar."))
-            return@action
+    suspend fun correctCurrentContext(type: PlaceType, historical: Boolean, expectedEventId: Long?): Boolean {
+        if (_busy.value) return false
+        _busy.value = true
+        return try {
+            val corrected = withContext(Dispatchers.IO) { contextEngine.correctCurrentContext(expectedEventId, type, historical) }
+            if (!corrected) {
+                _events.send(HomeUiEvent.ShowMessage("O Hoodie identificou uma mudança. Confira sua atividade atual antes de salvar."))
+                false
+            } else {
+                if (!historical) withContext(Dispatchers.IO) { mobility.onManualContext(type.toContext(), clock.nowMillis()) }
+                _events.send(HomeUiEvent.React(AnimationId.HAPPY))
+                true
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Log.e(TAG, "Failed to save context correction", error)
+            _events.send(HomeUiEvent.ShowMessage("Não foi possível salvar a correção. Tente novamente."))
+            false
+        } finally {
+            _busy.value = false
         }
-        if (!historical) mobility.onManualContext(type.toContext(), clock.nowMillis())
-        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
     fun answerYesNo(id: Long, yes: Boolean) = action {

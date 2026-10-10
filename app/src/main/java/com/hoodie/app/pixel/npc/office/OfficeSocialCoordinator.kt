@@ -42,7 +42,10 @@ object OfficeSocialCoordinator {
 }
 
 /** Os colegas recebem o mesmo encontro calculado a partir da seed; ninguém fala sozinho. */
-class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContract {
+class OfficeSocialSession(
+    private val daySeed: Int,
+    reservationCacheLimit: Int = RESERVATION_CACHE_LIMIT,
+) : NpcSocialCoordinatorContract {
     private val cachedMeetingTravelMs: Long by lazy(LazyThreadSafetyMode.PUBLICATION) {
         maxOf(
             routeDurationMs(OfficeNavigationGraph.route(OfficeNpcSpot.DESK_LEFT, OfficeNpcSpot.CENTER)),
@@ -54,8 +57,9 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
     private var scheduleIndex = 0L
     private var lastActualStart = Long.MIN_VALUE
     private val scheduledEvents = mutableListOf<OfficeSocialEvent>()
-    private val reservationsByDecision = LinkedHashMap<Long, Map<String, OfficeSpotReservation>>(512, .75f, true)
-    private val reservationCacheLimit = RESERVATION_CACHE_LIMIT
+    /** Packed spot assignments keep the replay window bounded without retaining per-decision maps. */
+    private val reservationsByDecision = LinkedHashMap<Long, Int>(512, .75f, true)
+    private val reservationCacheLimit = reservationCacheLimit.coerceAtLeast(1)
     private val resolvingReservationTimes = mutableSetOf<Long>()
     private val socialCooldownUntil = mutableMapOf<String, Long>()
     private val speechCooldownUntil = mutableMapOf<String, Long>()
@@ -188,12 +192,29 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
         // A new action at the boundary currently being allocated is included as part of that
         // boundary's batch. Returning its preferred target here avoids re-entering the batch.
         if (decisionAt in resolvingReservationTimes) return preferred
-        val reservation = reservationsByDecision.getOrPut(decisionAt) { assignedSpots(decisionAt) }
+        val packed = reservationsByDecision.getOrPut(decisionAt) { packReservations(assignedSpots(decisionAt)) }
         while (reservationsByDecision.size > reservationCacheLimit) {
             val eldest = reservationsByDecision.entries.iterator()
             if (eldest.hasNext()) { eldest.next(); eldest.remove() } else break
         }
-        return reservation[npcId]?.spot ?: preferred
+        val slot = when (npcId) {
+            "rabbit_analyst" -> 0
+            "cat_colleague" -> 1
+            "bulldog_exec" -> 2
+            else -> return preferred
+        }
+        val spotCode = (packed ushr (slot * RESERVATION_SPOT_BITS)) and RESERVATION_SPOT_MASK
+        return if (spotCode == 0) preferred else OfficeNpcSpot.entries.getOrNull(spotCode - 1) ?: preferred
+    }
+
+    /** Three spot ordinals fit in fifteen bits; no reservation maps/objects are retained per key. */
+    private fun packReservations(reservations: Map<String, OfficeSpotReservation>): Int {
+        var packed = 0
+        for ((slot, npcId) in RESERVATION_NPC_IDS.withIndex()) {
+            val spotCode = reservations[npcId]?.spot?.ordinal?.plus(1) ?: 0
+            packed = packed or (spotCode shl (slot * RESERVATION_SPOT_BITS))
+        }
+        return packed
     }
 
     private fun assignedSpots(timeMs: Long): Map<String, OfficeSpotReservation> {
@@ -280,7 +301,10 @@ class OfficeSocialSession(private val daySeed: Int) : NpcSocialCoordinatorContra
     }
 
     private companion object {
-        const val RESERVATION_CACHE_LIMIT = 512
+        const val RESERVATION_SPOT_BITS = 5
+        const val RESERVATION_SPOT_MASK = (1 shl RESERVATION_SPOT_BITS) - 1
+        val RESERVATION_NPC_IDS = listOf("rabbit_analyst", "cat_colleague", "bulldog_exec")
+        const val RESERVATION_CACHE_LIMIT = 24_576
         const val APPROACH_TRANSITION_MS = 640L + com.hoodie.app.pixel.npc.NpcPoseLibrary.TURN_MS
         const val INTERACTION_PREP_MS = 300L
         const val RETURN_TRANSITION_MS = com.hoodie.app.pixel.npc.NpcPoseLibrary.TURN_MS + 640L

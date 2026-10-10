@@ -1,6 +1,10 @@
 package com.hoodie.app.pixel.transport
 
 import com.hoodie.app.core.mobility.MovementMode
+import com.hoodie.app.core.mobility.MobilityPhase
+import com.hoodie.app.core.mobility.MobilityVisualSnapshot
+import com.hoodie.app.core.mobility.ModeCertainty
+import com.hoodie.app.core.mobility.MobilitySource
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.diary.journey.JourneyVehicle
@@ -33,8 +37,20 @@ data class TransportVisualProfile(
     val journey: TransportJourneyProfile,
 )
 
+data class TransportVisualResolution(
+    val profile: TransportVisualProfile,
+    val certainty: ModeCertainty,
+    val source: MobilitySource?,
+    val reason: String,
+)
+
 /** Single mapping from recognized movement to Home scene, animation, ambience and Journey style. */
 object TransportVisualRegistry {
+    private val neutral = TransportVisualProfile(
+        null, SceneId.GENERIC_OUTDOOR, TransportAnimationSet(primary = listOf(AnimationId.IDLE)),
+        TransportAmbientProfile(true, .35f, TransportVibration.NONE, TransportLighting.OPEN_AIR),
+        TransportJourneyProfile(JourneyVehicle.GENERIC_TRANSIT, TransportRouteStyle.GENERIC_TRANSIT),
+    )
     private val walk = TransportVisualProfile(
         null, SceneId.STREET, TransportAnimationSet(primary = listOf(AnimationId.WALK)),
         TransportAmbientProfile(true, .7f, TransportVibration.NONE, TransportLighting.OPEN_AIR),
@@ -93,12 +109,58 @@ object TransportVisualRegistry {
         }
     }
 
+    /** Resolves only from current mobility evidence; absence of a mode never means walking. */
+    fun resolve(
+        snapshot: MobilityVisualSnapshot,
+        preferredMode: MovementMode?,
+        now: Long,
+        variant: Int = 0,
+    ): TransportVisualResolution {
+        val open = snapshot.sessionId != null && snapshot.phase in setOf(MobilityPhase.CANDIDATE, MobilityPhase.ACTIVE, MobilityPhase.ARRIVING)
+        val candidateRecent = snapshot.observedAt?.let { now >= it && now - it <= CANDIDATE_EVIDENCE_MAX_AGE_MS } == true
+        val vehicleRecent = snapshot.lastVehicleAt?.let { now >= it && now - it <= CANDIDATE_EVIDENCE_MAX_AGE_MS } == true
+        val vehicleStillObserved = snapshot.vehicleExitAt == null || snapshot.lastVehicleAt == null || snapshot.vehicleExitAt < snapshot.lastVehicleAt
+
+        if (open && snapshot.mode?.isVehicle == true && snapshot.phase != MobilityPhase.CANDIDATE) {
+            val mode = snapshot.mode
+            val profile = profileFor(mode, CommuteStyle.WALK, variant)
+            return TransportVisualResolution(profile, snapshot.certainty, snapshot.source,
+                "Sessão ativa com modo $mode")
+        }
+        if (open && snapshot.observedMovement == com.hoodie.app.core.mobility.DetectedMovement.IN_VEHICLE && vehicleRecent && vehicleStillObserved) {
+            val selected = preferredMode?.takeIf { it.isVehicle }
+            val mode = selected ?: MovementMode.VEHICLE_UNKNOWN
+            val certainty = if (selected != null) ModeCertainty.PREFERRED else ModeCertainty.PROVISIONAL
+            val source = if (selected != null) MobilitySource.PREFERENCE else MobilitySource.ACTIVITY_RECOGNITION
+            return TransportVisualResolution(profileFor(mode, CommuteStyle.WALK, variant), certainty, source,
+                if (selected != null) "Veículo detectado; preferência aplicada: $selected" else "IN_VEHICLE detectado; tipo ainda desconhecido")
+        }
+        if (open && candidateRecent) {
+            when (snapshot.observedMovement) {
+                com.hoodie.app.core.mobility.DetectedMovement.WALKING -> return TransportVisualResolution(
+                    profileFor(MovementMode.WALKING, CommuteStyle.WALK, variant), ModeCertainty.PROVISIONAL,
+                    MobilitySource.ACTIVITY_RECOGNITION, "Caminhada detectada provisoriamente")
+                com.hoodie.app.core.mobility.DetectedMovement.RUNNING -> return TransportVisualResolution(
+                    profileFor(MovementMode.RUNNING, CommuteStyle.WALK, variant), ModeCertainty.PROVISIONAL,
+                    MobilitySource.ACTIVITY_RECOGNITION, "Corrida detectada provisoriamente")
+                com.hoodie.app.core.mobility.DetectedMovement.ON_BICYCLE -> return TransportVisualResolution(
+                    profileFor(MovementMode.BICYCLE, CommuteStyle.WALK, variant), ModeCertainty.PROVISIONAL,
+                    MobilitySource.ACTIVITY_RECOGNITION, "Bicicleta detectada provisoriamente")
+                else -> Unit
+            }
+        }
+        return TransportVisualResolution(neutral, ModeCertainty.UNKNOWN, null,
+            if (!open) "Nenhuma sessão de deslocamento ativa" else "Sem evidência recente suficiente para escolher um transporte")
+    }
+
     private fun genericTransit(mode: MovementMode?) = profile(
         mode, SceneId.TRANSIT, AnimationId.TRANSIT_ENTER,
         listOf(AnimationId.TRANSIT_SIT, AnimationId.TRANSIT_LOOK_WINDOW, AnimationId.TRANSIT_BUMP), listOf(AnimationId.TRANSIT_EXIT),
         TransportAmbientProfile(true, .7f, TransportVibration.LOW, TransportLighting.DAYLIGHT_INTERIOR),
         JourneyVehicle.GENERIC_TRANSIT, TransportRouteStyle.GENERIC_TRANSIT,
     )
+
+    private const val CANDIDATE_EVIDENCE_MAX_AGE_MS = 5 * 60_000L
 
     private fun profile(
         mode: MovementMode?, scene: SceneId, enter: AnimationId, primary: List<AnimationId>, exit: List<AnimationId>,

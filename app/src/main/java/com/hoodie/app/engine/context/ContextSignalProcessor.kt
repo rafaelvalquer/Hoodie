@@ -90,8 +90,9 @@ internal class ContextSignalProcessor(
         source: ContextSource,
         reason: TransitionReason,
         note: String? = null,
+        venueType: PlaceType? = null,
     ): TransitionResult {
-        val r = transitions.transition(type, at, confidence, placeId, source, reason, note)
+        val r = transitions.transition(type, at, confidence, placeId, source, reason, note, venueType)
         if (r.changed) {
             memory.onContext(type, r.previous?.type, r.event.startedAt)
             if (source == ContextSource.GEOFENCE) notifyArrival(type, r.previous, r.event.startedAt)

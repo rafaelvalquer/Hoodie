@@ -16,6 +16,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -92,6 +93,23 @@ class PassiveContextConfirmationTest {
         assertEquals("HOME", graph.db.intelligenceDao().correctionsSince(0).single().originalContext)
         assertEquals("DINING", graph.db.intelligenceDao().correctionsSince(0).single().correctedContext)
         assertTrue(graph.timelineTexts().any { "Restaurante" in it || "Almoço" in it })
+    }
+
+    @Test fun changingShoppingVenueCreatesOneObservableBoundaryAndSameVenueIsIdempotent() = runBlocking {
+        graph.engine.setManualPlace(PlaceType.MARKET)
+        val market = graph.contextDao.current()!!
+        assertEquals(UserContextType.SHOPPING, market.type)
+        assertEquals(PlaceType.MARKET, market.venueType)
+
+        graph.engine.setManualPlace(PlaceType.STORE)
+        val store = graph.contextDao.current()!!
+        assertNotEquals(market.id, store.id)
+        assertEquals(UserContextType.SHOPPING, store.type)
+        assertEquals(PlaceType.STORE, store.venueType)
+
+        graph.engine.setManualPlace(PlaceType.STORE)
+        assertEquals(store.id, graph.contextDao.current()!!.id)
+        assertEquals(PlaceType.STORE, graph.contextDao.current()!!.venueType)
     }
 
     @Test fun fromNowCorrectionWithNoPriorContextIsAllowedOnlyWhileStillUnknown() = runBlocking {

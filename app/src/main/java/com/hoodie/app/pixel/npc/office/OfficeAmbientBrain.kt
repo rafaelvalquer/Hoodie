@@ -21,6 +21,7 @@ class OfficeAmbientBrain(
     val daySeed: Int,
     speechProfile: NpcSpeechProfile? = null,
     internal val speechSeed: Int = 0,
+    coordinatedTimelineLimit: Int = DEFAULT_COORDINATED_TIMELINE_LIMIT,
 ) : NpcAmbientBrain {
     @Volatile internal var speechProfile: NpcSpeechProfile? = speechProfile
     internal var socialSession: OfficeSocialSession? = null
@@ -31,8 +32,14 @@ class OfficeAmbientBrain(
         val cooldownsBefore: NpcCooldowns,
     )
     private val coordinatedTimeline = mutableListOf<PlannedStep>()
+    private val coordinatedTimelineLimit = coordinatedTimelineLimit.coerceAtLeast(1)
+    private val coordinatedTimelinePruneBatch = minOf(1_024, this.coordinatedTimelineLimit)
+    private var coordinatedTimelinePrunes = 0
     /** Reservation planning also asks for the uncoordinated action at historical times. */
     private val rawTimeline = mutableListOf<PlannedStep>()
+    private val rawTimelineLimit = 512
+    private val rawTimelinePruneBatch = 256
+    private var rawTimelinePrunes = 0
     private var bulldogReturnStartX = Int.MIN_VALUE
     private var bulldogReturnStartY = Int.MIN_VALUE
     private var bulldogReturnRouteCache: List<OfficeSpot>? = null
@@ -66,6 +73,11 @@ class OfficeAmbientBrain(
         timeline: MutableList<PlannedStep>,
         coordinated: Boolean,
     ): Pair<OfficeNpcAction, NpcBrainState> {
+        // Both timelines are bounded memoization windows. An older query is replayed from the
+        // deterministic seed instead of retaining a second copy of the complete action history.
+        if (timeline.isNotEmpty() && timeMs < timeline.first().action.startedAt) {
+            return actionAndStateFromTimeline(timeMs, mutableListOf(), coordinated)
+        }
         val cached = cachedStepAt(timeline, timeMs)
         val step = cached ?: run {
             while (timeline.isEmpty() || timeline.last().action.finishedAt <= timeMs) {
@@ -105,7 +117,16 @@ class OfficeAmbientBrain(
                     recentIntents = (listOf(intent) + recent).take(4),
                     cooldownsBefore = cooldowns,
                 )
-                if (coordinated) OfficePerformanceCounters.timelineRebuilds.incrementAndGet()
+                if (coordinated) {
+                    OfficePerformanceCounters.timelineRebuilds.incrementAndGet()
+                }
+                val limit = if (coordinated) coordinatedTimelineLimit else rawTimelineLimit
+                val pruneBatch = if (coordinated) coordinatedTimelinePruneBatch else rawTimelinePruneBatch
+                if (timeline.size > limit) {
+                    timeline.subList(0, pruneBatch).clear()
+                    if (coordinated) coordinatedTimelinePrunes++ else rawTimelinePrunes++
+                    OfficePerformanceCounters.timelinePrunes.incrementAndGet()
+                }
             }
             timeline.last()
         }
@@ -123,7 +144,7 @@ class OfficeAmbientBrain(
         return action to state
     }
 
-    /** The timeline is append-only and time ordered, so backwards/seek access is logarithmic. */
+    /** The retained timeline is time ordered, so backwards/seek access within its window is logarithmic. */
     private fun cachedStepAt(timeline: List<PlannedStep>, timeMs: Long): PlannedStep? {
         var low = 0
         var high = timeline.lastIndex
@@ -143,6 +164,13 @@ class OfficeAmbientBrain(
         coordinatedTimeline.clear()
         rawTimeline.clear()
     }
+
+    internal fun rawTimelineCacheSize(): Int = rawTimeline.size
+    internal fun rawTimelineCacheCapacity(): Int = rawTimelineLimit
+    internal fun rawTimelinePruneCount(): Int = rawTimelinePrunes
+    internal fun coordinatedTimelineCacheSize(): Int = coordinatedTimeline.size
+    internal fun coordinatedTimelineCacheCapacity(): Int = coordinatedTimelineLimit
+    internal fun coordinatedTimelinePruneCount(): Int = coordinatedTimelinePrunes
 
     override fun movementAt(timeMs: Long): NpcMovement = movementAt(timeMs, null)
 
@@ -395,5 +423,9 @@ class OfficeAmbientBrain(
 
     private fun isDesk(spot: OfficeNpcSpot) = spot == OfficeNpcSpot.DESK_LEFT || spot == OfficeNpcSpot.DESK_RIGHT
 
-    private companion object { const val STAND_MS = 640L; const val SIT_MS = 640L }
+    private companion object {
+        const val DEFAULT_COORDINATED_TIMELINE_LIMIT = 8_192
+        const val STAND_MS = 640L
+        const val SIT_MS = 640L
+    }
 }

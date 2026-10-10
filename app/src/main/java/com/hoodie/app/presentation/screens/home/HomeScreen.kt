@@ -152,7 +152,7 @@ internal data class HomeActions(
     val answerTransportMode: (Long, com.hoodie.app.core.mobility.MovementMode) -> Unit = { _, _ -> },
     val dismissQuestion: (Long) -> Unit = {},
     val answerSavePlace: (Long, Boolean) -> Unit = { _, _ -> },
-    val correctContext: (PlaceType, Boolean, Long?) -> Unit = { _, _, _ -> },
+    val correctContext: suspend (PlaceType, Boolean, Long?) -> Boolean = { _, _, _ -> false },
 )
 
 /** Production UI shared by the connected screen and deterministic visual fixtures. */
@@ -320,7 +320,7 @@ internal fun HomeContent(
     if (correctionOpen) HomeNowCorrectionSheet(
         snapshot = correctionSnapshot,
         onDismiss = { correctionOpen = false },
-        onSave = { type, historical -> actions.correctContext(type, historical, correctionExpectedEventId); correctionOpen = false },
+        onSave = { type, historical -> actions.correctContext(type, historical, correctionExpectedEventId) },
         saving = busy,
     )
 }

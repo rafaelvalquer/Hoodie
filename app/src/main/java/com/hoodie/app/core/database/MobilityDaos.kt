@@ -3,6 +3,8 @@ package com.hoodie.app.core.database
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -23,6 +25,17 @@ interface MobilitySessionDao {
 
     @Query("SELECT * FROM mobility_sessions WHERE endedAt IS NULL ORDER BY startedAt DESC LIMIT 1")
     fun observeOpen(): Flow<MobilitySessionEntity?>
+
+    /** Session and its open segment are read from one Room query snapshot. */
+    @Query("""
+        SELECT s.*, g.mode AS openSegmentMode, g.confidence AS openSegmentConfidence,
+               g.confirmed AS openSegmentConfirmed, g.source AS openSegmentSource
+        FROM mobility_sessions AS s
+        LEFT JOIN mobility_segments AS g ON g.sessionId = s.id AND g.endedAt IS NULL
+        WHERE s.endedAt IS NULL
+        ORDER BY s.startedAt DESC LIMIT 1
+    """)
+    fun observeOpenVisual(): Flow<MobilityVisualRow?>
 
     /** Deslocamentos encerrados (para aprendizado), mais recentes primeiro. */
     @Query("SELECT * FROM mobility_sessions WHERE endedAt IS NOT NULL AND confirmed = 1 AND startedAt >= :since ORDER BY startedAt DESC")
@@ -46,6 +59,14 @@ interface MobilitySessionDao {
     @Query("SELECT COUNT(*) FROM mobility_sessions")
     suspend fun count(): Int
 }
+
+data class MobilityVisualRow(
+    @Embedded val session: MobilitySessionEntity,
+    @ColumnInfo(name = "openSegmentMode") val openSegmentMode: com.hoodie.app.core.mobility.MovementMode?,
+    @ColumnInfo(name = "openSegmentConfidence") val openSegmentConfidence: Float?,
+    @ColumnInfo(name = "openSegmentConfirmed") val openSegmentConfirmed: Boolean?,
+    @ColumnInfo(name = "openSegmentSource") val openSegmentSource: com.hoodie.app.core.mobility.MobilitySource?,
+)
 
 @Dao
 interface MobilitySegmentDao {

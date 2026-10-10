@@ -93,7 +93,7 @@ fun HoodieSceneView(
         AnimationStateMachine(if (fixedFrame != null) Random(0) else Random(System.nanoTime()))
     }
     val renderer = remember { SceneRenderer() }
-    val officeRendererMutex = remember(renderer) { Mutex() }
+    val rendererMutex = remember(renderer) { Mutex() }
     DisposableEffect(renderer) { onDispose { renderer.dispose() } }
     val bitmap = remember { Bitmap.createBitmap(PixelScene.SCENE_W, PixelScene.SCENE_H, Bitmap.Config.ARGB_8888) }
     val image = remember { bitmap.asImageBitmap() }
@@ -111,7 +111,7 @@ fun HoodieSceneView(
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
                 val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                renderAndPresent(renderer, officeRendererMutex, bitmap, rendered, fixedFrame.animationMillis) { frames++ }
+                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis) { frames++ }
             }
             return@LaunchedEffect
         }
@@ -125,7 +125,7 @@ fun HoodieSceneView(
                 val period = currentPeriod ?: DayPeriod.of(time.hour)
                 machine.frame(t, time.hour * 60 + time.minute, period)?.let { f ->
                     val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                    renderAndPresent(renderer, officeRendererMutex, bitmap, rendered, t) { frames++ }
+                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t) { frames++ }
                 }
             }
         }
@@ -133,12 +133,12 @@ fun HoodieSceneView(
     PixelImage(image, PixelScene.SCENE_W, PixelScene.SCENE_H, modifier) { frames }
 }
 
-/** Office pixel work runs away from the Compose frame callback; the lock prevents a cancelled
- * scene effect from racing the next render and prevents a rendered buffer being changed while
- * Bitmap.setPixels is copying it. No frame queue is built: the loop awaits each one. */
+/** All scenes share one renderer and pixel buffer, so its lock spans both drawing and bitmap
+ * presentation. Office pixel work runs away from the Compose frame callback. No frame queue is
+ * built: the loop awaits each frame before asking the renderer for the next one. */
 private suspend fun renderAndPresent(
     renderer: SceneRenderer,
-    officeRendererMutex: Mutex,
+    rendererMutex: Mutex,
     bitmap: Bitmap,
     frame: RenderFrame,
     timeMs: Long,
@@ -155,13 +155,13 @@ private suspend fun renderAndPresent(
         onPresented()
     }
 
-    if (frame.scene.id == SceneId.OFFICE) {
-        officeRendererMutex.withLock {
-            val buffer = withContext(Dispatchers.Default) { renderer.render(frame, timeMs) }
-            present(buffer)
+    rendererMutex.withLock {
+        val buffer = if (frame.scene.id == SceneId.OFFICE) {
+            withContext(Dispatchers.Default) { renderer.render(frame, timeMs) }
+        } else {
+            renderer.render(frame, timeMs)
         }
-    } else {
-        present(renderer.render(frame, timeMs))
+        present(buffer)
     }
 }
 

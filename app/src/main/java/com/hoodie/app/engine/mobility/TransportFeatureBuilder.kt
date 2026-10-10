@@ -42,7 +42,21 @@ class TransportFeatureBuilder @Inject constructor() {
     }
     @Synchronized fun speed(metersPerSecond: Float, at: Long) {
         if (sessionId == null || at < startedAt || !metersPerSecond.isFinite() || metersPerSecond < 0 || metersPerSecond > 100) return
-        val kmh = metersPerSecond * 3.6f
+        addKmh(metersPerSecond * 3.6f)
+    }
+    @Synchronized fun speedKmh(kmh: Float, at: Long) {
+        if (sessionId == null || at < startedAt || !kmh.isFinite() || kmh !in 0f..360f) return
+        addKmh(kmh)
+    }
+    @Synchronized fun restorePersisted(id: Long, at: Long, count: Int, meanKmh: Float?, maxKmh: Float?, variation: Float) {
+        if (sessionId == id && speedCount > 0) return
+        begin(id, at)
+        val mean = meanKmh?.takeIf { it.isFinite() && it >= 0f } ?: return
+        val n = count.coerceAtLeast(0)
+        speedCount = n; speedSum = mean.toDouble() * n; speedMax = maxKmh?.takeIf { it.isFinite() } ?: mean
+        speedSquareSum = (mean * mean * (1f + variation.coerceAtLeast(0f) * variation.coerceAtLeast(0f))).toDouble() * n
+    }
+    private fun addKmh(kmh: Float) {
         speedCount++; speedSum += kmh; speedSquareSum += kmh.toDouble() * kmh; speedMax = maxOf(speedMax, kmh)
     }
     @Synchronized fun build(now: Long): TransportFeatures {

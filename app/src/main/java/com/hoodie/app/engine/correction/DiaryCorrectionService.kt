@@ -63,7 +63,8 @@ class DiaryCorrectionService @Inject constructor(
             rewriteTimeline(adjusted)
         }
         if (r.endedAt == null) require(dao.current()?.id == old.id) { "Somente o evento atual pode permanecer aberto." }
-        val corrected = old.copy(type = type, placeId = r.placeId, startedAt = r.startedAt, endedAt = r.endedAt, confidence = 1f, source = ContextSource.USER_CORRECTION)
+        val venue = r.venueType ?: old.venueType
+        val corrected = old.copy(type = type, placeId = r.placeId, venueType = venue, startedAt = r.startedAt, endedAt = r.endedAt, confidence = 1f, source = ContextSource.USER_CORRECTION)
         val audit = auditContext(old, corrected, CorrectionTargetType.CONTEXT)
         dao.update(corrected)
         rewriteTimeline(corrected)
@@ -146,6 +147,7 @@ class DiaryCorrectionService @Inject constructor(
         originalPlaceId = old.placeId, correctedPlaceId = corrected.placeId, originalStartAt = old.startedAt, correctedStartAt = corrected.startedAt,
         originalEndAt = old.endedAt, correctedEndAt = corrected.endedAt, originalMode = null, correctedMode = null,
         originalSource = old.source.name, originalConfidence = old.confidence, createdAt = clock.nowMillis(),
+        originalVenueType = old.venueType?.name, correctedVenueType = corrected.venueType?.name,
     ))
 
     private suspend fun rewriteTimeline(event: ContextEventEntity) {

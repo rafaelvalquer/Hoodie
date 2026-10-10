@@ -39,7 +39,7 @@ object MobilityConfirmationPolicy {
         }
         if (questionsAskedInSession >= sessionLimit) return Verdict.SKIP
         // Nada de pergunta que peça toque enquanto alguém pode estar dirigindo.
-        if (vehicleMoving && !appInForeground) return Verdict.DEFER
+        if (vehicleMoving) return Verdict.DEFER
         if (!ConfirmationPolicy.canAsk(now, zone, kind, candidate, recent)) {
             // A escolha do transporte não se perde: espera a próxima oportunidade.
             return if (kind == QuestionKind.SELECT_TRANSPORT_MODE) Verdict.DEFER else Verdict.SKIP

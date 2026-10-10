@@ -25,7 +25,7 @@ internal class ManualContextHandler(private val processor: ContextSignalProcesso
         val type = placeType.toContext()
         val placeId = places.firstOfType(placeType)?.id
         scheduler.cancelChecks()
-        switchTo(type, now, 1f, placeId, ContextSource.MANUAL, TransitionReason.MANUAL)
+        switchTo(type, now, 1f, placeId, ContextSource.MANUAL, TransitionReason.MANUAL, venueType = placeType)
         recordConfirmation(type, placeId, now, accepted = true)
     }
 
@@ -35,8 +35,7 @@ internal class ManualContextHandler(private val processor: ContextSignalProcesso
         val placeId = places.firstOfType(placeType)?.id
         scheduler.cancelChecks()
         val current = contextDao.current()
-        if (current?.type == type) transitions.confirm(current.id, 1f, ContextSource.USER_CORRECTION)
-        else switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL)
+        switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL, venueType = placeType)
         recordConfirmation(type, placeId, now, accepted = true)
         hoodie.resolve()
     }
@@ -48,9 +47,8 @@ internal class ManualContextHandler(private val processor: ContextSignalProcesso
         val type = placeType.toContext()
         val placeId = places.firstOfType(placeType)?.id
         scheduler.cancelChecks()
-        if (current == null) switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL)
-        else if (current.type == type) transitions.confirm(current.id, 1f, ContextSource.USER_CORRECTION)
-        else switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL)
+        if (current == null) switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL, venueType = placeType)
+        else switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL, venueType = placeType)
         recordConfirmation(type, placeId, now, accepted = true)
         hoodie.resolve()
         true

@@ -15,6 +15,8 @@ import com.hoodie.app.pixel.npc.office.OfficeNpcDirector
 import com.hoodie.app.pixel.npc.office.OfficeNpcSession
 import com.hoodie.app.pixel.npc.office.OfficeSessionKey
 import com.hoodie.app.pixel.npc.office.OfficeNpcFrameState
+import com.hoodie.app.pixel.npc.shopping.ShoppingNpcDirector
+import com.hoodie.app.pixel.npc.shopping.ShoppingNpcSession
 import com.hoodie.app.pixel.npc.AmbientNpcSlot
 import com.hoodie.app.pixel.scene.Prop
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
@@ -34,6 +36,8 @@ class SceneRenderer {
     /** Office state belongs to this renderer: previews and other renderers never share brains. */
     private var officeSession: OfficeNpcSession? = null
     private var officeRenderPlan: OfficeRenderPlan? = null
+    private var shoppingSession: ShoppingNpcSession? = null
+    private var shoppingSessionStartedAt: Long = 0L
 
     private class OfficeDrawEntry(
         val prop: Prop? = null,
@@ -74,6 +78,16 @@ class SceneRenderer {
     }
 
     private fun npcSlots(scene: PixelScene, env: SceneEnv): List<com.hoodie.app.pixel.npc.AmbientNpcSlot> {
+        if (scene.id == SceneId.SHOPPING) {
+            val current = shoppingSession
+            val session = current?.takeIf { it.venue == env.shoppingVenue && it.seed == (env.daySeed * 31 + env.variant * 17 + env.period.ordinal) }
+                ?: ShoppingNpcDirector.createSession(env).also {
+                    shoppingSession = it
+                    shoppingSessionStartedAt = 0L
+                }
+            return session.npcSlots
+        }
+        shoppingSession = null
         if (scene.id != SceneId.OFFICE) {
             officeSession?.dispose()
             officeSession = null
@@ -97,12 +111,16 @@ class SceneRenderer {
         officeSession = null
         officeRenderPlan = null
         backgrounds.clear()
+        shoppingSession = null
     }
 
     private fun background(scene: PixelScene, env: SceneEnv): PixelBuffer = synchronized(backgrounds) {
-        val key = BgKey(scene.id, env.period, env.variant.mod(scene.backgroundVariants))
+        val visualVariant = if (scene.id == SceneId.SHOPPING) {
+            if (env.shoppingVenue == com.hoodie.app.core.model.PlaceType.STORE) 1 else 0
+        } else env.variant
+        val key = BgKey(scene.id, env.period, visualVariant.mod(scene.backgroundVariants))
         backgrounds[key]?.let { return@synchronized it }
-        val rendered = PixelBuffer(scene.width, scene.height).also { scene.drawBackground(it, env) }
+        val rendered = PixelBuffer(scene.width, scene.height).also { scene.drawBackground(it, env.copy(variant = visualVariant)) }
         backgrounds[key] = rendered
         if (backgrounds.size > backgroundCacheLimit) {
             val eldest = backgrounds.entries.iterator()
@@ -112,7 +130,7 @@ class SceneRenderer {
     }
 
     @Synchronized
-    fun render(frame: RenderFrame, timeMs: Long): PixelBuffer {
+    fun render(frame: RenderFrame, absoluteTimeMs: Long): PixelBuffer {
         val scene = frame.scene
         val measureOffice = BuildConfig.DEBUG && scene.id == SceneId.OFFICE
         val renderStart = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
@@ -122,6 +140,8 @@ class SceneRenderer {
         val npcs = npcSlots(scene, frame.env)
         if (measureOffice) ScenePerformanceMonitor.traceEnd()
         val planningNanos = if (measureOffice) ScenePerformanceMonitor.nowNanos() - planningStart else 0L
+        if (scene.id == SceneId.SHOPPING && shoppingSessionStartedAt == 0L) shoppingSessionStartedAt = absoluteTimeMs
+        val timeMs = if (scene.id == SceneId.SHOPPING) (absoluteTimeMs - shoppingSessionStartedAt).coerceAtLeast(0L) else absoluteTimeMs
         val stateStart = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
         if (measureOffice) ScenePerformanceMonitor.traceBegin("Hoodie.Office.stateUpdate")
         val env = envWithAmbientNpcState(frame.env, npcs, timeMs)

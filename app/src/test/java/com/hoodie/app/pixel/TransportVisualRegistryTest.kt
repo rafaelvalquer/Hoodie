@@ -1,6 +1,10 @@
 package com.hoodie.app.pixel
 
 import com.hoodie.app.core.mobility.MovementMode
+import com.hoodie.app.core.mobility.MobilityPhase
+import com.hoodie.app.core.mobility.MobilityVisualSnapshot
+import com.hoodie.app.core.mobility.ModeCertainty
+import com.hoodie.app.core.mobility.DetectedMovement
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.UserContextType
@@ -20,6 +24,31 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TransportVisualRegistryTest {
+    @Test fun `resolver estrito usa estado neutro sem evidencia e transito provisório para veículo`() {
+        val neutral = TransportVisualRegistry.resolve(MobilityVisualSnapshot(), null, 1_000L)
+        assertEquals(SceneId.GENERIC_OUTDOOR, neutral.profile.scene)
+        val vehicle = TransportVisualRegistry.resolve(
+            MobilityVisualSnapshot(sessionId = 7, observedMovement = DetectedMovement.IN_VEHICLE,
+                lastVehicleAt = 900L, observedAt = 900L, phase = MobilityPhase.CANDIDATE), null, 1_000L,
+        )
+        assertEquals(SceneId.TRANSIT, vehicle.profile.scene)
+        assertEquals(ModeCertainty.PROVISIONAL, vehicle.certainty)
+        val preferred = TransportVisualRegistry.resolve(
+            MobilityVisualSnapshot(sessionId = 7, observedMovement = DetectedMovement.IN_VEHICLE,
+                lastVehicleAt = 900L, observedAt = 900L, phase = MobilityPhase.CANDIDATE), MovementMode.CAR, 1_000L,
+        )
+        assertEquals(SceneId.CAR, preferred.profile.scene)
+        assertEquals(ModeCertainty.PREFERRED, preferred.certainty)
+    }
+
+    @Test fun `resolver respeita modo ativo confirmado`() {
+        val visual = TransportVisualRegistry.resolve(
+            MobilityVisualSnapshot(sessionId = 8, mode = MovementMode.CAR, phase = MobilityPhase.ACTIVE,
+                certainty = ModeCertainty.CONFIRMED), null, 2_000L,
+        )
+        assertEquals(SceneId.CAR, visual.profile.scene)
+        assertEquals(ModeCertainty.CONFIRMED, visual.certainty)
+    }
     @Test fun `passageiros do trem deixam o assento do Hoodie visivel`() {
         val scene = SceneRegistry[SceneId.TRAIN]
         val seat = scene.spots.getValue(com.hoodie.app.pixel.scene.SpotId.SEAT)

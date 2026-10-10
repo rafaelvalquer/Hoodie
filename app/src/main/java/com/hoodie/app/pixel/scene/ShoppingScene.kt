@@ -9,6 +9,7 @@ import com.hoodie.app.pixel.renderer.PixelBuffer
  * produtos dentro do carrinho (ITEM_IN_CART) e esteira + visor do caixa (CHECKOUT_ACTIVE).
  */
 class ShoppingScene : PixelScene(SceneId.SHOPPING) {
+    override val backgroundVariants = 2
     override val spots = mapOf(
         SpotId.AISLE_A to Spot(84, 216),
         SpotId.AISLE_B to Spot(170, 216),
@@ -30,15 +31,22 @@ class ShoppingScene : PixelScene(SceneId.SHOPPING) {
             b.box(x, y, x + 13, minOf(y + 13, 319), if ((x / 14 + y / 14) % 2 == 0) 0xFFEDEFF2.toInt() else 0xFFD5DAE2.toInt())
         }
         b.box(0, 153, 239, 155, PixelBuffer.mix(0xFFD5DAE2.toInt(), P.OUTLINE, 0.35f))
-        // Letreiro "MERCADO".
+        // O mesmo ambiente atende loja e mercado, com identidade visual explícita.
         b.outlined(76, 20, 200, 48, 0xFFC9544F.toInt(), P.OUTLINE)
-        b.glyph(listOf(
+        val sign = if (env.shoppingVenue == com.hoodie.app.core.model.PlaceType.STORE) listOf(
+            "#   # ### ### #   #",
+            "## ## #   #   ## ##",
+            "# # # ##  ### # # #",
+            "#   # #     # #   #",
+            "#   # ### ### #   #",
+        ) else listOf(
             "#   # ### ##   ##  #  ##   # ",
             "## ## #   # # #   # # # # # #",
             "# # # ##  ##  #   ### # # # #",
             "#   # #   # # #   # # # # # #",
             "#   # ### # #  ## # # ##   # ",
-        ), 124, 32, P.WHITE)
+        )
+        b.glyph(sign, 124, 32, P.WHITE)
         // Lâmpadas tubulares no teto.
         for (lx in intArrayOf(40, 120, 200)) b.outlined(lx - 18, 2, lx + 18, 6, P.WHITE, P.OUTLINE)
     }

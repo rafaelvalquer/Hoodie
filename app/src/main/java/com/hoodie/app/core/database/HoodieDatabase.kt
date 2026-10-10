@@ -3,7 +3,7 @@ package com.hoodie.app.core.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
-const val HOODIE_DATABASE_VERSION = 8
+const val HOODIE_DATABASE_VERSION = 10
 
 /**
  * Banco local cifrado com SQLCipher no DatabaseModule. As coordenadas possuem

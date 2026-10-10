@@ -104,7 +104,7 @@ class ContextEngine @Inject constructor(
         requireNotNull(corrections) { "Correções do Diário indisponíveis." }.get().save(
             com.hoodie.app.domain.correction.DiaryCorrection(
                 com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT, event.id,
-                type.toContext(), places.firstOfType(type)?.id, event.startedAt, event.endedAt,
+                type.toContext(), places.firstOfType(type)?.id, event.startedAt, event.endedAt, venueType = type,
             ),
         )
         true

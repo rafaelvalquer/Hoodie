@@ -21,7 +21,13 @@ interface CurrentPosition {
 /** O que as engines precisam saber da localização (fake nos testes). */
 interface LocationSource : CurrentPosition {
     fun permissionState(): LocationPermissionState
+
+    /** Explicit, speed-only sample used by transport classification. */
+    suspend fun currentSpeed(): SpeedObservation? = null
 }
+
+/** Ephemeral point sample; latitude/longitude never leave LocationProvider. */
+data class SpeedObservation(val metersPerSecond: Float, val observedAt: Long)
 
 /**
  * Localização pontual, nunca contínua. Usada só para: cadastrar um lugar, e
@@ -31,7 +37,6 @@ interface LocationSource : CurrentPosition {
 class LocationProvider @Inject constructor(
     @ApplicationContext private val context: Context,
     private val permissions: LocationPermissionManager,
-    private val transportFeatures: com.hoodie.app.engine.mobility.TransportFeatureBuilder? = null,
 ) : LocationSource {
 
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(context) }
@@ -53,10 +58,19 @@ class LocationProvider @Inject constructor(
             withTimeoutOrNull(POSITION_TIMEOUT_MS) {
                 val cts = CancellationTokenSource()
                 fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token).await()
-            }?.let {
-                if (com.hoodie.app.core.config.HoodieConfig.TRANSPORT_CLASSIFIER_V2 && it.hasSpeed()) transportFeatures?.speed(it.speed, it.time)
-                it.latitude to it.longitude
-            }
+            }?.let { it.latitude to it.longitude }
+        }.getOrNull()
+    }
+
+    @SuppressLint("MissingPermission")
+    override suspend fun currentSpeed(): SpeedObservation? {
+        if (!permissionState().canReadPosition) return null
+        return runCatching {
+            withTimeoutOrNull(POSITION_TIMEOUT_MS) {
+                val cts = CancellationTokenSource()
+                fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token).await()
+            }?.takeIf { it.hasSpeed() && it.speed.isFinite() && it.speed in 0f..100f }
+                ?.let { SpeedObservation(it.speed, it.time) }
         }.getOrNull()
     }
 

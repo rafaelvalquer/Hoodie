@@ -38,4 +38,4 @@ class HistoryRepository @Inject constructor(
     val memories: Flow<List<Memory>> = memoryDao.observeAll().map { list -> list.map { Memory(it.key, it.emoji, it.title, it.unlockedAt) } }
 }
 
-fun ContextEventEntity.toDomain() = ContextEvent(id, type, startedAt, endedAt, confidence, placeId, source)
+fun ContextEventEntity.toDomain() = ContextEvent(id, type, startedAt, endedAt, confidence, placeId, source, venueType)
