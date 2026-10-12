@@ -89,7 +89,7 @@ class DiaryCorrectionIntegrationTest {
             source = com.hoodie.app.core.mobility.MobilitySource.ACTIVITY_RECOGNITION))
         service.save(DiaryCorrection(CorrectionTargetType.CONTEXT, target, UserContextType.LUNCH, restaurant, at(12), at(13)))
         val diary = com.hoodie.app.data.repository.DiaryRepository(g.contextDao, g.db.timelineDao(), g.db.hoodieActivityDao(), g.db.placeDao(), g.clock,
-            mobility = com.hoodie.app.data.repository.MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())).loadDiary(date)
+            mobility = com.hoodie.app.data.repository.MobilityRepository(g.db)).loadDiary(date)
         assertEquals(3_600_000L, diary.summary.lunchMs)
         assertTrue(diary.movements.isEmpty())
         assertTrue(diary.mobilityTotals.isEmpty())
@@ -107,7 +107,7 @@ class DiaryCorrectionIntegrationTest {
         g.db.mobilitySegmentDao().insert(MobilitySegmentEntity(sessionId = session, mode = mode, startedAt = at(17), confidence = .7f,
             source = com.hoodie.app.core.mobility.MobilitySource.ACTIVITY_RECOGNITION))
         service.save(DiaryCorrection(CorrectionTargetType.CONTEXT, event, UserContextType.LUNCH, restaurant, at(17), null))
-        val repo = com.hoodie.app.data.repository.MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())
+        val repo = com.hoodie.app.data.repository.MobilityRepository(g.db)
         assertNull(repo.open())
         assertTrue(repo.trips(at(18)).isEmpty())
         assertEquals(at(18), g.db.mobilitySegmentDao().forSession(session).single().endedAt)

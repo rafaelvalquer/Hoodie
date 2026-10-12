@@ -87,6 +87,7 @@ fun HoodieSceneView(
     speed: Float = 1f,
     periodOverride: DayPeriod? = null,
     sceneOverride: PixelScene? = null,
+    onScenePresented: ((SceneId) -> Unit)? = null,
 ) {
     val fixedFrame = LocalPixelRenderFrame.current
     val machine = remember(fixedFrame != null) {
@@ -101,6 +102,7 @@ fun HoodieSceneView(
     val clock = remember { VirtualClock() }
     val currentSpeed by rememberUpdatedState(speed)
     val currentPeriod by rememberUpdatedState(periodOverride)
+    val currentScenePresented by rememberUpdatedState(onScenePresented)
 
     LaunchedEffect(visual, fixedFrame) {
         // Ao abrir o app o ReactionDirector decide se ele reage (olha, acena, sorri…).
@@ -111,7 +113,7 @@ fun HoodieSceneView(
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
                 val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis) { frames++ }
+                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis) { frames++; currentScenePresented?.invoke(rendered.scene.id) }
             }
             return@LaunchedEffect
         }
@@ -125,7 +127,7 @@ fun HoodieSceneView(
                 val period = currentPeriod ?: DayPeriod.of(time.hour)
                 machine.frame(t, time.hour * 60 + time.minute, period)?.let { f ->
                     val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t) { frames++ }
+                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t) { frames++; currentScenePresented?.invoke(rendered.scene.id) }
                 }
             }
         }

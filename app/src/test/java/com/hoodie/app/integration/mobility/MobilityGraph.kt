@@ -45,8 +45,14 @@ class FakeArRegistrar : ActivityRecognitionRegistrar {
 /** Conta leituras de posição: a mobilidade não pode virar GPS contínuo. */
 class CountingLocation(private val inner: LocationSource) : LocationSource {
     var reads = 0
+    var speedReads = 0
+    var speedOverride: (suspend () -> com.hoodie.app.core.location.SpeedObservation?)? = null
     override fun permissionState(): LocationPermissionState = inner.permissionState()
     override suspend fun current(): Pair<Double, Double>? { reads++; return inner.current() }
+    override suspend fun currentSpeed(): com.hoodie.app.core.location.SpeedObservation? {
+        speedReads++
+        return speedOverride?.invoke() ?: inner.currentSpeed()
+    }
 }
 
 /**
@@ -58,7 +64,7 @@ class MobilityGraph(startDay: Int = SUNDAY - 7, private val intelligenceEnabled:
     val scheduler = FakeMobilityScheduler()
     val arPermissions = FakeArPermissions()
     val location = CountingLocation(g.location)
-    val repo = MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())
+    val repo = MobilityRepository(g.db)
     val bus = MobilityEventBus()
     var engine = newEngine()
     val router get() = QuestionRouter(g.db.questionDao(), g.engine, engine)
@@ -74,13 +80,18 @@ class MobilityGraph(startDay: Int = SUNDAY - 7, private val intelligenceEnabled:
         restaurant = g.addPlace(PlaceType.RESTAURANT, -23.62)
     }
 
-    fun newEngine() = MobilityEngine(
-        repo, g.engine, g.contextDao, g.places, g.routines, g.db.questionDao(), g.notifier, g.settings,
-        location, scheduler, arPermissions, bus, g.clock, g.log,
-        transportFeatures = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportFeatureBuilder() else null,
-        transportPatterns = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportPatternLearner(g.db, com.hoodie.app.core.database.RoomTransactionRunner(g.db), g.clock) else null,
-        intelligence = if (intelligenceEnabled) g.db.intelligenceDao() else null,
-    )
+    fun newEngine(): MobilityEngine {
+        val features = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportFeatureBuilder() else null
+        val sampler = features?.let { com.hoodie.app.engine.mobility.TransportSpeedSampler(repo, location, it, g.settings, scheduler, g.clock, g.log) }
+        return MobilityEngine(
+            repo, g.engine, g.contextDao, g.places, g.routines, g.db.questionDao(), g.notifier, g.settings,
+            location, scheduler, arPermissions, bus, g.clock, g.log,
+            transportFeatures = features,
+            transportPatterns = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportPatternLearner(g.db, com.hoodie.app.core.database.RoomTransactionRunner(g.db), g.clock) else null,
+            intelligence = if (intelligenceEnabled) g.db.intelligenceDao() else null,
+            speedSampler = sampler,
+        )
+    }
 
     /** "Reinicia o processo": engine novo, mesmo banco. */
     fun restart() { engine = newEngine() }

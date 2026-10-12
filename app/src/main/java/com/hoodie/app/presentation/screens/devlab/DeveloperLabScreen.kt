@@ -93,6 +93,7 @@ class DeveloperLabViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val clock: ClockProvider,
     logger: DebugEventLogger,
+    private val homeVisualDiagnostics: com.hoodie.app.core.debug.HomeVisualDiagnostics,
 ) : ViewModel() {
     private val _snapshot = MutableStateFlow(DevLabSnapshot())
     val snapshot: StateFlow<DevLabSnapshot> = _snapshot.asStateFlow()
@@ -101,6 +102,7 @@ class DeveloperLabViewModel @Inject constructor(
     val log: StateFlow<List<DebugEventLogger.Entry>> = logger.entries
     private val _transport = MutableStateFlow(TransportDiagnostics())
     val transport: StateFlow<TransportDiagnostics> = _transport.asStateFlow()
+    val homeVisual: StateFlow<com.hoodie.app.core.debug.HomeVisualSnapshot> = homeVisualDiagnostics.snapshot
 
     init {
         viewModelScope.launch {
@@ -162,6 +164,7 @@ fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: Develop
     val geofence by vm.geofenceResult.collectAsStateWithLifecycle()
     val log by vm.log.collectAsStateWithLifecycle()
     val transport by vm.transport.collectAsStateWithLifecycle()
+    val homeVisual by vm.homeVisual.collectAsStateWithLifecycle()
     LaunchedEffect(tab) { vm.refresh() }
     val zone = java.time.ZoneId.systemDefault()
 
@@ -178,7 +181,7 @@ fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: Develop
             "PIXEL" -> PixelLabTab(onOpen)
             "CONTEXT" -> ContextTab(snap, zone)
             "GEOFENCE" -> GeofenceTab(snap, permission, geofence, vm::reregister)
-            "TRANSPORT" -> TransportTab(transport)
+            "TRANSPORT" -> TransportTab(transport.copy(homeVisual = homeVisual, now = System.currentTimeMillis()))
             "SIMULATOR" -> SimulatorTab(snap, zone, vm::advance, vm::resetClock)
             "DATABASE" -> DatabaseTab(snap)
             "DIARY" -> DiaryLabScreen(Modifier.fillMaxWidth())
@@ -190,6 +193,8 @@ fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: Develop
 data class TransportDiagnostics(
     val snapshot: MobilityVisualSnapshot = MobilityVisualSnapshot(),
     val visual: TransportVisualResolution = TransportVisualRegistry.resolve(MobilityVisualSnapshot(), null, 0L, 0),
+    val homeVisual: com.hoodie.app.core.debug.HomeVisualSnapshot = com.hoodie.app.core.debug.HomeVisualSnapshot(),
+    val now: Long = 0,
 )
 
 @Composable
@@ -204,10 +209,13 @@ private fun TransportTab(data: TransportDiagnostics) {
         Mono("amostras=${s.speedSampleCount}/${s.speedSampleAttempts} · média=${s.meanSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"} · pico=${s.maxSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"}")
     }
     PixelPanel(Modifier.fillMaxWidth()) {
-        SectionLabel("Resolução visual usada pela Home")
-        Mono("cena=${data.visual.profile.scene} · modo=${data.visual.profile.mode ?: "—"}")
-        Mono("certeza=${data.visual.certainty} · origem=${data.visual.source ?: "—"}")
-        Mono(data.visual.reason)
+        SectionLabel("Cena real da Home")
+        val diag = data.homeVisual
+        Mono("esperada=${diag.expected ?: "—"} · selecionada=${diag.selected ?: "—"}")
+        Mono("apresentada=${diag.presented ?: "—"} · Home ${if (diag.homeVisible) "aberta" else "fechada; última cena conhecida"}")
+        Mono("modo=${diag.mode ?: "—"} · certeza=${diag.certainty ?: "—"}")
+        Mono("seleção há ${diag.selectedAt?.let { ((data.now - it).coerceAtLeast(0) / 1000) }?.let { "${it}s" } ?: "—"} · apresentação há ${diag.presentedAt?.let { ((data.now - it).coerceAtLeast(0) / 1000) }?.let { "${it}s" } ?: "—"}")
+        Mono("defasagem=${if (diag.selected != null && diag.presented != null && diag.selected != diag.presented) "sim" else "não"} · ${diag.reason ?: data.visual.reason}")
     }
 }
 

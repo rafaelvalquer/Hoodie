@@ -92,7 +92,7 @@ class FullDayIntelligenceIntegrationTest {
             assertEquals(com.hoodie.app.engine.officeRoutine.lunchStartMinute, configured.lunchStartMinute)
             val date = today.minusDays(1)
             val diary = com.hoodie.app.data.repository.DiaryRepository(g.contextDao, g.db.timelineDao(), g.db.hoodieActivityDao(), g.db.placeDao(), g.clock,
-                mobility = com.hoodie.app.data.repository.MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())).loadDiary(date)
+                mobility = com.hoodie.app.data.repository.MobilityRepository(g.db)).loadDiary(date)
             assertEquals(56 * 60_000L, diary.summary.lunchMs)
             assertTrue(JourneyMapAssembler.build(diary, g.clock.millis).nodes.any { it.placeId == restaurant && it.contextType == UserContextType.LUNCH })
             assertTrue(JourneyMapAssembler.build(diary, g.clock.millis).nodes.any { it.placeId == gym && it.contextType == UserContextType.GYM })
@@ -125,7 +125,7 @@ class FullDayIntelligenceIntegrationTest {
             correction.save(DiaryCorrection(CorrectionTargetType.CONTEXT, previousDayLunchId,
                 UserContextType.LUNCH, restaurant, at(date, 12, 15), at(date, 12, 55)))
             val correctedDiary = com.hoodie.app.data.repository.DiaryRepository(g.contextDao, g.db.timelineDao(), g.db.hoodieActivityDao(), g.db.placeDao(), g.clock,
-                mobility = com.hoodie.app.data.repository.MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())).loadDiary(date)
+                mobility = com.hoodie.app.data.repository.MobilityRepository(g.db)).loadDiary(date)
             val correctedReport = DayReportAssembler().assemble(correctedDiary, learnedSlots,
                 DayReportStatusResolver.resolve(date, today, correctedDiary), g.clock.millis, zone)
             assertEquals(40 * 60_000L, correctedReport.lunchMs)

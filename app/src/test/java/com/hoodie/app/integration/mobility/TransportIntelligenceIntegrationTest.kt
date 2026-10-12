@@ -40,11 +40,12 @@ class TransportIntelligenceIntegrationTest {
             assertEquals(MobilitySource.USER_CORRECTION, m.segmentsOf(session.id).last().source)
             assertEquals(MovementMode.BUS, m.open()!!.currentMode)
             m.at(MONDAY, 8, 20); m.move(DetectedMovement.WALKING)
+            m.at(MONDAY, 8, 21); m.check()
             m.at(MONDAY, 8, 30); m.geofence(m.work, GeofenceTransition.ENTER)
             val trip = m.repo.session(session.id)!!
             assertTrue(trip.confirmed)
             assertEquals(m.work.id, trip.destinationPlaceId)
-            assertEquals(listOf(MovementMode.WALKING, MovementMode.BUS, MovementMode.WALKING), m.segmentsOf(session.id).map { it.mode })
+            assertEquals("correção explícita do trecho impede a troca inferida", listOf(MovementMode.WALKING, MovementMode.BUS), m.segmentsOf(session.id).map { it.mode })
             assertTrue(m.segmentsOf(session.id).all { it.endedAt != null })
             assertEquals(0, m.location.reads)
             val learned = m.g.db.intelligenceDao().transportPatterns(m.home.id, m.work.id, "WEEKDAY", (7 * 60 + 47) / 30)

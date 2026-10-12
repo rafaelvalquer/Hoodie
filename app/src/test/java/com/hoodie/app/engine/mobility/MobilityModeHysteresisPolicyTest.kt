@@ -3,29 +3,36 @@ package com.hoodie.app.engine.mobility
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.location.LocationPermissionState
 import com.hoodie.app.core.model.QuestionKind
+import com.hoodie.app.core.mobility.DetectedMovement
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MobilityModeHysteresisPolicyTest {
     @Test fun `isolated walking event does not replace vehicle mode`() {
-        assertFalse(MobilityModeHysteresisPolicy.confirmVehicleToWalking(
-            MovementMode.VEHICLE_UNKNOWN, MovementMode.WALKING, null, null, 100_000L,
+        assertFalse(MobilityModeHysteresisPolicy.confirmPendingVehicleToWalking(
+            MovementMode.VEHICLE_UNKNOWN, null, null, 100_000L, DetectedMovement.WALKING, 10_000L, 5_000L, true, false,
         ))
     }
 
-    @Test fun `walking needs a repeated observation after the hysteresis window`() {
-        assertFalse(MobilityModeHysteresisPolicy.confirmVehicleToWalking(
-            MovementMode.CAR, MovementMode.WALKING, MovementMode.WALKING, 10_000L, 54_999L,
+    @Test fun `onCheck may confirm persisted walking after the hysteresis window without another enter`() {
+        assertFalse(MobilityModeHysteresisPolicy.confirmPendingVehicleToWalking(
+            MovementMode.CAR, MovementMode.WALKING, 10_000L, 54_999L, DetectedMovement.WALKING, 10_000L, 5_000L, true, false,
         ))
-        assertTrue(MobilityModeHysteresisPolicy.confirmVehicleToWalking(
-            MovementMode.CAR, MovementMode.WALKING, MovementMode.WALKING, 10_000L, 55_000L,
+        assertTrue(MobilityModeHysteresisPolicy.confirmPendingVehicleToWalking(
+            MovementMode.CAR, MovementMode.WALKING, 10_000L, 55_000L, DetectedMovement.WALKING, 10_000L, 5_000L, true, false,
         ))
     }
 
-    @Test fun `vehicle observation supersedes pending walking`() {
-        assertFalse(MobilityModeHysteresisPolicy.confirmVehicleToWalking(
-            MovementMode.CAR, MovementMode.VEHICLE_UNKNOWN, MovementMode.WALKING, 10_000L, 100_000L,
+    @Test fun `still vehicle reentry or explicit correction invalidates pending walking`() {
+        assertFalse(MobilityModeHysteresisPolicy.confirmPendingVehicleToWalking(
+            MovementMode.CAR, MovementMode.WALKING, 10_000L, 100_000L, DetectedMovement.IN_VEHICLE, 100_000L, 100_000L, true, false,
+        ))
+        assertFalse(MobilityModeHysteresisPolicy.confirmPendingVehicleToWalking(
+            MovementMode.CAR, MovementMode.WALKING, 10_000L, 100_000L, DetectedMovement.WALKING, 100_000L, 5_000L, true, true,
+        ))
+        assertFalse(MobilityModeHysteresisPolicy.confirmPendingVehicleToWalking(
+            MovementMode.CAR, MovementMode.WALKING, 10_000L, 100_000L, DetectedMovement.STILL, 100_000L, 5_000L, true, false,
         ))
     }
 

@@ -140,6 +140,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         snackbar = snackbar,
         dayState = dayState,
         homeNow = homeNow,
+        onScenePresented = vm::onScenePresented,
     )
 }
 
@@ -168,6 +169,7 @@ internal fun HomeContent(
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
     dayState: com.hoodie.app.domain.daystate.DayStateSnapshot? = null,
     homeNow: com.hoodie.app.domain.home.HomeNowSnapshot? = null,
+    onScenePresented: (com.hoodie.app.pixel.scene.SceneId) -> Unit = {},
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
@@ -228,7 +230,7 @@ internal fun HomeContent(
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
             state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp, bottom = 6.dp)) }
-            HoodieSceneView(state.visual, Modifier.fillMaxWidth().testTag("home_live_scene"), reactions = reactions)
+            HoodieSceneView(state.visual, Modifier.fillMaxWidth().testTag("home_live_scene"), reactions = reactions, onScenePresented = onScenePresented)
         }
 
         if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {

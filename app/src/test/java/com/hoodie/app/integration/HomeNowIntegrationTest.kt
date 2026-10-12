@@ -66,6 +66,7 @@ class HomeNowIntegrationTest {
                 router = graph.router,
                 mobility = graph.engine,
                 mobilityRepo = graph.repo,
+                visualDiagnostics = com.hoodie.app.core.debug.HomeVisualDiagnostics(),
                 contextDao = g.contextDao,
                 questionDao = g.db.questionDao(),
                 dayStates = dagger.Lazy { DayStateCoordinator(g.db, g.settings, g.clock) },
@@ -87,7 +88,7 @@ class HomeNowIntegrationTest {
             assertEquals(ContextSource.USER_CORRECTION, g.contextDao.current()!!.source)
             graph.at(MONDAY, 9, 1) // Let the corrected context become a non-zero diary interval.
             val diary = DiaryRepository(g.contextDao, g.db.timelineDao(), g.db.hoodieActivityDao(), g.db.placeDao(), g.clock,
-                mobility = MobilityRepository(g.db.mobilitySessionDao(), g.db.mobilitySegmentDao())).loadDiary(g.clock.today())
+                mobility = MobilityRepository(g.db)).loadDiary(g.clock.today())
             assertEquals(UserContextType.DINING, g.contextDao.current()!!.type)
             assertTrue("Diary timeline: ${diary.timeline}", diary.timeline.any { it.relatedContext == UserContextType.DINING })
             assertTrue("Diary visits: ${diary.visits}", diary.visits.any { it.placeId == graph.restaurant.id && it.placeType == PlaceType.RESTAURANT })

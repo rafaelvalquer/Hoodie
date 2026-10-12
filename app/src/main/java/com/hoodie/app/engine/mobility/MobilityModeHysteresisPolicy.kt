@@ -7,14 +7,21 @@ import com.hoodie.app.core.mobility.MovementMode
 object MobilityModeHysteresisPolicy {
     const val WALKING_CONFIRMATION_MS = 45_000L
 
-    fun confirmVehicleToWalking(
+    fun confirmPendingVehicleToWalking(
         currentMode: MovementMode,
-        observedMode: MovementMode,
         pendingMode: MovementMode?,
         pendingAt: Long?,
         now: Long,
-    ): Boolean = currentMode.isVehicle && observedMode in setOf(MovementMode.WALKING, MovementMode.RUNNING) &&
-        pendingMode == observedMode && pendingAt != null && now - pendingAt >= WALKING_CONFIRMATION_MS
+        lastObservedMovement: com.hoodie.app.core.mobility.DetectedMovement?,
+        lastObservationAt: Long?,
+        lastVehicleAt: Long?,
+        active: Boolean,
+        corrected: Boolean,
+    ): Boolean = active && !corrected && currentMode.isVehicle && pendingMode in setOf(MovementMode.WALKING, MovementMode.RUNNING) &&
+        pendingAt != null && now - pendingAt >= WALKING_CONFIRMATION_MS &&
+        lastObservedMovement in setOf(com.hoodie.app.core.mobility.DetectedMovement.WALKING, com.hoodie.app.core.mobility.DetectedMovement.RUNNING) &&
+        lastObservationAt != null && lastObservationAt >= pendingAt &&
+        (lastVehicleAt == null || lastVehicleAt <= pendingAt)
 }
 
 /** The only operation allowed to request a point speed sample. */

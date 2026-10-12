@@ -24,12 +24,27 @@ class TransportFeatureBuilder @Inject constructor() {
     private var stopSquareSum = 0.0
     private var vehicle = false
 
-    @Synchronized fun begin(id: Long, at: Long, newVehicleSegment: Boolean = false) {
-        if (sessionId == id && !newVehicleSegment) return
+    /** Starts a new persisted session; repeated calls for the same id are no-ops. */
+    @Synchronized fun beginSession(id: Long, at: Long) {
+        if (sessionId == id) return
         sessionId = id; startedAt = at; lastAt = at; speedCount = 0; speedSum = 0.0; speedSquareSum = 0.0; speedMax = 0f
-        stopStart = null; stopCount = 0; stoppedMs = 0; stopSquareSum = 0.0; vehicle = false
+        resetSegmentStats(); vehicle = false
     }
-    @Synchronized fun movement(activity: DetectedMovement, at: Long) {
+
+    /** Starts a vehicle segment without losing session-level speed aggregates. */
+    @Synchronized fun beginVehicleSegment(id: Long, at: Long) {
+        beginSession(id, at)
+        lastAt = maxOf(lastAt, at)
+        resetSegmentStats()
+        vehicle = true
+    }
+
+    /** Compatibility shim. New code should make the intended operation explicit. */
+    @Synchronized fun begin(id: Long, at: Long, newVehicleSegment: Boolean = false) {
+        if (newVehicleSegment) beginVehicleSegment(id, at) else beginSession(id, at)
+    }
+
+    @Synchronized fun recordMovement(activity: DetectedMovement, at: Long) {
         if (sessionId == null || at < lastAt) return
         lastAt = at
         if (activity == DetectedMovement.IN_VEHICLE) vehicle = true
@@ -40,6 +55,7 @@ class TransportFeatureBuilder @Inject constructor() {
             stopStart = null
         }
     }
+    @Synchronized fun movement(activity: DetectedMovement, at: Long) = recordMovement(activity, at)
     @Synchronized fun speed(metersPerSecond: Float, at: Long) {
         if (sessionId == null || at < startedAt || !metersPerSecond.isFinite() || metersPerSecond < 0 || metersPerSecond > 100) return
         addKmh(metersPerSecond * 3.6f)
@@ -48,13 +64,25 @@ class TransportFeatureBuilder @Inject constructor() {
         if (sessionId == null || at < startedAt || !kmh.isFinite() || kmh !in 0f..360f) return
         addKmh(kmh)
     }
-    @Synchronized fun restorePersisted(id: Long, at: Long, count: Int, meanKmh: Float?, maxKmh: Float?, variation: Float) {
-        if (sessionId == id && speedCount > 0) return
-        begin(id, at)
-        val mean = meanKmh?.takeIf { it.isFinite() && it >= 0f } ?: return
+    /** Restores only monotonic speed aggregates. It never initializes or mutates movement/stops. */
+    @Synchronized fun restoreSpeedAggregates(id: Long, count: Int, meanKmh: Float?, maxKmh: Float?, variation: Float) {
+        if (sessionId != id) return
         val n = count.coerceAtLeast(0)
-        speedCount = n; speedSum = mean.toDouble() * n; speedMax = maxKmh?.takeIf { it.isFinite() } ?: mean
-        speedSquareSum = (mean * mean * (1f + variation.coerceAtLeast(0f) * variation.coerceAtLeast(0f))).toDouble() * n
+        if (n <= speedCount || n == 0) return
+        val mean = meanKmh?.takeIf { it.isFinite() && it >= 0f } ?: return
+        val coefficient = variation.takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
+        speedCount = n
+        speedSum = mean.toDouble() * n
+        speedMax = maxKmh?.takeIf { it.isFinite() && it >= mean } ?: mean
+        speedSquareSum = (mean * mean * (1f + coefficient * coefficient)).toDouble() * n
+    }
+
+    /** Compatibility shim that no longer starts a session or clears other evidence. */
+    @Synchronized fun restorePersisted(id: Long, at: Long, count: Int, meanKmh: Float?, maxKmh: Float?, variation: Float) =
+        restoreSpeedAggregates(id, count, meanKmh, maxKmh, variation)
+
+    private fun resetSegmentStats() {
+        stopStart = null; stopCount = 0; stoppedMs = 0L; stopSquareSum = 0.0
     }
     private fun addKmh(kmh: Float) {
         speedCount++; speedSum += kmh; speedSquareSum += kmh.toDouble() * kmh; speedMax = maxOf(speedMax, kmh)

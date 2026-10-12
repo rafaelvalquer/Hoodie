@@ -108,6 +108,7 @@ class HomeViewModel @Inject constructor(
     private val router: com.hoodie.app.engine.mobility.QuestionRouter,
     private val mobility: com.hoodie.app.engine.mobility.MobilityEngine,
     mobilityRepo: com.hoodie.app.data.repository.MobilityRepository,
+    private val visualDiagnostics: com.hoodie.app.core.debug.HomeVisualDiagnostics,
     private val contextDao: ContextEventDao,
     questionDao: QuestionDao,
     dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
@@ -185,6 +186,7 @@ class HomeViewModel @Inject constructor(
 
     /** Hide the previous snapshot until canonical sources have been reconciled on every resume. */
     fun onHomeStarted() {
+        visualDiagnostics.visibility(true)
         homeResumeJob?.cancel()
         homeNowReconciled.value = false
         homeResumeJob = viewModelScope.launch {
@@ -211,11 +213,16 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onHomeStopped() {
+        visualDiagnostics.visibility(false)
         homeResumeJob?.cancel()
         homeNowReconciled.value = false
     }
 
     fun retryLoad() { reloadHome.value += 1 }
+
+    fun onScenePresented(scene: com.hoodie.app.pixel.scene.SceneId) {
+        visualDiagnostics.presented(scene, clock.nowMillis())
+    }
 
     private fun kotlinx.coroutines.flow.Flow<HomeUiState>.combineWithQuestion() =
         combine(this, pendingQuestion) { s, q -> s.copy(question = q) }
@@ -248,6 +255,7 @@ class HomeViewModel @Inject constructor(
             preferredMode = i.settings.mobility.preferredMode,
             now = now,
         )
+        visualDiagnostics.selected(visual, now)
         val userType = ctx?.type ?: UserContextType.HOME
         val next = RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)
 

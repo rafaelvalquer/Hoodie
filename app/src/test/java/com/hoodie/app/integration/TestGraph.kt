@@ -11,6 +11,7 @@ import com.hoodie.app.core.geofence.GeofenceRegistrar
 import com.hoodie.app.core.geofence.GeofenceRegistrationResult
 import com.hoodie.app.core.location.LocationPermissionState
 import com.hoodie.app.core.location.LocationSource
+import com.hoodie.app.core.location.SpeedObservation
 import com.hoodie.app.core.model.Place
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.Routine
@@ -59,8 +60,10 @@ class FakeScheduler : CheckScheduler {
 
 class FakeLocation(var state: LocationPermissionState = LocationPermissionState.BACKGROUND) : LocationSource {
     var position: Pair<Double, Double>? = null
+    var speedObservation: SpeedObservation? = null
     override fun permissionState() = state
     override suspend fun current() = position
+    override suspend fun currentSpeed() = speedObservation
 }
 
 class FakeGeofences : GeofenceRegistrar {

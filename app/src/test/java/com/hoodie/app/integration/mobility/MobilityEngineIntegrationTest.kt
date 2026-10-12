@@ -70,8 +70,10 @@ class MobilityEngineIntegrationTest {
         assertTrue(m.open()!!.pendingModeQuestion)
         assertEquals("veículo sem classificação: transporte genérico", SceneId.TRANSIT, scene())
 
-        // App aberto (passageiro olhando): agora pergunta, dentro do app.
+        // Nem com o app aberto perguntamos enquanto o veículo ainda pode estar em movimento.
         m.at(MONDAY, 8, 0); runBlocking { m.engine.onAppOpened() }
+        assertNull(m.pending(QuestionKind.SELECT_TRANSPORT_MODE))
+        m.move(DetectedMovement.STILL)
         val q = m.pending(QuestionKind.SELECT_TRANSPORT_MODE)
         assertNotNull(q)
         runBlocking { m.router.answerTransportMode(q!!.id, MovementMode.BUS) }
@@ -80,6 +82,8 @@ class MobilityEngineIntegrationTest {
 
         // 08:25 desce e anda.
         m.at(MONDAY, 8, 25); m.move(DetectedMovement.WALKING)
+        assertEquals("a troca aguarda evidência contínua", SceneId.BUS, scene())
+        m.at(MONDAY, 8, 26); m.check()
         assertEquals(SceneId.STREET, scene())
 
         // 08:31 geofence do Trabalho.
@@ -108,7 +112,7 @@ class MobilityEngineIntegrationTest {
             ),
             day, 0, Long.MAX_VALUE, m.now(), m.g.clock.zone(),
         ).timeline.map { "${it.emoji} ${it.subtitle}" }
-        assertEquals(listOf("🚶 07:47–07:54 · 7 min", "🚌 07:54–08:25 · 31 min", "🚶 08:25–08:31 · 6 min"), items)
+        assertEquals(listOf("🚶 07:47–07:54 · 7 min", "🚌 07:54–08:26 · 32 min", "🚶 08:26–08:31 · 5 min"), items)
     }
 
     @Test
@@ -127,6 +131,7 @@ class MobilityEngineIntegrationTest {
         startConfirmedWalk()
         m.at(MONDAY, 7, 55); m.move(DetectedMovement.IN_VEHICLE)
         m.at(MONDAY, 8, 20); m.move(DetectedMovement.WALKING)
+        m.at(MONDAY, 8, 21); m.check()
         val modes = m.segmentsOf(m.open()!!.id).map { it.mode }
         assertEquals(listOf(MovementMode.WALKING, MovementMode.VEHICLE_UNKNOWN, MovementMode.WALKING), modes)
         // Veículo nunca classificado: a pergunta aparece ao chegar (parado = seguro).
@@ -185,9 +190,10 @@ class MobilityEngineIntegrationTest {
         m.at(MONDAY, 7, 55); m.move(DetectedMovement.IN_VEHICLE)
         m.at(MONDAY, 8, 20); m.move(DetectedMovement.STILL)
         m.at(MONDAY, 8, 21); m.move(DetectedMovement.WALKING)
+        assertTrue("checagem é agendada para confirmar a caminhada", m.scheduler.scheduled.any { it == 45_000L })
         m.at(MONDAY, 8, 30); m.geofence(m.work, GeofenceTransition.ENTER)
         assertEquals(0, m.location.reads)
-        assertFalse("checagem agendada só por tempo, nunca periódica de GPS", m.scheduler.scheduled.any { it < 60_000 })
+        assertFalse("nenhuma checagem curta periódica de GPS", m.scheduler.scheduled.any { it in 1L..44_999L })
     }
 
     /** Casa → caminhada confirmada às 07:47. */
