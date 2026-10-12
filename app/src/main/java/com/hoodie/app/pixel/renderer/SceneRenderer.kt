@@ -17,6 +17,9 @@ import com.hoodie.app.pixel.npc.office.OfficeSessionKey
 import com.hoodie.app.pixel.npc.office.OfficeNpcFrameState
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcDirector
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcSession
+import com.hoodie.app.pixel.npc.shopping.ShoppingNavigationGraph
+import com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph
+import com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary
 import com.hoodie.app.pixel.npc.AmbientNpcSlot
 import com.hoodie.app.pixel.scene.Prop
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
@@ -78,10 +81,14 @@ class SceneRenderer {
     }
 
     private fun npcSlots(scene: PixelScene, env: SceneEnv): List<com.hoodie.app.pixel.npc.AmbientNpcSlot> {
-        if (scene.id == SceneId.SHOPPING) {
+        if (scene.id == SceneId.SHOPPING || scene.id == SceneId.STORE) {
+            // Mercado e loja de roupas: o mesmo comprador, cada um com a sua planta e as suas falas.
+            val store = scene.id == SceneId.STORE
+            val floor = if (store) StoreNavigationGraph else ShoppingNavigationGraph
             val current = shoppingSession
-            val session = current?.takeIf { it.venue == env.shoppingVenue && it.seed == (env.daySeed * 31 + env.variant * 17 + env.period.ordinal) }
-                ?: ShoppingNpcDirector.createSession(env).also {
+            val session = current?.takeIf { it.floor == floor && it.venue == env.shoppingVenue && it.seed == (env.daySeed * 31 + env.variant * 17 + env.period.ordinal) }
+                ?: (if (store) ShoppingNpcDirector.createSession(env, StoreNavigationGraph, StoreSpeechLibrary, StoreNavigationGraph.BASELINE)
+                else ShoppingNpcDirector.createSession(env)).also {
                     shoppingSession = it
                     shoppingSessionStartedAt = 0L
                 }
@@ -140,8 +147,9 @@ class SceneRenderer {
         val npcs = npcSlots(scene, frame.env)
         if (measureOffice) ScenePerformanceMonitor.traceEnd()
         val planningNanos = if (measureOffice) ScenePerformanceMonitor.nowNanos() - planningStart else 0L
-        if (scene.id == SceneId.SHOPPING && shoppingSessionStartedAt == 0L) shoppingSessionStartedAt = absoluteTimeMs
-        val timeMs = if (scene.id == SceneId.SHOPPING) (absoluteTimeMs - shoppingSessionStartedAt).coerceAtLeast(0L) else absoluteTimeMs
+        val shoppingScene = scene.id == SceneId.SHOPPING || scene.id == SceneId.STORE
+        if (shoppingScene && shoppingSessionStartedAt == 0L) shoppingSessionStartedAt = absoluteTimeMs
+        val timeMs = if (shoppingScene) (absoluteTimeMs - shoppingSessionStartedAt).coerceAtLeast(0L) else absoluteTimeMs
         val stateStart = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
         if (measureOffice) ScenePerformanceMonitor.traceBegin("Hoodie.Office.stateUpdate")
         val env = envWithAmbientNpcState(frame.env, npcs, timeMs)

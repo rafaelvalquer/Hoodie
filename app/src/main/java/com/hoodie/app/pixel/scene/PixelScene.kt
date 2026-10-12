@@ -26,6 +26,7 @@ enum class SceneId(val label: String) {
     // Lugares com identidade própria.
     SCHOOL("Escola"),
     SHOPPING("Compras"),
+    STORE("Loja"),
     FAMILY("Família"),
     LEISURE("Passeio"),
 
@@ -44,6 +45,9 @@ enum class SpotId {
 
     // Compras
     AISLE_A, AISLE_B, CART, CHECKOUT,
+
+    // Loja (roupas)
+    RACK_A, RACK_B, MIRROR, FITTING_ROOM,
 
     // Família
     FAMILY_SOFA, FAMILY_TABLE,
@@ -98,6 +102,15 @@ enum class SceneFlag {
 
     /** Celular erguido como câmera no passeio (CAMERA_READY → PHOTO_TAKEN). */
     CAMERA_ACTIVE,
+
+    /** Loja: peça tirada da arara (GARMENT_PICKED → GARMENT_RETURNED / pago no caixa). */
+    GARMENT_HELD,
+
+    /** Loja: Hoodie dentro do provador, cortina fechada (CURTAIN_CLOSE → CURTAIN_OPEN). */
+    CURTAIN_CLOSED,
+
+    /** Loja: sacola da compra saiu do balcão (BAG_TAKEN). */
+    BAG_HELD,
 }
 
 /** Objeto ordenado por Y: desenhado antes do Hoodie se [baseline] <= pés dele, depois caso contrário. */
