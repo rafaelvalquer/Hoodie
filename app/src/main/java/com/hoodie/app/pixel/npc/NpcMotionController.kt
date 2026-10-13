@@ -18,6 +18,7 @@ object NpcMotionController {
         slot.shoppingBrain?.let { return it.movementAt(timeMs) }
         slot.officeBrain?.let { return it.movementAt(timeMs) }
         slot.restaurantBrain?.let { return it.movementAt(timeMs) }
+        slot.leisureActor?.let { return it.movementAt(timeMs) }
         val profile = slot.definition.behaviorProfile
         val path = slot.path ?: return stationary(slot, timeMs)
         val turns = turnFlags(path)

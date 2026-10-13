@@ -99,9 +99,9 @@ object StreetSkyline {
         }
     }
 
-    /** Caixa recortada em [x0]..[x1] (o `PixelBuffer.rect` não recorta caixas fora da borda direita). */
+    /** Caixa recortada na faixa [x0]..[x1] da cena (as bordas do buffer o próprio `PixelBuffer.rect` recorta). */
     private fun box(b: PixelBuffer, ax: Int, ay: Int, bx: Int, by: Int, color: Int, x0: Int, x1: Int) {
-        val l = maxOf(ax, x0, 0); val r = minOf(bx, x1, b.width - 1)
+        val l = maxOf(ax, x0); val r = minOf(bx, x1)
         if (l <= r) b.box(l, ay, r, by, color)
     }
 }

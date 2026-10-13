@@ -21,6 +21,7 @@ import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcBrain
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcDirector
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcBrain
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcDirector
+import com.hoodie.app.pixel.npc.leisure.LeisureNpcDirector
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.BuildConfig
@@ -58,6 +59,8 @@ data class AmbientNpcSlot(
     val seatSlotId: String? = null,
     /** Alternating deterministic bump phase, set only for V2 bus passengers. */
     val busJoltPhaseMs: Long? = null,
+    /** Visitante do Passeio 2.0: movimento, fala e profundidade vêm da sessão compartilhada. */
+    val leisureActor: com.hoodie.app.pixel.npc.leisure.LeisureNpcActor? = null,
 ) {
     val scale: Float get() = NpcScalePolicy.scale(definition.characterStyle, depth)
 }
@@ -126,7 +129,6 @@ object NpcDirector {
         ),
         lines = listOf("Cheiro bom.", "Vou pedir o de sempre."),
     )
-    private val walker = definition(NpcCharacterRegistry.RABBIT_WALKER, NpcAnimation.WALK)
 
     fun plan(scene: SceneId, env: SceneEnv): List<AmbientNpcSlot> {
         val v = env.variant and 1
@@ -145,10 +147,7 @@ object NpcDirector {
                 com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary,
                 com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph.BASELINE,
             )
-            SceneId.LEISURE -> listOf(
-                AmbientNpcSlot(walker, 204, 252, 254, 91, walkerPath()),
-                AmbientNpcSlot(cat, 38, 252, 254, 92, strollPath()),
-            )
+            SceneId.LEISURE -> LeisureNpcDirector.plan(env)
             else -> emptyList()
         }
     }
@@ -190,23 +189,6 @@ object NpcDirector {
         millisPerPixel = 30,
     )
 
-    private fun walkerPath() = NpcPath(
-        points = listOf(
-            NpcPathPoint(212, 252, NpcAnimation.IDLE, 1_200),
-            NpcPathPoint(150, 252, NpcAnimation.LOOK, 1_800),
-            NpcPathPoint(212, 252),
-        ),
-        millisPerPixel = 26,
-    )
-
-    private fun strollPath() = NpcPath(
-        points = listOf(
-            NpcPathPoint(30, 252, NpcAnimation.IDLE, 1_600),
-            NpcPathPoint(78, 252, NpcAnimation.LOOK, 1_400),
-            NpcPathPoint(30, 252),
-        ),
-        millisPerPixel = 32,
-    )
 }
 
 /** Renderer de cena: resolve movimento, pinta a pose, escala por profundidade, sombra no chão e fala. */
@@ -225,6 +207,7 @@ object NpcRenderer {
         timeMs: Long,
         movementOverride: NpcMovement? = null,
         officeFrameStateOverride: com.hoodie.app.pixel.npc.office.OfficeNpcFrameState? = null,
+        leisureFrameStateOverride: com.hoodie.app.pixel.npc.leisure.LeisureNpcFrameState? = null,
     ) {
         val measureOffice = BuildConfig.DEBUG && slot.officeBrain != null
         var stageStarted = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
@@ -237,9 +220,10 @@ object NpcRenderer {
         val restaurantBrain = slot.restaurantBrain
         val restaurantState = restaurantBrain?.stateAt(timeMs)
         val officeFrameState = officeFrameStateOverride ?: slot.officeBrain?.frameStateAt(timeMs)
+        val leisureFrameState = leisureFrameStateOverride ?: slot.leisureActor?.frameStateAt(timeMs)
         val movement = movementOverride ?: if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.movementAt(timeMs, restaurantState)
-        } else officeFrameState?.movement ?: NpcMotionController.movement(slot, timeMs)
+        } else officeFrameState?.movement ?: leisureFrameState?.movement ?: NpcMotionController.movement(slot, timeMs)
         if (!NpcMotionController.visible(movement)) {
             if (measureOffice) ScenePerformanceMonitor.recordNpcStages(
                 ScenePerformanceMonitor.nowNanos() - stageStarted, 0L, 0L, 0L, 0L, 0L,
@@ -254,13 +238,16 @@ object NpcRenderer {
             NpcSpeechProfile(listOf(it), visibleMs = RestaurantNpcBrain.SPEECH_VISIBLE_MS)
         } ?: slot.definition.speechProfile
         val officeSpeech = officeFrameState?.speech
+        val leisureSpeech = leisureFrameState?.speech
         val speechAllowed = when {
             restaurantBrain != null -> restaurantLine != null
             slot.officeBrain != null -> officeSpeech != null
+            slot.leisureActor != null -> leisureSpeech != null
             else -> shouldSpeak(slot, timeMs)
         }
         val animation = if (
-            movement.animation == NpcAnimation.TALK && speechProfile != null && !speechAllowed && slot.officeBrain == null
+            movement.animation == NpcAnimation.TALK && speechProfile != null && !speechAllowed && slot.officeBrain == null &&
+            slot.leisureActor == null
         ) {
             if (restaurantBrain != null) {
                 NpcAnimation.IDLE
@@ -333,11 +320,15 @@ object NpcRenderer {
             )
         }
         if (movement.animation == NpcAnimation.TALK && speechAllowed) {
-            val speech = officeSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) } ?: speechProfile
+            val speech = officeSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
+                ?: leisureSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
+                ?: speechProfile
             speech?.let { activeProfile ->
             NpcSpeechBubbleRenderer.draw(
                 b, activeProfile, movement.x, movement.floorY, slot.seed, timeMs,
-                officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) } ?: movement.localTimeMs, frame.anchors.head.y,
+                officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
+                    ?: leisureSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
+                    ?: movement.localTimeMs, frame.anchors.head.y,
                 (slot.definition.characterStyle.species.headHeight * slot.scale).roundToInt().coerceAtLeast(1),
             )
             }
