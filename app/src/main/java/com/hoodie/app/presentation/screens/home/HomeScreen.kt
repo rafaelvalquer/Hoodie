@@ -225,10 +225,19 @@ internal fun HomeContent(
     ) {
         // Cabeçalho: hora + período + atalhos.
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (state.now > 0) formatClock(state.now, zone) else "--:--", style = MaterialTheme.typography.headlineSmall)
-            Spacer(Modifier.width(8.dp))
-            IconLabel(PixelIcons.of(state.period), state.period.label, color = periodColor(state.period), style = MaterialTheme.typography.labelLarge, iconSize = 20.dp)
-            Spacer(Modifier.weight(1f))
+            // Fonte ampliada: hora e período empilham, senão os 4 botões de 48 dp empurram o último para fora da tela.
+            val largeFont = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.15f
+            if (largeFont) {
+                Column(Modifier.weight(1f)) {
+                    Text(if (state.now > 0) formatClock(state.now, zone) else "--:--", style = MaterialTheme.typography.headlineSmall, maxLines = 1)
+                    IconLabel(PixelIcons.of(state.period), state.period.label, color = periodColor(state.period), style = MaterialTheme.typography.labelLarge, iconSize = 20.dp)
+                }
+            } else {
+                Text(if (state.now > 0) formatClock(state.now, zone) else "--:--", style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.width(8.dp))
+                IconLabel(PixelIcons.of(state.period), state.period.label, color = periodColor(state.period), style = MaterialTheme.typography.labelLarge, iconSize = 20.dp)
+                Spacer(Modifier.weight(1f))
+            }
             if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
                 HomeMoreMenu(onAdjust = openCorrection)
             }
@@ -250,6 +259,10 @@ internal fun HomeContent(
         }
         // A altura é a da própria cena (escala inteira pela largura): sem caixa 3:4 sobrando abaixo dela,
         // o texto "Hoodie está…" fica logo embaixo do cenário.
+        if (ux2) HomeHeroContent(
+            state, homeNow, zone, busy, reactions, onScenePresented,
+            onConfirm = actions.confirmContext, onCorrect = openCorrection,
+        ) else {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
             state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp, bottom = 6.dp)) }
@@ -278,6 +291,7 @@ internal fun HomeContent(
                     color = HoodieColors.Muted, style = MaterialTheme.typography.bodyMedium,
                 )
             }
+        }
         }
 
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
