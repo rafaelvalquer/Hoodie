@@ -529,9 +529,10 @@ object NpcPoseLibrary {
     /** Repõe a prateleira: alcança o alto com a caixinha, ajeita e volta. */
     fun restock(t: Long): CharacterPose {
         val k = Math.floorMod(t, 1_800L)
+        // Braço à frente (não para o alto): as orelhas/cabeça continuam com folga no topo do quadro.
         return CharacterPose(
             facing = Facing.SIDE,
-            rightArm = if (k < 1_000L) Arm.UP else Arm.FORWARD_UP,
+            rightArm = if (k < 1_000L) Arm.FORWARD_UP else Arm.HOLD_CHEST,
             item = if (k < 700L) Item.PRODUCT else Item.NONE,
             eyes = Eyes.LOOK_UP, ears = if (k in 700L..900L) Ears.ALERT else Ears.NORMAL,
         )
