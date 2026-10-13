@@ -65,6 +65,14 @@ interface MobilitySessionDao {
     @Query("UPDATE mobility_sessions SET pendingMovementMode = NULL, pendingMovementAt = NULL WHERE id = :id AND endedAt IS NULL")
     suspend fun clearPendingMovement(id: Long): Int
 
+    /** Restore persisted accounting without reducing counters written by another caller. */
+    @Query("""UPDATE mobility_sessions SET speedSampleAttempts = MAX(speedSampleAttempts, :attempts),
+        lastSpeedSampleAt = CASE WHEN lastSpeedSampleAt IS NULL THEN :lastAttemptAt
+            WHEN :lastAttemptAt IS NULL OR lastSpeedSampleAt >= :lastAttemptAt THEN lastSpeedSampleAt
+            ELSE :lastAttemptAt END
+        WHERE id = :id AND endedAt IS NULL""")
+    suspend fun restoreSpeedBudget(id: Long, attempts: Int, lastAttemptAt: Long?)
+
     /** Atomic throttle and reservation. Concurrent callers cannot reserve the same window. */
     @Query("""
         UPDATE mobility_sessions
