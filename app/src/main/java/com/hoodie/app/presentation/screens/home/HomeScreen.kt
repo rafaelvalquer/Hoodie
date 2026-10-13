@@ -238,23 +238,26 @@ internal fun HomeContent(
         }
 
         if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
+            // Bloco único "Hoodie · Agora": a atividade do Hoodie em destaque e o contexto do usuário embaixo.
             Column(Modifier.padding(horizontal = 16.dp)) {
-                HomeNowCard(homeNow, state.now, zone)
+                HomeNowCard(
+                    homeNow, state.now, zone,
+                    activity = state.snapshot?.state?.activity, activityStartedAt = state.snapshot?.state?.startedAt, catName = state.catName,
+                )
+            }
+        } else state.snapshot?.let { snap ->
+            val a = snap.state.activity
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).testTag("home_hoodie_activity"), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(stringResource(R.string.home_activity, state.catName, a.label), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+                val since = state.now - snap.state.startedAt
+                Text(
+                    stringResource(R.string.home_activity_since, formatClock(snap.state.startedAt, zone), formatDuration(since)),
+                    color = HoodieColors.Muted, style = MaterialTheme.typography.bodyMedium,
+                )
             }
         }
 
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (!com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) state.snapshot?.let { snap ->
-                val a = snap.state.activity
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.home_activity, state.catName, a.label), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
-                    val since = state.now - snap.state.startedAt
-                    Text(
-                        stringResource(R.string.home_activity_since, formatClock(snap.state.startedAt, zone), formatDuration(since)),
-                        color = HoodieColors.Muted, style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
 
             state.question?.takeUnless { state.vehicleMoving && it.kind in setOf(QuestionKind.NEW_PLACE, QuestionKind.SAVE_PLACE) }
                 ?.let { q -> QuestionCard(q, actions, state.newPlaceSaveOptions, busy) }

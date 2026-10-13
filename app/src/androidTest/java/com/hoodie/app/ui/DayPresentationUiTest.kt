@@ -109,6 +109,38 @@ class DayPresentationUiTest {
         rule.onAllNodesWithText("Corrigir", ignoreCase = true).assertCountEquals(0)
     }
 
+    @Test fun oneBlockShowsWhatHoodieIsDoingAboveTheUserContext() {
+        val snapshot = HomeNowAssembler.assemble(null,
+            ContextEvent(42, UserContextType.WORK, 1_000, null, .63f, 8, ContextSource.GEOFENCE),
+            "Escritório", null, null, 3_000)
+        rule.setContent {
+            HoodieTheme {
+                HomeNowCard(snapshot, 21 * 60_000L, ZoneId.of("UTC"),
+                    activity = com.hoodie.app.core.model.HoodieActivity.READING, activityStartedAt = 60_000L, catName = "Hoodie")
+            }
+        }
+        rule.onNodeWithText("Hoodie está lendo").assertIsDisplayed()
+        rule.onNodeWithText("VOCÊ").assertIsDisplayed()
+        rule.onNodeWithText("Provavelmente trabalhando").assertIsDisplayed()
+        rule.onNodeWithText("Confiança: 63%").assertIsDisplayed()
+        rule.onNodeWithContentDescription("HOODIE · AGORA: Hoodie está lendo. Você: Provavelmente trabalhando").assertExists()
+        val activityTop = rule.onNodeWithTag("home_hoodie_activity").fetchSemanticsNode().boundsInRoot.top
+        val youTop = rule.onNodeWithText("Provavelmente trabalhando").fetchSemanticsNode().boundsInRoot.top
+        assertTrue("a atividade do Hoodie vem antes do contexto do usuário", activityTop < youTop)
+    }
+
+    @Test fun withoutAUserContextTheBlockStillShowsWhatHoodieIsDoing() {
+        rule.setContent {
+            HoodieTheme {
+                HomeNowCard(null, 21 * 60_000L, ZoneId.of("UTC"),
+                    activity = com.hoodie.app.core.model.HoodieActivity.GAMING, activityStartedAt = 60_000L, catName = "Hoodie")
+            }
+        }
+        rule.onNodeWithText("Hoodie está jogando").assertIsDisplayed()
+        rule.onAllNodesWithText("VOCÊ").assertCountEquals(0)
+        rule.onNodeWithContentDescription("HOODIE · AGORA: Hoodie está jogando").assertExists()
+    }
+
     @Test fun secondaryMenuOpensOnDemandCorrectionWhileSceneRemainsVisible() {
         val snapshot = HomeNowAssembler.assemble(null,
             ContextEvent(42, UserContextType.WORK, 1_000, null, .78f, 8, ContextSource.GEOFENCE),

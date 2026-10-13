@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home_now_title">HOODIE · AGORA</string>
+    <string name="home_now_you">Você</string>
     <string name="home_now_resting">Descansando</string>
     <string name="home_now_waking">Começando o dia</string>
     <string name="home_now_commuting">Em deslocamento</string>
