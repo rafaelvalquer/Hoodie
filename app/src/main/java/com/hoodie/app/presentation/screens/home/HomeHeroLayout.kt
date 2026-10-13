@@ -16,6 +16,26 @@ object HomeHeroLayout {
     /** Abaixo disso a escala inteira de pixel art degrada; prefere-se rolar a cortar sprites. */
     const val MIN_SCENE_DP = 200
 
+    /** Canvas lógico da cena (px). O pixel art só escala por fator inteiro. */
+    const val SCENE_W = 240
+    const val SCENE_H = 320
+    /** Quanto a cena pode passar do espaço calculado para encaixar num fator inteiro maior (a rolagem cobre o resto). */
+    const val SCALE_TOLERANCE = 1.15f
+
+    /**
+     * Fator inteiro da cena: o maior que cabe na largura e, com [SCALE_TOLERANCE], na altura disponível.
+     * Sem a tolerância, 360×640 cairia de 2× para 1× por poucos dp e a cena ficaria minúscula.
+     */
+    fun sceneScale(widthPx: Int, maxHeightDp: Int, pxPerDp: Float): Int {
+        var scale = (widthPx / SCENE_W).coerceAtLeast(1)
+        val limitDp = maxHeightDp * SCALE_TOLERANCE
+        while (scale > 1 && SCENE_H * scale / pxPerDp > limitDp) scale--
+        return scale
+    }
+
+    /** Altura exata (dp) da cena nesse fator, com meio pixel de folga contra arredondamento. */
+    fun sceneHeightDp(scale: Int, pxPerDp: Float): Float = (SCENE_H * scale + 0.5f) / pxPerDp
+
     fun sceneMaxHeightDp(screenHeightDp: Int, fontScale: Float): Int {
         val text = ((ACTIVITY_DP + CONTEXT_DP) * fontScale.coerceIn(1f, 2f)).toInt()
         return (screenHeightDp - HEADER_DP - text - ACTION_DP).coerceAtLeast(MIN_SCENE_DP)

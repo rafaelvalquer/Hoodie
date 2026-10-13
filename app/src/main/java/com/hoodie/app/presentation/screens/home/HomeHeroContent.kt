@@ -40,8 +40,14 @@ internal fun HomeHeroContent(
     modifier: Modifier = Modifier,
 ) {
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
-    val fontScale = LocalDensity.current.fontScale
-    val sceneMax = remember(screenHeightDp, fontScale) { HomeHeroLayout.sceneMaxHeightDp(screenHeightDp, fontScale).dp }
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val density = LocalDensity.current
+    val fontScale = density.fontScale
+    val sceneMax = remember(screenHeightDp, screenWidthDp, fontScale, density.density) {
+        val maxDp = HomeHeroLayout.sceneMaxHeightDp(screenHeightDp, fontScale)
+        val scale = HomeHeroLayout.sceneScale((screenWidthDp * density.density).toInt(), maxDp, density.density)
+        HomeHeroLayout.sceneHeightDp(scale, density.density).dp
+    }
     val hero = remember(state, homeNow) { HomePresentationMapper.map(state, homeNow) }
     Column(modifier.fillMaxWidth().testTag("home_hero"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // A fala fica sobreposta ao topo da cena e aparece/some por opacidade: não ocupa espaço nem empurra nada.

@@ -30,6 +30,28 @@ class HomeHeroLayoutTest {
         }
     }
 
+    @Test fun `escala inteira encaixa com tolerancia em vez de cair para 1x`() {
+        // 360x640 a 100%: 2x (320 dp) cabe dentro da tolerancia dos 294 dp calculados.
+        assertEquals(2, HomeHeroLayout.sceneScale(720, HomeHeroLayout.sceneMaxHeightDp(640, 1f), 2f))
+        // 360x640 a 130%: sobra pouco; 1x.
+        assertEquals(1, HomeHeroLayout.sceneScale(720, HomeHeroLayout.sceneMaxHeightDp(640, 1.3f), 2f))
+        // 360x800 a 100%: 3x.
+        assertEquals(3, HomeHeroLayout.sceneScale(720, HomeHeroLayout.sceneMaxHeightDp(800, 1f), 2f))
+        // Pixel 8 (1080 px, 2,625 px/dp): 4x.
+        assertEquals(4, HomeHeroLayout.sceneScale(1080, HomeHeroLayout.sceneMaxHeightDp(914, 1f), 2.625f))
+    }
+
+    @Test fun `escala nunca passa da largura nem fica abaixo de 1x`() {
+        assertEquals(1, HomeHeroLayout.sceneScale(200, 600, 2f))
+        assertEquals(1, HomeHeroLayout.sceneScale(1080, 10, 2.625f))
+        assertTrue(HomeHeroLayout.sceneScale(720, 10_000, 2f) <= 3)
+    }
+
+    @Test fun `altura em dp tem meio pixel de folga para o arredondamento`() {
+        val dp = HomeHeroLayout.sceneHeightDp(2, 2.625f)
+        assertTrue(dp * 2.625f >= 640f)
+    }
+
     @Test fun `origem da confianca so descreve o que o app sabe`() {
         assertEquals(ConfidenceOrigin.PLACE_ARRIVAL, ConfidenceExplainer.origin(ContextSource.GEOFENCE, HomeNowStatus.IDENTIFIED))
         assertEquals(ConfidenceOrigin.ROUTINE, ConfidenceExplainer.origin(ContextSource.ROUTINE, HomeNowStatus.PROBABLE))
