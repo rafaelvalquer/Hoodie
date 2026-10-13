@@ -140,11 +140,6 @@ object ContextScorer {
                 similar >= 3 -> { score += 30; reasons += "Almoço confirmado $similar vezes (+30)"; evidence += DetectionEvidence(EvidenceType.HISTORY, .30f, at) }
                 similar >= 1 -> { score += 10; reasons += "Almoço já confirmado (+10)"; evidence += DetectionEvidence(EvidenceType.HISTORY, .10f, at) }
             }
-            input.learnedLunch?.takeIf { it.confidence.value >= .60f && abs(minute - it.medianMinute) <= maxOf(45, it.deviationMinutes * 3) }?.let {
-                score += 25
-                reasons += "Padrão de almoço aprendido (+25)"
-                evidence += DetectionEvidence(EvidenceType.LEARNED_PATTERN, .25f, at)
-            }
             return ContextCandidate(UserContextType.LUNCH, score.coerceAtMost(100), reasons, evidence)
         }
         return ContextCandidate(UserContextType.COMMUTING, APPLY_THRESHOLD, listOf("Saiu de ${exit.place.name}"), listOf(DetectionEvidence(EvidenceType.GEOFENCE_EXIT, .85f, at)))

@@ -60,7 +60,7 @@ O plano e a evidência de implementação estão em
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v8 (25 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v11 (27 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
@@ -263,7 +263,7 @@ ANDROID USAGE STATS ─► UsageStatsSource (só foreground/background, tela, bl
         ▼
 AppSessionBuilder ─► ScreenSessionBuilder ─► AppCategoryResolver ─► ContextUsageCorrelator ─► DailyPhoneUsageCalculator
         ▼                                                                 (PhoneInsightsAssembler, puro)
-DeviceUsageRepository ─► Room v8 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
+DeviceUsageRepository ─► Room v11 (agregados, horas, timeline e sessões) ─► DiaryDigitalMerger ─► Diário (aba Geral + aba Digital)
 ```
 
 * **Permissão**: `PACKAGE_USAGE_STATS` é ligada pelo usuário em *Acesso ao uso*. Antes, a tela "Análise do celular" explica
@@ -273,7 +273,7 @@ DeviceUsageRepository ─► Room v8 (agregados, horas, timeline e sessões) ─
   Aparelhos sem esses eventos (API 26–27, alguns fabricantes) caem em estimativa a partir do uso de apps e a UI marca "≈".
   Launchers e a interface do sistema contam como tela ligada, não como app usado.
 * **Categorias**: escolha do usuário → mapa interno (YouTube → Vídeo, Spotify → Música, Teams → Trabalho...) → `ApplicationInfo.category` → Outros.
-* **Persistência**: Room v8 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
+* **Persistência**: Room v11 mantém `daily_device_usage`, todos os apps em `daily_app_usage`, rankings por contexto,
   totais em `daily_context_usage`, 24 horas em `daily_screen_hourly`, blocos em `daily_phone_timeline` e `phone_app_sessions`.
   Migrações 1→2→3→4→5 preservam os registros anteriores. Categorias manuais ficam em `app_category_overrides`.
   Eventos brutos nunca são salvos. O Android só guarda eventos por alguns dias: um recálculo "menor" de um dia antigo não sobrescreve o histórico.
@@ -357,7 +357,7 @@ instrumentados num emulador. Geofence real, reboot e homologação por aparelho 
 
 O plano técnico é acompanhado em [stability-architecture-progress.md](docs/stability-architecture-progress.md). A versão permanece dev enquanto os gates de teste, UI e revisão artística estão em andamento.
 
-O banco atual é Room v8: v5 completa o histórico digital, v6 adiciona mobilidade e v7 acrescenta índices compostos sem reescrever dados e v8 adiciona estado do dia, auditoria de correções, rotina aprendida e padrões de transporte. Sessões individuais são mantidas por 365 dias; agregados diários permanecem. Ver [auditoria dos índices](docs/database-index-audit.md).
+O banco atual é Room v11: v5 completa o histórico digital, v6 adiciona mobilidade e v7 acrescenta índices compostos sem reescrever dados e v8 adiciona estado do dia, auditoria de correções, rotina aprendida e padrões de transporte. A v9 preserva o tipo de estabelecimento corrigido; a v10 acrescenta evidências de mobilidade; a v11 isola agregados por período em veículo, registra a confirmação da caminhada e versiona a rotina efetiva. Sessões individuais são mantidas por 365 dias; agregados diários permanecem. Ver [auditoria dos índices](docs/database-index-audit.md).
 
 O Diário Digital começa desativado. Ativar solicita o acesso ao uso do Android; a análise só liga após a permissão. A ajuda de Configurações restritas está disponível na tela de ativação. A permissão Android sozinha não equivale a consentimento no app.
 

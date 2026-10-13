@@ -56,22 +56,24 @@ internal class ContextSignalProcessor(
     val clock: ClockProvider,
     val log: DebugEventLogger,
     val intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
+    val effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
+    private val mobilityRepository: com.hoodie.app.data.repository.MobilityRepository? = null,
 ) {
+    suspend fun vehicleInMotion(): Boolean = mobilityRepository?.open()?.let {
+        it.currentMode.isVehicle && it.stillSince == null
+    } == true
     suspend fun input(signal: ContextSignal, previous: UserContextType?): ContextInput {
         val now = clock.now()
         val confirmations = confirmationDao.since(clock.nowMillis() - HoodieConfig.CONFIRMATION_LOOKBACK_MS).map {
             ConfirmationRecord(it.type, it.placeId, DayOfWeek.of(it.dayOfWeek), it.minuteOfDay, it.accepted, it.timestamp)
         }
-        val learnedLunch = if (HoodieConfig.LEARNED_ROUTINE) intelligence?.routineSlots()?.filter { it.type == "LUNCH_START" }?.let { slots ->
-            slots.firstOrNull { it.dayGroup == now.dayOfWeek.name } ?: slots.firstOrNull { it.dayGroup == com.hoodie.app.domain.routine.routineDayGroup(now.dayOfWeek) }
-        }?.let { com.hoodie.app.domain.routine.LearnedRoutineSlot(it.dayGroup, com.hoodie.app.domain.routine.RoutineEventType.LUNCH_START,
-            it.medianMinute, it.deviationMinutes, it.sampleCount, com.hoodie.app.domain.detection.ConfidenceScore(it.confidence)) } else null
-        return ContextInput(signal, now, routines.get(), routines.isDayOff(now.toLocalDate()), previous, confirmations, learnedLunch)
+        val routine = effectiveRoutine?.currentSnapshot()?.routine ?: routines.get()
+        return ContextInput(signal, now, routine, routines.isDayOff(now.toLocalDate()), previous, confirmations)
     }
 
     suspend fun inferredContextFor(type: PlaceType, now: Long): UserContextType = when {
         type != PlaceType.RESTAURANT -> type.toContext()
-        RoutineEngine.isLunchWindow(now.atZone(clock.zone()).minuteOfDay(), routines.get()) -> UserContextType.LUNCH
+        RoutineEngine.isLunchWindow(now.atZone(clock.zone()).minuteOfDay(), effectiveRoutine?.resolve(now.atZone(clock.zone()).toLocalDate(), now)?.routine ?: routines.get()) -> UserContextType.LUNCH
         else -> UserContextType.DINING
     }
 
@@ -114,6 +116,7 @@ internal class ContextSignalProcessor(
     }
 
     suspend fun ask(kind: QuestionKind, candidate: UserContextType?, placeId: Long?, eventId: Long?, coords: String? = null, detection: DetectionResult? = null): Long? {
+        if (kind == QuestionKind.NEW_PLACE && vehicleInMotion()) return null
         if (HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION && kind == QuestionKind.CONFIRM_CONTEXT) return null
         val now = clock.nowMillis()
         val history = questionDao.since(now - DAY_MS)

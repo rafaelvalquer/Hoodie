@@ -7,4 +7,6 @@ data class SpeedSampleReservation(
     val reservedAt: Long,
     val sampleCountAtReservation: Int,
     val attemptNumber: Int,
+    val evidenceId: Long = 0,
+    val workRequestId: String = "",
 )

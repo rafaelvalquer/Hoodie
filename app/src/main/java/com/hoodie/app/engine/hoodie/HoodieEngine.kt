@@ -1,5 +1,6 @@
 package com.hoodie.app.engine.hoodie
 
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.database.ContextEventDao
 import com.hoodie.app.core.database.HoodieActivityDao
 import com.hoodie.app.core.database.HoodieActivityEntity
@@ -44,24 +45,28 @@ class HoodieEngine @Inject constructor(
     private val timeline: TimelineRepository,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
+    private val effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
 ) {
     private val mutex = Mutex()
 
     suspend fun resolve(): HoodieSnapshot = mutex.withLock {
+        val effective = effectiveRoutine?.currentSnapshot()
         val now = clock.nowMillis()
         val zone = clock.zone()
         val s = settings.current()
         val routine = routines.get()
         val today = clock.today()
         val daysOff = routines.daysOff(today.minusDays(4), today.plusDays(1))
-        val env = SimulationEnv(zone, routine, s.sleep, daysOff)
+        val versions = effectiveRoutine?.history(now - HoodieConfig.MAX_CATCH_UP_MS - DAY_MS, now).orEmpty()
+        val env = SimulationEnv(zone, effective?.routine ?: routine, effective?.sleep ?: s.sleep, daysOff, versions)
 
         val saved = stateDao.get()?.toDomain()
         val from = minOf(saved?.needsAt ?: now, now) - DAY_MS
         val events = contextDao.overlapping(from, now + 1).map { ContextSpan(it.type, it.startedAt, it.endedAt) }
         val contexts = EventContextTimeline(events) { t ->
             val zoned = t.atZone(zone)
-            RoutineEngine.probableContext(zoned, routine, zoned.toLocalDate() in daysOff)
+            val version = versions.lastOrNull { it.effectiveFrom <= t }
+            RoutineEngine.probableContext(zoned, version?.routine ?: routine, version?.dayOff ?: (zoned.toLocalDate() in daysOff))
         }
 
         val result = if (saved == null) {

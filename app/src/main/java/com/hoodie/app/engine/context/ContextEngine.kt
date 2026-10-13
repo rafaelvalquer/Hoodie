@@ -56,10 +56,12 @@ class ContextEngine @Inject constructor(
     log: DebugEventLogger,
     intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
     private val corrections: dagger.Lazy<com.hoodie.app.engine.correction.DiaryCorrectionService>? = null,
+    effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
+    mobilityRepository: com.hoodie.app.data.repository.MobilityRepository? = null,
 ) {
     private val mutex = Mutex()
 
-    private val processor = ContextSignalProcessor(contextDao, transitions, confirmationDao, questionDao, locationEventDao, places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, cipher, clock, log, intelligence)
+    private val processor = ContextSignalProcessor(contextDao, transitions, confirmationDao, questionDao, locationEventDao, places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, cipher, clock, log, intelligence, effectiveRoutine, mobilityRepository)
     private val geofenceContextHandler = GeofenceContextHandler(processor)
     private val contextQuestionHandler = ContextQuestionHandler(processor)
     private val routineFallbackHandler = RoutineFallbackHandler(processor)
@@ -67,6 +69,11 @@ class ContextEngine @Inject constructor(
     private val placeLearningHandler = PlaceLearningHandler(processor)
 
     suspend fun onGeofence(placeId: Long, transition: GeofenceTransition, at: Long = clock.nowMillis()): Unit = mutex.withLock { geofenceContextHandler.onGeofence(placeId, transition, at) }
+
+    suspend fun onArrivalGeofences(placeIds: List<Long>, transition: GeofenceTransition, at: Long,
+        position: com.hoodie.app.core.geofence.PlaceArrivalPosition? = null): Long? = mutex.withLock {
+        geofenceContextHandler.onArrivalGeofences(placeIds, transition, at, position)
+    }
 
     suspend fun onLunchCheck(exitAt: Long, placeId: Long): Unit = mutex.withLock { geofenceContextHandler.onLunchCheck(exitAt, placeId) }
 
@@ -112,7 +119,13 @@ class ContextEngine @Inject constructor(
 
     suspend fun savePlaceHere(type: PlaceType, name: String, lat: Double, lng: Double): Place = mutex.withLock { placeLearningHandler.savePlaceHere(type, name, lat, lng) }
 
-    suspend fun answerSavePlace(questionId: Long, save: Boolean): Unit = mutex.withLock { placeLearningHandler.answerSavePlace(questionId, save) }
+    suspend fun newPlaceSaveOptions(questionId: Long, manualPosition: Pair<Double, Double>? = null): NewPlaceSaveOptions? =
+        mutex.withLock { placeLearningHandler.saveOptions(questionId, manualPosition) }
+
+    suspend fun answerSavePlace(questionId: Long, save: Boolean, name: String? = null,
+        reusePlaceId: Long? = null, manualPosition: Pair<Double, Double>? = null): Unit = mutex.withLock {
+        placeLearningHandler.answerSavePlace(questionId, save, name, reusePlaceId, manualPosition)
+    }
 
     // ── Mobilidade: APIs explícitas; o ContextEngine segue dono do UserContextType ──
 

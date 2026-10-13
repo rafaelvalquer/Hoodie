@@ -112,7 +112,7 @@ class MobilityEngineIntegrationTest {
             ),
             day, 0, Long.MAX_VALUE, m.now(), m.g.clock.zone(),
         ).timeline.map { "${it.emoji} ${it.subtitle}" }
-        assertEquals(listOf("🚶 07:47–07:54 · 7 min", "🚌 07:54–08:26 · 32 min", "🚶 08:26–08:31 · 5 min"), items)
+        assertEquals(listOf("🚶 07:47–07:54 · 7 min", "🚌 07:54–08:25 · 31 min", "🚶 08:25–08:31 · 6 min"), items)
     }
 
     @Test

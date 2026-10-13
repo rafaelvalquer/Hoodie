@@ -33,6 +33,34 @@ class SimulatorPersistenceTest {
     )
     private val timeline = EventContextTimeline(day) { UserContextType.HOME }
 
+    @Test fun effectiveRoutineRevisionsProduceTheSameHistoryWithOrWithoutIntermediateChecks() {
+        val start = at(MONDAY, 6).ms()
+        val date = at(MONDAY, 6).toLocalDate()
+        val original = com.hoodie.app.domain.routine.EffectiveRoutineResolver.resolve(date, start, officeRoutine,
+            SleepSchedule(), emptySet(), emptyList())
+        val changed = com.hoodie.app.domain.routine.EffectiveRoutineResolver.resolve(date, at(MONDAY, 13).ms(),
+            officeRoutine.copy(endMinute = 960), SleepSchedule(sleepMinute = 1320), emptySet(), emptyList())
+        val versions = listOf(original, changed)
+        val effectiveEnv = env.copy(routineVersions = versions)
+        val tl = EventContextTimeline(emptyList()) { instant ->
+            val snapshot = versions.lastOrNull { it.effectiveFrom <= instant } ?: original
+            com.hoodie.app.engine.routine.RoutineEngine.probableContext(java.time.Instant.ofEpochMilli(instant).atZone(ZONE), snapshot.routine, false)
+        }
+        val initial = HoodieSimulator.initial(start, tl, effectiveEnv)
+        val end = at(MONDAY, 23, 30).ms()
+        val once = HoodieSimulator.advance(initial, end, tl, effectiveEnv)
+        var state = initial
+        val completed = mutableListOf<com.hoodie.app.engine.hoodie.CompletedActivity>()
+        var time = start
+        while (time < end) {
+            time = minOf(time + 7 * MINUTE_MS, end)
+            val step = HoodieSimulator.advance(state, time, tl, effectiveEnv)
+            state = step.state; completed += step.completed
+        }
+        assertEquals(once.state, state)
+        assertEquals(once.completed, completed)
+    }
+
     @Test
     fun `CT-PERSIST - fechar e reabrir em qualquer momento produz o mesmo estado`() {
         val start = at(MONDAY - 1, 21).ms()

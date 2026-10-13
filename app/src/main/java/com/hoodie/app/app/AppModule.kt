@@ -55,6 +55,7 @@ abstract class BindingsModule {
     @Binds abstract fun notifier(impl: HoodieNotifier): Notifier
     @Binds abstract fun checkScheduler(impl: WorkScheduler): CheckScheduler
     @Binds abstract fun mobilityScheduler(impl: WorkScheduler): com.hoodie.app.worker.MobilityScheduler
+    @Binds abstract fun speedSampleScheduler(impl: WorkScheduler): com.hoodie.app.worker.SpeedSampleScheduler
     @Binds abstract fun activityRecognitionRegistrar(impl: com.hoodie.app.core.mobility.ActivityRecognitionProvider): com.hoodie.app.core.mobility.ActivityRecognitionRegistrar
     @Binds abstract fun activityRecognitionPermissions(impl: com.hoodie.app.core.mobility.ActivityRecognitionPermissionManager): com.hoodie.app.core.mobility.ActivityRecognitionPermissions
     @Binds abstract fun transactions(impl: RoomTransactionRunner): TransactionRunner

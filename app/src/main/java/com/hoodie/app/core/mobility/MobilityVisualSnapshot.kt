@@ -21,4 +21,5 @@ data class MobilityVisualSnapshot(
     val speedSampleCount: Int = 0,
     val meanSpeedKmh: Float? = null,
     val maxSpeedKmh: Float? = null,
+    val evidenceId: Long? = null,
 )

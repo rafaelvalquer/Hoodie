@@ -35,6 +35,7 @@ data class AppSettings(
     val mobility: MobilitySettings = MobilitySettings(),
     /** Visualização do mapa do Diário (`JOURNEY` ou `CLOCK`); o Diário reabre nela. */
     val diaryMapMode: String = "JOURNEY",
+    val automaticRoutineEvents: Set<String> = emptySet(),
 )
 
 /**
@@ -93,6 +94,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val MOBILITY_PREFERRED = stringPreferencesKey("mobility_preferred_mode")
         val MOBILITY_APPROVED = stringSetPreferencesKey("mobility_approved_patterns")
         val MOBILITY_DECLINED = stringSetPreferencesKey("mobility_declined_patterns")
+        val ROUTINE_AUTO = stringSetPreferencesKey("routine_automatic_events")
         val DIARY_MAP_MODE = stringPreferencesKey("diary_map_mode")
     }
 
@@ -121,6 +123,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 approvedPatterns = p[Keys.MOBILITY_APPROVED] ?: emptySet(),
                 declinedPatterns = p[Keys.MOBILITY_DECLINED] ?: emptySet(),
             ),
+            automaticRoutineEvents = p[Keys.ROUTINE_AUTO] ?: emptySet(),
             diaryMapMode = p[Keys.DIARY_MAP_MODE] ?: "JOURNEY",
         )
     }
@@ -134,6 +137,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     }
 
     suspend fun setCatName(name: String) = store.edit { it[Keys.CAT_NAME] = name.ifBlank { "Hoodie" } }
+
+    suspend fun setAutomaticRoutineEvents(events: Set<String>) = store.edit { it[Keys.ROUTINE_AUTO] = events }
 
     suspend fun setSleep(s: SleepSchedule) = store.edit { it[Keys.WAKE] = s.wakeMinute; it[Keys.SLEEP] = s.sleepMinute }
 

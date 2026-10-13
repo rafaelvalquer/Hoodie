@@ -17,6 +17,7 @@ import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.mobility.SpeedSampleReservation
 import com.hoodie.app.core.time.DAY_MS
 import com.hoodie.app.engine.mobility.TripRecord
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -33,6 +34,62 @@ class MobilityRepository @Inject constructor(
 ) {
     private val sessions: MobilitySessionDao get() = db.mobilitySessionDao()
     private val segments: MobilitySegmentDao get() = db.mobilitySegmentDao()
+    private val evidence get() = db.transportEvidenceDao()
+    val currentEvidence = evidence.observeCurrent()
+    suspend fun evidenceFor(sessionId: Long) = evidence.current(sessionId)
+    suspend fun ensureEvidence(sessionId: Long, at: Long): com.hoodie.app.core.database.TransportEvidenceEntity? = db.withTransaction {
+        val session = sessions.getById(sessionId)?.takeIf { it.endedAt == null } ?: return@withTransaction null
+        evidence.current(sessionId) ?: com.hoodie.app.core.database.TransportEvidenceEntity(sessionId = sessionId,
+            startedAt = maxOf(at, session.startedAt)).let { it.copy(id = evidence.insert(it)) }
+    }
+    suspend fun invalidateSpeedReservations(sessionId: Long) = evidence.invalidate(sessionId)
+    suspend fun invalidateAllSpeedReservations() = evidence.invalidateAll()
+    suspend fun releaseSpeedReservation(r: SpeedSampleReservation) = db.withTransaction {
+        evidence.get(r.evidenceId)?.takeIf { it.reservationId == r.workRequestId }?.let { evidence.update(it.copy(reservationId = null)) }
+    }
+
+    suspend fun recordTransportMovement(sessionId: Long, movement: DetectedMovement, at: Long) = db.withTransaction {
+        val e = evidence.current(sessionId) ?: return@withTransaction
+        if (at < e.startedAt) return@withTransaction
+        if (movement == DetectedMovement.STILL) evidence.update(e.copy(stopStart = e.stopStart ?: at, reservationId = null))
+        else if (movement.isMoving && e.stopStart != null) {
+            val duration = (at - e.stopStart).coerceAtLeast(0)
+            evidence.update(e.copy(stopStart = null, stopCount = e.stopCount + if (duration >= 10_000) 1 else 0,
+                stoppedMs = e.stoppedMs + if (duration >= 10_000) duration else 0,
+                stopSquareSum = e.stopSquareSum + if (duration >= 10_000) duration.toDouble() * duration else 0.0))
+        }
+    }
+
+    /** Both the budget and the single-use reservation belong to the vehicle period, never to the trip. */
+    suspend fun reserveEvidenceSample(sessionId: Long, evidenceId: Long, workRequestId: String, now: Long): SpeedSampleReservation? = db.withTransaction {
+        val s = sessions.getById(sessionId) ?: return@withTransaction null
+        val e = evidence.current(sessionId)?.takeIf { it.id == evidenceId } ?: return@withTransaction null
+        if (s.endedAt != null || !s.currentMode.isVehicle || s.stillSince != null || s.pendingMovementAt != null ||
+            e.attempts >= 5 || workRequestId in e.consumedWorkRequestIds.split(",") ||
+            e.lastAttemptAt?.let { now - it < 60_000 } == true) return@withTransaction null
+        evidence.update(e.copy(attempts = e.attempts + 1, lastAttemptAt = now,
+            lastWorkRequestId = workRequestId, consumedWorkRequestIds = (e.consumedWorkRequestIds.split(",").filter { it.isNotEmpty() } + workRequestId).joinToString(","), reservationId = workRequestId))
+        SpeedSampleReservation(s.id, s.startedAt, now, e.sampleCount, e.attempts + 1, e.id, workRequestId)
+    }
+
+    suspend fun applyEvidenceSample(r: SpeedSampleReservation, sample: SpeedObservation, now: Long): Boolean = db.withTransaction {
+        val s = sessions.getById(r.sessionId) ?: return@withTransaction false
+        val e = evidence.current(s.id) ?: return@withTransaction false
+        if (s.endedAt != null || !s.currentMode.isVehicle || s.stillSince != null || s.pendingMovementAt != null ||
+            e.id != r.evidenceId || e.reservationId != r.workRequestId || e.sampleCount != r.sampleCountAtReservation ||
+            now - r.reservedAt !in 0..120_000 || sample.observedAt < e.startedAt ||
+            sample.observedAt > now || now - sample.observedAt > 120_000 ||
+            !sample.metersPerSecond.isFinite() || sample.metersPerSecond !in 0f..100f) return@withTransaction false
+        val speed = sample.metersPerSecond * 3.6
+        val mean = e.meanSpeedKmh?.toDouble() ?: 0.0
+        val n = e.sampleCount + 1
+        val nextMean = mean + (speed - mean) / n
+        val m2 = e.sampleCount * (mean * e.speedVariation) * (mean * e.speedVariation) + (speed - mean) * (speed - nextMean)
+        val variation = if (nextMean > 0) kotlin.math.sqrt((m2 / n).coerceAtLeast(0.0)) / nextMean else 0.0
+        evidence.update(e.copy(reservationId = null, sampleCount = n, meanSpeedKmh = nextMean.toFloat(),
+            maxSpeedKmh = maxOf(e.maxSpeedKmh ?: 0f, speed.toFloat()), speedVariation = variation.toFloat()))
+        true
+    }
     suspend fun open(): MobilitySessionEntity? = sessions.open()
     suspend fun session(id: Long): MobilitySessionEntity? = sessions.getById(id)
     suspend fun insert(s: MobilitySessionEntity): MobilitySessionEntity = s.copy(id = sessions.insert(s))
@@ -42,8 +99,11 @@ class MobilityRepository @Inject constructor(
         recordVehicle: Boolean, recordVehicleExit: Boolean, clearPending: Boolean): Boolean =
         sessions.updateMovementEvidence(sessionId, movement.name, observedAt, recordVehicle, recordVehicleExit, clearPending) == 1
 
-    suspend fun setPendingMovement(sessionId: Long, mode: MovementMode, at: Long): Boolean =
-        sessions.setPendingMovement(sessionId, mode.name, at) == 1
+    suspend fun setPendingMovement(sessionId: Long, mode: MovementMode, at: Long): Boolean = db.withTransaction {
+        val changed = sessions.setPendingMovement(sessionId, mode.name, at) == 1
+        if (changed) evidence.invalidate(sessionId)
+        changed
+    }
 
     suspend fun clearPendingMovement(sessionId: Long): Boolean = sessions.clearPendingMovement(sessionId) == 1
 
@@ -64,7 +124,8 @@ class MobilityRepository @Inject constructor(
         if (current.endedAt != null || current.state != MobilityState.MOVEMENT_CANDIDATE) return@withTransaction false
         if (current.startedAt != expected.startedAt) return@withTransaction false
         sessions.update(promoted.mergeSpeedAggregatesFrom(current))
-        segments.insert(segment)
+        val e = if (segment.mode.isVehicle) ensureEvidence(current.id, current.startedAt) else null
+        segments.insert(segment.copy(evidenceId = e?.id))
         true
     }
 
@@ -74,9 +135,16 @@ class MobilityRepository @Inject constructor(
         if (current.endedAt != null || current.currentMode != expectedMode) return@withTransaction false
         val open = segments.openFor(updated.id)
         if (open?.mode == next.mode) return@withTransaction false
-        open?.let { segments.update(it.copy(endedAt = maxOf(next.startedAt, it.startedAt))) }
+        val boundary = maxOf(next.startedAt, current.startedAt, open?.startedAt ?: current.startedAt)
+        if (next.confirmedAt != null && (current.pendingMovementAt == null || current.pendingMovementAt > next.startedAt ||
+                current.pendingMovementMode != next.mode || open?.source == com.hoodie.app.core.mobility.MobilitySource.USER_CORRECTION)) return@withTransaction false
+        open?.let { segments.update(it.copy(endedAt = boundary)) }
+        val e = if (next.mode.isVehicle) ensureEvidence(current.id, boundary) else {
+            evidence.current(current.id)?.let { evidence.update(it.copy(endedAt = boundary, reservationId = null)) }
+            null
+        }
         sessions.update(updated.mergeSpeedAggregatesFrom(current))
-        segments.insert(next)
+        segments.insert(next.copy(startedAt = boundary, evidenceId = e?.id))
         true
     }
 
@@ -86,6 +154,7 @@ class MobilityRepository @Inject constructor(
         if (current.endedAt != null) return@withTransaction false
         segments.openFor(ended.id)?.let { segments.update(it.copy(endedAt = maxOf(at, it.startedAt))) }
         sessions.update(ended.mergeSpeedAggregatesFrom(current))
+        evidence.current(ended.id)?.let { evidence.update(it.copy(endedAt = at, reservationId = null)) }
         true
     }
     suspend fun delete(id: Long) = sessions.delete(id)
@@ -104,8 +173,8 @@ class MobilityRepository @Inject constructor(
     }.distinctUntilChanged()
 
     /** Visual evidence includes candidates, but `activeMode` keeps its confirmed-mode contract. */
-    val visualObservation: Flow<MobilityVisualSnapshot> = sessions.observeOpenVisual().map { row ->
-        val s = row?.session ?: return@map MobilityVisualSnapshot()
+    val visualObservation: Flow<MobilityVisualSnapshot> = combine(sessions.observeOpenVisual(), evidence.observeCurrent()) { row, e ->
+        val s = row?.session ?: return@combine MobilityVisualSnapshot()
         val mode = row.openSegmentMode ?: s.currentMode
         val source = row.openSegmentSource ?: s.source
         val certainty = when {
@@ -128,8 +197,9 @@ class MobilityRepository @Inject constructor(
             observedMovement = s.lastObservedMovement, confidence = row.openSegmentConfidence ?: s.confidence,
             certainty = certainty, source = source, observedAt = s.lastObservationAt,
             lastVehicleAt = s.lastVehicleAt, vehicleExitAt = s.vehicleExitAt, phase = phase,
-            speedSampleAttempts = s.speedSampleAttempts, speedSampleCount = s.speedSampleCount,
-            meanSpeedKmh = s.meanSpeedKmh, maxSpeedKmh = s.maxSpeedKmh,
+            speedSampleAttempts = e?.takeIf { it.sessionId == s.id }?.attempts ?: 0, speedSampleCount = e?.takeIf { it.sessionId == s.id }?.sampleCount ?: 0,
+            meanSpeedKmh = e?.takeIf { it.sessionId == s.id }?.meanSpeedKmh, maxSpeedKmh = e?.takeIf { it.sessionId == s.id }?.maxSpeedKmh,
+            evidenceId = e?.takeIf { it.sessionId == s.id }?.id,
         )
     }.distinctUntilChanged()
 

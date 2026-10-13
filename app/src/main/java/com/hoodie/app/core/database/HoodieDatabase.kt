@@ -3,7 +3,7 @@ package com.hoodie.app.core.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
-const val HOODIE_DATABASE_VERSION = 10
+const val HOODIE_DATABASE_VERSION = 11
 
 /**
  * Banco local cifrado com SQLCipher no DatabaseModule. As coordenadas possuem
@@ -37,11 +37,15 @@ const val HOODIE_DATABASE_VERSION = 10
         DiaryCorrectionEntity::class,
         LearnedRoutineSlotEntity::class,
         TransportPatternEntity::class,
+        TransportEvidenceEntity::class,
+        EffectiveRoutineVersionEntity::class,
     ],
     version = HOODIE_DATABASE_VERSION,
     exportSchema = true,
 )
 abstract class HoodieDatabase : RoomDatabase() {
+    abstract fun transportEvidenceDao(): TransportEvidenceDao
+    abstract fun effectiveRoutineDao(): EffectiveRoutineDao
     abstract fun intelligenceDao(): IntelligenceDao
     abstract fun placeDao(): PlaceDao
     abstract fun routineDao(): RoutineDao

@@ -17,6 +17,7 @@ class DiaryCorrectionService @Inject constructor(
     private val learning: dagger.Lazy<com.hoodie.app.engine.routine.RoutineLearningCoordinator>? = null,
     private val transportLearning: dagger.Lazy<com.hoodie.app.engine.mobility.TransportPatternLearner>? = null,
     private val notifier: com.hoodie.app.core.notification.Notifier? = null,
+    private val speedScheduler: com.hoodie.app.worker.SpeedSampleScheduler? = null,
 ) {
     suspend fun save(request: DiaryCorrection): Long {
         val cancelledQuestions = mutableSetOf<Long>()
@@ -30,9 +31,10 @@ class DiaryCorrectionService @Inject constructor(
                 CorrectionTargetType.MOBILITY_SEGMENT -> correctMovement(request, cancelledQuestions)
                 CorrectionTargetType.CONTEXT_BOUNDARY -> error("Uma correção de limite depende do evento principal.")
             }
-            if (com.hoodie.app.core.config.HoodieConfig.LEARNED_ROUTINE) learning?.get()?.recompute()
             audit
         }
+        if (com.hoodie.app.core.config.HoodieConfig.LEARNED_ROUTINE) learning?.get()?.recompute()
+        if (request.targetType == CorrectionTargetType.MOBILITY_SEGMENT) db.mobilitySegmentDao().getById(request.targetId)?.let { speedScheduler?.cancelSession(it.sessionId) }
         // Notifications are external effects: cancel only after the canonical transaction commits.
         cancelledQuestions.forEach { id -> runCatching { notifier?.cancelQuestion(id) } }
         return result
@@ -119,10 +121,11 @@ class DiaryCorrectionService @Inject constructor(
             originalMode = old.mode.name, correctedMode = mode.name, originalSource = old.source.name, originalConfidence = old.confidence, createdAt = clock.nowMillis(),
         ))
         dao.update(corrected)
+        db.transportEvidenceDao().invalidate(old.sessionId)
         supersedeQuestions(cancelledQuestions) { it.mobilitySessionId == old.sessionId && it.kind == QuestionKind.SELECT_TRANSPORT_MODE }
         val all = dao.forSession(old.sessionId)
         val hasMovement = all.any { it.mode != com.hoodie.app.core.mobility.MovementMode.NONE }
-        db.mobilitySessionDao().update(session.copy(initialMode = all.first().mode, currentMode = all.last().mode, destinationPlaceId = r.placeId,
+        db.mobilitySessionDao().update(session.copy(pendingMovementMode = null, pendingMovementAt = null, initialMode = all.first().mode, currentMode = all.last().mode, destinationPlaceId = r.placeId,
             confidence = all.minOf { it.confidence }, confirmed = hasMovement && all.all { it.confirmed },
             endedAt = if (hasMovement) all.last().endedAt else session.endedAt ?: clock.nowMillis(),
             state = when {
@@ -131,6 +134,9 @@ class DiaryCorrectionService @Inject constructor(
                 else -> session.state
             },
             source = if (all.last().source == MobilitySource.USER_CORRECTION) MobilitySource.USER_CORRECTION else session.source))
+        if (!all.last().mode.isVehicle || all.last().endedAt != null) {
+            db.transportEvidenceDao().current(session.id)?.let { db.transportEvidenceDao().update(it.copy(endedAt = all.last().endedAt ?: clock.nowMillis(), reservationId = null)) }
+        }
         if (com.hoodie.app.core.config.HoodieConfig.TRANSPORT_CLASSIFIER_V2 &&
             (old.source != MobilitySource.USER_CORRECTION || old.mode != mode || session.destinationPlaceId != r.placeId)) {
             val patterns = transportLearning?.get()

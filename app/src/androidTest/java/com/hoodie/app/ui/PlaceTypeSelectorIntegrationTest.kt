@@ -3,8 +3,8 @@ package com.hoodie.app.ui
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.assertCountEquals
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.compose.runtime.getValue
@@ -82,7 +82,8 @@ class PlaceTypeSelectorIntegrationTest {
                     zone = java.time.ZoneId.of("America/Sao_Paulo"),
                     onOpen = {},
                     homeNow = homeNow,
-                    actions = HomeActions(setManual = { place ->
+                    actions = HomeActions(correctContext = { place, historical, _ ->
+                        assertEquals(false, historical)
                         selected = place
                         val context = place.toContext()
                         selectedContext = context
@@ -93,16 +94,23 @@ class PlaceTypeSelectorIntegrationTest {
                             visual = visual,
                         )
                         homeNow = HomeNowAssembler.assemble(null, state.context, null, null, null, state.now)
+                        true
                     }),
                 )
             }
         }
 
         rule.mainClock.advanceTimeBy(100L)
-        rule.scrollWithPausedClock(rule.onNodeWithText(rule.activity.getString(com.hoodie.app.R.string.ui_home_screen_4).uppercase())).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        rule.onNodeWithContentDescription("Mais ações").performClick()
+        rule.waitUntil(10_000) {
+            rule.mainClock.advanceTimeBy(100L)
+            rule.onAllNodesWithText("Ajustar atividade").fetchSemanticsNodes().size == 1
+        }
+        rule.onNodeWithText("Ajustar atividade").performClick()
         rule.waitForIdle()
         rule.mainClock.advanceTimeBy(1_000L)
-        rule.scrollWithPausedClock(rule.onNodeWithText("RESTAURANTE")).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        rule.scrollWithPausedClock(rule.onNodeWithText("Restaurante")).performClick()
+        rule.scrollWithPausedClock(rule.onNodeWithText("Salvar correção", ignoreCase = true)).performClick()
         rule.waitForIdle()
         rule.mainClock.advanceTimeBy(1_000L)
         rule.runOnIdle {

@@ -77,10 +77,13 @@ data class HomeUiState(
     val snapshot: HoodieSnapshot? = null,
     val visual: VisualState? = null,
     val next: UpcomingEvent? = null,
+    val routineOrigin: String? = null,
     val dialogue: String? = null,
     val probableMode: Boolean = false,
     val locationStatus: LocationStatus = LocationStatus.OK,
     val question: ContextQuestion? = null,
+    val newPlaceSaveOptions: com.hoodie.app.engine.context.NewPlaceSaveOptions? = null,
+    val vehicleMoving: Boolean = false,
     val suggestSavePlace: PlaceType? = null,
     val canSaveHere: Boolean = false,
 )
@@ -91,6 +94,7 @@ private data class Inputs(
     val context: ContextEvent?,
     val places: List<Place>,
     val dayOff: Boolean,
+    val effective: com.hoodie.app.domain.routine.EffectiveRoutineSnapshot? = null,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -112,6 +116,7 @@ class HomeViewModel @Inject constructor(
     private val contextDao: ContextEventDao,
     questionDao: QuestionDao,
     dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
+    private val effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
 ) : ViewModel() {
     private val dayStateCoordinator = if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStates?.get() else null
     val dayState = dayStateCoordinator?.snapshots ?: kotlinx.coroutines.flow.flowOf(null)
@@ -125,11 +130,6 @@ class HomeViewModel @Inject constructor(
     private val _events = Channel<HomeUiEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    init {
-        // App aberto: a escolha do transporte adiada (veículo andando) pode aparecer agora.
-        action { mobility.onAppOpened() }
-    }
-
     override fun onCleared() {
         mobility.onAppClosed()
         super.onCleared()
@@ -142,7 +142,7 @@ class HomeViewModel @Inject constructor(
     /** Relógio da tela: só corre enquanto alguém observa (pausa em background). */
     private val ticker = flow { while (true) { emit(clock.nowMillis()); delay(TICK_MS) } }
 
-    private val inputs = combine(
+    private val manualInputs = combine(
         settingsRepo.settings,
         routines.routine,
         contextDao.observeCurrent().map { it?.toDomain() },
@@ -150,6 +150,10 @@ class HomeViewModel @Inject constructor(
         // Vira o dia junto com o relógio (meia-noite, fuso, TIME_SET): nunca observa o dia antigo.
         currentDateFlow(clock).flatMapLatest { routines.observeDayOff(it) },
     ) { s, r, c, p, off -> Inputs(s, r, c, p, off) }
+
+    private val inputs = combine(manualInputs, effectiveRoutine?.current ?: kotlinx.coroutines.flow.flowOf(null)) { i, effective ->
+        if (effective == null) i else i.copy(routine = effective.routine, settings = i.settings.copy(sleep = effective.sleep), effective = effective)
+    }
 
     private val pendingQuestion = questionDao.observePending(clock.nowMillis() - 12 * HOUR_MS).map { list ->
         list.firstOrNull { !(com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION && it.kind == com.hoodie.app.core.model.QuestionKind.CONFIRM_CONTEXT) }
@@ -162,6 +166,8 @@ class HomeViewModel @Inject constructor(
     private val reloadHome = MutableStateFlow(0L)
     private val homeNowReconciled = MutableStateFlow(false)
     private var homeResumeJob: Job? = null
+    private val manualPlaceOptions = MutableStateFlow<com.hoodie.app.engine.context.NewPlaceSaveOptions?>(null)
+    private var placeOptionsJob: Job? = null
     val state: StateFlow<HomeUiState> = retryableUiState(
         retries = reloadHome,
         loading = HomeUiState(),
@@ -191,6 +197,7 @@ class HomeViewModel @Inject constructor(
         homeNowReconciled.value = false
         homeResumeJob = viewModelScope.launch {
             try {
+                withContext(Dispatchers.IO) { mobility.onAppOpened() }
                 if (com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) {
                     runCatching { withContext(Dispatchers.IO) { contextEngine.dismissPendingContextConfirmations() } }
                 }
@@ -214,6 +221,7 @@ class HomeViewModel @Inject constructor(
 
     fun onHomeStopped() {
         visualDiagnostics.visibility(false)
+        mobility.onAppClosed()
         homeResumeJob?.cancel()
         homeNowReconciled.value = false
     }
@@ -225,9 +233,24 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun kotlinx.coroutines.flow.Flow<HomeUiState>.combineWithQuestion() =
-        combine(this, pendingQuestion) { s, q -> s.copy(question = q) }
+        combine(this, pendingQuestion, manualPlaceOptions) { s, q, manual ->
+            val visible = q?.takeUnless { s.vehicleMoving && it.kind in setOf(
+                com.hoodie.app.core.model.QuestionKind.NEW_PLACE, com.hoodie.app.core.model.QuestionKind.SAVE_PLACE) }
+            s.copy(question = visible, newPlaceSaveOptions = visible?.takeIf {
+                it.kind == com.hoodie.app.core.model.QuestionKind.SAVE_PLACE
+            }?.let { manual?.takeIf { options -> options.questionId == it.id } ?: contextEngine.newPlaceSaveOptions(it.id) })
+        }
 
-    private fun build(i: Inputs, now: Long, snap: HoodieSnapshot, mobility: com.hoodie.app.core.mobility.MobilityVisualSnapshot): HomeUiState {
+    fun updateNewPlacePosition(id: Long, position: Pair<Double, Double>?) {
+        placeOptionsJob?.cancel()
+        manualPlaceOptions.value = null
+        if (position == null) return
+        placeOptionsJob = viewModelScope.launch {
+            manualPlaceOptions.value = withContext(Dispatchers.IO) { contextEngine.newPlaceSaveOptions(id, position) }
+        }
+    }
+
+    private suspend fun build(i: Inputs, now: Long, snap: HoodieSnapshot, mobility: com.hoodie.app.core.mobility.MobilityVisualSnapshot): HomeUiState {
         val zoned = clock.now()
         val minute = zoned.minuteOfDay()
         val ctx = i.context
@@ -257,7 +280,16 @@ class HomeViewModel @Inject constructor(
         )
         visualDiagnostics.selected(visual, now)
         val userType = ctx?.type ?: UserContextType.HOME
-        val next = RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)
+        val tomorrowDate = zoned.toLocalDate().plusDays(1)
+        val tomorrow = effectiveRoutine?.resolve(tomorrowDate, tomorrowDate.atStartOfDay(clock.zone()).toInstant().toEpochMilli())
+        val next = if (i.effective != null && tomorrow != null) RoutineEngine.nextEvent(zoned, i.effective, tomorrow)
+            else RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)
+        val originSnapshot = if (next.tomorrow) tomorrow else i.effective
+        val origin = next.routineType?.let { originSnapshot?.values?.get(it) }?.takeIf { it.origin != com.hoodie.app.domain.routine.RoutineValueOrigin.MANUAL }
+        val originText = origin?.let { if (it.origin == com.hoodie.app.domain.routine.RoutineValueOrigin.LEARNED)
+            "Aprendido · ${(100 * (it.confidence ?: 0f)).toInt()}% · ${it.sampleCount} observações"
+            else if (it.fallbackReason == "NO_ELIGIBLE_PATTERN") "Automático · referência manual (sem padrão elegível)"
+            else "Automático · referência manual (horários incompatíveis)" }
 
         // Fala ocasional, sem IA: regras do dialogues.json. Fica alguns segundos e some.
         if (now >= dialogueUntil) {
@@ -294,9 +326,12 @@ class HomeViewModel @Inject constructor(
         return HomeUiState(
             loading = false, catName = i.settings.catName, now = now, period = DayPeriod.of(zoned.hour),
             context = ctx, contextPlaceName = ctx?.placeId?.let { id -> i.places.firstOrNull { it.id == id }?.name },
-            snapshot = snap, visual = visual, next = next, dialogue = dialogueText,
+            snapshot = snap, visual = visual, next = next, routineOrigin = originText, dialogue = dialogueText,
             probableMode = probable, locationStatus = status,
             suggestSavePlace = suggest, canSaveHere = canSaveHere,
+            vehicleMoving = mobility.mode?.isVehicle == true &&
+                mobility.phase != com.hoodie.app.core.mobility.MobilityPhase.IDLE &&
+                mobility.observedMovement != com.hoodie.app.core.mobility.DetectedMovement.STILL,
         )
     }
 
@@ -354,8 +389,13 @@ class HomeViewModel @Inject constructor(
         _events.send(HomeUiEvent.React(AnimationId.SURPRISED))
     }
 
-    fun answerSavePlace(id: Long, save: Boolean) = action {
+    fun answerSavePlace(id: Long, save: Boolean) = placeAction {
         contextEngine.answerSavePlace(id, save)
+        _events.send(HomeUiEvent.React(AnimationId.HAPPY))
+    }
+
+    fun saveDiscoveredPlace(id: Long, name: String, reuseId: Long?, manualPosition: Pair<Double, Double>?) = placeAction {
+        contextEngine.answerSavePlace(id, true, name, reuseId, manualPosition)
         _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
@@ -391,6 +431,19 @@ class HomeViewModel @Inject constructor(
             Log.e(TAG, "Home action failed", cause)
             _events.send(HomeUiEvent.ShowError(error))
         }, block)
+    }
+
+    private fun placeAction(block: suspend () -> Unit) = viewModelScope.launch {
+        if (_busy.value) return@launch
+        _busy.value = true
+        try {
+            runUiAction(PlaceError.SaveFailed, { error, cause ->
+                Log.e(TAG, "Discovered place save failed", cause)
+                _events.send(HomeUiEvent.ShowError(error))
+            }) { withContext(Dispatchers.IO) { block() } }
+        } finally {
+            _busy.value = false
+        }
     }
 
     companion object {

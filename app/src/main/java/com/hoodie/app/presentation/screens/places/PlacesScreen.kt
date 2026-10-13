@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -53,6 +54,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @HiltViewModel
 class PlacesViewModel @Inject constructor(
@@ -65,6 +69,7 @@ class PlacesViewModel @Inject constructor(
     val list = places.places.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val message = MutableStateFlow<String?>(null)
     val busy = MutableStateFlow(false)
+    val monitoring = geofences.lastResult
 
     fun status(): LocationStatus = location.status()
 
@@ -80,11 +85,16 @@ class PlacesViewModel @Inject constructor(
     fun addManual(type: PlaceType, name: String, coords: String) = viewModelScope.launch {
         val parsed = Geo.parse(coords)
         if (parsed == null) { message.value = "Coordenadas inválidas. Use o formato: -23.5505, -46.6333"; return@launch }
-        places.add(name.ifBlank { type.label }, type, parsed.first, parsed.second, GeofenceManager.DEFAULT_RADIUS, clock.nowMillis())
+        places.add(name.ifBlank { type.label }, type, parsed.first, parsed.second, GeofenceManager.DEFAULT_RADIUS, clock.nowMillis(), visitedAt = null)
         geofences.registerAll()
     }
 
     fun update(place: Place) = viewModelScope.launch { places.update(place); geofences.registerAll() }
+
+    fun favorite(place: Place) = viewModelScope.launch {
+        places.setFavorite(place.id, !place.isFavorite)
+        geofences.registerAll()
+    }
 
     fun delete(id: Long) = viewModelScope.launch { places.delete(id); geofences.registerAll() }
 }
@@ -94,8 +104,13 @@ fun PlacesScreen(onOpen: (String) -> Unit, vm: PlacesViewModel = hiltViewModel()
     val list by vm.list.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val monitoring by vm.monitoring.collectAsStateWithLifecycle()
     var adding by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Place?>(null) }
+    var query by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf(PlaceCategory.ALL) }
+    var sort by remember { mutableStateOf(PlaceSort.FAVORITES) }
+    val visible = remember(list, category, query, sort) { queryPlaces(list, category, query, sort) }
 
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -109,14 +124,41 @@ fun PlacesScreen(onOpen: (String) -> Unit, vm: PlacesViewModel = hiltViewModel()
             Text("⚠️ Localização ${if (vm.status() == LocationStatus.NO_BACKGROUND) "só com o app aberto" else "indisponível"}: os geofences podem não disparar.", color = HoodieColors.Coral)
         }
         message?.let { Text(it, color = HoodieColors.Coral) }
+        OutlinedTextField(query, { query = it }, label = { Text("Buscar por nome") },
+            singleLine = true, modifier = Modifier.fillMaxWidth())
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PlaceCategory.entries.forEach { item ->
+                FilterChip(selected = category == item, onClick = { category = item }, label = { Text(item.label) })
+            }
+        }
+        SectionLabel("Ordenar por")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PlaceSort.entries.forEach { item ->
+                FilterChip(selected = sort == item, onClick = { sort = item }, label = { Text(item.label) })
+            }
+        }
         if (list.isEmpty()) PixelPanel(Modifier.fillMaxWidth()) { Text("Nenhum lugar ainda. Comece pela Casa.", color = HoodieColors.Muted) }
-        list.forEach { p ->
+        else if (visible.isEmpty()) Text("Nenhum lugar encontrado.", color = HoodieColors.Muted)
+        visible.forEach { p ->
             PixelPanel(Modifier.fillMaxWidth(), onClick = { editing = p }) {
                 Row {
                     IconLabel(PixelIcons.of(p.type), p.name, style = MaterialTheme.typography.titleMedium, iconSize = 20.dp, modifier = Modifier.weight(1f))
                     Text("${p.radiusMeters.toInt()} m", color = HoodieColors.Muted)
                 }
-                Text("${p.type.label} · ${p.confirmationCount} visitas", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+                Text(p.type.label, color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Última visita: ${p.lastVisitedAt?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) } ?: "não registrada"}",
+                    color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Registros de chegada: ${p.confirmationCount}", color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+                Text(when {
+                    vm.status() != LocationStatus.OK -> "Lugar salvo · monitoramento indisponível por permissão ou localização"
+                    monitoring == null -> "Lugar salvo · monitoramento ainda não verificado"
+                    monitoring?.ok != true -> "Lugar salvo · monitoramento indisponível"
+                    p.id in monitoring!!.activePlaceIds -> "Lugar salvo · monitoramento ativo"
+                    else -> "Lugar salvo · fora do limite de monitoramento"
+                }, color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = { vm.favorite(p) }) {
+                    Text(if (p.isFavorite) "Remover dos favoritos" else "Marcar como favorito")
+                }
             }
         }
         PixelButton(if (busy) "Localizando..." else "Adicionar lugar", { adding = true }, Modifier.fillMaxWidth(), enabled = !busy)

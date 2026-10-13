@@ -24,6 +24,14 @@ import com.hoodie.app.integration.TestGraph
 import com.hoodie.app.worker.MobilityScheduler
 import kotlinx.coroutines.runBlocking
 
+class FakeSpeedScheduler : com.hoodie.app.worker.SpeedSampleScheduler {
+    val enqueued = mutableListOf<Pair<Long, Long>>()
+    val cancelled = mutableListOf<Long>()
+    override fun enqueue(sessionId: Long, evidenceId: Long) { enqueued += sessionId to evidenceId }
+    override fun cancelSession(sessionId: Long) { cancelled += sessionId }
+    override fun cancelEvidence(evidenceId: Long) = Unit
+    override fun cancelSpeedSamples() { enqueued.clear() }
+}
 class FakeMobilityScheduler : MobilityScheduler {
     val scheduled = mutableListOf<Long>()
     var cancelled = 0
@@ -62,6 +70,8 @@ class CountingLocation(private val inner: LocationSource) : LocationSource {
 class MobilityGraph(startDay: Int = SUNDAY - 7, private val intelligenceEnabled: Boolean = false) {
     val g = TestGraph(com.hoodie.app.engine.at(startDay, 20).ms())
     val scheduler = FakeMobilityScheduler()
+    val speedScheduler = FakeSpeedScheduler()
+    var sampler: com.hoodie.app.engine.mobility.TransportSpeedSampler? = null
     val arPermissions = FakeArPermissions()
     val location = CountingLocation(g.location)
     val repo = MobilityRepository(g.db)
@@ -81,12 +91,10 @@ class MobilityGraph(startDay: Int = SUNDAY - 7, private val intelligenceEnabled:
     }
 
     fun newEngine(): MobilityEngine {
-        val features = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportFeatureBuilder() else null
-        val sampler = features?.let { com.hoodie.app.engine.mobility.TransportSpeedSampler(repo, location, it, g.settings, scheduler, g.clock, g.log) }
+        sampler = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportSpeedSampler(repo, location, g.settings, scheduler, speedScheduler, com.hoodie.app.core.location.ProcessForegroundState(g.context), g.clock) else null
         return MobilityEngine(
             repo, g.engine, g.contextDao, g.places, g.routines, g.db.questionDao(), g.notifier, g.settings,
             location, scheduler, arPermissions, bus, g.clock, g.log,
-            transportFeatures = features,
             transportPatterns = if (intelligenceEnabled) com.hoodie.app.engine.mobility.TransportPatternLearner(g.db, com.hoodie.app.core.database.RoomTransactionRunner(g.db), g.clock) else null,
             intelligence = if (intelligenceEnabled) g.db.intelligenceDao() else null,
             speedSampler = sampler,

@@ -26,6 +26,7 @@ data class SimulationEnv(
     val routine: Routine,
     val sleep: SleepSchedule,
     val daysOff: Set<LocalDate>,
+    val routineVersions: List<com.hoodie.app.domain.routine.EffectiveRoutineSnapshot> = emptyList(),
 )
 
 data class CompletedActivity(
@@ -84,13 +85,23 @@ object HoodieSimulator {
         var s = state
         val completed = mutableListOf<CompletedActivity>()
         val started = mutableListOf<HoodieState>()
+        val routineBoundaries = env.routineVersions.flatMap { version ->
+            val nextVersion = env.routineVersions.firstOrNull { it.effectiveFrom > version.effectiveFrom }?.effectiveFrom ?: Long.MAX_VALUE
+            version.values.filterKeys { it in setOf(com.hoodie.app.domain.routine.RoutineEventType.WAKE,
+                com.hoodie.app.domain.routine.RoutineEventType.SLEEP, com.hoodie.app.domain.routine.RoutineEventType.WORK_START,
+                com.hoodie.app.domain.routine.RoutineEventType.WORK_END, com.hoodie.app.domain.routine.RoutineEventType.LUNCH_START,
+                com.hoodie.app.domain.routine.RoutineEventType.LUNCH_END) }.values.map { value ->
+                version.date.atStartOfDay(env.zone).plusMinutes(value.minute.toLong()).toInstant().toEpochMilli()
+            }.filter { it >= version.effectiveFrom && it < nextVersion }
+        }.distinct().sorted()
         var steps = 0
         while (steps++ < MAX_STEPS) {
             // O contexto mudou "por trás" do estado salvo (evento atrasado ou correção):
             // reage já, em vez de esperar a atividade atual terminar.
             val stale = timeline.contextAt(s.needsAt) != s.userContext
             val change = if (stale) s.needsAt else timeline.nextChangeAfter(s.needsAt)
-            val boundary = listOfNotNull(s.expectedEndAt, change).minOrNull() ?: break
+            val boundary = listOfNotNull(s.expectedEndAt, change, env.routineVersions.firstOrNull { it.effectiveFrom > s.needsAt }?.effectiveFrom,
+                routineBoundaries.firstOrNull { it > s.needsAt }).minOrNull() ?: break
             if (boundary > now) break
 
             val needs = NeedsEngine.apply(s.needs, s.activity, s.userContext, (boundary - s.needsAt) / MINUTE_MS)
@@ -115,7 +126,8 @@ object HoodieSimulator {
 
     private fun input(at: Long, ctx: UserContextType, needs: Needs, previous: HoodieActivity?, env: SimulationEnv): DecisionInput {
         val zoned = at.atZone(env.zone)
-        return DecisionInput(zoned, ctx, needs, previous, env.routine, env.sleep, zoned.toLocalDate() in env.daysOff)
+        val version = env.routineVersions.lastOrNull { it.effectiveFrom <= at }
+        return DecisionInput(zoned, ctx, needs, previous, version?.routine ?: env.routine, version?.sleep ?: env.sleep, version?.dayOff ?: (zoned.toLocalDate() in env.daysOff))
     }
 
     private fun seeded(at: Long, previous: HoodieActivity?): Random =

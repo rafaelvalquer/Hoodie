@@ -206,7 +206,7 @@ private fun TransportTab(data: TransportDiagnostics) {
         Mono("modo=${s.mode ?: "—"} · observação=${s.observedMovement ?: "—"}")
         Mono("certeza=${s.certainty} · origem=${s.source ?: "—"} · confiança=${(s.confidence * 100).toInt()}%")
         Mono("veículo=${s.lastVehicleAt?.let { formatClock(it, java.time.ZoneId.systemDefault()) } ?: "—"} · saída=${s.vehicleExitAt?.let { formatClock(it, java.time.ZoneId.systemDefault()) } ?: "—"}")
-        Mono("amostras=${s.speedSampleCount}/${s.speedSampleAttempts} · média=${s.meanSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"} · pico=${s.maxSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"}")
+        Mono("evidência=${s.evidenceId ?: "—"} · amostras=${s.speedSampleCount}/${s.speedSampleAttempts} · média=${s.meanSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"} · pico=${s.maxSpeedKmh?.let { "%.1f km/h".format(it) } ?: "—"}")
     }
     PixelPanel(Modifier.fillMaxWidth()) {
         SectionLabel("Cena real da Home")

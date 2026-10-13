@@ -14,11 +14,18 @@ class MobilityRegistration @Inject constructor(
     private val settings: SettingsRepository,
     private val permissions: ActivityRecognitionPermissions,
     private val registrar: ActivityRecognitionRegistrar,
+    private val speedScheduler: com.hoodie.app.worker.SpeedSampleScheduler? = null,
+    private val repository: dagger.Lazy<com.hoodie.app.data.repository.MobilityRepository>? = null,
+    private val gate: com.hoodie.app.core.database.DatabaseGate? = null,
 ) {
     /** true quando o reconhecimento ficou ativo. */
     suspend fun sync(): Boolean {
         val s = settings.current()
         val wanted = s.onboardingDone && s.mobility.detectionEnabled && permissions.state().granted
-        return if (wanted) registrar.register() else { registrar.unregister(); false }
+        return if (wanted) registrar.register() else {
+            speedScheduler?.cancelSpeedSamples()
+            if (gate?.isReady() == true) repository?.get()?.invalidateAllSpeedReservations()
+            registrar.unregister(); false
+        }
     }
 }

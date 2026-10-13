@@ -37,9 +37,20 @@ class ShoppingNpcBrain(
     )
     private data class Trip(val targetItems: Int, val actions: List<TimedAction>, val endAt: Long)
 
-    private val trips = HashMap<Long, Trip>()
+    private val trips = LinkedHashMap<Long, Trip>(MAX_CACHED_TRIPS + 1, .75f, true)
+    internal val cachedTripCount: Int get() = synchronized(this) { trips.size }
     private val cycleMs = 300_000L
-    @Synchronized private fun trip(index: Long): Trip = trips.getOrPut(index) { compileTrip(index) }
+    @Synchronized private fun trip(index: Long): Trip {
+        trips[index]?.let { return it }
+        val compiled = compileTrip(index)
+        trips[index] = compiled
+        if (trips.size > MAX_CACHED_TRIPS) {
+            val eldest = trips.entries.iterator()
+            eldest.next()
+            eldest.remove()
+        }
+        return compiled
+    }
 
     fun stateAt(timeMs: Long): ShoppingNpcState {
         val t = timeMs.coerceAtLeast(0)
@@ -321,5 +332,9 @@ class ShoppingNpcBrain(
         spot.name.startsWith("AISLE_A") -> 0
         spot.name.startsWith("AISLE_B") -> 1
         else -> null
+    }
+
+    companion object {
+        internal const val MAX_CACHED_TRIPS = 32
     }
 }

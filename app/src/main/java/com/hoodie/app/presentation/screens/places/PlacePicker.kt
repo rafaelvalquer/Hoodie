@@ -198,7 +198,7 @@ class PlacePickerViewModel @Inject constructor(
                 val existing = places.byId(s.editingId) ?: throw PlaceException.NotFound(s.editingId)
                 places.update(existing.copy(name = name, type = s.type, latitude = s.latitude, longitude = s.longitude, radiusMeters = s.radius))
             } else {
-                places.add(name, s.type, s.latitude, s.longitude, s.radius, clock.nowMillis())
+                places.add(name, s.type, s.latitude, s.longitude, s.radius, clock.nowMillis(), visitedAt = null)
             }
         } catch (e: CancellationException) {
             _state.update { it.copy(saving = false) }

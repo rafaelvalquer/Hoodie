@@ -24,12 +24,14 @@ class HoodieApp : Application(), Configuration.Provider {
     }
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var processForeground: com.hoodie.app.core.location.ProcessForegroundState
     @Inject lateinit var notifier: HoodieNotifier
     @Inject lateinit var scheduler: WorkScheduler
     @Inject lateinit var debugLog: DebugEventLogger
     @Inject lateinit var mobilityRegistration: com.hoodie.app.core.mobility.MobilityRegistration
     @Inject lateinit var databaseGate: com.hoodie.app.core.database.DatabaseGate
     @Inject lateinit var dayStateCoordinator: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>
+    @Inject lateinit var effectiveRoutine: dagger.Lazy<com.hoodie.app.data.repository.EffectiveRoutineRepository>
     @Inject lateinit var contextEngine: dagger.Lazy<com.hoodie.app.engine.context.ContextEngine>
 
     override val workManagerConfiguration: Configuration
@@ -44,6 +46,7 @@ class HoodieApp : Application(), Configuration.Provider {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
             runCatching { mobilityRegistration.sync() }
             if (databaseGate.isReady()) {
+                effectiveRoutine.get().currentSnapshot()
                 if (com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) {
                     runCatching { contextEngine.get().dismissPendingContextConfirmations() }
                 }

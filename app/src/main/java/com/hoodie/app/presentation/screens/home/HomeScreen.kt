@@ -134,6 +134,8 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             answerTransportMode = { id, mode -> vm.answerTransportMode(id, mode) },
             dismissQuestion = { vm.dismissQuestion(it) },
             answerSavePlace = { id, save -> vm.answerSavePlace(id, save) },
+            saveDiscoveredPlace = { id, name, reuseId, position -> vm.saveDiscoveredPlace(id, name, reuseId, position) },
+            updateNewPlacePosition = vm::updateNewPlacePosition,
             correctContext = { type, historical, expectedEventId -> vm.correctCurrentContext(type, historical, expectedEventId) },
         ),
         reactions = reactions,
@@ -153,6 +155,8 @@ internal data class HomeActions(
     val answerTransportMode: (Long, com.hoodie.app.core.mobility.MovementMode) -> Unit = { _, _ -> },
     val dismissQuestion: (Long) -> Unit = {},
     val answerSavePlace: (Long, Boolean) -> Unit = { _, _ -> },
+    val saveDiscoveredPlace: (Long, String, Long?, Pair<Double, Double>?) -> Unit = { _, _, _, _ -> },
+    val updateNewPlacePosition: (Long, Pair<Double, Double>?) -> Unit = { _, _ -> },
     val correctContext: suspend (PlaceType, Boolean, Long?) -> Boolean = { _, _, _ -> false },
 )
 
@@ -252,7 +256,8 @@ internal fun HomeContent(
                 }
             }
 
-            state.question?.let { q -> QuestionCard(q, actions) }
+            state.question?.takeUnless { state.vehicleMoving && it.kind in setOf(QuestionKind.NEW_PLACE, QuestionKind.SAVE_PLACE) }
+                ?.let { q -> QuestionCard(q, actions, state.newPlaceSaveOptions, busy) }
 
             if (state.probableMode || state.locationStatus != LocationStatus.OK) {
                 PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
@@ -297,6 +302,7 @@ internal fun HomeContent(
                     Spacer(Modifier.padding(4.dp))
                     SectionLabel(stringResource(R.string.ui_home_screen_3))
                     Text(it.display)
+                    state.routineOrigin?.let { origin -> Text(origin, style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted) }
                 }
             }
 
@@ -386,7 +392,9 @@ private fun periodColor(p: com.hoodie.app.core.time.DayPeriod) = when (p) {
 }
 
 @Composable
-private fun QuestionCard(q: ContextQuestion, actions: HomeActions) {
+private fun QuestionCard(q: ContextQuestion, actions: HomeActions,
+    saveOptions: com.hoodie.app.engine.context.NewPlaceSaveOptions?, busy: Boolean) {
+    var saving by remember(q.id) { mutableStateOf(q.kind == QuestionKind.SAVE_PLACE) }
     PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
         Text(q.prompt, style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.padding(6.dp))
@@ -409,9 +417,16 @@ private fun QuestionCard(q: ContextQuestion, actions: HomeActions) {
                 PixelButton(stringResource(R.string.ui_home_screen_9), { actions.dismissQuestion(q.id) }, modifier = Modifier.fillMaxWidth(), color = HoodieColors.PanelLight)
             }
             QuestionKind.SAVE_PLACE -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                PixelButton(stringResource(R.string.ui_home_screen_10), { actions.answerSavePlace(q.id, true) }, Modifier.weight(1f))
-                PixelButton(stringResource(R.string.ui_home_screen_11), { actions.answerSavePlace(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
+                PixelButton("Guardar lugar", { saving = true }, Modifier.weight(1f), enabled = !busy)
+                PixelButton("Somente hoje", { actions.answerSavePlace(q.id, false) }, Modifier.weight(1f), color = HoodieColors.Panel, textColor = HoodieColors.Ink, enabled = !busy)
             }
         }
+    }
+    if (saving && q.kind == QuestionKind.SAVE_PLACE) {
+        NewPlaceSaveSheet(q.id, q.chosenPlaceType ?: PlaceType.OTHER, saveOptions, busy,
+            onSave = { name, reuseId, manualPosition -> actions.saveDiscoveredPlace(q.id, name, reuseId, manualPosition) },
+            onToday = { actions.answerSavePlace(q.id, false) },
+            onPositionChange = { actions.updateNewPlacePosition(q.id, it) },
+            onDismiss = { saving = false })
     }
 }

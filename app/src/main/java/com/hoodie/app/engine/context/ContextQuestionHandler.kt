@@ -59,33 +59,30 @@ internal class ContextQuestionHandler(private val processor: ContextSignalProces
     }
 
     suspend fun answerNewPlace(questionId: Long, type: PlaceType): Unit = with(processor) {
-        val q = questionDao.getById(questionId) ?: return@with
-        if (q.answeredAt != null) return@with
         val now = clock.nowMillis()
-        questionDao.update(q.copy(answeredAt = now, answer = type.name, chosenPlaceType = type))
-        notifier.cancelQuestion(questionId)
-        val ctx = inferredContextFor(type, now)
-        recordConfirmation(ctx, null, now, accepted = true)
-        memory.unlock(Milestone.FIRST_NEW_PLACE)
-        val asked = q.contextEventId?.let { contextDao.getById(it) }
-        val eventId = if (asked != null && asked.endedAt == null) {
-            switchTo(ctx, now, 1f, null, ContextSource.CONFIRMATION, TransitionReason.NEW_PLACE_ANSWER).event.id
-        } else {
-            // A pessoa já saiu de lá: aprende a resposta, mas não muda o presente.
-            memory.onContext(ctx, null, now)
-            hoodie.resolve()
-            q.contextEventId
-        }
-        // Segunda etapa da mesma conversa: salvar o lugar? (não conta no limite diário)
-        if (q.encryptedCoordinates != null) {
+        val classified = transitions.atomic {
+            val q = questionDao.getById(questionId) ?: return@atomic null
+            if (q.answeredAt != null) return@atomic null
+            require(q.kind == QuestionKind.NEW_PLACE)
+            val ctx = inferredContextFor(type, q.askedAt)
+            q.contextEventId?.let { transitions.classifyDiscoveredVisit(it, ctx, type) }
+            questionDao.update(q.copy(answeredAt = now, answer = type.name, chosenPlaceType = type))
+            // Also offer manual location when the original observation had no position.
             questionDao.insert(
                 ContextQuestionEntity(
                     kind = QuestionKind.SAVE_PLACE, candidate = ctx, placeId = null,
                     encryptedCoordinates = q.encryptedCoordinates, chosenPlaceType = type,
-                    contextEventId = eventId, askedAt = now,
+                    contextEventId = q.contextEventId, askedAt = now,
                 ),
             )
+            ctx to q.askedAt
         }
+        classified ?: return@with
+        notifier.cancelQuestion(questionId)
+        recordConfirmation(classified.first, null, classified.second, accepted = true)
+        memory.unlock(Milestone.FIRST_NEW_PLACE)
+        memory.onContext(classified.first, null, now)
+        hoodie.resolve()
     }
 
     suspend fun dismissQuestion(questionId: Long): Unit = with(processor) {
