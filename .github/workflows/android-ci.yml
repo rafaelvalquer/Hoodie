@@ -165,17 +165,7 @@ jobs:
             adb shell settings put secure show_ime_with_hard_keyboard 1
             # Test the virtual keyboard, without Gboard's first-run stylus tutorial.
             adb shell settings put secure stylus_handwriting_enabled 0
-            test_status=0
-            ./gradlew :app:connectedDebugAndroidTest || test_status=$?
-            if [ "$test_status" -ne 0 ]; then
-              mkdir -p app/build/reports/androidTests/diagnostics
-              # Collect before the emulator action shuts down the failed device.
-              adb shell dumpsys power > app/build/reports/androidTests/diagnostics/power.txt || true
-              adb shell dumpsys window > app/build/reports/androidTests/diagnostics/window.txt || true
-              adb pull /sdcard/Android/data/com.hoodie.app/files/stabilization-window-focus-timeout.png app/build/reports/androidTests/diagnostics/ || true
-              adb pull /sdcard/Android/data/com.hoodie.app/files/stabilization-ime-timeout.png app/build/reports/androidTests/diagnostics/ || true
-            fi
-            exit "$test_status"
+            bash .github/scripts/connected-tests.sh
       - name: Upload instrumentation reports
         if: always()
         uses: actions/upload-artifact@v4
