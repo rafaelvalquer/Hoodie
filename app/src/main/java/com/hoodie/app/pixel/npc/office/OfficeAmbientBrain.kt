@@ -175,11 +175,19 @@ class OfficeAmbientBrain(
     override fun movementAt(timeMs: Long): NpcMovement = movementAt(timeMs, null)
 
     private fun movementAt(timeMs: Long, frameState: NpcBrainState?): NpcMovement {
-        if (npcId == "bulldog_exec") return bulldogMovement(timeMs.coerceAtLeast(0))
-        val state = frameState ?: stateAt(timeMs)
-        val socialClock = state.socialTargetId != null && state.currentIntent == NpcIntent.SOCIALIZE
-        val movementTimeMs = if (socialClock) timeMs else socialSession?.baseTimeAt(npcId, timeMs) ?: timeMs
-        return regularMovement(movementTimeMs, state)
+        // Microevento (entrega de documento) tem a vez enquanto dura; depois a rotina segue de onde estava.
+        val deliveries = socialSession?.deliveries
+        deliveries?.movementAt(npcId, timeMs)?.let { return it }
+        val movement = if (npcId == "bulldog_exec") bulldogMovement(timeMs.coerceAtLeast(0)) else {
+            val state = frameState ?: stateAt(timeMs)
+            val socialClock = state.socialTargetId != null && state.currentIntent == NpcIntent.SOCIALIZE
+            val movementTimeMs = if (socialClock) timeMs else socialSession?.baseTimeAt(npcId, timeMs) ?: timeMs
+            regularMovement(movementTimeMs, state)
+        }
+        val held = deliveries?.heldItemAt(npcId, timeMs) ?: com.hoodie.app.pixel.sprite.Item.NONE
+        return if (held != com.hoodie.app.pixel.sprite.Item.NONE && movement.heldItem == com.hoodie.app.pixel.sprite.Item.NONE) {
+            movement.copy(heldItem = held)
+        } else movement
     }
 
     /** Snapshot renderizável: posição, pose e identidade da ação são resolvidas num só objeto. */

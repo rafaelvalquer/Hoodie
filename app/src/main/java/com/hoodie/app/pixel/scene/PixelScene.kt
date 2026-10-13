@@ -113,6 +113,8 @@ data class SceneEnv(
     val venueAmbient: com.hoodie.app.pixel.npc.venue.VenueAmbientState? = null,
     /** Lugar salvo da visita (história estável por lugar); null = desconhecido. */
     val placeId: Long? = null,
+    /** Microevento de NPC em andamento e onde estão os objetos dele (documento na mesa...). */
+    val sceneStory: com.hoodie.app.pixel.npc.events.SceneStorySnapshot? = null,
 ) {
     companion object {
         const val DOOR_OPEN = 3

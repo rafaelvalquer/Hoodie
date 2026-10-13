@@ -1,0 +1,39 @@
+[
+  { "id": "open_morning_01", "trigger": "FIRST_OPEN_OF_DAY", "hourFrom": 5, "hourTo": 12, "text": "Bom dia! Que bom te ver.", "priority": 2 },
+  { "id": "open_morning_coffee_01", "trigger": "FIRST_OPEN_OF_DAY", "trait": "COFFEE_AFFINITY", "minTrait": 70, "hourFrom": 5, "hourTo": 11, "text": "Bom dia! Já pensei no café.", "priority": 2 },
+  { "id": "open_afternoon_01", "trigger": "FIRST_OPEN_OF_DAY", "hourFrom": 12, "hourTo": 18, "text": "Boa tarde! Que bom te ver.", "priority": 2 },
+  { "id": "open_evening_01", "trigger": "FIRST_OPEN_OF_DAY", "hourFrom": 18, "text": "Boa noite! Que bom te ver.", "priority": 2 },
+  { "id": "open_night_01", "trigger": "FIRST_OPEN_OF_DAY", "hourTo": 5, "text": "Oi! Por aqui tudo calmo.", "priority": 2 },
+  { "id": "open_any_01", "trigger": "FIRST_OPEN_OF_DAY", "text": "Olá! Que bom te ver por aqui.", "priority": 1 },
+
+  { "id": "return_01", "trigger": "APP_RETURN", "text": "Olá! Que bom te ver por aqui.", "priority": 1 },
+  { "id": "return_social_01", "trigger": "APP_RETURN", "trait": "SOCIABILITY", "minTrait": 60, "text": "Oi de novo!", "priority": 1 },
+
+  { "id": "waking_01", "trigger": "DAY_WAKING", "text": "Bom dia! Vamos com calma.", "priority": 1 },
+  { "id": "waking_coffee_01", "trigger": "DAY_WAKING", "trait": "COFFEE_AFFINITY", "minTrait": 70, "text": "Primeiro, um café.", "priority": 2 },
+  { "id": "waking_rest_01", "trigger": "DAY_WAKING", "trait": "REST_AFFINITY", "minTrait": 60, "text": "Só mais uma espreguiçada...", "priority": 2 },
+
+  { "id": "work_arrive_01", "trigger": "ARRIVED_AT_WORK", "text": "Chegamos! Bora começar.", "priority": 1 },
+  { "id": "work_arrive_curious_01", "trigger": "ARRIVED_AT_WORK", "trait": "CURIOSITY", "minTrait": 70, "text": "O que será que tem hoje?", "priority": 2 },
+  { "id": "work_arrive_coffee_01", "trigger": "ARRIVED_AT_WORK", "trait": "COFFEE_AFFINITY", "minTrait": 80, "hourTo": 11, "text": "Café primeiro, depois o resto.", "priority": 3 },
+
+  { "id": "break_01", "trigger": "WORK_BREAK", "text": "Uma pausa faz bem.", "priority": 1 },
+  { "id": "break_coffee_01", "trigger": "WORK_BREAK", "trait": "COFFEE_AFFINITY", "minTrait": 70, "activity": "COFFEE", "text": "Pausa boa é pausa com café.", "priority": 3 },
+  { "id": "break_rest_01", "trigger": "WORK_BREAK", "trait": "REST_AFFINITY", "minTrait": 60, "activity": "RESTING", "text": "Respirar um pouquinho...", "priority": 3 },
+  { "id": "break_food_01", "trigger": "WORK_BREAK", "activity": "EATING", "text": "Hora de recarregar.", "priority": 2 },
+
+  { "id": "new_place_01", "trigger": "NEW_PLACE_CONFIRMED", "text": "Lugar novo anotado!", "priority": 1 },
+  { "id": "new_place_curious_01", "trigger": "NEW_PLACE_CONFIRMED", "trait": "CURIOSITY", "minTrait": 70, "text": "Que lugar diferente! Gostei.", "priority": 2 },
+  { "id": "new_place_curious_02", "trigger": "NEW_PLACE_CONFIRMED", "trait": "CURIOSITY", "minTrait": 70, "text": "Vou lembrar deste lugar.", "priority": 2 },
+
+  { "id": "long_done_01", "trigger": "LONG_ACTIVITY_FINISHED", "text": "Essa foi longa! Ufa.", "priority": 1 },
+  { "id": "long_done_rest_01", "trigger": "LONG_ACTIVITY_FINISHED", "trait": "REST_AFFINITY", "minTrait": 60, "text": "Agora dá para descansar um pouco.", "priority": 2 },
+
+  { "id": "home_back_01", "trigger": "BACK_HOME", "text": "Casa! Que bom.", "priority": 1 },
+  { "id": "home_back_rest_01", "trigger": "BACK_HOME", "trait": "REST_AFFINITY", "minTrait": 60, "text": "Hora de relaxar no sofá.", "priority": 2 },
+  { "id": "home_back_social_01", "trigger": "BACK_HOME", "trait": "SOCIABILITY", "minTrait": 60, "text": "Chegamos! Que bom estar aqui.", "priority": 2 },
+
+  { "id": "winding_01", "trigger": "DAY_WINDING_DOWN", "text": "O dia está acabando.", "priority": 1 },
+  { "id": "winding_rest_01", "trigger": "DAY_WINDING_DOWN", "trait": "REST_AFFINITY", "minTrait": 60, "text": "Hora de desacelerar...", "priority": 2 },
+  { "id": "winding_rest_02", "trigger": "DAY_WINDING_DOWN", "trait": "REST_AFFINITY", "minTrait": 60, "text": "Uma noite tranquila cai bem.", "priority": 2 }
+]

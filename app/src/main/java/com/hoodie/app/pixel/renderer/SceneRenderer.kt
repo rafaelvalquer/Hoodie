@@ -374,7 +374,9 @@ class SceneRenderer {
         val officeDoorFrame = npcs.firstNotNullOfOrNull { it.officeBrain?.officeDoorFrameAt(timeMs)?.takeIf { frame -> frame > 0 } }
         val leisureAmbient = npcs.firstNotNullOfOrNull { it.leisureActor }?.session?.snapshotAt(timeMs)?.ambient
         val venueAmbient = npcs.firstNotNullOfOrNull { it.venueActor }?.session?.snapshotAt(timeMs)?.ambient
+        val story = npcs.firstNotNullOfOrNull { it.officeBrain?.socialSession?.deliveries?.snapshotAt(timeMs) }
         return env.copy(
+            sceneStory = story ?: env.sceneStory,
             leisureAmbient = leisureAmbient ?: env.leisureAmbient,
             venueAmbient = venueAmbient ?: env.venueAmbient,
             shoppingNpc = shopperState ?: env.shoppingNpc,

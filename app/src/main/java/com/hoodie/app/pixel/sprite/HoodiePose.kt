@@ -28,6 +28,9 @@ enum class Item {
 
     // Estabelecimentos (padaria, cinema, hotel, praia). Sempre no fim.
     PASTRY, POPCORN, SUITCASE, KEYCARD, ICE_CREAM, TICKET, CLOTH,
+
+    // Microeventos de NPC (entrega de documento no escritório).
+    DOCUMENT,
 }
 
 /** Expressões aplicáveis por cima de qualquer animação. */

@@ -159,6 +159,12 @@ HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Di
   encontros e eventos de objetos. Barista que prepara e entrega o café, atendente que repõe prateleiras, dupla
   que troca a bola com dono lógico, comprador que entra na loja e volta com sacola, plateia com luz que baixa e
   reações escalonadas, hóspede com mala que faz check-in e sobe pelo elevador. Detalhes em `docs/venue-scenes.md`.
+* **Personalidade do Hoodie 2.0** (`HOODIE_PERSONALITY_V2`): traços estáveis (curiosidade 80, café 85, social 65,
+  descanso 70, espontaneidade 50) puxam café, descanso e gestos sem forçar nada; momentos do dia (primeira abertura,
+  chegada ao trabalho, pausa, lugar novo, volta para casa, fim do dia...) viram um gesto curto e uma fala de
+  `personality-dialogues.json`, com limites de frequência e sem cobrança. Microeventos de NPC
+  (`SCENE_STORY_EVENTS`, até 2 a cada 10 min): no escritório, o coelho leva uma folha ao bulldog. Detalhes em
+  `docs/hoodie-personality.md`.
 * **Transporte**: perfis únicos para caminhada, carro, ônibus, trem, metrô, bicicleta, outro veículo e transporte público não identificado; cada perfil liga cena, entrada/saída, animações, balanço/paralaxe e visual da rota/Jornada. Modais identificados têm cenas próprias e alternativas desconhecidas usam apresentação neutra.
 * Iluminação por overlay (manhã, dia, entardecer, noite) com áreas emissivas e halos de lâmpada em degraus.
 * **Personagens ambientais (NPC Art System V3)**: Bulldog executivo, cachorros, coelhos, rato, pato, guaxinim

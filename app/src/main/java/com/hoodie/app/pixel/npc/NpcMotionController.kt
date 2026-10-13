@@ -124,6 +124,8 @@ object NpcMotionController {
      */
     private fun carrying(frame: NpcFrame, movement: NpcMovement): NpcFrame {
         val item = movement.heldItem
+        // Ler a folha recebida: a pose de leitura mostra a mesma folha, não a pasta dela (objeto único).
+        if (item == Item.DOCUMENT && movement.animation == NpcAnimation.READ_DOCUMENT) return frame.copy(pose = frame.pose.copy(item = item))
         if (item == Item.NONE || frame.pose.item != Item.NONE) return frame
         // Entrega: o objeto sai da mão no meio do gesto.
         if (movement.animation == NpcAnimation.SERVE) return if (movement.localTimeMs < SERVE_RELEASE_MS) frame.copy(pose = frame.pose.copy(item = item)) else frame

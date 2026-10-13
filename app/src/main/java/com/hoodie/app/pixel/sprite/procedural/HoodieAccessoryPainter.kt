@@ -165,6 +165,11 @@ internal object HoodieAccessoryPainter {
                 b.outlined(rx - 2, ry - 4, rx + 5, ry, 0xFF7FC4E0.toInt(), o)
                 b.hline(rx - 1, rx + 4, ry - 2, 0xFFB8E2F0.toInt())
             }
+            Item.DOCUMENT -> {
+                // Folha de papel com linhas de texto (entrega do escritório).
+                b.outlined(rx - 2, ry - 7, rx + 4, ry + 1, 0xFFF6F3EA.toInt(), o)
+                for (y in ry - 5..ry - 1 step 2) b.hline(rx - 1, rx + 3, y, 0xFF9AA6BC.toInt())
+            }
             else -> Unit
         }
     }

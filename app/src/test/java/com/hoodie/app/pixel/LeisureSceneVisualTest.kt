@@ -63,7 +63,8 @@ class LeisureSceneVisualTest {
     /** Quadro completo com o Hoodie, como no app. */
     private fun withHoodie(activity: HoodieActivity, untilMs: Long, period: DayPeriod = DayPeriod.DAY, variant: Int = 0, daySeed: Int = 82_000, sample: (Long, LeisureNpcSession?) -> Unit = { _, _ -> }): PixelBuffer {
         val sm = AnimationStateMachine(Random(7))
-        sm.setVisual(VisualDirector.resolve(activity, UserContextType.LEISURE, variant = variant).copy(daySeed = daySeed), 1)
+        // Pesos neutros: o roteiro (Hoodie caminhando com a semente 7) não depende dos traços de personalidade.
+        sm.setVisual(VisualDirector.resolve(activity, UserContextType.LEISURE, variant = variant, personality = null).copy(daySeed = daySeed), 1)
         val renderer = SceneRenderer()
         var t = 1L
         var out: PixelBuffer? = null

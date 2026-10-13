@@ -179,6 +179,9 @@ object VisualDirector {
         now: Long = System.currentTimeMillis(),
         /** Cenas de estabelecimento que podem ser escolhidas (padrão: as liberadas pelas flags). */
         venueScenes: Set<SceneId> = enabledVenueScenes,
+        /** Traços que puxam café e descanso nas microações (null = pesos neutros). */
+        personality: com.hoodie.app.domain.personality.HoodiePersonalityProfile? =
+            if (HoodieConfig.HOODIE_PERSONALITY_V2) com.hoodie.app.domain.personality.HoodiePersonalityProfile.DEFAULT else null,
     ): VisualState {
         val mobilityVisual = if (context == UserContextType.COMMUTING) mobilitySnapshot?.let {
             TransportVisualRegistry.resolve(it, preferredMode, now, variant)
@@ -196,6 +199,7 @@ object VisualDirector {
             }
         } else forScene(scene, activity, currentMood)
         return base.copy(
+            actions = personality?.let { PersonalityVisuals.apply(base.actions, it) } ?: base.actions,
             variant = variant,
             expression = base.expression ?: tired,
             shoppingVenue = shoppingVenue,
