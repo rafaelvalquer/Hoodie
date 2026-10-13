@@ -42,6 +42,12 @@ class VenueVisualGoldenTest {
             "bakery_coffee" to Shot(SpotId.CAFE_TABLE, AnimationId.DRINK, 900, DayPeriod.EVENING, setOf(SceneFlag.CHAIR_OCCUPIED, SceneFlag.MUG_IN_HAND), variant = 2),
             "bakery_watch" to Shot(SpotId.CAFE_TABLE, AnimationId.BAKERY_PEOPLE_WATCH, 30_000, DayPeriod.NIGHT, setOf(SceneFlag.CHAIR_OCCUPIED)),
         ),
+        SceneId.PHARMACY to linkedMapOf(
+            "pharmacy_look" to Shot(SpotId.SHELF_A, AnimationId.SHOP_LOOK, 1_500, DayPeriod.MORNING),
+            "pharmacy_examine" to Shot(SpotId.SHELF_B, AnimationId.PHARMACY_EXAMINE, 2_300),
+            "pharmacy_pay" to Shot(SpotId.CHECKOUT, AnimationId.SHOP_PAY, 1_400, DayPeriod.EVENING, variant = 1),
+            "pharmacy_wait" to Shot(SpotId.CENTER, AnimationId.IDLE_PHONE, 2_000, DayPeriod.NIGHT, variant = 2),
+        ),
     )
 
     private fun shot(scene: SceneId, s: Shot): PixelBuffer {

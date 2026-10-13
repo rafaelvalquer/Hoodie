@@ -94,6 +94,49 @@ class VenuePropSyncTest {
         assertTrue("vitrine sem o vão do salgado", gap.showcaseGap)
     }
 
+    // ───── Farmácia ─────
+
+    @Test fun pharmacyShelvesShowGapsUntilTheClerkRestocks() {
+        val s = VenueTestFixtures.session(SceneId.PHARMACY, 0, 75_000)
+        s.snapshotAt(900_000)
+        val events = s.coordinatorForTests().events()
+        val taken = events.filter { it.event == VenueEvent.PRODUCT_TAKEN }
+        assertTrue("ninguém levou produto em 15 min", taken.isNotEmpty())
+        taken.forEach { e ->
+            val a = s.snapshotAt(e.at + 50).ambient as com.hoodie.app.pixel.npc.venue.PharmacyAmbient
+            assertTrue("vão em ${e.tag} não apareceu", e.tag in a.shelfGaps)
+        }
+        val restocks = events.filter { it.event == VenueEvent.SHELF_RESTOCKED }
+        assertTrue("atendente nunca repôs em 15 min", restocks.isNotEmpty())
+        restocks.forEach { r ->
+            val a = s.snapshotAt(r.at + 50).ambient as com.hoodie.app.pixel.npc.venue.PharmacyAmbient
+            assertFalse("${r.tag} continua com vão depois da reposição", r.tag in a.shelfGaps && taken.none { it.tag == r.tag && it.at in r.at..r.at + 50 })
+        }
+    }
+
+    @Test fun clerkLeavesTheCounterOnlyWhenNobodyIsComingToPay() {
+        (0 until 3).forEach { v ->
+            val s = VenueTestFixtures.session(SceneId.PHARMACY, v, 76_000 + v)
+            val track = VenueTestFixtures.track(s, "pharmacy_clerk", 900_000, 200)
+            val orders = s.coordinatorForTests().orders()
+            track.filter { (_, st) -> st.floorY > com.hoodie.app.pixel.npc.venue.PharmacyVenue.COUNTER_FRONT_Y }.forEach { (t, _) ->
+                // Fora do balcão, nenhum pedido esperando há mais que o tempo de voltar.
+                assertTrue("atendente fora com cliente esperando em t=$t", orders.none { o -> o.placedAt < t - 9_000 && (o.takenAt ?: Long.MAX_VALUE) > t })
+            }
+            assertTrue("atendente nunca saiu do balcão (v$v)", track.any { (_, st) -> st.floorY > com.hoodie.app.pixel.npc.venue.PharmacyVenue.COUNTER_FRONT_Y })
+        }
+    }
+
+    /** Privacidade: nenhuma fala, produto ou evento menciona remédio, sintoma ou motivo da visita. */
+    @Test fun pharmacyNeverInfersHealth() {
+        val forbidden = listOf("REMEDIO", "DOR", "GRIPE", "RECEITA", "DOENCA", "FEBRE", "PRESSAO", "ANTIBIOTICO", "TOSSE", "VACINA")
+        val s = VenueTestFixtures.session(SceneId.PHARMACY, 0, 77_000)
+        val lines = (0L until 900_000L step 100L).mapNotNull { t -> s.snapshotAt(t).npcs.mapNotNull { it.speech?.line } }.flatten().toSet()
+        assertTrue("ninguém falou em 15 min", lines.isNotEmpty())
+        lines.forEach { line -> forbidden.forEach { word -> assertFalse("fala \"$line\" menciona $word", line.uppercase().contains(word)) } }
+        s.coordinatorForTests().orders().forEach { assertEquals("produto genérico", com.hoodie.app.pixel.npc.venue.PharmacyVenue.BAG, it.product) }
+    }
+
     @Test fun nightIsCalmer() {
         val night = VenueTestFixtures.session(SceneId.BAKERY, period = DayPeriod.NIGHT)
         val day = VenueTestFixtures.session(SceneId.BAKERY)

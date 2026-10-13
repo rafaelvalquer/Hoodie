@@ -166,72 +166,18 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
         const val LEAVING = 5
     }
 
-    /** Ninguém pede enquanto outro pedido do balcão não foi retirado (um atendimento por vez). */
-    private fun counterBusy(s: VenueNpcSession, c: VenueCursor) =
-        s.coordinator.orders().any { it.service == SERVICE && it.customerId != c.npcId && (it.pickedAt?.let { p -> p > c.time } ?: true) }
+    private fun enterIfOutside(s: VenueNpcSession, c: VenueCursor) = VenueScripts.enterIfOutside(s, c, DOOR, ENTRY, VenueAction.BROWSE)
 
-    private fun enterIfOutside(s: VenueNpcSession, c: VenueCursor): Boolean {
-        if (!c.offstage) return false
-        // A porta comporta a passagem, mas ninguém entra enquanto outro ainda está saindo por ela.
-        s.enter(c, DOOR, ENTRY, VenueAction.BROWSE)
-        c.phase = Phase.INSIDE; c.orderId = -1; c.visits = 0; c.held = Item.NONE
-        return true
-    }
-
-    /** Fila: pede se o balcão está livre; senão espera na fila (ou na vitrine se a fila estiver ocupada). */
+    /** Fila: pede se o balcão está livre; senão espera na fila (ou olhando a vitrine se a fila estiver ocupada). */
     private fun goOrder(s: VenueNpcSession, c: VenueCursor, product: String) {
-        val arrive = c.time + s.estimateRouteMs(c, ORDER)
-        if (!counterBusy(s, c) && s.isFree(c, ORDER, c.time, arrive + ORDER_MS + 1_000)) {
-            s.endWait(c)
-            s.reserveFor(c, ORDER, ORDER_MS)
-            s.walkTo(c, ORDER, VenueNpcState.NAVIGATING, VenueAction.ORDER)
-            s.turnIntoFront(c, VenueNpcState.INTERACTING, VenueAction.ORDER)
-            val line = if (product == COFFEE) ORDER_COFFEE_LINES else ORDER_PASTRY_LINES
-            s.say(c, line[Math.floorMod(c.decisions.toInt() + c.spec.slotSeed, line.size)], ORDER_MS, VenueNpcState.INTERACTING, VenueAction.ORDER, Facing.FRONT)
-            // O pedido vale quando a fala termina: o barista responde depois, nunca por cima.
-            val order = s.coordinator.placeOrder(SERVICE, c.npcId, c.time, product)
-            s.coordinator.emit(c.time, VenueEvent.ORDER_PLACED, c.npcId, product)
-            c.orderId = order.id
+        val lines = if (product == COFFEE) ORDER_COFFEE_LINES else ORDER_PASTRY_LINES
+        if (VenueScripts.queueAndOrder(s, c, SERVICE, ORDER, listOf(QUEUE, SHOWCASE), product, VenueScripts.line(lines, c), ORDER_MS, browseSpot = SHOWCASE)) {
             c.phase = Phase.WAITING
-            return
         }
-        val waitAt = when {
-            c.node == QUEUE || s.isFree(c, QUEUE, c.time, c.time + 4_000) -> QUEUE
-            c.node == SHOWCASE || s.isFree(c, SHOWCASE, c.time, c.time + 4_000) -> SHOWCASE
-            else -> null
-        }
-        if (waitAt != null && c.node != waitAt) {
-            s.endWait(c)
-            s.reserveFor(c, waitAt, 3_000)
-            s.walkTo(c, waitAt, VenueNpcState.NAVIGATING, VenueAction.WAIT)
-            s.turnSide(c, true, VenueNpcState.WAITING, VenueAction.WAIT)
-        }
-        s.waitSlice(c, VenueAction.WAIT, if (c.node == SHOWCASE) NpcAnimation.STAND_BROWSE else NpcAnimation.CHECKOUT_WAIT)
     }
 
-    /** Espera o pedido ficar pronto em [at]; true quando já pegou. */
-    private fun collect(s: VenueNpcSession, c: VenueCursor, at: String, item: Item, event: VenueEvent): Boolean {
-        val order = s.coordinator.order(c.orderId) ?: run { c.phase = Phase.LEAVING; return false }
-        if (c.node != at) {
-            s.endWait(c)
-            s.walkTo(c, at, VenueNpcState.NAVIGATING, VenueAction.WAIT)
-            s.turnIntoFront(c, VenueNpcState.WAITING, VenueAction.WAIT)
-            return false
-        }
-        val ready = order.readyAt
-        if (ready == null) { s.waitSlice(c, VenueAction.WAIT, NpcAnimation.CHECKOUT_WAIT, Facing.FRONT); return false }
-        if (ready > c.time) {
-            s.stay(c, ready - c.time, VenueNpcState.WAITING, VenueAction.WAIT, NpcAnimation.CHECKOUT_WAIT, Facing.FRONT, localOffsetMs = c.time - c.waitStartedAt.coerceAtLeast(0))
-        }
-        s.endWait(c)
-        // Só pega depois de pronto: o objeto aparece na mão no meio do gesto.
-        s.stay(c, PICK_MS / 2, VenueNpcState.INTERACTING, VenueAction.ORDER, NpcAnimation.SERVE, Facing.FRONT)
-        c.held = item
-        order.pickedAt = c.time
-        s.coordinator.emit(c.time, event, c.npcId, order.product)
-        s.stay(c, PICK_MS / 2, VenueNpcState.INTERACTING, VenueAction.ORDER, NpcAnimation.IDLE, Facing.FRONT)
-        return true
-    }
+    private fun collect(s: VenueNpcSession, c: VenueCursor, at: String, item: Item, event: VenueEvent): Boolean =
+        VenueScripts.collect(s, c, at, item, event)
 
     /** Consumidor e leitor: pedem café, sentam e ficam um tempo; devolvem a xícara e saem. */
     private fun customer(s: VenueNpcSession, c: VenueCursor) {
@@ -351,8 +297,7 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
     private fun barista(s: VenueNpcSession, c: VenueCursor) {
         val pending = s.coordinator.nextPending(SERVICE, c.time)
         if (pending != null) { serve(s, c, pending); c.decisions++; return }
-        val upcoming = s.coordinator.firstUnserved(SERVICE)
-        val calmFor = upcoming?.let { it.placedAt - c.time } ?: Long.MAX_VALUE
+        val calmFor = VenueScripts.calmFor(s, c, SERVICE)
         val dirty = dirtyCupsAt(s, c.time)
         when {
             dirty > 0 && calmFor > CLEAN_MS + 2_000 -> {
@@ -369,49 +314,32 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
                 s.stay(c, CLEAN_MS, VenueNpcState.PERFORMING_ACTION, VenueAction.CLEAN, NpcAnimation.WIPE, Facing.FRONT)
                 c.remember(VenueAction.CLEAN)
             }
-            else -> {
-                if (c.node != B_REGISTER) s.walkTo(c, B_REGISTER, VenueNpcState.NAVIGATING, VenueAction.WAIT)
-                s.turnIntoFront(c, VenueNpcState.WAITING, VenueAction.WAIT)
-                // Espera até o próximo pedido (se ele já estiver a caminho) ou um pouco, olhando o salão.
-                val ms = calmFor.coerceIn(400L, VenueNpcBrain.idleMs(c.profile, s.seed, c.decisions))
-                s.stay(c, ms, VenueNpcState.WAITING, VenueAction.WAIT, NpcAnimation.LOOK, Facing.FRONT)
-                c.remember(VenueAction.WAIT)
-            }
+            else -> VenueScripts.waitAtPost(s, c, B_REGISTER, calmFor)
         }
         c.decisions++
     }
 
     private fun serve(s: VenueNpcSession, c: VenueCursor, order: VenueInteractionCoordinator.VenueOrder) {
-        s.walkTo(c, B_REGISTER, VenueNpcState.NAVIGATING, VenueAction.SERVE)
-        s.turnIntoFront(c, VenueNpcState.INTERACTING, VenueAction.SERVE)
-        order.takenAt = c.time; order.servedBy = c.npcId
-        s.coordinator.emit(c.time, VenueEvent.ORDER_TAKEN, c.npcId, order.product)
-        s.say(c, BARISTA_LINES[Math.floorMod(order.id, BARISTA_LINES.size)], 1_300, VenueNpcState.INTERACTING, VenueAction.SERVE, Facing.FRONT)
-        if (order.product == COFFEE) {
-            // Xícara na máquina, preparo visível, entrega na área de retirada.
-            s.walkTo(c, B_MACHINE, VenueNpcState.NAVIGATING, VenueAction.PREPARE)
-            s.turnSide(c, true, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE)
-            c.held = Item.MUG
-            s.stay(c, PREPARE_MS, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE, NpcAnimation.PREPARE)
-            s.walkTo(c, B_HANDOFF, VenueNpcState.NAVIGATING, VenueAction.SERVE)
-        } else {
-            // Salgado da vitrine para o saquinho, entregue no caixa.
-            s.walkTo(c, B_SHOWCASE, VenueNpcState.NAVIGATING, VenueAction.PREPARE)
-            s.turnIntoFront(c, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE)
-            s.stay(c, BAG_MS / 2, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE, NpcAnimation.STAND_PICK_PRODUCT, Facing.FRONT)
-            s.coordinator.emit(c.time, VenueEvent.PASTRY_PICKED, c.npcId)
-            c.held = Item.SHOPPING_BAG
-            s.stay(c, BAG_MS / 2, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE, NpcAnimation.IDLE, Facing.FRONT)
-            s.walkTo(c, B_REGISTER, VenueNpcState.NAVIGATING, VenueAction.SERVE)
+        val coffee = order.product == COFFEE
+        VenueScripts.serveOrder(s, c, order, B_REGISTER, BARISTA_LINES[Math.floorMod(order.id, BARISTA_LINES.size)], if (coffee) VenueEvent.COFFEE_READY else null) {
+            if (coffee) {
+                // Xícara na máquina, preparo visível, entrega na área de retirada.
+                s.walkTo(c, B_MACHINE, VenueNpcState.NAVIGATING, VenueAction.PREPARE)
+                s.turnSide(c, true, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE)
+                c.held = Item.MUG
+                s.stay(c, PREPARE_MS, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE, NpcAnimation.PREPARE)
+                B_HANDOFF
+            } else {
+                // Salgado da vitrine para o saquinho, entregue no caixa.
+                s.walkTo(c, B_SHOWCASE, VenueNpcState.NAVIGATING, VenueAction.PREPARE)
+                s.turnIntoFront(c, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE)
+                s.stay(c, BAG_MS / 2, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE, NpcAnimation.STAND_PICK_PRODUCT, Facing.FRONT)
+                s.coordinator.emit(c.time, VenueEvent.PASTRY_PICKED, c.npcId)
+                c.held = Item.SHOPPING_BAG
+                s.stay(c, BAG_MS / 2, VenueNpcState.PERFORMING_ACTION, VenueAction.PREPARE, NpcAnimation.IDLE, Facing.FRONT)
+                B_REGISTER
+            }
         }
-        s.turnIntoFront(c, VenueNpcState.INTERACTING, VenueAction.SERVE)
-        val start = c.time
-        s.stay(c, NpcPoseLibrary.SERVE_MS, VenueNpcState.INTERACTING, VenueAction.SERVE, NpcAnimation.SERVE, Facing.FRONT)
-        c.held = Item.NONE
-        // Pronto no instante em que o objeto sai da mão do barista.
-        order.readyAt = start + SERVE_RELEASE_MS
-        if (order.product == COFFEE) s.coordinator.emit(order.readyAt!!, VenueEvent.COFFEE_READY, c.npcId, order.product)
-        c.remember(VenueAction.SERVE)
     }
 
     private fun dirtyCupsAt(s: VenueNpcSession, t: Long): Int {
@@ -446,12 +374,10 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
 
     private val SEATS = listOf(SEAT_A, SEAT_B)
     private const val ORDER_MS = 1_500L
-    private const val PICK_MS = 700L
     private const val PAY_MS = 1_200L
     private const val PREPARE_MS = 3_400L
     private const val BAG_MS = 1_400L
     private const val CLEAN_MS = 2_600L
-    private const val SERVE_RELEASE_MS = 650L
     private const val SHOWCASE_REFILL_MS = 90_000L
 
     private val ORDER_COFFEE_LINES = listOf("Um cafe, por favor", "Um pingado, por favor", "Cafe com leite")
