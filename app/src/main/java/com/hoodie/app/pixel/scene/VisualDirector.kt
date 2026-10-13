@@ -80,6 +80,11 @@ data class VisualState(
     val shoppingVenue: PlaceType? = null,
     val manualTransition: Boolean = false,
     val mobilityVisual: TransportVisualResolution? = null,
+    /**
+     * Semente dos acontecimentos do dia (vem da jornada, nunca do relógio do renderer).
+     * [variant] escolhe só a aparência. null = semente histórica (igual a [variant]).
+     */
+    val daySeed: Int? = null,
 )
 
 /** HoodieActivity + contexto do usuário → cena, âncora, sequências e microações. */

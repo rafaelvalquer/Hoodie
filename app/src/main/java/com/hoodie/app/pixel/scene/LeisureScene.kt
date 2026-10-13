@@ -75,30 +75,42 @@ class LeisureScene : PixelScene(SceneId.LEISURE) {
         },
         // Elemento característico da variante.
         Prop(206) { b, env, t ->
+            // Passeio 2.0: os elementos vivos seguem o estado calculado junto com os visitantes.
+            val ambient = env.leisureAmbient
             when (env.variant.mod(3)) {
-                0 -> { // Patos nadando no lago.
+                0 -> { // Patos nadando no lago (vêm à margem quando alguém observa).
                     val dx = ((t / 160) % 40).toInt().let { if (it < 20) it else 40 - it }
+                    val pull = ambient?.duckOffsetX ?: 0
+                    val alert = ambient?.duckAlert == true
                     for ((k, base) in intArrayOf(48, 72).withIndex()) {
-                        val x = base + dx - k * 6
-                        b.disc(x, 190 + k * 6, 3, P.OUTLINE); b.disc(x, 190 + k * 6, 2, P.WHITE)
-                        b.disc(x + 3, 187 + k * 6, 2, P.OUTLINE); b.set(x + 3, 187 + k * 6, P.WHITE); b.set(x + 5, 187 + k * 6, P.YELLOW)
+                        val x = (base + dx - k * 6 + pull).coerceIn(32, 108)
+                        val y = 190 + k * 6
+                        val head = if (alert) 186 + k * 6 else 187 + k * 6
+                        b.disc(x, y, 3, P.OUTLINE); b.disc(x, y, 2, P.WHITE)
+                        b.disc(x + 3, head, 2, P.OUTLINE); b.set(x + 3, head, P.WHITE); b.set(x + 5, head, P.YELLOW)
+                        if (alert && (t / 260) % 2 == 0L) { b.set(x - 4, y + 3, P.WHITE); b.set(x + 6, y + 3, P.WHITE) }
                     }
                 }
-                1 -> { // Chafariz.
+                1 -> { // Chafariz (o jato sobe quando alguém o fotografa; o clique brilha no topo).
                     b.outlined(86, 188, 154, 206, 0xFFB8B0A0.toInt(), P.OUTLINE)
                     b.box(90, 190, 150, 196, 0xFF6FB6E0.toInt())
                     b.outlined(114, 168, 126, 190, 0xFFB8B0A0.toInt(), P.OUTLINE)
-                    val h = 6 + ((t / 180) % 3).toInt() * 2
+                    val h = 6 + ((t / 180) % 3).toInt() * 2 + (ambient?.fountainBoost ?: 0)
                     b.vline(120, 168 - h, 168, 0xFF9CD3EE.toInt())
                     for (k in 0..3) {
                         val drop = ((t / 90 + k * 3) % 12).toInt()
                         b.set(116 - drop / 2, 162 - h + drop * 2, 0xFF9CD3EE.toInt()); b.set(124 + drop / 2, 162 - h + drop * 2, 0xFF9CD3EE.toInt())
                     }
+                    if (ambient?.photoFlash == true) {
+                        val top = 166 - h
+                        b.set(120, top - 3, P.WHITE); b.set(120, top + 1, P.WHITE); b.set(118, top - 1, P.WHITE); b.set(122, top - 1, P.WHITE)
+                        b.set(120, top - 1, P.YELLOW)
+                    }
                 }
-                else -> { // Borboleta.
-                    val bx = 60 + ((t / 50) % 120).toInt()
-                    val by = 196 + ((t / 300) % 4).toInt() - 2
-                    val wing = if ((t / 140) % 2 == 0L) 0xFFF2CF5B.toInt() else 0xFFE58AAE.toInt()
+                else -> { // Borboleta (rodeia quem para entre as flores).
+                    val (bx, by) = ambient?.butterfly ?: ((60 + ((t / 50) % 120).toInt()) to (196 + ((t / 300) % 4).toInt() - 2))
+                    val wingUp = ambient?.butterflyWingUp ?: ((t / 140) % 2 == 0L)
+                    val wing = if (wingUp) 0xFFF2CF5B.toInt() else 0xFFE58AAE.toInt()
                     b.set(bx, by, P.OUTLINE); b.box(bx - 2, by - 1, bx - 1, by, wing); b.box(bx + 1, by - 1, bx + 2, by, wing)
                 }
             }
