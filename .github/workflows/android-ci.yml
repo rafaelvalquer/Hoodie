@@ -49,15 +49,24 @@ jobs:
             app/build/pixel-preview/new_place_scenes.png
           if-no-files-found: ignore
 
-      # Roda de novo isolado para o resultado aparecer explícito no log do PR.
-      - name: Sprite sheets entregues (arte final)
-        run: ./gradlew :app:testDebugUnitTest --tests '*ShippedSheetsValidationTest*'
-
+      # Preserve the full suite before the isolated sprite run replaces Gradle's report.
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+      # Roda de novo isolado para o resultado aparecer explícito no log do PR.
+      - name: Sprite sheets entregues (arte final)
+        run: ./gradlew :app:testDebugUnitTest --tests '*ShippedSheetsValidationTest*'
+
+      - name: Upload sprite sheet test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprite-sheet-test-reports
           path: app/build/reports/tests/
           if-no-files-found: ignore
 

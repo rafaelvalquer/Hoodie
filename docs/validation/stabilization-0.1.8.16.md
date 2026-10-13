@@ -446,3 +446,41 @@ não comprova ausência de travamentos. Valores e limites em
 interface, conferindo lista vazia; a configuração local de escrita por caneta
 foi restaurada ao valor ausente original. A configuração do CI permanece
 explícita e restrita ao emulador efêmero do workflow.
+
+## Homologação complementar — 13/10/2026, após publicação do PR #9
+
+O commit remoto `6dd68159` tem a mesma árvore `daf7e1e` do commit local validado
+`7df71dbe`; os identificadores diferem pelos metadados do commit criado pelo
+conector. O PR #9 foi aberto em rascunho, com autorização explícita do usuário.
+
+O primeiro CI parou antes dos testes porque o catálogo antigo do avdmanager não
+tinha Pixel 8. As ferramentas agora são fixadas em 23.0, usando caminho absoluto
+e seleção explícita de `latest`. O log confirma `Pkg.Revision=23.0` e o perfil
+`pixel_8`. Na execução `38433878862`, commit `37f074d7`, **unit-tests, lint,
+assemble e instrumentation passaram**. O relatório instrumentado do artefato
+`11833852355` confirma **329 casos, 149 aprovados, zero falhas e 180 ignorados**.
+Os ignorados são capturas parametrizadas cujo gate de comparação permanece
+desligado; não foram contabilizados como comparações aprovadas. As migrações,
+três entradas reais da Loja e o teste do teclado passaram.
+
+A conferência dos artefatos também identificou que a execução isolada de sprites
+substituía o HTML unitário completo. O workflow foi ajustado para publicar esse
+HTML antes da reexecução e guardar o relatório isolado em outro artefato.
+Esse ajuste de relatórios e a documentação complementar continuam sujeitos à
+execução do CI sobre o novo commit; o resultado verde acima pertence a `37f074d7`.
+
+A Loja permaneceu 30 minutos reais na Home com o mesmo PID nas sete coletas e
+53.249 quadros. O P95 final do Android foi **36 ms**, acima da meta inicial.
+Descobriu-se que `dumpsys meminfo` solicita GC pela plataforma; portanto, essa
+janela não pode ser descrita como coleta sem GC forçado. Uma janela complementar
+de dez minutos leu PSS pelo kernel, sem `meminfo`, e registrou **17.971 quadros,
+P95 21 ms**, PSS final abaixo da inicial e oscilações intermediárias. Um trace
+separado de 30 segundos mediu render P95 1,163 ms e bitmap P95 0,116 ms; houve
+um callback do Choreographer acima de 33 ms. Os números e limitações estão em
+`docs/performance/store-performance.md` e no JSON complementar de evidências.
+Essas janelas não constituem uma comparação controlada de causa ou prova de
+ausência de vazamentos/travamentos em períodos maiores.
+
+**Pendências preservadas:** Android físico, bateria e homologação de um dia em
+uso real. O usuário informou que não possui aparelho disponível. O PR permanece
+em rascunho; não foi feito merge nem publicação de release.
