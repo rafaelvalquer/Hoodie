@@ -46,7 +46,7 @@ class ContextEngine @Inject constructor(
     routines: RoutineRepository,
     settings: SettingsRepository,
     memory: MemoryEngine,
-    hoodie: HoodieEngine,
+    private val hoodie: HoodieEngine,
     notifier: Notifier,
     scheduler: CheckScheduler,
     location: LocationSource,
@@ -58,6 +58,7 @@ class ContextEngine @Inject constructor(
     private val corrections: dagger.Lazy<com.hoodie.app.engine.correction.DiaryCorrectionService>? = null,
     effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
     mobilityRepository: com.hoodie.app.data.repository.MobilityRepository? = null,
+    private val undo: dagger.Lazy<com.hoodie.app.engine.correction.CorrectionUndoService>? = null,
 ) {
     private val mutex = Mutex()
 
@@ -103,18 +104,48 @@ class ContextEngine @Inject constructor(
     suspend fun correctPlaceNow(type: PlaceType): Unit = mutex.withLock { manualContextHandler.correctPlaceNow(type) }
 
     /** Validates the snapshot and applies a requested current or whole-event correction under the engine lock. */
-    suspend fun correctCurrentContext(expectedEventId: Long?, type: PlaceType, sinceActivityStart: Boolean): Boolean = mutex.withLock {
+    suspend fun correctCurrentContext(expectedEventId: Long?, type: PlaceType, sinceActivityStart: Boolean, placeId: Long? = null): Boolean =
+        mutex.withLock { correctLocked(expectedEventId, type, sinceActivityStart, placeId) }
+
+    private suspend fun correctLocked(expectedEventId: Long?, type: PlaceType, sinceActivityStart: Boolean, placeId: Long?): Boolean {
         val current = contextDao.current()
-        if (current?.id != expectedEventId) return@withLock false
-        if (!sinceActivityStart) return@withLock manualContextHandler.correctCurrentPlace(expectedEventId, type)
-        val event = current ?: return@withLock false
+        if (current?.id != expectedEventId) return false
+        if (!sinceActivityStart) return manualContextHandler.correctCurrentPlace(expectedEventId, type, placeId)
+        val event = current ?: return false
         requireNotNull(corrections) { "Correções do Diário indisponíveis." }.get().save(
             com.hoodie.app.domain.correction.DiaryCorrection(
                 com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT, event.id,
-                type.toContext(), places.firstOfType(type)?.id, event.startedAt, event.endedAt, venueType = type,
+                type.toContext(), placeId ?: places.firstOfType(type)?.id, event.startedAt, event.endedAt, venueType = type,
             ),
         )
-        true
+        return true
+    }
+
+    /**
+     * Correção rápida da Home com o lugar exato e opção de Desfazer. Confere o evento esperado e
+     * fotografa os registros canônicos antes de aplicar; o Desfazer só existe se tudo foi gravado.
+     */
+    suspend fun correctWithUndo(request: com.hoodie.app.domain.correction.QuickContextCorrection): com.hoodie.app.domain.correction.QuickCorrectionResult = mutex.withLock {
+        val current = contextDao.current()
+        if (current?.id != request.expectedEventId) return@withLock com.hoodie.app.domain.correction.QuickCorrectionResult.Stale
+        val service = undo?.get()
+        val pending = service?.begin(current.startedAt)
+        val since = request.scope == com.hoodie.app.domain.correction.CorrectionScope.SINCE_CURRENT_ARRIVAL
+        if (!correctLocked(request.expectedEventId, request.placeType, since, request.placeId)) {
+            return@withLock com.hoodie.app.domain.correction.QuickCorrectionResult.Stale
+        }
+        val operationId = if (service != null && pending != null) {
+            runCatching { service.commit(pending, request.scope.name) }.getOrNull()
+        } else null
+        com.hoodie.app.domain.correction.QuickCorrectionResult.Applied(operationId)
+    }
+
+    /** Reverte uma correção recente se nada mudou depois; senão devolve o motivo do bloqueio. */
+    suspend fun undoCorrection(operationId: String): com.hoodie.app.domain.correction.UndoResult = mutex.withLock {
+        val service = undo?.get() ?: return@withLock com.hoodie.app.domain.correction.UndoResult.NotFound
+        val result = service.undo(operationId)
+        if (result == com.hoodie.app.domain.correction.UndoResult.Restored) hoodie.resolve()
+        result
     }
 
     suspend fun savePlaceHere(type: PlaceType, name: String, lat: Double, lng: Double): Place = mutex.withLock { placeLearningHandler.savePlaceHere(type, name, lat, lng) }

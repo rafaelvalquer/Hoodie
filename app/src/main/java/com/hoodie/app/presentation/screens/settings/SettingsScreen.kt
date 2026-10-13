@@ -144,6 +144,8 @@ class SettingsViewModel @Inject constructor(
     fun setCommute(s: CommuteStyle) = action { settings.setCommuteStyle(s) }
     fun setNotifications(on: Boolean) = action { settings.setNotifications(on) }
 
+    fun setNotificationMode(mode: com.hoodie.app.domain.notification.NotificationMode) = action { settings.setNotificationMode(mode) }
+
     /** Voltou das configurações do sistema: revalida e reaplica os geofences. */
     fun onResume() = action {
         val usage = usageAccess.refresh()
@@ -262,6 +264,7 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
             setName = { vm.setName(it) },
             setCommute = { vm.setCommute(it) },
             setNotifications = { vm.setNotifications(it) },
+            setNotificationMode = { vm.setNotificationMode(it) },
             reregister = { vm.reregister() },
             setDigital = { vm.setDigital(it) },
             setMobility = { vm.setMobility(it) },
@@ -285,6 +288,7 @@ internal data class SettingsActions(
     val setName: (String) -> Unit = {},
     val setCommute: (CommuteStyle) -> Unit = {},
     val setNotifications: (Boolean) -> Unit = {},
+    val setNotificationMode: (com.hoodie.app.domain.notification.NotificationMode) -> Unit = {},
     val reregister: () -> Unit = {},
     val setDigital: (DigitalSettings) -> Unit = {},
     val setMobility: (com.hoodie.app.core.datastore.MobilitySettings) -> Unit = {},
@@ -352,6 +356,16 @@ internal fun SettingsContent(
                     Text(stringResource(R.string.ui_settings_screen_6), color = HoodieColors.Muted)
                 }
                 Switch(s.notificationsEnabled, actions.setNotifications)
+            }
+            if (com.hoodie.app.core.config.HoodieConfig.SMART_NOTIFICATIONS_V2) {
+                // O modo só decide COMO avisar; com o interruptor geral desligado nada é reativado.
+                val modes = com.hoodie.app.domain.notification.NotificationMode.entries
+                Text(stringResource(R.string.notif_mode_title), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+                ChipRow(modes.map { it.label }, modes.indexOf(s.notificationMode), { actions.setNotificationMode(modes[it]) })
+                Text(
+                    if (s.notificationsEnabled) s.notificationMode.description else stringResource(R.string.notif_mode_master_off),
+                    color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
 

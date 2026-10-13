@@ -164,7 +164,8 @@ class DayPresentationUiTest {
         rule.onNodeWithText("Ajustar atividade").performClick()
         rule.onNodeWithText("O que você está fazendo agora?").assertIsDisplayed()
         rule.onNodeWithText("Atividade exibida: Trabalho").assertIsDisplayed()
-        rule.onNodeWithText("Evento: 42").assertIsDisplayed()
+        // O id técnico do evento não é mostrado na correção rápida (usado só internamente para conferir o evento esperado).
+        rule.onAllNodesWithText("Evento: 42").assertCountEquals(0)
     }
 
     @Test fun dayReportShowsConciseMetricsWithoutRepeatingJourney() {
@@ -194,7 +195,7 @@ class DayPresentationUiTest {
         var saved: Pair<PlaceType, Boolean>? = null
         rule.setContent {
             HoodieTheme {
-                HomeNowCorrectionSheet(null, onDismiss = {}, onSave = { type, historical -> saved = type to historical; true }, saving = false)
+                HomeNowCorrectionSheet(null, onDismiss = {}, onSave = { type, historical, _ -> saved = type to historical; true }, saving = false)
             }
         }
         rule.onNodeWithText("A partir de agora").assertIsDisplayed()

@@ -101,6 +101,12 @@ class TestGraph(startAt: Long) {
             notifier = notifier,
         )
     }
+    val undoService by lazy {
+        com.hoodie.app.engine.correction.CorrectionUndoService(
+            db, RoomTransactionRunner(db), com.hoodie.app.engine.correction.CorrectionSnapshotCollector(db),
+            com.hoodie.app.engine.correction.CorrectionProjectionRefresher(db, com.hoodie.app.engine.correction.PhoneContextRecalculator(db, clock), clock), clock,
+        )
+    }
     val notifier = FakeNotifier()
     val scheduler = FakeScheduler()
     val location = FakeLocation()
@@ -110,6 +116,7 @@ class TestGraph(startAt: Long) {
         places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, PlainCipher, clock, log,
         db.intelligenceDao(), dagger.Lazy { diaryCorrections },
         mobilityRepository = com.hoodie.app.data.repository.MobilityRepository(db),
+        undo = dagger.Lazy { undoService },
     )
 
     val contextDao get() = db.contextEventDao()

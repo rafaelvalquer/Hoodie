@@ -44,6 +44,7 @@ class ReconcileWorker @AssistedInject constructor(
     private val deviceUsageDaoLazy: Lazy<DeviceUsageDao>,
     private val mobilityRepoLazy: Lazy<com.hoodie.app.data.repository.MobilityRepository>,
     private val mobilityLazy: Lazy<com.hoodie.app.engine.mobility.MobilityEngine>,
+    private val deliveryLazy: Lazy<com.hoodie.app.engine.notification.NotificationDeliveryCoordinator>,
     private val gate: DatabaseGate,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
@@ -58,6 +59,8 @@ class ReconcileWorker @AssistedInject constructor(
             val locationEvents = locationEventsLazy.get()
             log.log(DebugEventLogger.Category.WORKER, "reconcile")
             contextEngineLazy.get().applyRoutineFallbackIfNeeded()
+            // Entregas adiadas ou recuperadas após reinício: reavalia, no máximo uma por rodada.
+            if (com.hoodie.app.core.config.HoodieConfig.SMART_NOTIFICATIONS_V2) runCatching { deliveryLazy.get().reevaluateDue() }
             val snapshot = hoodieLazy.get().resolve()
             memoryLazy.get().checkCalendar()
             maybeNotifyAutonomy(snapshot.started.map { it.activity to it.userContext })
@@ -143,6 +146,7 @@ class MobilityCheckWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val mobilityLazy: Lazy<com.hoodie.app.engine.mobility.MobilityEngine>,
+    private val deliveryLazy: Lazy<com.hoodie.app.engine.notification.NotificationDeliveryCoordinator>,
     private val gate: DatabaseGate,
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {

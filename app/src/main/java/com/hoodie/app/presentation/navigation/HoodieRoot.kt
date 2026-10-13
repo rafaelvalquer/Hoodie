@@ -91,7 +91,9 @@ private fun HoodieRootContent(state: RootState) {
     Box(Modifier.fillMaxSize().background(HoodieColors.Night)) {
         when (state) {
             RootState.SPLASH -> SplashScreen()
-            RootState.ONBOARDING -> OnboardingScreen()
+            RootState.ONBOARDING ->
+                if (com.hoodie.app.core.config.HoodieConfig.PROGRESSIVE_ONBOARDING) com.hoodie.app.presentation.screens.onboarding.ProgressiveOnboardingScreen()
+                else OnboardingScreen()
             RootState.MAIN -> MainScaffold()
         }
     }
@@ -132,6 +134,7 @@ object Routes {
     const val PROFILE = "profile"
     const val PIXEL_LAB = "pixel_lab"
     const val DEV_LAB = "dev_lab"
+    const val DEMO_DAY = "demo_day"
     const val PLACE_PICKER = "place_picker?type={type}&placeId={placeId}"
 
     /** Abre o mapa para escolher um lugar (novo, ou [placeId] para mudar o local de um existente). */
@@ -191,7 +194,8 @@ fun MainScaffold() {
             composable(Routes.MEMORIES) { MemoriesScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.PROFILE) { ProfileScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(it) }) }
             composable(Routes.PIXEL_LAB) { PixelLabScreen(onBack = { nav.popBackStack() }) }
-            composable(Routes.DEV_LAB) { DeveloperLabScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(it) }) }
+            composable(Routes.DEMO_DAY) { com.hoodie.app.presentation.screens.demo.DemoDayScreen(onExit = { nav.popBackStack() }) }
+        composable(Routes.DEV_LAB) { DeveloperLabScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(it) }) }
             composable(
                 Routes.PLACE_PICKER,
                 arguments = listOf(

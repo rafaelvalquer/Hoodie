@@ -26,6 +26,14 @@ interface Notifier {
     suspend fun askInApp(questionId: Long, text: String)
     fun cancelQuestion(questionId: Long)
     fun cancelAll()
+
+    /** Chegada conhecida (ex.: "chegou ao trabalho"). Por padrão igual a [event]; a entrega inteligente a silencia. */
+    suspend fun knownArrival(text: String) = event(text)
+}
+
+/** O sistema permite notificar agora? (interruptor do app + permissão + canal do Android). */
+fun interface NotificationGate {
+    suspend fun canNotify(): Boolean
 }
 
 /** Poucas notificações e boas: chegadas, perguntas de confirmação e (no máximo 1/dia) vida própria. */
@@ -33,7 +41,9 @@ interface Notifier {
 class HoodieNotifier @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settings: SettingsRepository,
-) : Notifier {
+) : Notifier, NotificationGate {
+    override suspend fun canNotify(): Boolean = allowed()
+
     fun createChannels() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = context.getSystemService(NotificationManager::class.java)
@@ -53,6 +63,12 @@ class HoodieNotifier @Inject constructor(
         return NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 
+    /** Na tela bloqueada o texto não revela lugares nem hábitos; só o conteúdo completo ao desbloquear. */
+    private fun NotificationCompat.Builder.privateOnLockScreen(channel: String, genericText: String): NotificationCompat.Builder =
+        setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setPublicVersion(
+            NotificationCompat.Builder(context, channel).setSmallIcon(R.drawable.ic_stat_hoodie).setContentTitle("Hoodie").setContentText(genericText).build(),
+        )
+
     private fun openApp(requestCode: Int): PendingIntent = PendingIntent.getActivity(
         context, requestCode,
         Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
@@ -67,6 +83,7 @@ class HoodieNotifier @Inject constructor(
             .setContentTitle(settings.current().catName)
             .setContentText(text)
             .setContentIntent(openApp(1))
+            .privateOnLockScreen(CH_EVENTS, "O Hoodie tem uma novidade")
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(ID_EVENT, n)
@@ -90,6 +107,7 @@ class HoodieNotifier @Inject constructor(
             .setContentIntent(openApp(2))
             .addAction(0, "Sim", action(true))
             .addAction(0, "Não", action(false))
+            .privateOnLockScreen(CH_QUESTIONS, "O Hoodie tem uma pergunta")
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(questionNotificationId(questionId), n)
@@ -104,6 +122,7 @@ class HoodieNotifier @Inject constructor(
             .setContentTitle(settings.current().catName)
             .setContentText(text)
             .setContentIntent(openApp(3))
+            .privateOnLockScreen(CH_QUESTIONS, "O Hoodie tem uma pergunta")
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(questionNotificationId(questionId), n)

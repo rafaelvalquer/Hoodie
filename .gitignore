@@ -46,3 +46,5 @@ build-lock.txt
 
 # Cache Gradle local
 .gradle-user/
+
+build-shots/

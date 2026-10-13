@@ -129,6 +129,8 @@ class RoutineViewModel @Inject constructor(
             settings.setSleep(sleep)
             if (automatic != null) settings.setAutomaticRoutineEvents(automatic)
         }
+        // Rotina salva pela pessoa conta como configurada (a rotina padrão nunca contava).
+        settings.setSetupWorkDone(true)
         hoodie.resolve()
         done()
     }
