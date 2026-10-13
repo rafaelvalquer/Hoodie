@@ -38,6 +38,17 @@ jobs:
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest
 
+      # Revisão visual de cenas alteradas: mantém o candidato mesmo se o golden falhar.
+      - name: Upload candidate scene goldens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scene-golden-candidates
+          path: |
+            app/build/pixel-preview/npc-art-review/scene-goldens-v1-candidate.sha256
+            app/build/pixel-preview/new_place_scenes.png
+          if-no-files-found: ignore
+
       # Roda de novo isolado para o resultado aparecer explícito no log do PR.
       - name: Sprite sheets entregues (arte final)
         run: ./gradlew :app:testDebugUnitTest --tests '*ShippedSheetsValidationTest*'
