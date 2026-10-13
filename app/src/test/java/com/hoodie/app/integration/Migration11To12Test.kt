@@ -46,7 +46,7 @@ class Migration11To12Test {
             undo.insert(CorrectionUndoEntity(operationId = "op", kind = "FROM_NOW", formatVersion = 1, windowFrom = 10, snapshot = "{}", createdAt = 1, expiresAt = 2, status = UndoStatus.AVAILABLE))
             assertNotNull(undo.byOperation("op"))
             val delivery = room.notificationDeliveryDao()
-            val row = NotificationDeliveryEntity(questionId = 5, kind = "QUESTION", createdAt = 1, nextEligibleAt = 1, expiresAt = 9, deliveredAt = null, status = DeliveryStatus.PENDING, attemptCount = 0, dedupeKey = "q5")
+            val row = NotificationDeliveryEntity(questionId = 5, kind = "QUESTION", text = "Voce chegou?", createdAt = 1, nextEligibleAt = 1, expiresAt = 9, deliveredAt = null, status = DeliveryStatus.PENDING, attemptCount = 0, dedupeKey = "q5")
             delivery.insertIgnore(row)
             assertEquals(-1L, delivery.insertIgnore(row)) // dedupeKey impede duplicata
             assertEquals(1, delivery.due(5).size)

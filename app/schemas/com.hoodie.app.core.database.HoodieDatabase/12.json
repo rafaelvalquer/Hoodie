@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 12,
-    "identityHash": "622cb7e4a84413800843ba7bb41d50bf",
+    "identityHash": "e0e32e51538aacc1fa5a3ddc63efb741",
     "entities": [
       {
         "tableName": "places",
@@ -2102,7 +2102,7 @@
       },
       {
         "tableName": "notification_delivery",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `questionId` INTEGER, `kind` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `nextEligibleAt` INTEGER NOT NULL, `expiresAt` INTEGER NOT NULL, `deliveredAt` INTEGER, `status` TEXT NOT NULL, `attemptCount` INTEGER NOT NULL, `dedupeKey` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `questionId` INTEGER, `kind` TEXT NOT NULL, `text` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `nextEligibleAt` INTEGER NOT NULL, `expiresAt` INTEGER NOT NULL, `deliveredAt` INTEGER, `status` TEXT NOT NULL, `attemptCount` INTEGER NOT NULL, `dedupeKey` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -2118,6 +2118,12 @@
           {
             "fieldPath": "kind",
             "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -2194,7 +2200,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '622cb7e4a84413800843ba7bb41d50bf')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e0e32e51538aacc1fa5a3ddc63efb741')"
     ]
   }
 }

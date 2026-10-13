@@ -44,6 +44,8 @@ data class AppSettings(
     /** Etapa e nome parciais da entrada inicial, para retomar depois de fechar o app. */
     val onboardingDraftStep: String? = null,
     val onboardingDraftName: String? = null,
+    /** Quanto o Hoodie pode interromper. Novas instalações e atualizações começam em Equilibrado. */
+    val notificationMode: com.hoodie.app.domain.notification.NotificationMode = com.hoodie.app.domain.notification.NotificationMode.BALANCED,
 )
 
 /**
@@ -110,6 +112,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val DEMO_DONE = booleanPreferencesKey("demo_completed")
         val ONBOARDING_STEP = stringPreferencesKey("onboarding_draft_step")
         val ONBOARDING_NAME = stringPreferencesKey("onboarding_draft_name")
+        val NOTIFICATION_MODE = stringPreferencesKey("notification_mode")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -145,6 +148,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             demoCompleted = p[Keys.DEMO_DONE] ?: false,
             onboardingDraftStep = p[Keys.ONBOARDING_STEP],
             onboardingDraftName = p[Keys.ONBOARDING_NAME],
+            notificationMode = com.hoodie.app.domain.notification.NotificationMode.parse(p[Keys.NOTIFICATION_MODE]),
         )
     }
 
@@ -170,6 +174,9 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setSetupWorkDone(done: Boolean) = store.edit { it[Keys.SETUP_V2] = true; it[Keys.SETUP_WORK] = done }
 
     suspend fun setSetupNotificationsDone(done: Boolean) = store.edit { it[Keys.SETUP_V2] = true; it[Keys.SETUP_NOTIFICATIONS] = done }
+
+    /** O modo nunca altera o interruptor geral: com notificações desligadas, nada é reativado. */
+    suspend fun setNotificationMode(mode: com.hoodie.app.domain.notification.NotificationMode) = store.edit { it[Keys.NOTIFICATION_MODE] = mode.name }
 
     suspend fun setDemoCompleted(done: Boolean) = store.edit { it[Keys.DEMO_DONE] = done }
 

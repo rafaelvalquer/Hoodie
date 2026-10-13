@@ -64,6 +64,8 @@ data class NotificationDeliveryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val questionId: Long?,
     val kind: String,
+    /** Texto a exibir quando a entrega acontecer depois (adiada). */
+    val text: String,
     val createdAt: Long,
     val nextEligibleAt: Long,
     val expiresAt: Long,

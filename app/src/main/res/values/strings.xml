@@ -595,4 +595,6 @@
     <string name="demo_banner">Dados fictícios · Dia de Demonstração</string>
     <string name="demo_exit">Sair da demonstração</string>
     <string name="demo_title">Um dia com o Hoodie</string>
-    <string name="demo_intro">Veja como o Hoodie conta seu dia. Nada aqui é gravado e nenhuma permissão é necessária.</string></resources>
+    <string name="demo_intro">Veja como o Hoodie conta seu dia. Nada aqui é gravado e nenhuma permissão é necessária.</string>    <string name="notif_mode_title">Como o Hoodie avisa</string>
+    <string name="notif_mode_master_off">As notificações estão desligadas; as perguntas ficam só dentro do app.</string>
+</resources>

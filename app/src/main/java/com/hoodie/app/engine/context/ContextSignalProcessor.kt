@@ -106,11 +106,11 @@ internal class ContextSignalProcessor(
     suspend fun notifyArrival(type: UserContextType, previous: ContextEventEntity?, at: Long) {
         val name = settings.current().catName
         when (type) {
-            UserContextType.WORK -> if (previous?.type != UserContextType.LUNCH) notifier.event("🐱 $name chegou ao trabalho.")
+            UserContextType.WORK -> if (previous?.type != UserContextType.LUNCH) notifier.knownArrival("🐱 $name chegou ao trabalho.")
             UserContextType.HOME -> if (previous != null && previous.type != UserContextType.HOME && at - previous.startedAt >= HOME_RETURN_MIN_MS) {
-                notifier.event("🏠 Vocês estão de volta em casa.")
+                notifier.knownArrival("🏠 Vocês estão de volta em casa.")
             }
-            UserContextType.GYM -> notifier.event("🏋 $name veio treinar junto!")
+            UserContextType.GYM -> notifier.knownArrival("🏋 $name veio treinar junto!")
             else -> Unit
         }
     }
