@@ -7,12 +7,12 @@ import java.util.Locale
 
 internal enum class PlaceCategory(val label: String, private val types: Set<PlaceType>?) {
     ALL("Todos", null),
-    RESTAURANTS("Restaurantes", setOf(PlaceType.RESTAURANT)),
-    STORES("Lojas", setOf(PlaceType.STORE, PlaceType.MARKET)),
+    RESTAURANTS("Restaurantes", setOf(PlaceType.RESTAURANT, PlaceType.BAKERY)),
+    STORES("Lojas", setOf(PlaceType.STORE, PlaceType.MARKET, PlaceType.MALL, PlaceType.PHARMACY)),
     GYMS("Academias", setOf(PlaceType.GYM)),
     WORK("Trabalho", setOf(PlaceType.WORK)),
     HOME("Casa", setOf(PlaceType.HOME)),
-    OTHER("Outros", setOf(PlaceType.SCHOOL, PlaceType.FAMILY, PlaceType.LEISURE, PlaceType.OTHER));
+    OTHER("Outros", setOf(PlaceType.SCHOOL, PlaceType.FAMILY, PlaceType.LEISURE, PlaceType.OTHER, PlaceType.BEACH, PlaceType.CINEMA, PlaceType.HOTEL));
 
     fun contains(type: PlaceType): Boolean = types == null || type in types
 }

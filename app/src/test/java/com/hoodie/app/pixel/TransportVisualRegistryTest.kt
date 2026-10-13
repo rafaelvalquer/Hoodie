@@ -171,9 +171,12 @@ class TransportVisualRegistryTest {
     }
 
     @Test fun `catalogo fisico alinhado para selecao manual e novo lugar`() {
-        val expected = listOf("Casa", "Trabalho", "Academia", "Escola", "Restaurante", "Mercado", "Loja", "Casa de amigos ou familiares", "Lazer", "Outro")
-        assertEquals(expected, PlaceType.entries.map { it.label })
-        assertEquals(expected, PlaceType.newPlaceOptions.map { it.label })
+        val historical = listOf("Casa", "Trabalho", "Academia", "Escola", "Restaurante", "Mercado", "Loja", "Casa de amigos ou familiares", "Lazer", "Outro")
+        val venues = listOf("Padaria ou cafeteria", "Shopping", "Praia", "Cinema", "Farmácia", "Hotel")
+        // Persistência: os tipos novos só entram no fim do enum.
+        assertEquals(historical + venues, PlaceType.entries.map { it.label })
+        // Seleção: "Outro" continua sendo a última opção.
+        assertEquals(historical.dropLast(1) + venues + "Outro", PlaceType.newPlaceOptions.map { it.label })
         assertEquals("STORE", PlaceType.STORE.name) // nome persistido é aditivo e estável
         assertEquals(
             listOf(UserContextType.HOME, UserContextType.WORK, UserContextType.STUDY, UserContextType.SHOPPING, UserContextType.GYM, UserContextType.LEISURE, UserContextType.VISITING, UserContextType.LUNCH, UserContextType.DINING, UserContextType.UNKNOWN),

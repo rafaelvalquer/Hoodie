@@ -32,6 +32,26 @@ object HoodieConfig {
      * reservado ao Hoodie e reações do ambiente. false volta ao roteiro fixo do Passeio 1.0.
      */
     const val LEISURE_LIVING_WORLD_V2 = true
+
+    /**
+     * Cenas próprias por tipo de lugar (Venue Activity Engine). Cada uma só passa a ser escolhida
+     * pelo app depois de validada no Pixel Lab (onde todas aparecem sempre); desligada, o lugar
+     * abre a cena do contexto dele (Restaurante, Compras, Passeio, exterior genérico).
+     */
+    const val VENUE_BAKERY = false
+    const val VENUE_PHARMACY = false
+    const val VENUE_BEACH = false
+    const val VENUE_MALL = false
+    const val VENUE_CINEMA = false
+    const val VENUE_HOTEL = false
+    /**
+     * Personalidade do Hoodie 2.0: traços estáveis puxam (sem forçar) café e descanso nas
+     * microações, reações curtas a momentos do dia e falas próprias com limites de frequência.
+     * false volta às microações e falas ambientes de antes.
+     */
+    const val HOODIE_PERSONALITY_V2 = true
+    /** Microeventos de NPC (entrega de documento no escritório...), no máximo 2 a cada 10 min. */
+    const val SCENE_STORY_EVENTS = true
     /** Contexto é apresentado passivamente; só há alteração quando o usuário a solicita. */
     const val PASSIVE_CONTEXT_CONFIRMATION = true
     const val DAILY_INTELLIGENT_REPORT = true

@@ -33,9 +33,15 @@ class LeisureSocialCoordinatorTest {
                 val b = session.snapshotAt(mid).npcs.single { it.npcId == e.partner }
                 assertEquals(LeisureNpcIntent.SOCIALIZING, a.intent); assertEquals(LeisureNpcIntent.SOCIALIZING, b.intent)
                 assertTrue("posições de conversa", a.spot in setOf(LeisureNpcSpot.SOCIAL_LEFT, LeisureNpcSpot.SOCIAL_RIGHT))
-                // Viram-se um para o outro e ficam a um passo de distância.
-                assertEquals("${e.initiator} olha para o outro", b.x > a.x, a.movement.facingRight)
-                assertEquals("${e.partner} olha para o outro", a.x > b.x, b.movement.facingRight)
+                // Viram-se um para o outro e ficam a um passo de distância; na vista compartilhada
+                // (microevento) ficam lado a lado, virados para a atração.
+                val view = session.storiesUntil(e.endAt).firstOrNull { mid in it.event.interactAt until it.event.resolveAt && e.initiator in it.event.participants }
+                if (view != null) {
+                    assertEquals("lado a lado diante da vista", a.movement.facingRight, b.movement.facingRight)
+                } else {
+                    assertEquals("${e.initiator} olha para o outro", b.x > a.x, a.movement.facingRight)
+                    assertEquals("${e.partner} olha para o outro", a.x > b.x, b.movement.facingRight)
+                }
                 assertTrue("distância de conversa ${abs(a.x - b.x)}", abs(a.x - b.x) in 20..30)
                 // Ninguém anda durante a conversa.
                 for (t in e.meetAt until e.endAt step 50) {

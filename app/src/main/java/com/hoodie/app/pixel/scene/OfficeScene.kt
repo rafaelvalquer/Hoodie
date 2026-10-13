@@ -67,11 +67,16 @@ class OfficeScene : PixelScene(SceneId.OFFICE) {
             b.outlined(25, 197, 43, 201, 0xFF3F4A66.toInt(), P.OUTLINE)
             b.vline(28, 200, 204, P.OUTLINE); b.vline(40, 200, 204, P.OUTLINE)
         },
-        Prop(208) { b, _, t ->
+        Prop(208) { b, env, t ->
             b.outlined(5, 183, 55, 190, 0xFFB8AA90.toInt(), P.OUTLINE)
             b.box(9, 190, 12, 201, 0xFF8B785F.toInt()); b.box(48, 190, 51, 201, 0xFF8B785F.toInt())
             SceneArt.monitor(b, 17, 162, 42, 181, t, true, 1)
             b.outlined(22, 181, 38, 183, 0xFF353B50.toInt(), P.OUTLINE)
+            // Folha da entrega esperando na mesa do coelho (some quando ele a pega).
+            if (env.sceneStory?.objects?.any { it.holder == com.hoodie.app.pixel.npc.events.StoryObjectHolder.ON_DESK } == true) {
+                b.box(44, 184, 52, 186, 0xFFF6F3EA.toInt())
+                b.hline(45, 50, 185, 0xFF9AA6BC.toInt())
+            }
         },
         Prop(208) { b, _, t ->
             b.outlined(187, 183, 237, 190, 0xFFB8AA90.toInt(), P.OUTLINE)

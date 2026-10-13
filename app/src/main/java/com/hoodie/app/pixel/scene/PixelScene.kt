@@ -34,6 +34,14 @@ enum class SceneId(val label: String) {
     UNKNOWN("Desconhecido"),
     GENERIC_INDOOR("Interior genérico"),
     GENERIC_OUTDOOR("Exterior genérico"),
+
+    // Estabelecimentos com cena própria (Venue Activity Engine). Sempre no fim.
+    BAKERY("Padaria"),
+    MALL("Shopping"),
+    BEACH("Praia"),
+    CINEMA("Cinema"),
+    PHARMACY("Farmácia"),
+    HOTEL("Hotel"),
 }
 
 /** Zonas/âncoras de cena (BED_ZONE, WORK_DESK...). */
@@ -54,6 +62,24 @@ enum class SpotId {
 
     // Passeio
     BENCH, VIEWPOINT,
+
+    // Padaria / cafeteria
+    SHOWCASE, COUNTER, CAFE_TABLE,
+
+    // Shopping
+    STOREFRONT_A, STOREFRONT_B, STOREFRONT_C, STORE_ENTRANCE,
+
+    // Praia
+    UMBRELLA, SHORE, ICE_CREAM,
+
+    // Cinema
+    BOX_OFFICE, POPCORN, CINEMA_SEAT,
+
+    // Farmácia
+    SHELF_A, SHELF_B,
+
+    // Hotel
+    RECEPTION, LOBBY_SOFA, ELEVATOR,
 }
 
 /** Âncora com a posição dos pés do Hoodie (x central, y do chão). */
@@ -83,6 +109,12 @@ data class SceneEnv(
     val shoppingVenue: com.hoodie.app.core.model.PlaceType? = null,
     /** Patos, chafariz e borboleta do Passeio 2.0, reagindo aos visitantes (null = animação livre de antes). */
     val leisureAmbient: com.hoodie.app.pixel.npc.leisure.LeisureAmbientState? = null,
+    /** Objetos dos estabelecimentos (xícara no balcão, bola, elevador, luz do cinema) vindos da sessão. */
+    val venueAmbient: com.hoodie.app.pixel.npc.venue.VenueAmbientState? = null,
+    /** Lugar salvo da visita (história estável por lugar); null = desconhecido. */
+    val placeId: Long? = null,
+    /** Microevento de NPC em andamento e onde estão os objetos dele (documento na mesa...). */
+    val sceneStory: com.hoodie.app.pixel.npc.events.SceneStorySnapshot? = null,
 ) {
     companion object {
         const val DOOR_OPEN = 3
@@ -113,6 +145,24 @@ enum class SceneFlag {
 
     /** Loja: sacola da compra saiu do balcão (BAG_TAKEN). */
     BAG_HELD,
+
+    /** Padaria: pedido feito no balcão (HOODIE_ORDER) → salgado na mão (ORDER_RECEIVED → PASTRY_FINISHED). */
+    ORDER_PENDING, PASTRY_IN_HAND,
+
+    /** Shopping: o Hoodie está dentro de uma loja (a porta fecha na frente dele). */
+    INSIDE_STORE,
+
+    /** Praia: casquinha na mão (ICE_CREAM_TAKEN → ICE_CREAM_FINISHED). */
+    ICE_CREAM_IN_HAND,
+
+    /** Cinema: balde de pipoca com o Hoodie (POPCORN_TAKEN). */
+    POPCORN_HELD,
+
+    /** Hotel: mala na mão / no chão ao lado do balcão; cartão do quarto recebido. */
+    SUITCASE_HELD, SUITCASE_DOWN, KEYCARD_HELD,
+
+    /** Hotel: elevador do Hoodie aberto / com ele dentro (porta fechada na frente dele). */
+    ELEVATOR_OPEN, INSIDE_ELEVATOR,
 }
 
 /** Objeto ordenado por Y: desenhado antes do Hoodie se [baseline] <= pés dele, depois caso contrário. */

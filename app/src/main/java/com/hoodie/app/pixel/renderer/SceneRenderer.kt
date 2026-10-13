@@ -23,11 +23,16 @@ import com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary
 import com.hoodie.app.pixel.npc.AmbientNpcSlot
 import com.hoodie.app.pixel.npc.leisure.LeisureNpcDirector
 import com.hoodie.app.pixel.npc.leisure.LeisureNpcSession
+import com.hoodie.app.pixel.npc.venue.VenueNpcDirector
+import com.hoodie.app.pixel.npc.venue.VenueNpcSession
 import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.pixel.scene.Prop
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
 import com.hoodie.app.BuildConfig
 import java.util.LinkedHashMap
+
+/** Objeto de microevento no chão: a âncora fica um pouco acima dos pés de quem o largou. */
+private const val FLOOR_ITEM_LIFT = 2
 
 /**
  * Compõe um frame: fundo (cacheado) → objetos atrás → Hoodie → objetos na frente
@@ -49,6 +54,10 @@ class SceneRenderer {
     private var shoppingSessionStartedAt: Long? = null
     /** Passeio 2.0: simulação dos visitantes deste renderer (uma por dia/variante/noite). */
     private var leisureSession: LeisureNpcSession? = null
+    /** Estabelecimentos (padaria, praia, cinema...): uma sessão por cena/lugar/dia/variante/noite. */
+    private var venueSession: VenueNpcSession? = null
+    /** Restaurante: agenda dos microeventos (copo derramado) e o garçom que só aparece neles. */
+    private var restaurantStory: com.hoodie.app.pixel.npc.restaurant.RestaurantStorySession? = null
 
     private class OfficeDrawEntry(
         val prop: Prop? = null,
@@ -108,6 +117,18 @@ class SceneRenderer {
         shoppingSession = null
         shoppingKey = null
         shoppingSessionStartedAt = null
+        if (VenueNpcDirector.supports(scene.id)) {
+            officeSession?.dispose(); officeSession = null; officeRenderPlan = null
+            leisureSession?.dispose(); leisureSession = null
+            val key = VenueNpcDirector.sessionKey(scene.id, env)
+            val session = venueSession?.takeIf { it.key == key } ?: run {
+                venueSession?.dispose()
+                VenueNpcDirector.createSession(key).also { venueSession = it }
+            }
+            return session.npcSlots
+        }
+        venueSession?.dispose()
+        venueSession = null
         if (scene.id == SceneId.LEISURE && HoodieConfig.LEISURE_LIVING_WORLD_V2) {
             officeSession?.dispose()
             officeSession = null
@@ -125,6 +146,18 @@ class SceneRenderer {
             officeSession?.dispose()
             officeSession = null
             officeRenderPlan = null
+            if (scene.id == SceneId.RESTAURANT && HoodieConfig.SCENE_STORY_EVENTS) {
+                // Restaurante: o cliente é refeito a cada quadro, mas a agenda de microeventos é deste renderer.
+                val base = scene.ambientNpcs(env)
+                val guest = base.firstNotNullOfOrNull { it.restaurantBrain } ?: return base
+                val key = com.hoodie.app.pixel.npc.restaurant.RestaurantStorySession.key(env)
+                val story = restaurantStory?.takeIf { it.key == key } ?: run {
+                    restaurantStory?.dispose()
+                    com.hoodie.app.pixel.npc.restaurant.RestaurantStorySession(key, guest).also { restaurantStory = it }
+                }
+                return story.slots(base)
+            }
+            restaurantStory?.dispose(); restaurantStory = null
             return scene.ambientNpcs(env)
         }
         val key = OfficeSessionKey(env.daySeed, env.variant)
@@ -149,11 +182,22 @@ class SceneRenderer {
         shoppingSessionStartedAt = null
         leisureSession?.dispose()
         leisureSession = null
+        venueSession?.dispose()
+        venueSession = null
+        restaurantStory?.dispose()
+        restaurantStory = null
     }
 
-    /** Profundidade de desenho: visitantes do Passeio usam o chão onde estão agora. */
+    /** Objetos de um microevento largados no chão (a sacola caída), desenhados na profundidade de onde estão. */
+    private fun storyFloorObjects(env: SceneEnv): List<Pair<Int, () -> Unit>> =
+        env.sceneStory?.objects.orEmpty()
+            .filter { it.holder == com.hoodie.app.pixel.npc.events.StoryObjectHolder.ON_FLOOR && it.x != null && it.y != null }
+            .map { o -> o.y!! to { HoodiePainter.drawItemAt(buffer, o.item, com.hoodie.app.pixel.sprite.Point(o.x!!, o.y!! - FLOOR_ITEM_LIFT)) } }
+
+    /** Profundidade de desenho: visitantes do Passeio e de estabelecimentos usam o chão onde estão agora. */
     private fun npcDepth(slot: AmbientNpcSlot, timeMs: Long): Int =
-        slot.leisureActor?.frameStateAt(timeMs)?.floorY ?: slot.baseline
+        slot.story?.movementAt(slot.definition.id, timeMs)?.floorY
+            ?: slot.leisureActor?.frameStateAt(timeMs)?.floorY ?: slot.venueActor?.frameStateAt(timeMs)?.floorY ?: slot.baseline
 
     private fun background(scene: PixelScene, env: SceneEnv): PixelBuffer = synchronized(backgrounds) {
         val visualVariant = if (scene.id == SceneId.SHOPPING) {
@@ -222,7 +266,8 @@ class SceneRenderer {
             val behindProps = scene.sortedProps.filter { it.baseline <= frame.y }
             val behindNpcs = npcs.filter { npcDepth(it, timeMs) <= frame.y }
                 (behindProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
-                    behindNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } })
+                    behindNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } } +
+                    storyFloorObjects(env).filter { it.first <= frame.y })
                     .sortedBy { it.first }.forEach { it.second() }
         }
         if (measureScene) {
@@ -254,7 +299,8 @@ class SceneRenderer {
             val frontProps = scene.sortedProps.filter { it.baseline > frame.y }
             val frontNpcs = npcs.filter { npcDepth(it, timeMs) > frame.y }
             (frontProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
-                frontNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } })
+                frontNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } } +
+                storyFloorObjects(env).filter { it.first > frame.y })
                 .sortedBy { it.first }.forEach { it.second() }
         }
 
@@ -303,7 +349,7 @@ class SceneRenderer {
         val npcs = slots.map { slot -> npcDepth(slot, timeMs) to {
             NpcRenderer.draw(buffer, slot, timeMs, movementOverride(slot, timeMs, facingOverride))
         } }
-        (props + npcs)
+        (props + npcs + storyFloorObjects(drawEnv))
             .sortedBy { it.first }.forEach { it.second() }
         Lighting.apply(buffer, Lighting.map(scene, drawEnv))
         if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
@@ -372,8 +418,15 @@ class SceneRenderer {
         val tableState = restaurant?.tableStateAt(timeMs)
         val officeDoorFrame = npcs.firstNotNullOfOrNull { it.officeBrain?.officeDoorFrameAt(timeMs)?.takeIf { frame -> frame > 0 } }
         val leisureAmbient = npcs.firstNotNullOfOrNull { it.leisureActor }?.session?.snapshotAt(timeMs)?.ambient
+        val venueAmbient = npcs.firstNotNullOfOrNull { it.venueActor }?.session?.snapshotAt(timeMs)?.ambient
+        val story = npcs.firstNotNullOfOrNull { it.officeBrain?.socialSession?.deliveries?.snapshotAt(timeMs) }
+            ?: npcs.firstNotNullOfOrNull { it.story?.snapshotAt(timeMs) }
+            ?: npcs.firstNotNullOfOrNull { it.venueActor }?.session?.storySnapshotAt(timeMs)
+            ?: npcs.firstNotNullOfOrNull { it.leisureActor }?.session?.storySnapshotAt(timeMs)
         return env.copy(
+            sceneStory = story ?: env.sceneStory,
             leisureAmbient = leisureAmbient ?: env.leisureAmbient,
+            venueAmbient = venueAmbient ?: env.venueAmbient,
             shoppingNpc = shopperState ?: env.shoppingNpc,
             doorFrame = maxOf(env.doorFrame, officeDoorFrame ?: 0,
                 if (shopperState?.doorOpen == true) SceneEnv.DOOR_OPEN else 0),

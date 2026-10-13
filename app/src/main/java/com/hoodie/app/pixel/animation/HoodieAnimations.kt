@@ -11,7 +11,10 @@ import com.hoodie.app.pixel.sprite.Legs
 import com.hoodie.app.pixel.sprite.Mouth
 
 /** Grupos só para organizar o Pixel Lab. */
-enum class AnimGroup { LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION, STUDY, SHOPPING, STORE, VISIT, LEISURE, TRANSPORT }
+enum class AnimGroup {
+    LOCOMOTION, IDLE, POSTURE, SLEEP, WORK, COFFEE, PHONE, FOOD, GAME, GYM, HOME, REACTION, STUDY, SHOPPING, STORE, VISIT, LEISURE, TRANSPORT,
+    BAKERY, MALL, BEACH, CINEMA, PHARMACY, HOTEL,
+}
 
 /**
  * Identificador estável de animação. É o contrato entre o motor (VisualDirector,
@@ -213,6 +216,39 @@ enum class AnimationId(val label: String, val group: AnimGroup) {
     GLANCE("Olhar rápido", AnimGroup.REACTION),
     EAR_FLICK("Mexer a orelha", AnimGroup.REACTION),
     NOD("Concordar", AnimGroup.REACTION),
+
+    // Locomoção carregando algo (escolhida pela máquina de estados conforme o que está na mão).
+    WALK_BAG("Caminhar com a sacola", AnimGroup.LOCOMOTION),
+    WALK_SUITCASE("Caminhar com a mala", AnimGroup.LOCOMOTION),
+
+    // Padaria / cafeteria
+    BAKERY_CHOOSE("Escolher na vitrine", AnimGroup.BAKERY),
+    BAKERY_WAIT_ORDER("Esperar o pedido", AnimGroup.BAKERY),
+    BAKERY_EAT_PASTRY("Comer um salgado", AnimGroup.BAKERY),
+    BAKERY_PEOPLE_WATCH("Observar o movimento", AnimGroup.BAKERY),
+
+    // Shopping
+    MALL_WINDOW_SHOP("Olhar a vitrine", AnimGroup.MALL),
+    MALL_ENTER_STORE("Entrar numa loja", AnimGroup.MALL),
+
+    // Praia
+    BEACH_LOUNGE("Relaxar sob o guarda-sol", AnimGroup.BEACH),
+    BEACH_LOOK_SEA("Olhar o mar", AnimGroup.BEACH),
+    BEACH_ICE_CREAM("Tomar sorvete", AnimGroup.BEACH),
+
+    // Cinema
+    CINEMA_BUY_POPCORN("Comprar pipoca", AnimGroup.CINEMA),
+    CINEMA_WATCH("Assistir ao filme", AnimGroup.CINEMA),
+    CINEMA_EAT_POPCORN("Comer pipoca", AnimGroup.CINEMA),
+    CINEMA_REACT("Reagir ao filme", AnimGroup.CINEMA),
+
+    // Farmácia
+    PHARMACY_EXAMINE("Examinar um produto", AnimGroup.PHARMACY),
+
+    // Hotel
+    HOTEL_CHECK_IN("Fazer o check-in", AnimGroup.HOTEL),
+    HOTEL_CHECK_WATCH("Olhar o relógio", AnimGroup.HOTEL),
+    HOTEL_ELEVATOR("Pegar o elevador", AnimGroup.HOTEL),
     ;
 
     val clip: AnimationClip get() = HoodieClips[this]

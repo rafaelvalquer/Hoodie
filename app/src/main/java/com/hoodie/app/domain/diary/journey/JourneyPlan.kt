@@ -27,6 +27,11 @@ enum class BiomeType {
             PlaceType.LEISURE -> PARK
             PlaceType.FAMILY -> FAMILY_LODGE
             PlaceType.OTHER -> CAMP
+            // Estabelecimentos com cena própria usam a construção mais próxima do mapa.
+            PlaceType.BAKERY -> CAFE
+            PlaceType.MALL, PlaceType.PHARMACY -> MARKET
+            PlaceType.BEACH, PlaceType.CINEMA -> PARK
+            PlaceType.HOTEL -> CAMP
         }
 
         fun of(type: DiaryMapNodeType): BiomeType = when (type) {

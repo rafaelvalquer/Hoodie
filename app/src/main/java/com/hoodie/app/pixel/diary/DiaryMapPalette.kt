@@ -49,6 +49,12 @@ object DiaryMapPalette {
         PlaceType.LEISURE -> 0xFFEFA3C8.toInt() to 0xFFCB7FA6.toInt()
         PlaceType.FAMILY -> 0xFFF0B27A.toInt() to 0xFFCF9058.toInt()
         PlaceType.OTHER -> 0xFFA9B1C7.toInt() to 0xFF858DA6.toInt()
+        PlaceType.BAKERY -> 0xFFE3B064.toInt() to 0xFFC0913F.toInt()
+        PlaceType.MALL -> 0xFF9FB7E8.toInt() to 0xFF7B93C6.toInt()
+        PlaceType.BEACH -> 0xFF7FD3D8.toInt() to 0xFF58AEB4.toInt()
+        PlaceType.CINEMA -> 0xFFC9545F.toInt() to 0xFFA63D48.toInt()
+        PlaceType.PHARMACY -> 0xFF8FD6B0.toInt() to 0xFF66B28B.toInt()
+        PlaceType.HOTEL -> 0xFFC8A0E0.toInt() to 0xFFA57FBE.toInt()
     }
 
     /** Tinta do horário no replay (cor, intensidade 0..255). */

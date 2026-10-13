@@ -14,6 +14,9 @@ import com.hoodie.app.pixel.npc.NpcReaction
 import com.hoodie.app.pixel.npc.PathPhase
 import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.npc.brain.NpcDeterministicRandom
+import com.hoodie.app.pixel.npc.events.SceneStoryEvent
+import com.hoodie.app.pixel.npc.events.SceneStoryEventType
+import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.SpotId
 import com.hoodie.app.pixel.sprite.Facing
 import kotlin.math.abs
@@ -134,6 +137,8 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
     private var cursors = newCursors()
     private val reservation = LeisureSpotReservation()
     private val social = LeisureSocialCoordinator(seed, variant)
+    /** Microeventos (vista compartilhada) planejados nesta simulação, com o mesmo determinismo. */
+    private val stories = com.hoodie.app.pixel.npc.venue.VenueStoryLog()
     private val speech = ArrayList<LongArray>()
     private var dirty = false
 
@@ -245,6 +250,7 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
         speech.clear()
         reservation.clearNpcHolds()
         social.reset()
+        stories.clear()
         cached = null
     }
 
@@ -385,6 +391,7 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
         cursors = newCursors()
         reservation.clearNpcHolds()
         social.reset()
+        stories.clear()
         speech.clear()
         dirty = false
         cachedAt = Long.MIN_VALUE
@@ -882,8 +889,16 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
         val aSpot = if (aLeft) LeisureNpcSpot.SOCIAL_LEFT else LeisureNpcSpot.SOCIAL_RIGHT
         val bSpot = if (aLeft) LeisureNpcSpot.SOCIAL_RIGHT else LeisureNpcSpot.SOCIAL_LEFT
         val index = a.decisions * 31 + b.decisions
-        val lines = social.script(a.npcId, b.npcId, index)
-        val talkMs = lines.sumOf { it.durationMs + LeisureSocialCoordinator.LINE_GAP_MS }
+        // Às vezes o encontro vira "olha essa vista": os dois param lado a lado diante da atração.
+        val sharedView = rand(a, 77) < SHARED_VIEW_CHANCE &&
+            stories.canStart(SceneStoryEventType.LEISURE_SHARED_VIEW, a.time, listOf(a.npcId, b.npcId))
+        val lines = social.script(a.npcId, b.npcId, index).let { script ->
+            // Mesmo roteiro de quatro falas: o assunto vira o comentário sobre a vista.
+            if (!sharedView) script else listOf(script[0], script[1],
+                LeisureSocialCoordinator.Line(true, VIEW_LINES[Math.floorMod(index.toInt(), VIEW_LINES.size)], 1_600), script[3])
+        }
+        val viewExtraMs = if (sharedView) VIEW_LOOK_MS + 4 * com.hoodie.app.pixel.npc.NpcPoseLibrary.TURN_MS else 0L
+        val talkMs = lines.sumOf { it.durationMs + LeisureSocialCoordinator.LINE_GAP_MS } + viewExtraMs
         val arriveA = a.time + estimateRouteMs(a, aSpot)
         val arriveB = b.time + estimateRouteMs(b, bSpot)
         val holdUntil = max(arriveA, arriveB) + talkMs + 4_000
@@ -903,9 +918,32 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
             if (c.time < meet) stay(c, meet - c.time, LeisureNpcIntent.SOCIALIZING, NpcAnimation.IDLE, Facing.SIDE,
                 if (c === a) aSpot else bSpot, LeisureActivity.SOCIAL, socialId = encounter.id)
         }
-        for (line in lines) {
+        val viewRight = (spot(LeisureNpcSpot.NATURE_VIEW).attractionX ?: 239) > (a.x + b.x) / 2
+        var viewStart = -1L
+        var viewEnd = -1L
+        for ((i, line) in lines.withIndex()) {
             val speaker = if (line.byInitiator) a else b
             val listener = if (line.byInitiator) b else a
+            if (sharedView && i == 2) {
+                // Lado a lado, virados para a atração.
+                viewStart = max(a.time, b.time)
+                listOf(a, b).forEach { c ->
+                    if (c.time < viewStart) stay(c, viewStart - c.time, LeisureNpcIntent.SOCIALIZING, NpcAnimation.IDLE, Facing.SIDE,
+                        if (c === a) aSpot else bSpot, LeisureActivity.SOCIAL, socialId = encounter.id)
+                    turnSide(c, viewRight, LeisureNpcIntent.SOCIALIZING, LeisureActivity.SOCIAL)
+                }
+            }
+            if (sharedView && i == 3) {
+                // Ficam um tempo olhando juntos e voltam a se olhar para a despedida.
+                val lookFrom = max(a.time, b.time)
+                listOf(a, b).forEach { c ->
+                    stay(c, lookFrom - c.time + VIEW_LOOK_MS, LeisureNpcIntent.SOCIALIZING, NpcAnimation.LOOK_WINDOW, Facing.SIDE,
+                        if (c === a) aSpot else bSpot, LeisureActivity.SOCIAL, socialId = encounter.id)
+                }
+                viewEnd = max(a.time, b.time)
+                turnSide(a, aLeft, LeisureNpcIntent.SOCIALIZING, LeisureActivity.SOCIAL)
+                turnSide(b, !aLeft, LeisureNpcIntent.SOCIALIZING, LeisureActivity.SOCIAL)
+            }
             addSpeech(speaker.time, speaker.time + line.durationMs)
             stay(speaker, line.durationMs, LeisureNpcIntent.SOCIALIZING, NpcAnimation.TALK, Facing.SIDE,
                 if (speaker === a) aSpot else bSpot, LeisureActivity.SOCIAL, speech = line.text, socialId = encounter.id)
@@ -915,6 +953,21 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
                 stay(c, LeisureSocialCoordinator.LINE_GAP_MS, LeisureNpcIntent.SOCIALIZING, NpcAnimation.IDLE, Facing.SIDE,
                     if (c === a) aSpot else bSpot, LeisureActivity.SOCIAL, socialId = encounter.id)
             }
+        }
+        if (sharedView) {
+            // O encontro foi reservado com folga para as viradas: os dois ficam juntos até o fim dele,
+            // nunca andando dentro da janela registrada.
+            listOf(a, b).forEach { c ->
+                if (c.time < meet + talkMs) stay(c, meet + talkMs - c.time, LeisureNpcIntent.SOCIALIZING, NpcAnimation.IDLE, Facing.SIDE,
+                    if (c === a) aSpot else bSpot, LeisureActivity.SOCIAL, socialId = encounter.id)
+            }
+            val end = max(a.time, b.time)
+            stories.record(com.hoodie.app.pixel.npc.venue.VenueStoryRecord(SceneStoryEvent(
+                id = "leisure-view:${key.daySeed}:${encounter.id}:$meet", type = SceneStoryEventType.LEISURE_SHARED_VIEW, scene = SceneId.LEISURE,
+                participants = listOf(a.npcId, b.npcId), requiredSpots = listOf(aSpot.name, bSpot.name),
+                startAt = meet, durationMs = (end - meet).coerceAtLeast(1), priority = 1, cooldownMs = SHARED_VIEW_COOLDOWN_MS,
+                interactAt = viewStart.coerceIn(meet, end), resolveAt = viewEnd.coerceIn(viewStart.coerceIn(meet, end), end),
+            )))
         }
         a.lastStop = aSpot; b.lastStop = bSpot
         a.socialReadyAt = a.time + social.cooldownMs(a.npcId, index)
@@ -941,7 +994,25 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
         }
     }
 
+    /** Microevento em [timeMs] (null = nenhum). */
+    @Synchronized
+    fun storySnapshotAt(timeMs: Long): com.hoodie.app.pixel.npc.events.SceneStorySnapshot? {
+        snapshotAt(timeMs)
+        return stories.snapshotAt(timeMs.coerceAtLeast(0L))
+    }
+
+    /** Microeventos já planejados até [timeMs] (testes e folhas de revisão). */
+    @Synchronized
+    internal fun storiesUntil(timeMs: Long): List<com.hoodie.app.pixel.npc.venue.VenueStoryRecord> {
+        snapshotAt(timeMs)
+        return stories.all().filter { it.event.startAt <= timeMs }
+    }
+
     companion object {
+        const val SHARED_VIEW_CHANCE = 0.4f
+        const val SHARED_VIEW_COOLDOWN_MS = 120_000L
+        const val VIEW_LOOK_MS = 2_200L
+        val VIEW_LINES = listOf("Olha essa vista!", "Que lugar bonito!")
         const val HOODIE_ID = "hoodie"
         private const val SCENE_W = 240
         /** Spot BENCH do Hoodie (LeisureScene). */

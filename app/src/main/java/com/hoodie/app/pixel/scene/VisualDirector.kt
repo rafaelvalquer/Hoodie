@@ -1,5 +1,6 @@
 package com.hoodie.app.pixel.scene
 
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.mobility.MovementMode
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.HoodieActivity
@@ -71,6 +72,11 @@ data class VisualState(
     val backpackWalk: Boolean = false,
     /** Antecipação antes de ir até o spot (olhar a cama, bocejar). */
     val approach: List<AnimationId> = emptyList(),
+    /**
+     * Onde a antecipação acontece (null = onde ele estiver). Encadeia lugares: pedir no balcão
+     * e só então sentar à mesa; comprar a pipoca antes da poltrona; check-in antes do sofá.
+     */
+    val approachSpot: SpotId? = null,
     val enter: List<AnimationId> = emptyList(),
     val exit: List<AnimationId> = emptyList(),
     val gaze: List<GazeStep> = emptyList(),
@@ -85,6 +91,8 @@ data class VisualState(
      * [variant] escolhe só a aparência. null = semente histórica (igual a [variant]).
      */
     val daySeed: Int? = null,
+    /** Lugar salvo da visita: estabelecimentos usam na chave da sessão dos NPCs. */
+    val placeId: Long? = null,
 )
 
 /** HoodieActivity + contexto do usuário → cena, âncora, sequências e microações. */
@@ -97,11 +105,45 @@ object VisualDirector {
     fun commuteScene(mobilityMode: MovementMode?, commute: CommuteStyle, variant: Int): SceneId =
         TransportVisualRegistry.profileFor(mobilityMode, commute, variant).scene
 
+    /** Cena própria de um tipo de lugar (null = o tipo não tem cena própria). */
+    fun specificScene(placeType: PlaceType?): SceneId? = when (placeType) {
+        PlaceType.BAKERY -> SceneId.BAKERY
+        PlaceType.MALL -> SceneId.MALL
+        PlaceType.BEACH -> SceneId.BEACH
+        PlaceType.CINEMA -> SceneId.CINEMA
+        PlaceType.PHARMACY -> SceneId.PHARMACY
+        PlaceType.HOTEL -> SceneId.HOTEL
+        else -> null
+    }
+
+    /** Cenas de estabelecimento liberadas para uso normal (feature flags por cena). */
+    val enabledVenueScenes: Set<SceneId> = buildSet {
+        if (HoodieConfig.VENUE_BAKERY) add(SceneId.BAKERY)
+        if (HoodieConfig.VENUE_MALL) add(SceneId.MALL)
+        if (HoodieConfig.VENUE_BEACH) add(SceneId.BEACH)
+        if (HoodieConfig.VENUE_CINEMA) add(SceneId.CINEMA)
+        if (HoodieConfig.VENUE_PHARMACY) add(SceneId.PHARMACY)
+        if (HoodieConfig.VENUE_HOTEL) add(SceneId.HOTEL)
+    }
+
+    /**
+     * Cena do estabelecimento, se o tipo do lugar for compatível com o contexto (uma padaria no
+     * almoço, não no trabalho) e a cena estiver liberada. "Outro" nunca escolhe uma cena nova.
+     */
+    fun venueScene(context: UserContextType, placeType: PlaceType?, enabled: Set<SceneId> = enabledVenueScenes): SceneId? {
+        val scene = specificScene(placeType) ?: return null
+        return scene.takeIf { context in placeType!!.venueContexts && it in enabled }
+    }
+
     /**
      * [placeType] diferencia lugares que dividem o mesmo contexto: Mercado e Loja são
      * ambos SHOPPING, mas a Loja (roupas) tem cena própria. Sem lugar conhecido = mercado.
+     * Estabelecimentos com cena própria (padaria, praia...) vêm antes do contexto genérico.
      */
-    fun sceneFor(activity: HoodieActivity, context: UserContextType, homeOffice: Boolean, commute: CommuteStyle, variant: Int, mobilityMode: MovementMode? = null, placeType: PlaceType? = null): SceneId =
+    fun sceneFor(
+        activity: HoodieActivity, context: UserContextType, homeOffice: Boolean, commute: CommuteStyle, variant: Int,
+        mobilityMode: MovementMode? = null, placeType: PlaceType? = null, venueScenes: Set<SceneId> = enabledVenueScenes,
+    ): SceneId = venueScene(context, placeType, venueScenes) ?:
         when (context) {
             UserContextType.HOME -> if (activity == HoodieActivity.WALKING) SceneId.GENERIC_OUTDOOR else SceneId.HOME
             UserContextType.WORK -> if (homeOffice) SceneId.HOME else SceneId.OFFICE
@@ -135,12 +177,18 @@ object VisualDirector {
         mobilitySnapshot: MobilityVisualSnapshot? = null,
         preferredMode: MovementMode? = null,
         now: Long = System.currentTimeMillis(),
+        /** Cenas de estabelecimento que podem ser escolhidas (padrão: as liberadas pelas flags). */
+        venueScenes: Set<SceneId> = enabledVenueScenes,
+        /** Traços que puxam café e descanso nas microações (null = pesos neutros). */
+        personality: com.hoodie.app.domain.personality.HoodiePersonalityProfile? =
+            if (HoodieConfig.HOODIE_PERSONALITY_V2) com.hoodie.app.domain.personality.HoodiePersonalityProfile.DEFAULT else null,
     ): VisualState {
         val mobilityVisual = if (context == UserContextType.COMMUTING) mobilitySnapshot?.let {
             TransportVisualRegistry.resolve(it, preferredMode, now, variant)
         } else null
-        // Mercado e Loja dividem o contexto SHOPPING; o tipo do lugar de compras escolhe a cena.
-        val scene = mobilityVisual?.profile?.scene ?: sceneFor(activity, context, homeOffice, commute, variant, mobilityMode, shoppingVenue)
+        // Um deslocamento real vale mais que a visita anterior. Depois, o tipo do lugar escolhe a
+        // cena (Mercado/Loja, Padaria, Praia...); [shoppingVenue] é o tipo do lugar de qualquer visita.
+        val scene = mobilityVisual?.profile?.scene ?: sceneFor(activity, context, homeOffice, commute, variant, mobilityMode, shoppingVenue, venueScenes)
         val tired = if (energy < 20) Expression.TIRED else null
         val currentMood = Mood(energy, mood, social, hunger, focus)
         val base = if (context == UserContextType.COMMUTING) {
@@ -151,6 +199,7 @@ object VisualDirector {
             }
         } else forScene(scene, activity, currentMood)
         return base.copy(
+            actions = personality?.let { PersonalityVisuals.apply(base.actions, it) } ?: base.actions,
             variant = variant,
             expression = base.expression ?: tired,
             shoppingVenue = shoppingVenue,
@@ -196,7 +245,7 @@ object VisualDirector {
     /** Animação de deslocamento entre spots: mochila no trajeto, passo lento no passeio. */
     fun locomotion(scene: SceneId?, backpack: Boolean): AnimationId = when {
         backpack || scene == SceneId.STREET -> WALK_BACKPACK
-        scene == SceneId.LEISURE -> LEISURE_WALK
+        scene == SceneId.LEISURE || scene == SceneId.BEACH -> LEISURE_WALK
         else -> WALK
     }
 
@@ -340,6 +389,195 @@ object VisualDirector {
         add(MicroAction(IDLE_LOOK, 10, spot = SpotId.PATH_A, once = true))
         add(MicroAction(HAPPY, if (m.cheerful) 8 else 4, spot = SpotId.WALK, once = true))
     }
+
+    // ───── Estabelecimentos (Venue Activity Engine) ─────
+
+    /**
+     * Padaria: pede no balcão (vitrine → pedido → salgado na mão) e só então senta à mesa para
+     * comer, beber, ler ou observar o movimento. Em pé, alterna vitrine e espera no balcão.
+     */
+    private fun bakery(scene: SceneId, a: HoodieActivity, m: Mood): VisualState {
+        val order = listOf(BAKERY_CHOOSE, BAKERY_WAIT_ORDER)
+        fun table(actions: List<MicroAction>, approach: List<AnimationId> = order, gaze: List<GazeStep> = cafeGaze, effects: List<EffectSpec> = emptyList()) =
+            VisualState(scene, SpotId.CAFE_TABLE, actions, effects, approach = approach, approachSpot = SpotId.COUNTER,
+                enter = sitDown, exit = standUp, gaze = gaze, steadyFlags = chairSteady)
+        return when (a) {
+            HoodieActivity.EATING, HoodieActivity.BREAKFAST -> table(
+                listOf(
+                    MicroAction(BAKERY_EAT_PASTRY, if (m.hungry) 45 else 35, once = true), coffee(m, 25),
+                    MicroAction(BAKERY_PEOPLE_WATCH, 20, 4_000, 8_000), MicroAction(IDLE_SIT, 10, 2_000, 4_000),
+                ),
+                gaze = foodGaze,
+            )
+            HoodieActivity.COFFEE -> table(
+                listOf(coffee(m, 55), MicroAction(BAKERY_PEOPLE_WATCH, 25, 4_000, 8_000), MicroAction(BAKERY_EAT_PASTRY, 10, once = true)) + phone(2).take(1),
+                approach = listOf(BAKERY_WAIT_ORDER), effects = mugSteam,
+            )
+            HoodieActivity.READING -> table(
+                listOf(MicroAction(READING, 50, 6_000, 12_000), coffee(m, 30), MicroAction(BAKERY_PEOPLE_WATCH, 20, 3_000, 6_000)),
+                approach = listOf(BAKERY_WAIT_ORDER),
+            )
+            HoodieActivity.PHONE -> table(phone(2) + MicroAction(BAKERY_PEOPLE_WATCH, 6, 3_000, 6_000), approach = emptyList())
+            HoodieActivity.RESTING, HoodieActivity.IDLE, HoodieActivity.SOCIALIZING, HoodieActivity.SLEEPING -> table(
+                listOf(
+                    MicroAction(BAKERY_PEOPLE_WATCH, 45, 5_000, 10_000), MicroAction(IDLE_SIT, 25, 3_000, 6_000), coffee(m, 15),
+                ) + (if (m.tired) listOf(MicroAction(NAP_SIT, 15, 3_000, 6_000)) else emptyList()),
+                approach = listOf(BAKERY_WAIT_ORDER), gaze = windowGaze,
+            )
+            else -> VisualState(
+                scene, SpotId.COUNTER,
+                listOf(
+                    MicroAction(BAKERY_CHOOSE, 30, spot = SpotId.COUNTER, once = true),
+                    MicroAction(BAKERY_WAIT_ORDER, 25, spot = SpotId.COUNTER, once = true),
+                    MicroAction(LOOK_AROUND, 20, 3_000, 5_000, SpotId.CENTER),
+                    MicroAction(IDLE_PHONE, 15, 3_000, 6_000, SpotId.CENTER, enter = listOf(PHONE_TAKE), exit = listOf(PHONE_PUT)),
+                    MicroAction(IDLE_LOOK, 10, spot = SpotId.CENTER, once = true),
+                ),
+                approach = listOf(LOOK_AROUND), gaze = cafeGaze,
+            )
+        }
+    }
+
+    /** Shopping: vitrines, entrar numa loja (volta com sacola), banco e observar as pessoas. */
+    private fun mall(scene: SceneId, a: HoodieActivity, m: Mood): VisualState {
+        fun benchState(actions: List<MicroAction>, effects: List<EffectSpec> = emptyList()) =
+            VisualState(scene, SpotId.BENCH, actions, effects, enter = sitDown, exit = standUp, gaze = crowdGaze)
+        return when (a) {
+            HoodieActivity.RESTING, HoodieActivity.SLEEPING -> benchState(
+                listOf(MicroAction(LEISURE_BENCH, 50, 5_000, 10_000), MicroAction(NAP_SIT, if (m.tired) 30 else 10, 3_000, 6_000), MicroAction(IDLE_SIT, 20)),
+            )
+            HoodieActivity.PHONE -> benchState(phone(2) + MicroAction(LEISURE_BENCH, 6))
+            HoodieActivity.COFFEE -> benchState(listOf(coffee(m, 60), MicroAction(LEISURE_BENCH, 40)), mugSteam)
+            HoodieActivity.EATING -> benchState(listOf(MicroAction(VISIT_SNACK, 55, once = true), MicroAction(LEISURE_BENCH, 45)))
+            else -> VisualState(
+                scene, SpotId.STOREFRONT_A,
+                listOf(
+                    MicroAction(MALL_WINDOW_SHOP, 25, 4_000, 8_000, SpotId.STOREFRONT_A),
+                    MicroAction(MALL_WINDOW_SHOP, 20, 4_000, 8_000, SpotId.STOREFRONT_C),
+                    MicroAction(MALL_ENTER_STORE, if (m.cheerful) 14 else 9, spot = SpotId.STORE_ENTRANCE, once = true),
+                    MicroAction(LEISURE_BENCH, if (m.tired) 24 else 10, 5_000, 9_000, SpotId.BENCH, enter = sitDown, exit = standUp),
+                    MicroAction(LOOK_AROUND, 14, 3_000, 5_000, SpotId.CENTER),
+                    MicroAction(IDLE, 8, 2_000, 4_000, SpotId.PATH_B),
+                    MicroAction(IDLE_PHONE, 6, 3_000, 5_000, SpotId.PATH_A, enter = listOf(PHONE_TAKE), exit = listOf(PHONE_PUT)),
+                ),
+                approach = listOf(LOOK_AROUND), gaze = crowdGaze,
+            )
+        }
+    }
+
+    /** Praia: andar na areia, olhar o mar, foto, sorvete do carrinho e guarda-sol. */
+    private fun beach(scene: SceneId, a: HoodieActivity, m: Mood): VisualState {
+        fun umbrella(actions: List<MicroAction>, effects: List<EffectSpec> = emptyList(), expression: Expression? = null) =
+            VisualState(scene, SpotId.UMBRELLA, actions, effects, expression = expression, enter = sitDown, exit = standUp, gaze = seaGaze)
+        return when (a) {
+            HoodieActivity.RESTING -> umbrella(listOf(MicroAction(BEACH_LOUNGE, 60, 6_000, 12_000), MicroAction(NAP_SIT, 25, 4_000, 8_000)) + phone(2).take(1))
+            HoodieActivity.SLEEPING -> umbrella(listOf(MicroAction(NAP_SIT, 70, 6_000, 12_000), MicroAction(BEACH_LOUNGE, 30)), zzz, Expression.SLEEPY)
+            HoodieActivity.PHONE -> umbrella(phone(2) + MicroAction(BEACH_LOUNGE, 8))
+            HoodieActivity.COFFEE -> umbrella(listOf(coffee(m, 55), MicroAction(BEACH_LOUNGE, 45)), mugSteam)
+            HoodieActivity.EATING -> VisualState(
+                scene, SpotId.ICE_CREAM,
+                listOf(
+                    MicroAction(BEACH_ICE_CREAM, 50, spot = SpotId.ICE_CREAM, once = true),
+                    MicroAction(BEACH_LOUNGE, 30, 5_000, 9_000, SpotId.UMBRELLA, enter = sitDown, exit = standUp),
+                    MicroAction(BEACH_LOOK_SEA, 20, spot = SpotId.SHORE, once = true),
+                ),
+                gaze = seaGaze,
+            )
+            else -> VisualState(
+                scene, SpotId.SHORE,
+                listOf(
+                    MicroAction(BEACH_LOOK_SEA, 24, spot = SpotId.SHORE, once = true),
+                    MicroAction(LEISURE_PHOTO, if (m.cheerful) 18 else 10, spot = SpotId.SHORE, once = true),
+                    MicroAction(BEACH_LOUNGE, if (m.tired) 30 else 16, 5_000, 10_000, SpotId.UMBRELLA, enter = sitDown, exit = standUp),
+                    MicroAction(BEACH_ICE_CREAM, if (m.hungry) 18 else 10, spot = SpotId.ICE_CREAM, once = true),
+                    MicroAction(IDLE, 10, 2_000, 4_000, SpotId.PATH_A),
+                    MicroAction(LOOK_AROUND, 10, 3_000, 5_000, SpotId.PATH_B),
+                    MicroAction(WAVE, 6, spot = SpotId.PATH_B, once = true),
+                ),
+                approach = listOf(LOOK_AROUND), gaze = seaGaze,
+            )
+        }
+    }
+
+    /**
+     * Cinema em fases: compra a pipoca no saguão, entra na sala, senta e assiste (come, reage,
+     * fica concentrado); ao sair do estado, levanta. Celular só no saguão, nunca na sessão.
+     */
+    private fun cinema(scene: SceneId, a: HoodieActivity, m: Mood): VisualState = when (a) {
+        HoodieActivity.PHONE -> VisualState(scene, SpotId.CENTER, phone(1))
+        HoodieActivity.SLEEPING -> VisualState(
+            scene, SpotId.CINEMA_SEAT, listOf(MicroAction(NAP_SIT, 70, 6_000, 12_000), MicroAction(CINEMA_WATCH, 30)),
+            zzz, expression = Expression.SLEEPY, enter = sitDown, exit = standUp, steadyFlags = setOf(SceneFlag.POPCORN_HELD),
+        )
+        else -> VisualState(
+            scene, SpotId.CINEMA_SEAT,
+            listOf(
+                MicroAction(CINEMA_WATCH, 50, 5_000, 10_000),
+                MicroAction(CINEMA_EAT_POPCORN, if (m.hungry) 35 else 25, 3_000, 6_000),
+                MicroAction(CINEMA_REACT, if (m.cheerful) 16 else 10, once = true),
+            ) + (if (m.tired) listOf(MicroAction(NAP_SIT, 10, 3_000, 5_000)) else emptyList()),
+            approach = listOf(CINEMA_BUY_POPCORN), approachSpot = SpotId.POPCORN,
+            enter = sitDown, exit = standUp, gaze = screenGaze, steadyFlags = setOf(SceneFlag.POPCORN_HELD),
+        )
+    }
+
+    /** Farmácia: parada breve. Olha prateleiras, examina e devolve uma caixinha, às vezes paga. */
+    private fun pharmacy(scene: SceneId, a: HoodieActivity, m: Mood): VisualState = when (a) {
+        HoodieActivity.PHONE -> VisualState(scene, SpotId.CENTER, phone(1))
+        else -> VisualState(
+            scene, SpotId.SHELF_A,
+            listOf(
+                MicroAction(SHOP_LOOK, 25, 3_000, 6_000, SpotId.SHELF_A),
+                MicroAction(PHARMACY_EXAMINE, 22, spot = SpotId.SHELF_B, once = true),
+                MicroAction(SHOP_LOOK, 14, 3_000, 5_000, SpotId.SHELF_B),
+                MicroAction(SHOP_PAY, if (m.tired) 16 else 8, spot = SpotId.CHECKOUT, once = true),
+                MicroAction(IDLE, 12, 2_000, 5_000, SpotId.CENTER),
+                MicroAction(IDLE_PHONE, 8, 3_000, 5_000, SpotId.CENTER, enter = listOf(PHONE_TAKE), exit = listOf(PHONE_PUT)),
+                MicroAction(IDLE_LOOK, 6, spot = SpotId.CENTER, once = true),
+            ),
+            approach = listOf(LOOK_AROUND), gaze = shelfGaze,
+        )
+    }
+
+    /**
+     * Hotel: entra com a mala, faz o check-in na recepção e então espera no saguão, descansa no
+     * sofá ou pega o elevador (que funciona como entrada/saída da cena).
+     */
+    private fun hotel(scene: SceneId, a: HoodieActivity, m: Mood): VisualState {
+        val arrival = setOf(SceneFlag.SUITCASE_HELD)
+        fun sofa(actions: List<MicroAction>, effects: List<EffectSpec> = emptyList(), expression: Expression? = null) = VisualState(
+            scene, SpotId.LOBBY_SOFA, actions, effects, expression = expression, approach = listOf(HOTEL_CHECK_IN), approachSpot = SpotId.RECEPTION,
+            enter = sitDown, exit = standUp, gaze = lobbyGaze, steadyFlags = arrival,
+        )
+        return when (a) {
+            HoodieActivity.RESTING -> sofa(listOf(MicroAction(IDLE_SIT, 45, 4_000, 8_000), MicroAction(NAP_SIT, if (m.tired) 35 else 15, 4_000, 8_000)) + phone(2).take(1))
+            HoodieActivity.SLEEPING -> sofa(listOf(MicroAction(NAP_SIT, 80, 6_000, 12_000), MicroAction(IDLE_SIT, 20)), zzz, Expression.SLEEPY)
+            HoodieActivity.PHONE -> sofa(phone(2) + MicroAction(IDLE_SIT, 6))
+            HoodieActivity.COFFEE -> sofa(listOf(coffee(m, 60), MicroAction(IDLE_SIT, 40)), mugSteam)
+            else -> VisualState(
+                scene, SpotId.CENTER,
+                listOf(
+                    MicroAction(HOTEL_CHECK_WATCH, 22, spot = SpotId.CENTER, once = true),
+                    MicroAction(IDLE_SIT, if (m.tired) 26 else 16, 4_000, 8_000, SpotId.LOBBY_SOFA, enter = sitDown, exit = standUp),
+                    MicroAction(HOTEL_ELEVATOR, 14, spot = SpotId.ELEVATOR, once = true),
+                    MicroAction(LOOK_AROUND, 16, 3_000, 5_000, SpotId.CENTER),
+                    MicroAction(IDLE_PHONE, 12, 3_000, 6_000, SpotId.CENTER, enter = listOf(PHONE_TAKE), exit = listOf(PHONE_PUT)),
+                ),
+                approach = listOf(HOTEL_CHECK_IN), approachSpot = SpotId.RECEPTION, gaze = lobbyGaze, steadyFlags = arrival,
+            )
+        }
+    }
+
+    /** Balcão → mesas → janela. */
+    private val cafeGaze = listOf(GazeStep(Eyes.LOOK_RIGHT, 1_500, 3_000), GazeStep(Eyes.OPEN, 800, 1_500), GazeStep(Eyes.LOOK_LEFT, 1_200, 2_500))
+    /** Pessoas passando de um lado para o outro do corredor. */
+    private val crowdGaze = listOf(GazeStep(Eyes.LOOK_LEFT, 1_200, 2_400), GazeStep(Eyes.OPEN, 600, 1_200), GazeStep(Eyes.LOOK_RIGHT, 1_200, 2_400))
+    /** Horizonte e céu. */
+    private val seaGaze = listOf(GazeStep(Eyes.LOOK_UP, 1_500, 3_000), GazeStep(Eyes.OPEN, 900, 1_800), GazeStep(Eyes.LOOK_RIGHT, 1_000, 2_000))
+    /** A tela (que fica do nosso lado) e um olhar rápido para o lado. */
+    private val screenGaze = listOf(GazeStep(Eyes.OPEN, 3_000, 6_000), GazeStep(Eyes.LOOK_LEFT, 500, 900))
+    /** Porta, recepção e elevador. */
+    private val lobbyGaze = listOf(GazeStep(Eyes.LOOK_LEFT, 1_500, 3_000), GazeStep(Eyes.OPEN, 800, 1_500), GazeStep(Eyes.LOOK_RIGHT, 1_200, 2_400))
 
     /** Sentado no banco do passeio. */
     private fun bench(scene: SceneId, actions: List<MicroAction>, effects: List<EffectSpec> = emptyList(), expression: Expression? = null) =
@@ -562,6 +800,12 @@ object VisualDirector {
                 scene, SpotId.SOFA, listOf(MicroAction(IDLE_SIT, 40), coffee(m, 30)) + phone(6).take(1), enter = sitDown, exit = standUp,
             )
         }
+        SceneId.BAKERY -> bakery(scene, a, m)
+        SceneId.MALL -> mall(scene, a, m)
+        SceneId.BEACH -> beach(scene, a, m)
+        SceneId.CINEMA -> cinema(scene, a, m)
+        SceneId.PHARMACY -> pharmacy(scene, a, m)
+        SceneId.HOTEL -> hotel(scene, a, m)
         SceneId.GENERIC_OUTDOOR -> when (a) {
             HoodieActivity.PHONE -> VisualState(scene, SpotId.CENTER, phone(1))
             HoodieActivity.COFFEE -> VisualState(scene, SpotId.CENTER, listOf(coffee(m, 1)))

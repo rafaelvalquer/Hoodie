@@ -23,7 +23,15 @@ enum class Ears { NORMAL, ALERT, RELAXED, TWITCH_LEFT, TWITCH_RIGHT, DOWN }
 enum class Facing { FRONT, BACK, SIDE }
 
 /** Pontos de encaixe: o item é desenhado na âncora da mão, não em um sprite por combinação. */
-enum class Item { NONE, MUG, PHONE, BOOK, CONTROLLER, DUMBBELL, BROOM, PAN, BOTTLE, GLASS, FORK, MENU, PENCIL, PRODUCT, SNACK, BASKET, SHOPPING_BAG, GARMENT }
+enum class Item {
+    NONE, MUG, PHONE, BOOK, CONTROLLER, DUMBBELL, BROOM, PAN, BOTTLE, GLASS, FORK, MENU, PENCIL, PRODUCT, SNACK, BASKET, SHOPPING_BAG, GARMENT,
+
+    // Estabelecimentos (padaria, cinema, hotel, praia). Sempre no fim.
+    PASTRY, POPCORN, SUITCASE, KEYCARD, ICE_CREAM, TICKET, CLOTH,
+
+    // Microeventos de NPC (entrega de documento no escritório).
+    DOCUMENT,
+}
 
 /** Expressões aplicáveis por cima de qualquer animação. */
 enum class Expression(val label: String, val eyes: Eyes?, val ears: Ears?) {

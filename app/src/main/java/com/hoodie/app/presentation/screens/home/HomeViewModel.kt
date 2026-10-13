@@ -88,6 +88,13 @@ data class HomeUiState(
     val canSaveHere: Boolean = false,
 )
 
+private data class HomeTick(
+    val inputs: Inputs,
+    val now: Long,
+    val mobility: com.hoodie.app.core.mobility.MobilityVisualSnapshot,
+    val day: com.hoodie.app.domain.daystate.DayStateSnapshot?,
+)
+
 private data class Inputs(
     val settings: AppSettings,
     val routine: Routine,
@@ -117,7 +124,12 @@ class HomeViewModel @Inject constructor(
     questionDao: QuestionDao,
     dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
     private val effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
+    personalityRuntime: com.hoodie.app.engine.personality.PersonalityRuntime? = null,
 ) : ViewModel() {
+    private val personality = personalityRuntime?.takeIf { com.hoodie.app.core.config.HoodieConfig.HOODIE_PERSONALITY_V2 }
+        ?.let(::PersonalityDialogueScheduler)
+    private val ambientDialogue = AmbientDialogueScheduler(dialogues)
+    private var lastScene: com.hoodie.app.pixel.scene.SceneId? = null
     private val dayStateCoordinator = if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStates?.get() else null
     val dayState = dayStateCoordinator?.snapshots ?: kotlinx.coroutines.flow.flowOf(null)
     private val wakeEvidence = dayStateCoordinator?.wakeEvidence ?: kotlinx.coroutines.flow.flowOf(null)
@@ -160,9 +172,6 @@ class HomeViewModel @Inject constructor(
             ?.let { ContextQuestion(it.id, it.kind, it.candidate, it.placeId, it.chosenPlaceType, it.contextEventId, it.askedAt, it.answeredAt, it.answer) }
     }
 
-    private var dialogueText: String? = null
-    private var dialogueUntil = 0L
-
     private val reloadHome = MutableStateFlow(0L)
     private val homeNowReconciled = MutableStateFlow(false)
     private var homeResumeJob: Job? = null
@@ -176,8 +185,8 @@ class HomeViewModel @Inject constructor(
             HomeUiState(loading = false, error = cause.appErrorOr(DatabaseError.ReadFailed))
         },
         source = {
-            combine(inputs, ticker, mobilityVisualObservation) { i, now, mobility -> Triple(i, now, mobility) }
-                .mapLatest { (i, now, mobility) -> build(i, now, hoodie.resolve(), mobility) }
+            combine(inputs, ticker, mobilityVisualObservation, dayState) { i, now, mobility, day -> HomeTick(i, now, mobility, day) }
+                .mapLatest { t -> build(t.inputs, t.now, hoodie.resolve(), t.mobility, t.day) }
                 .combineWithQuestion()
         },
     ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
@@ -193,6 +202,7 @@ class HomeViewModel @Inject constructor(
     /** Hide the previous snapshot until canonical sources have been reconciled on every resume. */
     fun onHomeStarted() {
         visualDiagnostics.visibility(true)
+        personality?.onForeground(clock.nowMillis())
         homeResumeJob?.cancel()
         homeNowReconciled.value = false
         homeResumeJob = viewModelScope.launch {
@@ -221,6 +231,7 @@ class HomeViewModel @Inject constructor(
 
     fun onHomeStopped() {
         visualDiagnostics.visibility(false)
+        personality?.onBackground(clock.nowMillis())
         mobility.onAppClosed()
         homeResumeJob?.cancel()
         homeNowReconciled.value = false
@@ -250,7 +261,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun build(i: Inputs, now: Long, snap: HoodieSnapshot, mobility: com.hoodie.app.core.mobility.MobilityVisualSnapshot): HomeUiState {
+    private suspend fun build(
+        i: Inputs, now: Long, snap: HoodieSnapshot, mobility: com.hoodie.app.core.mobility.MobilityVisualSnapshot,
+        day: com.hoodie.app.domain.daystate.DayStateSnapshot? = null,
+    ): HomeUiState {
         val zoned = clock.now()
         val minute = zoned.minuteOfDay()
         val ctx = i.context
@@ -278,7 +292,7 @@ class HomeViewModel @Inject constructor(
             preferredMode = i.settings.mobility.preferredMode,
             now = now,
         // A história ambiental do dia vem da jornada (data), separada da aparência (variant).
-        ).copy(daySeed = zoned.toLocalDate().toEpochDay().toInt())
+        ).copy(daySeed = zoned.toLocalDate().toEpochDay().toInt(), placeId = ctx?.placeId)
         visualDiagnostics.selected(visual, now)
         val userType = ctx?.type ?: UserContextType.HOME
         val tomorrowDate = zoned.toLocalDate().plusDays(1)
@@ -292,25 +306,44 @@ class HomeViewModel @Inject constructor(
             else if (it.fallbackReason == "NO_ELIGIBLE_PATTERN") "Automático · referência manual (sem padrão elegível)"
             else "Automático · referência manual (horários incompatíveis)" }
 
+        // Personalidade: um momento do dia (chegou, pausa, lugar novo...) pode virar gesto e fala.
+        val daySeed = zoned.toLocalDate().toEpochDay().toInt()
+        val sceneChanged = lastScene != null && lastScene != visual.scene
+        lastScene = visual.scene
+        personality?.update(
+            com.hoodie.app.engine.personality.PersonalityObservation(
+                now = now, daySeed = daySeed, hour = zoned.hour, contextId = ctx?.id, contextType = ctx?.type,
+                contextStartedAt = ctx?.startedAt, placeId = ctx?.placeId, activity = snap.state.activity,
+                dayState = day?.state, dayStateStartedAt = day?.startedAt,
+            ),
+            com.hoodie.app.engine.personality.PersonalityGate(
+                walking = snap.state.activity == com.hoodie.app.core.model.HoodieActivity.WALKING ||
+                    (ctx?.type ?: snap.state.userContext) == UserContextType.COMMUTING,
+                workAction = snap.state.activity == com.hoodie.app.core.model.HoodieActivity.WORKING,
+                sceneTransition = sceneChanged,
+            ),
+        ) { detected ->
+            com.hoodie.app.engine.personality.PersonalityContext(
+                trigger = detected.trigger, scene = visual.scene, activity = snap.state.activity, needs = snap.liveNeeds,
+                placeId = ctx?.placeId, occurredAt = now, daySeed = daySeed, visitSeed = detected.visitSeed,
+                userContext = ctx?.type ?: snap.state.userContext, hour = zoned.hour,
+            )
+        }?.animation?.let { _events.send(HomeUiEvent.React(it)) }
+        val personalLine = personality?.current(now)
+        if (personalLine != null) ambientDialogue.holdUntil(personality!!.speakingUntil)
         // Fala ocasional, sem IA: regras do dialogues.json. Fica alguns segundos e some.
-        if (now >= dialogueUntil) {
-            dialogueText = null
-            if (Random.nextInt(100) < 40) {
-                val ctxMinutes = ctx?.let { (now - it.startedAt) / MINUTE_MS } ?: 0
-                val arrivedEarly = ctx?.type == UserContextType.WORK &&
-                    ctx.startedAt.let { java.time.Instant.ofEpochMilli(it).atZone(clock.zone()).minuteOfDay() } < i.routine.startMinute - 10
-                dialogueText = dialogues.pick(
-                    DialogueInput(
-                        context = snap.state.userContext, activity = snap.state.activity, contextMinutes = ctxMinutes,
-                        hour = zoned.hour, weekend = zoned.dayOfWeek == DayOfWeek.SATURDAY || zoned.dayOfWeek == DayOfWeek.SUNDAY,
-                        overtime = ctx?.type == UserContextType.WORK && workDay && RoutineEngine.isOvertime(zoned, i.routine),
-                        energy = snap.liveNeeds.energy, arrivedEarly = arrivedEarly,
-                    ),
-                    Random,
-                )
-            }
-            dialogueUntil = now + if (dialogueText != null) 9_000 else 20_000
+        val ambientLine = ambientDialogue.next(now) {
+            val ctxMinutes = ctx?.let { (now - it.startedAt) / MINUTE_MS } ?: 0
+            val arrivedEarly = ctx?.type == UserContextType.WORK &&
+                ctx.startedAt.let { java.time.Instant.ofEpochMilli(it).atZone(clock.zone()).minuteOfDay() } < i.routine.startMinute - 10
+            DialogueInput(
+                context = snap.state.userContext, activity = snap.state.activity, contextMinutes = ctxMinutes,
+                hour = zoned.hour, weekend = zoned.dayOfWeek == DayOfWeek.SATURDAY || zoned.dayOfWeek == DayOfWeek.SUNDAY,
+                overtime = ctx?.type == UserContextType.WORK && workDay && RoutineEngine.isOvertime(zoned, i.routine),
+                energy = snap.liveNeeds.energy, arrivedEarly = arrivedEarly,
+            )
         }
+        val dialogueText = DialogueArbiter.choose(personalLine, ambientLine)?.text
 
         val hasHome = i.places.any { it.type == PlaceType.HOME }
         val hasWork = i.places.any { it.type == PlaceType.WORK }
@@ -387,6 +420,7 @@ class HomeViewModel @Inject constructor(
 
     fun answerNewPlace(id: Long, type: PlaceType) = action {
         contextEngine.answerNewPlace(id, type)
+        personality?.onNewPlaceConfirmed(id)
         _events.send(HomeUiEvent.React(AnimationId.SURPRISED))
     }
 
@@ -397,6 +431,7 @@ class HomeViewModel @Inject constructor(
 
     fun saveDiscoveredPlace(id: Long, name: String, reuseId: Long?, manualPosition: Pair<Double, Double>?) = placeAction {
         contextEngine.answerSavePlace(id, true, name, reuseId, manualPosition)
+        personality?.onNewPlaceConfirmed(id)
         _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 

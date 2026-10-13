@@ -38,17 +38,12 @@ internal class TransitionPlanner {
             plan += Step.FadeOut
             plan += Step.Switch(target)
             plan += Step.FadeIn
-            target.approach.forEach { plan += Step.Play(it) }
-            if (!targetScene.walkInPlace) {
-                val from = targetScene.spots[SpotId.DOOR] ?: targetSpot
-                addWalk(plan, from.x.toFloat(), from.y.toFloat(), targetSpot, stop = true)
-            }
+            val from = targetScene.spots[SpotId.DOOR] ?: targetSpot
+            if (targetScene.walkInPlace) target.approach.forEach { plan += Step.Play(it) }
+            else approachThenWalk(plan, targetScene, target, from.x.toFloat(), from.y.toFloat(), targetSpot)
         } else {
             plan += Step.Apply(target)
-            if (!atTarget) {
-                target.approach.forEach { plan += Step.Play(it) }
-                addWalk(plan, x, y, targetSpot, stop = true)
-            }
+            if (!atTarget) approachThenWalk(plan, targetScene, target, x, y, targetSpot)
         }
         target.enter.filter { !(sameSpot && it in postureOnly) }.forEach { plan += Step.Play(it) }
         plan += Step.Loop
@@ -67,6 +62,19 @@ internal class TransitionPlanner {
         next.enter.forEach { plan += Step.Play(it) }
         plan += Step.Loop
         return AnimationSequence(plan.toList())
+    }
+
+    /** Antecipação (no lugar dela, se houver um) e depois a caminhada até o spot do estado. */
+    private fun approachThenWalk(plan: ArrayDeque<Step>, sc: PixelScene, target: VisualState, x: Float, y: Float, targetSpot: Spot) {
+        val stopover = target.approachSpot?.takeIf { it in sc.spots && target.approach.isNotEmpty() }?.let(sc::spot)
+        if (stopover == null) {
+            target.approach.forEach { plan += Step.Play(it) }
+            addWalk(plan, x, y, targetSpot, stop = true)
+            return
+        }
+        addWalk(plan, x, y, stopover, stop = true)
+        target.approach.forEach { plan += Step.Play(it) }
+        addWalk(plan, stopover.x.toFloat(), stopover.y.toFloat(), targetSpot, stop = true)
     }
 
     private fun addWalk(plan: ArrayDeque<Step>, fromX: Float, fromY: Float, to: Spot, stop: Boolean) {

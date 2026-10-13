@@ -116,6 +116,8 @@ data class NpcMovement(
     val shoppingBasketCount: Int = 0,
     /** Produto visível na mão durante o trajeto entre prateleira e cesta. */
     val shoppingProductHeld: Boolean = false,
+    /** Objeto carregado (xícara, sacola, mala…) quando a pose não traz o dela: segue a âncora da mão. */
+    val heldItem: com.hoodie.app.pixel.sprite.Item = com.hoodie.app.pixel.sprite.Item.NONE,
 )
 
 /** Escalas permitidas por profundidade (sempre nearest-neighbor). */

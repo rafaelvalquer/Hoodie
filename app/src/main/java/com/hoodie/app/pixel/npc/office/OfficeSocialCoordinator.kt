@@ -74,7 +74,14 @@ class OfficeSocialSession(
         com.hoodie.app.pixel.npc.brain.NpcIntent.LOOK_WINDOW,
     )
 
+    /** Microeventos do escritório (entrega de documento), coordenados por esta mesma sessão. */
+    val deliveries: OfficeDocumentDeliveries? =
+        if (com.hoodie.app.core.config.HoodieConfig.SCENE_STORY_EVENTS) OfficeDocumentDeliveries(this, daySeed) else null
+
+    @Synchronized internal fun brain(npcId: String): OfficeAmbientBrain? = brains[npcId]
+
     @Synchronized internal fun dispose() {
+        deliveries?.dispose()
         brains.values.forEach { it.socialSession = null }
         brains.clear()
         scheduledEvents.clear()
