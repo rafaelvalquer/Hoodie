@@ -15,15 +15,11 @@ object HomeHeroLayout {
     const val ACTION_DP = 56
     /** Abaixo disso a escala inteira de pixel art degrada; prefere-se rolar a cortar sprites. */
     const val MIN_SCENE_DP = 200
-    const val DIALOGUE_DP = 56
 
     fun sceneMaxHeightDp(screenHeightDp: Int, fontScale: Float): Int {
         val text = ((ACTIVITY_DP + CONTEXT_DP) * fontScale.coerceIn(1f, 2f)).toInt()
         return (screenHeightDp - HEADER_DP - text - ACTION_DP).coerceAtLeast(MIN_SCENE_DP)
     }
-
-    /** Área reservada para a fala: cresce com a fonte e nunca depende de haver fala (sem salto de layout). */
-    fun dialogueReservedDp(fontScale: Float): Int = (DIALOGUE_DP * fontScale.coerceIn(1f, 2f)).toInt()
 }
 
 /** De onde vem a identificação mostrada. Só descreve origens que o app realmente conhece. */

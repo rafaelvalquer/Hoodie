@@ -30,11 +30,6 @@ class HomeHeroLayoutTest {
         }
     }
 
-    @Test fun `area da fala cresce com a fonte e nao depende de haver fala`() {
-        assertEquals(56, HomeHeroLayout.dialogueReservedDp(1f))
-        assertTrue(HomeHeroLayout.dialogueReservedDp(1.3f) > HomeHeroLayout.dialogueReservedDp(1f))
-    }
-
     @Test fun `origem da confianca so descreve o que o app sabe`() {
         assertEquals(ConfidenceOrigin.PLACE_ARRIVAL, ConfidenceExplainer.origin(ContextSource.GEOFENCE, HomeNowStatus.IDENTIFIED))
         assertEquals(ConfidenceOrigin.ROUTINE, ConfidenceExplainer.origin(ContextSource.ROUTINE, HomeNowStatus.PROBABLE))
