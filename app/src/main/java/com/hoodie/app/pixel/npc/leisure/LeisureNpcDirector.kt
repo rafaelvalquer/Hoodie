@@ -39,17 +39,17 @@ object LeisureNpcDirector {
 
         val explorer = AmbientNpcSlot(
             definition = definition(rabbit, NpcAnimation.WALK),
-            x = -36, floorY = 266, baseline = 266, seed = seed + 11,
+            x = -64, floorY = 266, baseline = 266, seed = seed + 11,
             depth = NpcDepth.SCENE,
             path = NpcPath(
                 points = listOf(
-                    NpcPathPoint(-36, 264, holdMs = 600),
+                    NpcPathPoint(-64, 264, holdMs = 600),
                     NpcPathPoint(34 + drift, 264, NpcAnimation.LOOK_WINDOW, 3_400),
                     NpcPathPoint(72 + drift, 268, NpcAnimation.STRETCH, 2_500),
                     NpcPathPoint(120 + drift, 273, NpcAnimation.STAND_PHONE, 2_600),
                     NpcPathPoint(171 + drift, 270, NpcAnimation.LOOK, 3_000),
                     NpcPathPoint(208 + drift, 266, if (quiet) NpcAnimation.LOOK_WINDOW else NpcAnimation.STAND_PHOTO, 2_700),
-                    NpcPathPoint(277, 266),
+                    NpcPathPoint(304, 266),
                 ),
                 millisPerPixel = 34,
             ),
@@ -63,17 +63,17 @@ object LeisureNpcDirector {
                     cycleMs = 55_000, visibleMs = 1_500,
                 ),
             ),
-            x = 277, floorY = 281, baseline = 281, seed = seed + 53,
+            x = 304, floorY = 281, baseline = 281, seed = seed + 53,
             depth = NpcDepth.SCENE,
             path = NpcPath(
                 points = listOf(
-                    NpcPathPoint(277, 283, holdMs = 1_600),
+                    NpcPathPoint(304, 283, holdMs = 1_600),
                     NpcPathPoint(212 - drift, 281, NpcAnimation.LOOK, 2_300),
                     NpcPathPoint(183 - drift, 279, NpcAnimation.STAND_PHOTO, 3_800),
                     NpcPathPoint(136 - drift, 281, NpcAnimation.STAND_PHONE, 2_500),
                     NpcPathPoint(81 - drift, 281, NpcAnimation.STRETCH, 2_400),
                     NpcPathPoint(30 - drift, 282, NpcAnimation.TALK, 1_800),
-                    NpcPathPoint(-37, 283),
+                    NpcPathPoint(-64, 283),
                 ),
                 millisPerPixel = 38,
             ),
