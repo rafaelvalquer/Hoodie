@@ -36,6 +36,14 @@ data class AppSettings(
     /** Visualização do mapa do Diário (`JOURNEY` ou `CLOCK`); o Diário reabre nela. */
     val diaryMapMode: String = "JOURNEY",
     val automaticRoutineEvents: Set<String> = emptySet(),
+    /** Trabalho/rotina decidido pela pessoa (inclusive "não trabalho"). Rotina padrão nunca conta como confirmada. */
+    val setupWorkDone: Boolean = false,
+    /** A pessoa já decidiu sobre notificações (aceitou ou recusou). */
+    val setupNotificationsDone: Boolean = false,
+    val demoCompleted: Boolean = false,
+    /** Etapa e nome parciais da entrada inicial, para retomar depois de fechar o app. */
+    val onboardingDraftStep: String? = null,
+    val onboardingDraftName: String? = null,
 )
 
 /**
@@ -96,6 +104,12 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val MOBILITY_DECLINED = stringSetPreferencesKey("mobility_declined_patterns")
         val ROUTINE_AUTO = stringSetPreferencesKey("routine_automatic_events")
         val DIARY_MAP_MODE = stringPreferencesKey("diary_map_mode")
+        val SETUP_V2 = booleanPreferencesKey("setup_progress_v2")
+        val SETUP_WORK = booleanPreferencesKey("setup_work_done")
+        val SETUP_NOTIFICATIONS = booleanPreferencesKey("setup_notifications_done")
+        val DEMO_DONE = booleanPreferencesKey("demo_completed")
+        val ONBOARDING_STEP = stringPreferencesKey("onboarding_draft_step")
+        val ONBOARDING_NAME = stringPreferencesKey("onboarding_draft_name")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -125,10 +139,39 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             ),
             automaticRoutineEvents = p[Keys.ROUTINE_AUTO] ?: emptySet(),
             diaryMapMode = p[Keys.DIARY_MAP_MODE] ?: "JOURNEY",
+            // Quem já concluiu o fluxo completo antigo (sem o marcador v2) está configurado.
+            setupWorkDone = p[Keys.SETUP_WORK] ?: legacyConfigured(p),
+            setupNotificationsDone = p[Keys.SETUP_NOTIFICATIONS] ?: legacyConfigured(p),
+            demoCompleted = p[Keys.DEMO_DONE] ?: false,
+            onboardingDraftStep = p[Keys.ONBOARDING_STEP],
+            onboardingDraftName = p[Keys.ONBOARDING_NAME],
         )
     }
 
+    private fun legacyConfigured(p: Preferences) = (p[Keys.ONBOARDING] ?: false) && p[Keys.SETUP_V2] != true
+
     suspend fun current(): AppSettings = settings.first()
+
+    /** Entrada simplificada concluída: marca o fluxo v2 e descarta o rascunho. O trabalho NÃO fica configurado. */
+    suspend fun completeProgressiveOnboarding(catName: String, now: Long) = store.edit {
+        it[Keys.SETUP_V2] = true
+        it[Keys.SETUP_WORK] = it[Keys.SETUP_WORK] ?: false
+        it[Keys.SETUP_NOTIFICATIONS] = it[Keys.SETUP_NOTIFICATIONS] ?: false
+        it.remove(Keys.ONBOARDING_STEP); it.remove(Keys.ONBOARDING_NAME)
+        it[Keys.ONBOARDING] = true
+        it[Keys.CAT_NAME] = catName.ifBlank { "Hoodie" }
+        if (it[Keys.INSTALLED_AT] == null) it[Keys.INSTALLED_AT] = now
+    }
+
+    suspend fun saveOnboardingDraft(step: String, name: String) = store.edit {
+        it[Keys.ONBOARDING_STEP] = step; it[Keys.ONBOARDING_NAME] = name
+    }
+
+    suspend fun setSetupWorkDone(done: Boolean) = store.edit { it[Keys.SETUP_V2] = true; it[Keys.SETUP_WORK] = done }
+
+    suspend fun setSetupNotificationsDone(done: Boolean) = store.edit { it[Keys.SETUP_V2] = true; it[Keys.SETUP_NOTIFICATIONS] = done }
+
+    suspend fun setDemoCompleted(done: Boolean) = store.edit { it[Keys.DEMO_DONE] = done }
 
     suspend fun completeOnboarding(catName: String, now: Long) = store.edit {
         it[Keys.ONBOARDING] = true

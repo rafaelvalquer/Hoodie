@@ -27,7 +27,7 @@ object HoodieConfig {
     /** Home 2.0: ação principal única + confirmação rápida. false = Home anterior. */
     const val HOME_UX_V2 = true
     const val QUICK_CORRECTION_V2 = true
-    const val PROGRESSIVE_ONBOARDING = false
+    const val PROGRESSIVE_ONBOARDING = true
     const val SMART_NOTIFICATIONS_V2 = false
     // Presentation release switches. Enabled after assembler and interaction gates pass.
     const val HOME_NOW_V2 = true

@@ -149,6 +149,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             quickCorrect = vm::quickCorrect,
         ),
         savedPlaces = savedPlaces,
+        setupCard = { if (com.hoodie.app.core.config.HoodieConfig.PROGRESSIVE_ONBOARDING) com.hoodie.app.presentation.screens.onboarding.SetupProgressHost(onOpen) },
         reactions = reactions,
         snackbar = snackbar,
         dayState = dayState,
@@ -188,6 +189,7 @@ internal fun HomeContent(
     homeNow: com.hoodie.app.domain.home.HomeNowSnapshot? = null,
     onScenePresented: (com.hoodie.app.pixel.scene.SceneId) -> Unit = {},
     savedPlaces: List<com.hoodie.app.core.model.Place> = emptyList(),
+    setupCard: @Composable () -> Unit = {},
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
@@ -315,6 +317,9 @@ internal fun HomeContent(
                     PixelButton(stringResource(R.string.ui_home_screen_1), { onOpen(Routes.placePicker(type)) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
                 }
             }
+
+            // Configuração gradual: só quando não há nenhuma outra pendência e não está em veículo.
+            if (ux2 && primary == null && !state.vehicleMoving) setupCard()
 
             // Você.
             if (!com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) PixelPanel(Modifier.fillMaxWidth()) {
