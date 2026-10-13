@@ -137,6 +137,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             saveDiscoveredPlace = { id, name, reuseId, position -> vm.saveDiscoveredPlace(id, name, reuseId, position) },
             updateNewPlacePosition = vm::updateNewPlacePosition,
             correctContext = { type, historical, expectedEventId -> vm.correctCurrentContext(type, historical, expectedEventId) },
+            confirmContext = vm::confirmContext,
         ),
         reactions = reactions,
         snackbar = snackbar,
@@ -158,6 +159,7 @@ internal data class HomeActions(
     val saveDiscoveredPlace: (Long, String, Long?, Pair<Double, Double>?) -> Unit = { _, _, _, _ -> },
     val updateNewPlacePosition: (Long, Pair<Double, Double>?) -> Unit = { _, _ -> },
     val correctContext: suspend (PlaceType, Boolean, Long?) -> Boolean = { _, _, _ -> false },
+    val confirmContext: (Long) -> Unit = {},
 )
 
 /** Production UI shared by the connected screen and deterministic visual fixtures. */
@@ -180,6 +182,17 @@ internal fun HomeContent(
     var correctionOpen by remember { mutableStateOf(false) }
     var correctionExpectedEventId by remember { mutableStateOf<Long?>(null) }
     var correctionSnapshot by remember { mutableStateOf<com.hoodie.app.domain.home.HomeNowSnapshot?>(null) }
+    val openCorrection: () -> Unit = {
+        correctionSnapshot = homeNow ?: state.context?.let { current ->
+            com.hoodie.app.engine.home.HomeNowAssembler.assemble(
+                dayState, current, state.contextPlaceName, null, null, state.now, state.locationStatus,
+            )
+        }
+        correctionExpectedEventId = correctionSnapshot?.contextEventId ?: state.context?.id
+        correctionOpen = true
+    }
+    val ux2 = com.hoodie.app.core.config.HoodieConfig.HOME_UX_V2
+    val primary = if (ux2) HomePresentationMapper.primaryAction(state) else null
     if (state.loading) {
         HomeLoadingSkeleton()
         return
@@ -203,15 +216,7 @@ internal fun HomeContent(
             IconLabel(PixelIcons.of(state.period), state.period.label, color = periodColor(state.period), style = MaterialTheme.typography.labelLarge, iconSize = 20.dp)
             Spacer(Modifier.weight(1f))
             if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
-                HomeMoreMenu(onAdjust = {
-                    correctionSnapshot = homeNow ?: state.context?.let { current ->
-                        com.hoodie.app.engine.home.HomeNowAssembler.assemble(
-                            dayState, current, state.contextPlaceName, null, null, state.now, state.locationStatus,
-                        )
-                    }
-                    correctionExpectedEventId = correctionSnapshot?.contextEventId ?: state.context?.id
-                    correctionOpen = true
-                })
+                HomeMoreMenu(onAdjust = openCorrection)
             }
             HeaderIcon(PixelIcons.SPARKLE, HoodieColors.Gold, stringResource(R.string.home_memories)) { onOpen(Routes.MEMORIES) }
             HeaderIcon(PixelIcons.CAT, HoodieColors.Hood, stringResource(R.string.home_profile)) { onOpen(Routes.PROFILE) }
@@ -244,6 +249,10 @@ internal fun HomeContent(
                     homeNow, state.now, zone,
                     activity = state.snapshot?.state?.activity, activityStartedAt = state.snapshot?.state?.startedAt, catName = state.catName,
                 )
+                if (ux2) HomeNowQuickActions(
+                    HomePresentationMapper.quickActions(homeNow), onConfirm = actions.confirmContext, onCorrect = openCorrection,
+                    enabled = !busy, modifier = Modifier.padding(top = 8.dp),
+                )
             }
         } else state.snapshot?.let { snap ->
             val a = snap.state.activity
@@ -260,9 +269,10 @@ internal fun HomeContent(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
             state.question?.takeUnless { state.vehicleMoving && it.kind in setOf(QuestionKind.NEW_PLACE, QuestionKind.SAVE_PLACE) }
+                ?.takeIf { !ux2 || primary is HomePrimaryAction.PendingQuestion }
                 ?.let { q -> QuestionCard(q, actions, state.newPlaceSaveOptions, busy) }
 
-            if (state.probableMode || state.locationStatus != LocationStatus.OK) {
+            if (if (ux2) primary is HomePrimaryAction.MonitoringWarning else (state.probableMode || state.locationStatus != LocationStatus.OK)) {
                 PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
                     Text(
                         when (state.locationStatus) {
@@ -275,7 +285,7 @@ internal fun HomeContent(
                 }
             }
 
-            state.suggestSavePlace?.let { type ->
+            state.suggestSavePlace?.takeIf { !ux2 || primary is HomePrimaryAction.SuggestPlace }?.let { type ->
                 PixelPanel(Modifier.fillMaxWidth()) {
                     val title = when {
                         state.canSaveHere && type == PlaceType.WORK -> uiTextContext.getString(R.string.ui_extra_home_screen_4)

@@ -559,4 +559,6 @@
     <string name="clock2_description_part">%1$s em %2$s</string>
     <string name="clock2_description_now">agora em %1$s há %2$s</string>
     <string name="clock2_bar_description">Tempo por lugar: %1$s</string>
+    <string name="home_quick_confirm">Sim, correto</string>
+    <string name="home_quick_correct">Corrigir</string>
 </resources>
