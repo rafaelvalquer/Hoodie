@@ -78,6 +78,8 @@ class MobilityEngine @Inject constructor(
     private val speedSampler: TransportSpeedSampler? = null,
 ) {
     private val mutex = Mutex()
+    /** Horários de entrada/saída considerando o que foi aprendido (não só o configurado). */
+    private val effectiveRoutines = com.hoodie.app.data.repository.EffectiveRoutineRepository(routines, settings, intelligence, clock)
     private var lastClassification: TransportClassification? = null
     private val pendingVehicleSwitches = mutableMapOf<Long, TransportSwitchCandidate>()
 
@@ -776,9 +778,9 @@ class MobilityEngine @Inject constructor(
 
     /** Saída perto do horário de entrada ou saída do trabalho, em dia de trabalho. */
     private suspend fun timeMatchesRoutine(at: Long): Boolean {
-        val routine = routines.get()
-        if (!routine.hasWork) return false
         val z = at.atZone(clock.zone())
+        val routine = effectiveRoutines.forDate(z.toLocalDate()).routine
+        if (!routine.hasWork) return false
         if (!RoutineEngine.isWorkDay(z.toLocalDate(), routine, routines.isDayOff(z.toLocalDate()))) return false
         val minute = z.minuteOfDay()
         return abs(minute - routine.startMinute) <= HoodieConfig.TRIP_PATTERN_WINDOW_MIN + 30 ||

@@ -33,6 +33,14 @@ import com.hoodie.app.core.time.startOfDay
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.core.database.ContextEventDao
 import com.hoodie.app.data.repository.RoutineRepository
+import com.hoodie.app.domain.routine.EffectiveDayRoutine
+import com.hoodie.app.domain.routine.RoutineEventType
+import com.hoodie.app.domain.routine.RoutineValueSource
+import com.hoodie.app.core.time.formatHm
+import androidx.compose.material3.Switch
+import androidx.compose.ui.Alignment
+import com.hoodie.app.presentation.components.PixelPanel
+import kotlinx.coroutines.flow.stateIn
 import com.hoodie.app.engine.hoodie.HoodieEngine
 import com.hoodie.app.presentation.components.ChipRow
 import com.hoodie.app.presentation.components.PixelButton
@@ -70,7 +78,17 @@ class RoutineViewModel @Inject constructor(
     private val hoodie: HoodieEngine,
     private val clock: ClockProvider,
     private val contextEvents: ContextEventDao,
+    effectiveRoutines: com.hoodie.app.data.repository.EffectiveRoutineRepository,
 ) : ViewModel() {
+    /** Rotina efetiva de hoje: mostra quais horários o aprendizado está ajustando. */
+    val effective = effectiveRoutines.observeToday()
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000), null)
+
+    fun setLearnedRoutineEnabled(enabled: Boolean) = viewModelScope.launch {
+        settings.setLearnedRoutineEnabled(enabled)
+        // O Hoodie e o contexto passam a seguir a nova rotina na hora.
+        hoodie.resolve()
+    }
     private data class DayOffObservation(
         val date: LocalDate,
         val isDayOff: Boolean? = null,
@@ -225,6 +243,7 @@ fun RoutineScreen(onBack: () -> Unit, vm: RoutineViewModel = hiltViewModel()) {
     var routine by remember { mutableStateOf<Routine?>(null) }
     var sleep by remember { mutableStateOf(SleepSchedule()) }
     val dayException by vm.dayExceptionState.collectAsStateWithLifecycle()
+    val effective by vm.effective.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.load().let { routine = it.first; sleep = it.second } }
     val r = routine ?: return
     Column(
@@ -239,10 +258,12 @@ fun RoutineScreen(onBack: () -> Unit, vm: RoutineViewModel = hiltViewModel()) {
                 TimeField("Entrada", r.startMinute, { routine = r.copy(startMinute = it) }, Modifier.weight(1f))
                 TimeField("Saída", r.endMinute, { routine = r.copy(endMinute = it) }, Modifier.weight(1f))
             }
+            LearnedHints(effective, listOf(RoutineEventType.WORK_START to "Entrada", RoutineEventType.WORK_END to "Saída"))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TimeField("Almoço", r.lunchStartMinute, { routine = r.copy(lunchStartMinute = it) }, Modifier.weight(1f))
                 TimeField("Volta", r.lunchEndMinute, { routine = r.copy(lunchEndMinute = it) }, Modifier.weight(1f))
             }
+            LearnedHints(effective, listOf(RoutineEventType.LUNCH_START to "Almoço", RoutineEventType.LUNCH_END to "Volta"))
             SectionLabel("Dias")
             DayToggles(r.days, { d -> routine = r.copy(days = if (d in r.days) r.days - d else r.days + d) })
             RoutineDayExceptionSection(
@@ -257,7 +278,67 @@ fun RoutineScreen(onBack: () -> Unit, vm: RoutineViewModel = hiltViewModel()) {
             TimeField("Acordar", sleep.wakeMinute, { sleep = sleep.copy(wakeMinute = it) }, Modifier.weight(1f))
             TimeField("Dormir", sleep.sleepMinute, { sleep = sleep.copy(sleepMinute = it) }, Modifier.weight(1f))
         }
+        LearnedHints(effective, listOf(RoutineEventType.WAKE to "Acordar", RoutineEventType.SLEEP to "Dormir"))
+        LearnedRoutineSection(effective, onToggle = vm::setLearnedRoutineEnabled)
         PixelButton("Salvar", { vm.save(r, sleep, onBack) }, Modifier.fillMaxWidth())
         PixelButton("Voltar", onBack, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
+    }
+}
+
+/** Texto puro da dica de um horário (testável): null quando o horário segue o configurado. */
+internal fun learnedHintText(label: String, effective: EffectiveDayRoutine?, type: RoutineEventType): String? {
+    val o = effective?.takeIf { it.learningEnabled }?.origin(type)?.takeIf { it.learned } ?: return null
+    val manual = o.manualMinute?.let { " (configurado ${formatHm(it)})" }.orEmpty()
+    return when (o.source) {
+        RoutineValueSource.LEARNED -> "✨ $label aprendido: ${formatHm(o.effectiveMinute)}$manual"
+        RoutineValueSource.LEARNED_LIMITED ->
+            "✨ $label ajustado até o limite: ${formatHm(o.effectiveMinute)}$manual · seu padrão é ${o.learnedMinute?.let(::formatHm)}"
+        RoutineValueSource.MANUAL -> null
+    }
+}
+
+/** Grupo de dias do aprendizado, para a pessoa saber a que dias a dica se refere. */
+internal fun dayGroupLabel(group: String): String = when (group) {
+    "SATURDAY" -> "sábados"
+    "SUNDAY" -> "domingos"
+    else -> "dias úteis"
+}
+
+@Composable
+private fun LearnedHints(effective: EffectiveDayRoutine?, fields: List<Pair<RoutineEventType, String>>) {
+    fields.forEach { (type, label) ->
+        learnedHintText(label, effective, type)?.let {
+            Text(it, style = MaterialTheme.typography.labelSmall, color = HoodieColors.Mint)
+        }
+    }
+}
+
+/** Interruptor do ajuste aprendido + marcos que só o aprendizado conhece (sair de casa, academia, voltar). */
+@Composable
+private fun LearnedRoutineSection(effective: EffectiveDayRoutine?, onToggle: (Boolean) -> Unit) {
+    val e = effective ?: return
+    PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                SectionLabel("Rotina aprendida")
+                Text("Ajustar a rotina pelo que o Hoodie aprendeu", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Usa só padrões confiáveis dos ${dayGroupLabel(e.dayGroup)} e muda cada horário no máximo 1h30 em relação ao configurado.",
+                    style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted,
+                )
+            }
+            Switch(e.learningEnabled, onToggle)
+        }
+        if (e.learningEnabled) {
+            val extras = listOf(
+                RoutineEventType.LEAVE_HOME to "🚪 Sair de casa",
+                RoutineEventType.GYM_START to "🏋 Academia",
+                RoutineEventType.HOME_RETURN to "🏠 Volta para casa",
+            ).mapNotNull { (type, label) -> e.origin(type)?.let { "$label ~${formatHm(it.effectiveMinute)}" } }
+            when {
+                e.learnedCount == 0 -> Text("Ainda sem padrões confiáveis: o Hoodie segue os horários configurados.", style = MaterialTheme.typography.bodySmall, color = HoodieColors.Muted)
+                extras.isNotEmpty() -> Text("Também percebi: " + extras.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = HoodieColors.Ink)
+            }
+        }
     }
 }

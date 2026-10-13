@@ -57,6 +57,9 @@ internal class ContextSignalProcessor(
     val log: DebugEventLogger,
     val intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
 ) {
+    /** Rotina que o contexto segue: manual ajustada pelos padrões aprendidos confiáveis. */
+    val effectiveRoutines = com.hoodie.app.data.repository.EffectiveRoutineRepository(routines, settings, intelligence, clock)
+
     suspend fun input(signal: ContextSignal, previous: UserContextType?): ContextInput {
         val now = clock.now()
         val confirmations = confirmationDao.since(clock.nowMillis() - HoodieConfig.CONFIRMATION_LOOKBACK_MS).map {
@@ -66,12 +69,12 @@ internal class ContextSignalProcessor(
             slots.firstOrNull { it.dayGroup == now.dayOfWeek.name } ?: slots.firstOrNull { it.dayGroup == com.hoodie.app.domain.routine.routineDayGroup(now.dayOfWeek) }
         }?.let { com.hoodie.app.domain.routine.LearnedRoutineSlot(it.dayGroup, com.hoodie.app.domain.routine.RoutineEventType.LUNCH_START,
             it.medianMinute, it.deviationMinutes, it.sampleCount, com.hoodie.app.domain.detection.ConfidenceScore(it.confidence)) } else null
-        return ContextInput(signal, now, routines.get(), routines.isDayOff(now.toLocalDate()), previous, confirmations, learnedLunch)
+        return ContextInput(signal, now, effectiveRoutines.forDate(now.toLocalDate()).routine, routines.isDayOff(now.toLocalDate()), previous, confirmations, learnedLunch)
     }
 
     suspend fun inferredContextFor(type: PlaceType, now: Long): UserContextType = when {
         type != PlaceType.RESTAURANT -> type.toContext()
-        RoutineEngine.isLunchWindow(now.atZone(clock.zone()).minuteOfDay(), routines.get()) -> UserContextType.LUNCH
+        RoutineEngine.isLunchWindow(now.atZone(clock.zone()).minuteOfDay(), effectiveRoutines.forDate(now.atZone(clock.zone()).toLocalDate()).routine) -> UserContextType.LUNCH
         else -> UserContextType.DINING
     }
 

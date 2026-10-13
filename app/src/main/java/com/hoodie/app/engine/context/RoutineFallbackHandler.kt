@@ -12,7 +12,7 @@ internal class RoutineFallbackHandler(private val processor: ContextSignalProces
         val current = contextDao.current()
         if (usable && current != null) return@with
         val zoned = clock.now()
-        val probable = RoutineEngine.probableContext(zoned, routines.get(), routines.isDayOff(zoned.toLocalDate()))
+        val probable = RoutineEngine.probableContext(zoned, effectiveRoutines.forDate(zoned.toLocalDate()).routine, routines.isDayOff(zoned.toLocalDate()))
         val shouldSwitch = current == null ||
             (current.source == ContextSource.ROUTINE && current.type != probable) ||
             // Sem geofence nada mais vai mudar o contexto: qualquer evento antigo (manual,

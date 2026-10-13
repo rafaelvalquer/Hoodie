@@ -35,6 +35,8 @@ data class AppSettings(
     val mobility: MobilitySettings = MobilitySettings(),
     /** Visualização do mapa do Diário (`JOURNEY` ou `CLOCK`); o Diário reabre nela. */
     val diaryMapMode: String = "JOURNEY",
+    /** Ajustar a rotina pelos horários que o Hoodie aprendeu (interruptor da tela Rotina). */
+    val learnedRoutineEnabled: Boolean = true,
 )
 
 /**
@@ -94,6 +96,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val MOBILITY_APPROVED = stringSetPreferencesKey("mobility_approved_patterns")
         val MOBILITY_DECLINED = stringSetPreferencesKey("mobility_declined_patterns")
         val DIARY_MAP_MODE = stringPreferencesKey("diary_map_mode")
+        val LEARNED_ROUTINE = booleanPreferencesKey("learned_routine_enabled")
     }
 
     val settings: Flow<AppSettings> = store.data.map { p ->
@@ -122,6 +125,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 declinedPatterns = p[Keys.MOBILITY_DECLINED] ?: emptySet(),
             ),
             diaryMapMode = p[Keys.DIARY_MAP_MODE] ?: "JOURNEY",
+            learnedRoutineEnabled = p[Keys.LEARNED_ROUTINE] ?: true,
         )
     }
 
@@ -162,6 +166,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     }
 
     suspend fun setDiaryMapMode(mode: String) = store.edit { it[Keys.DIARY_MAP_MODE] = mode }
+
+    suspend fun setLearnedRoutineEnabled(enabled: Boolean) = store.edit { it[Keys.LEARNED_ROUTINE] = enabled }
 
     suspend fun clear() = store.edit { it.clear() }
 }

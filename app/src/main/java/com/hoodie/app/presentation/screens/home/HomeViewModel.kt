@@ -87,10 +87,12 @@ data class HomeUiState(
 
 private data class Inputs(
     val settings: AppSettings,
+    /** Rotina efetiva de hoje (manual ajustada pelo que foi aprendido). */
     val routine: Routine,
     val context: ContextEvent?,
     val places: List<Place>,
     val dayOff: Boolean,
+    val sleep: com.hoodie.app.core.model.SleepSchedule,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -112,7 +114,10 @@ class HomeViewModel @Inject constructor(
     private val contextDao: ContextEventDao,
     questionDao: QuestionDao,
     dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
+    intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
 ) : ViewModel() {
+    /** A Home mostra o próximo marco pela rotina efetiva, não só pela configurada. */
+    private val effectiveRoutines = com.hoodie.app.data.repository.EffectiveRoutineRepository(routines, settingsRepo, intelligence, clock)
     private val dayStateCoordinator = if (com.hoodie.app.core.config.HoodieConfig.DAY_STATE_ENGINE) dayStates?.get() else null
     val dayState = dayStateCoordinator?.snapshots ?: kotlinx.coroutines.flow.flowOf(null)
     private val wakeEvidence = dayStateCoordinator?.wakeEvidence ?: kotlinx.coroutines.flow.flowOf(null)
@@ -144,12 +149,12 @@ class HomeViewModel @Inject constructor(
 
     private val inputs = combine(
         settingsRepo.settings,
-        routines.routine,
+        effectiveRoutines.observeToday(),
         contextDao.observeCurrent().map { it?.toDomain() },
         places.places,
         // Vira o dia junto com o relógio (meia-noite, fuso, TIME_SET): nunca observa o dia antigo.
         currentDateFlow(clock).flatMapLatest { routines.observeDayOff(it) },
-    ) { s, r, c, p, off -> Inputs(s, r, c, p, off) }
+    ) { s, r, c, p, off -> Inputs(s, r.routine, c, p, off, r.sleep) }
 
     private val pendingQuestion = questionDao.observePending(clock.nowMillis() - 12 * HOUR_MS).map { list ->
         list.firstOrNull { !(com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION && it.kind == com.hoodie.app.core.model.QuestionKind.CONFIRM_CONTEXT) }
@@ -257,7 +262,7 @@ class HomeViewModel @Inject constructor(
         )
         visualDiagnostics.selected(visual, now)
         val userType = ctx?.type ?: UserContextType.HOME
-        val next = RoutineEngine.nextEvent(zoned, i.routine, i.settings.sleep, i.dayOff, userType)
+        val next = RoutineEngine.nextEvent(zoned, i.routine, i.sleep, i.dayOff, userType)
 
         // Fala ocasional, sem IA: regras do dialogues.json. Fica alguns segundos e some.
         if (now >= dialogueUntil) {

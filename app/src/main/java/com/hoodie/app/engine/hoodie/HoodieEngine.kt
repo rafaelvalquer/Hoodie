@@ -44,24 +44,30 @@ class HoodieEngine @Inject constructor(
     private val timeline: TimelineRepository,
     private val clock: ClockProvider,
     private val log: DebugEventLogger,
+    intelligence: com.hoodie.app.core.database.IntelligenceDao? = null,
 ) {
     private val mutex = Mutex()
+    /** O Hoodie acompanha a rotina efetiva: manual ajustada pelo que foi aprendido. */
+    private val effectiveRoutines = com.hoodie.app.data.repository.EffectiveRoutineRepository(routines, settings, intelligence, clock)
 
     suspend fun resolve(): HoodieSnapshot = mutex.withLock {
         val now = clock.nowMillis()
         val zone = clock.zone()
         val s = settings.current()
-        val routine = routines.get()
         val today = clock.today()
         val daysOff = routines.daysOff(today.minusDays(4), today.plusDays(1))
-        val env = SimulationEnv(zone, routine, s.sleep, daysOff)
+        // Um dia útil e um sábado podem ter horários aprendidos diferentes.
+        val byDate = effectiveRoutines.forDates((-4L..1L).map { today.plusDays(it) })
+        val todayRoutine = byDate.getValue(today)
+        val routine = todayRoutine.routine
+        val env = SimulationEnv(zone, routine, todayRoutine.sleep, daysOff)
 
         val saved = stateDao.get()?.toDomain()
         val from = minOf(saved?.needsAt ?: now, now) - DAY_MS
         val events = contextDao.overlapping(from, now + 1).map { ContextSpan(it.type, it.startedAt, it.endedAt) }
         val contexts = EventContextTimeline(events) { t ->
             val zoned = t.atZone(zone)
-            RoutineEngine.probableContext(zoned, routine, zoned.toLocalDate() in daysOff)
+            RoutineEngine.probableContext(zoned, byDate[zoned.toLocalDate()]?.routine ?: routine, zoned.toLocalDate() in daysOff)
         }
 
         val result = if (saved == null) {
