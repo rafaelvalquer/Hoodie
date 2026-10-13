@@ -122,7 +122,7 @@ jobs:
       - name: Update AVD command-line tools
         run: |
           # The runner's preinstalled device catalog may predate Pixel 8.
-          sdkmanager --install "cmdline-tools;latest"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "cmdline-tools;latest"
           "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list device > "$RUNNER_TEMP/avd-devices.txt"
           cat "$RUNNER_TEMP/avd-devices.txt"
           grep -q '"pixel_8"' "$RUNNER_TEMP/avd-devices.txt"
