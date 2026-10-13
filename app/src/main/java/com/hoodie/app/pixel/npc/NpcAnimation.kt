@@ -23,7 +23,7 @@ import kotlin.math.sin
 enum class NpcAnimation {
     IDLE, WALK, LOOK, LOOK_WINDOW, TALK,
     SIT, SIT_PHONE, SIT_EAT, SIT_DRINK, SIT_LOOK, SIT_READ_MENU, SIT_SLEEP, SIT_HEAD_DROP, SIT_WAKE,
-    STAND, STAND_UP, STAND_PHONE, STAND_COFFEE, TYPE, READ_DOCUMENT, STAND_READ, STRETCH,
+    STAND, STAND_UP, STAND_PHONE, STAND_PHOTO, STAND_COFFEE, TYPE, READ_DOCUMENT, STAND_READ, STRETCH,
     STAND_BROWSE, STAND_PICK_PRODUCT, STAND_READ_PRODUCT, STAND_COMPARE, STAND_LIST,
     STAND_BASKET, LOOK_PROMOTION, CHECKOUT_WAIT, CHECKOUT_PAY,
     TURN_LEFT, TURN_RIGHT, ENTER, EXIT, REACTION;
@@ -120,6 +120,7 @@ object NpcPoseLibrary {
             NpcAnimation.STAND -> NpcFrame(stand(t, seed), base.copy(breath = breath(t, seed)))
             NpcAnimation.STAND_UP -> NpcFrame(standUp(t, seed, facing ?: Facing.SIDE), base.copy(breath = breath(t, seed)))
             NpcAnimation.STAND_PHONE -> NpcFrame(standPhone(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.STAND_PHOTO -> NpcFrame(standPhoto(t, seed), base.copy(breath = breath(t, seed)))
             NpcAnimation.STAND_COFFEE -> NpcFrame(standCoffee(t, seed), base)
             NpcAnimation.TYPE -> NpcFrame(type(t, seed, facing ?: Facing.SIDE), base.copy(breath = breath(t, seed)))
             NpcAnimation.READ_DOCUMENT -> NpcFrame(readDocument(t, seed, seated, facing ?: Facing.SIDE), base.copy(breath = breath(t, seed)))
@@ -296,6 +297,20 @@ object NpcPoseLibrary {
         eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.LOOK_DOWN, headDy = 1,
         leftArm = if (Math.floorMod(t + seed * 7L, 2_400L) in 1_200L..1_400L) Arm.HOLD_CHEST else Arm.DOWN,
     )
+
+    /** Foto no mirante: enquadra, ergue o celular e baixa os braços após o clique. */
+    fun standPhoto(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 101L, 3_800L)
+        val framing = k in 650L..2_200L
+        return CharacterPose(
+            legs = Legs.STAND, facing = Facing.FRONT, item = Item.PHONE,
+            rightArm = if (framing) Arm.FORWARD_UP else Arm.HOLD_CHEST,
+            leftArm = if (framing) Arm.HOLD_CHEST else Arm.DOWN,
+            eyes = if (framing) Eyes.FOCUSED else if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.LOOK_UP,
+            headTilt = if (framing) 0 else 1,
+            mouth = Mouth.SMILE,
+        )
+    }
 
     fun standCoffee(t: Long, seed: Int): CharacterPose {
         val k = Math.floorMod(t + seed * 31L, 3_000L)
