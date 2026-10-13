@@ -12,7 +12,7 @@ import com.hoodie.app.pixel.scene.SceneId
  */
 object VenueNpcDirector {
     private val blueprints: Map<SceneId, VenueBlueprint> by lazy {
-        listOf(BakeryVenue, PharmacyVenue).associateBy { it.scene }
+        listOf(BakeryVenue, PharmacyVenue, BeachVenue).associateBy { it.scene }
     }
 
     fun supports(scene: SceneId): Boolean = scene in blueprints

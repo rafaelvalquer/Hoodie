@@ -37,14 +37,34 @@ class VenueInteractionCoordinator(private val seed: Int) {
 
     data class EventRecord(val at: Long, val event: VenueEvent, val actorId: String, val tag: String? = null)
 
+    /**
+     * Objeto em voo entre duas mãos (a bola da praia): sai de [from] em [release] e chega a [to]
+     * em [arrive]. Entre um voo e o próximo, o dono é quem pegou por último.
+     */
+    data class Flight(val release: Long, val arrive: Long, val from: String, val to: String, val fromX: Int, val fromY: Int, val toX: Int, val toY: Int)
+
     private val orders = ArrayList<VenueOrder>()
+    private val flights = ArrayList<Flight>()
     private val encounters = ArrayList<Encounter>()
     private val speech = ArrayList<LongArray>()
     private val events = ArrayList<EventRecord>()
     private var nextOrderId = 1
 
     fun reset() {
-        orders.clear(); encounters.clear(); speech.clear(); events.clear(); nextOrderId = 1
+        orders.clear(); encounters.clear(); speech.clear(); events.clear(); flights.clear(); nextOrderId = 1
+    }
+
+    // ───── Objetos em voo ─────
+
+    fun addFlight(f: Flight) { flights += f }
+
+    fun flights(): List<Flight> = flights.toList()
+
+    /** Último voo que já começou até [t] (null = o objeto ainda não saiu da mão do primeiro dono). */
+    fun flightAt(t: Long): Flight? {
+        var best: Flight? = null
+        for (f in flights) if (f.release <= t && (best == null || f.release > best.release)) best = f
+        return best
     }
 
     // ───── Pedidos ─────
@@ -113,9 +133,12 @@ class VenueInteractionCoordinator(private val seed: Int) {
         encounters.removeAll { it.end < before }
         speech.removeAll { it[1] < before }
         events.removeAll { it.at < before - EVENT_MEMORY_MS }
+        // Guarda sempre o último voo antigo: ele diz quem está com a bola.
+        val keep = flights.filter { it.arrive < before }.maxByOrNull { it.release }
+        flights.removeAll { it.arrive < before && it !== keep }
     }
 
-    internal val retainedSize: Int get() = orders.size + encounters.size + speech.size + events.size
+    internal val retainedSize: Int get() = orders.size + encounters.size + speech.size + events.size + flights.size
 
     companion object {
         const val COOLDOWN_MIN_MS = 60_000L

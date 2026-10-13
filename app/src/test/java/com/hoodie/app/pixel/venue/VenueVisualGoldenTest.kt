@@ -48,6 +48,13 @@ class VenueVisualGoldenTest {
             "pharmacy_pay" to Shot(SpotId.CHECKOUT, AnimationId.SHOP_PAY, 1_400, DayPeriod.EVENING, variant = 1),
             "pharmacy_wait" to Shot(SpotId.CENTER, AnimationId.IDLE_PHONE, 2_000, DayPeriod.NIGHT, variant = 2),
         ),
+        SceneId.BEACH to linkedMapOf(
+            "beach_sea" to Shot(SpotId.SHORE, AnimationId.BEACH_LOOK_SEA, 1_600, DayPeriod.MORNING),
+            "beach_lounge" to Shot(SpotId.UMBRELLA, AnimationId.BEACH_LOUNGE, 2_000, variant = 1),
+            "beach_photo" to Shot(SpotId.SHORE, AnimationId.LEISURE_PHOTO, 1_300),
+            "beach_ice_cream" to Shot(SpotId.ICE_CREAM, AnimationId.BEACH_ICE_CREAM, 1_500, DayPeriod.EVENING, setOf(SceneFlag.ICE_CREAM_IN_HAND), variant = 2),
+            "beach_night" to Shot(SpotId.UMBRELLA, AnimationId.NAP_SIT, 3_000, DayPeriod.NIGHT),
+        ),
     )
 
     private fun shot(scene: SceneId, s: Shot): PixelBuffer {

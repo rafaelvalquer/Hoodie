@@ -103,6 +103,8 @@ class VenueNpcPathTest {
             val s = VenueTestFixtures.session(scene, 0, 46_000)
             s.npcSlots.forEach { slot ->
                 val pos = VenueTestFixtures.track(s, slot.definition.id, 300_000, 500).map { (_, st) -> Triple(st.x, st.floorY, st.movement.animation) }
+                // Quem trabalha parado no posto (sorveteiro) não tem trajeto para repetir.
+                if (pos.map { it.first to it.second }.toSet().size < 3) return@forEach
                 for (period in 10..300) { // 5 s .. 150 s
                     val window = pos.size - period
                     if (window < 300) break

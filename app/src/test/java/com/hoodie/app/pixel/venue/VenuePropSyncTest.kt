@@ -137,6 +137,55 @@ class VenuePropSyncTest {
         s.coordinatorForTests().orders().forEach { assertEquals("produto genérico", com.hoodie.app.pixel.npc.venue.PharmacyVenue.BAG, it.product) }
     }
 
+    // ───── Praia ─────
+
+    @Test fun onlyTheBallOwnerThrowsAndTheCatcherCatchesOnArrival() {
+        (0 until 3).forEach { v ->
+            val s = VenueTestFixtures.session(SceneId.BEACH, v, 78_000 + v)
+            s.snapshotAt(300_000)
+            val flights = s.coordinatorForTests().flights()
+            assertTrue("sem bola em 5 min (v$v)", flights.size >= 10)
+            // A bola alterna: quem recebe é quem arremessa depois.
+            flights.zipWithNext().forEach { (a, b) -> assertEquals("v$v arremesso sem estar com a bola", a.to, b.from); assertTrue(b.release >= a.arrive) }
+            flights.take(30).forEach { f ->
+                val atRelease = s.snapshotAt(f.release).npcs
+                assertEquals("v$v soltou sem arremessar", NpcAnimation.THROW_BALL, atRelease.single { it.npcId == f.from }.movement.animation)
+                val atArrive = s.snapshotAt(f.arrive).npcs
+                assertEquals("v$v pegou sem agarrar", NpcAnimation.CATCH_BALL, atArrive.single { it.npcId == f.to }.movement.animation)
+                // Em voo, a bola nunca atravessa outro personagem.
+                (f.release until f.arrive step 50).forEach { t ->
+                    val snap = s.snapshotAt(t)
+                    val ball = snap.ambient as com.hoodie.app.pixel.npc.venue.BeachAmbientState
+                    snap.npcs.filter { !it.hidden && it.role != VenueRole.BALL_PLAYER }.forEach { n ->
+                        val inside = abs(ball.ballX - n.x) < 8 && ball.ballY in n.floorY - 44..n.floorY
+                        assertFalse("v$v t=$t bola atravessa ${n.npcId}", inside)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test fun ballStaysInTheHandsOfWhoHasIt() {
+        val s = VenueTestFixtures.session(SceneId.BEACH, 0, 79_000)
+        (0L until 120_000L step 100L).forEach { t ->
+            val snap = s.snapshotAt(t)
+            val a = snap.ambient as com.hoodie.app.pixel.npc.venue.BeachAmbientState
+            val owner = a.ballOwnerId ?: return@forEach
+            val holder = snap.npcs.single { it.npcId == owner }
+            assertTrue("t=$t bola longe de $owner", abs(a.ballX - holder.x) <= 8 && abs(a.ballY - (holder.floorY - 26)) <= 6)
+        }
+    }
+
+    @Test fun beachIsCalmAtNightWithoutTheVendor() {
+        val night = VenueTestFixtures.session(SceneId.BEACH, period = DayPeriod.NIGHT)
+        assertTrue(night.npcSlots.none { it.definition.id == "ice_cream_vendor" || it.definition.id.startsWith("ball_player") })
+        val a = night.snapshotAt(10_000).ambient as com.hoodie.app.pixel.npc.venue.BeachAmbientState
+        assertFalse(a.vendorOpen); assertFalse(a.ballVisible)
+        // Ondas e gaivotas seguem o relógio da cena.
+        val b = night.snapshotAt(12_800).ambient as com.hoodie.app.pixel.npc.venue.BeachAmbientState
+        assertTrue(a.wavePhase != b.wavePhase)
+    }
+
     @Test fun nightIsCalmer() {
         val night = VenueTestFixtures.session(SceneId.BAKERY, period = DayPeriod.NIGHT)
         val day = VenueTestFixtures.session(SceneId.BAKERY)
