@@ -76,16 +76,35 @@ bulldog está parado num ponto livre, nenhuma conversa da rotina está marcada e
 chefe. A rotina-base não pausa: o coelho volta à mesma ação sentada. Folha de revisão em
 `build/pixel-preview/story-events/office-document-delivery.png`.
 
-### Ainda não implementados
+### Os outros sete
 
-`OFFICE_COFFEE_CHAT`, `RESTAURANT_SPILL_HELP`, `CAFE_ORDER_HANDOFF`, `LEISURE_SHARED_VIEW`, `BEACH_SHARED_PHOTO`,
-`SHOPPING_DROPPED_BAG` e `HOTEL_LUGGAGE_HELP` já existem como tipos e passam pelo mesmo orçamento, mas ainda não têm
-roteiro nas cenas. Os próximos devem seguir o padrão da entrega: controlador por cena, reservas na sessão já
-existente (`LeisureSocialCoordinator`, `RestaurantNpcBrain`, `ShoppingNpcBrain`, `VenueInteractionCoordinator`) e
-o objeto com dono único.
+Três formas de encaixe, sempre no sistema que já cuida dos NPCs de cada cena:
+
+- **Roteiro sobreposto** (`StoryScript.kt`: `StoryTrackBuilder`, `ScriptedStory`, `PeriodicStoryOverlay`) para cenas
+  em que cada NPC é uma função do tempo. Uma janela de 150 s tenta um evento; o NPC de base só participa se ficar
+  parado/calmo pelo evento inteiro e retoma a rotina de onde estava. O ajudante só existe no evento. O renderer usa
+  `AmbientNpcSlot.story` (movimento, fala, oculto, profundidade) e desenha objetos largados no chão.
+- **Dentro da simulação compartilhada** (`VenueNpcSession.stories`, `LeisureNpcSession.stories`): o roteiro usa as
+  mesmas reservas, falas e pedidos da sessão; mesmo determinismo e replay.
+- **Escritório**: agendado pelo `OfficeSocialSession`, como a entrega.
+
+| Evento | Cena | Como acontece | Objeto (dono único) |
+|---|---|---|---|
+| `OFFICE_COFFEE_CHAT` | Escritório | numa visita sem entrega, o chefe para com a caneca, vira para a mesa do Hoodie e puxa conversa ("E aí, Hoodie! Um café?") | caneca na mão dele |
+| `RESTAURANT_SPILL_HELP` | Restaurante | o copo vira, o cliente se assusta, o garçom entra por trás dele, passa o pano do lado livre da mesa, põe o copo de pé; "Ops! Obrigado!" / "Sem problemas!" | copo: na mesa → derramado → na mesa |
+| `SHOPPING_DROPPED_BAG` | Compras/Loja | a cesta escorrega do comprador parado num corredor; outro cliente entra, pega e devolve | cesta: dono → chão → ajudante → dono |
+| `CAFE_ORDER_HANDOFF` | Padaria | o cliente já espera na retirada quando o café fica pronto: o barista chama ("Seu café!") e entrega por cima do balcão; o cliente agradece | xícara do pedido: barista → balcão → cliente |
+| `BEACH_SHARED_PHOTO` | Praia | a dupla da bola se junta no meio da quadra (pontos novos `photo_l/photo_r`), vira de frente e tira uma selfie | — |
+| `HOTEL_LUGGAGE_HELP` | Hotel | depois do check-in, o hóspede pede ajuda; o visitante sentado aceita, leva a mala até o elevador e sai do caminho; o hóspede pega a mala e sobe (sem resposta em 3,6 s, sobe sozinho) | mala: hóspede → visitante → chão do elevador → hóspede |
+| `LEISURE_SHARED_VIEW` | Passeio | variante do encontro do `LeisureSocialCoordinator`: depois do cumprimento os dois viram lado a lado para a atração, comentam a vista e olham juntos antes da despedida | — |
+
+O garçom e o cliente que ajuda nas compras são personagens novos que só aparecem no evento. As linhas novas são
+curtas (cabem no balão) e um teste confere objetos sem cópia, ausência de teletransporte, orçamento e determinismo.
 
 ## Testes
 
 `engine/personality/HoodiePersonalityTest` (perfil, política de pesos, determinismo, limites, prioridade, catálogo
-sem culpa, codec, detector) e `pixel/npc/events/SceneStoryEventsTest` (orçamento, fases, entregas determinísticas,
-objeto único em ordem, sem teletransporte, sem cruzar conversas nem falas do chefe).
+sem culpa, codec, detector), `pixel/npc/events/SceneStoryEventsTest` (orçamento, fases, entrega e conversa do café:
+objeto único em ordem, sem teletransporte, sem cruzar conversas nem falas do chefe), `SceneStoryScenesTest`
+(restaurante e compras) e `pixel/npc/venue/VenueStoryEventsTest` (padaria, praia, hotel, passeio). Folhas de revisão
+em `build/pixel-preview/story-events/`, uma por evento.

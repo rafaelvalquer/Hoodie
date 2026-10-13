@@ -3,6 +3,8 @@ package com.hoodie.app.pixel.npc.venue
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.NpcPoseLibrary
+import com.hoodie.app.pixel.npc.events.SceneStoryEvent
+import com.hoodie.app.pixel.npc.events.SceneStoryEventType
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Item
@@ -71,6 +73,8 @@ internal object BeachVenue : VenueBlueprint(SceneId.BEACH) {
     const val A2 = "court_a2"
     const val B1 = "court_b1"
     const val B2 = "court_b2"
+    const val PHOTO_L = "photo_l"
+    const val PHOTO_R = "photo_r"
 
     /** Pontos do Hoodie (BeachScene). */
     const val HOODIE_SHORE_X = 120
@@ -110,11 +114,14 @@ internal object BeachVenue : VenueBlueprint(SceneId.BEACH) {
             VenueSpot(A2, 54, 248, interaction = "quadra"),
             VenueSpot(B1, 132, 236, interaction = "quadra"),
             VenueSpot(B2, 138, 248, interaction = "quadra"),
+            // Meio da quadra: a dupla se junta ali para a foto (microevento BEACH_SHARED_PHOTO).
+            VenueSpot(PHOTO_L, 82, 240, interaction = "foto"),
+            VenueSpot(PHOTO_R, 110, 240, interaction = "foto"),
         ),
         edges = listOf(
             EDGE_L to VIEW_L, VIEW_L to SHORE_MID, SHORE_MID to VIEW_R, VIEW_R to EDGE_R,
             VIEW_R to R_LANE, R_LANE to SUN_SEAT, R_LANE to R_LOW, R_LOW to BUY_QUEUE, BUY_QUEUE to BUY,
-            A1 to A2, B1 to B2,
+            A1 to A2, B1 to B2, A1 to PHOTO_L, PHOTO_L to PHOTO_R, PHOTO_R to B1,
         ),
         obstacles = listOf(
             VenueObstacle("mar", 0, 0, 239, SEA_Y),
@@ -198,6 +205,12 @@ internal object BeachVenue : VenueBlueprint(SceneId.BEACH) {
         }
         val a = if (c.npcId == PLAYER_A) c else p
         val b = if (a === c) p else c
+        // Pausa para uma foto juntos, de vez em quando (dentro do orçamento de microeventos).
+        if (s.rand(c, 71) < PHOTO_CHANCE && s.stories.canStart(SceneStoryEventType.BEACH_SHARED_PHOTO, maxOf(a.time, b.time), listOf(a.npcId, b.npcId))) {
+            sharedPhoto(s, c, a, b)
+            p.decisions++
+            return
+        }
         when (s.choose(c, setOf(VenueAction.PLAY_BALL, VenueAction.SOCIAL, VenueAction.REST))) {
             VenueAction.SOCIAL -> {
                 s.converse(a, b, a.node ?: A1, b.node ?: B1, listOf(true to RALLY_LINES[Math.floorMod(c.decisions.toInt(), RALLY_LINES.size)], false to REPLY_LINES[Math.floorMod(c.decisions.toInt() + 1, REPLY_LINES.size)]))
@@ -260,6 +273,40 @@ internal object BeachVenue : VenueBlueprint(SceneId.BEACH) {
     }
 
     private fun handX(c: VenueCursor) = c.x + if (c.facingRight) 6 else -6
+
+    /**
+     * BEACH_SHARED_PHOTO: os dois se encontram no meio da quadra, viram de frente, um segura o
+     * celular para a selfie e o outro sorri; depois comentam a foto e voltam ao jogo. A bola fica
+     * com quem já estava com ela.
+     */
+    private fun sharedPhoto(s: VenueNpcSession, c: VenueCursor, a: VenueCursor, b: VenueCursor) {
+        val start = maxOf(a.time, b.time)
+        listOf(a, b).forEach { x -> if (x.time < start) s.stay(x, start - x.time, VenueNpcState.WAITING, VenueAction.PHOTO, NpcAnimation.LOOK) }
+        s.walkTo(a, PHOTO_L, VenueNpcState.NAVIGATING, VenueAction.PHOTO)
+        s.walkTo(b, PHOTO_R, VenueNpcState.NAVIGATING, VenueAction.PHOTO)
+        s.turnIntoFront(a, VenueNpcState.INTERACTING, VenueAction.PHOTO)
+        s.turnIntoFront(b, VenueNpcState.INTERACTING, VenueAction.PHOTO)
+        val pose = maxOf(a.time, b.time)
+        listOf(a, b).forEach { x -> if (x.time < pose) s.stay(x, pose - x.time, VenueNpcState.INTERACTING, VenueAction.PHOTO, NpcAnimation.IDLE, Facing.FRONT) }
+        s.stay(a, PHOTO_MS, VenueNpcState.INTERACTING, VenueAction.PHOTO, NpcAnimation.STAND_PHOTO, Facing.FRONT)
+        s.stay(b, PHOTO_MS, VenueNpcState.INTERACTING, VenueAction.PHOTO, NpcAnimation.REACTION, Facing.FRONT, reaction = com.hoodie.app.pixel.npc.NpcReaction.SMILE)
+        s.coordinator.emit(pose + PHOTO_MS - 800, VenueEvent.PHOTO_TAKEN, a.npcId, "selfie")
+        val talk = maxOf(a.time, b.time)
+        val line = PHOTO_LINES[Math.floorMod(c.decisions.toInt(), PHOTO_LINES.size)]
+        if (s.coordinator.speechFree(talk, talk + PHOTO_LINE_MS)) {
+            s.say(b, line, PHOTO_LINE_MS, VenueNpcState.INTERACTING, VenueAction.PHOTO, Facing.FRONT)
+            s.stay(a, PHOTO_LINE_MS, VenueNpcState.INTERACTING, VenueAction.PHOTO, NpcAnimation.IDLE, Facing.FRONT)
+        }
+        val end = maxOf(a.time, b.time)
+        listOf(a, b).forEach { x -> if (x.time < end) s.stay(x, end - x.time, VenueNpcState.INTERACTING, VenueAction.PHOTO, NpcAnimation.IDLE, Facing.FRONT) }
+        s.stories.record(VenueStoryRecord(SceneStoryEvent(
+            id = "beach-photo:${s.seed}:$start", type = SceneStoryEventType.BEACH_SHARED_PHOTO, scene = SceneId.BEACH,
+            participants = listOf(a.npcId, b.npcId), requiredSpots = listOf(PHOTO_L, PHOTO_R),
+            startAt = start, durationMs = end - start, priority = 1, cooldownMs = PHOTO_COOLDOWN_MS,
+            interactAt = pose, resolveAt = pose + PHOTO_MS,
+        )))
+        c.remember(VenueAction.PHOTO)
+    }
 
     // ───── Sorveteiro ─────
 
@@ -422,6 +469,12 @@ internal object BeachVenue : VenueBlueprint(SceneId.BEACH) {
     private const val CATCH_AT_MS = 380L
     private const val SCOOP_MS = 1_600L
     private const val CALL_EVERY_MS = 45_000L
+
+    private const val PHOTO_CHANCE = 0.12f
+    private const val PHOTO_MS = 2_800L
+    private const val PHOTO_LINE_MS = 1_600L
+    private const val PHOTO_COOLDOWN_MS = 120_000L
+    private val PHOTO_LINES = listOf("Ficou otima!", "Essa vai pro album!")
 
     private val RALLY_LINES = listOf("Boa jogada", "Essa foi longe", "Mais uma")
     private val REPLY_LINES = listOf("Agora vai", "Valeu", "Bora")

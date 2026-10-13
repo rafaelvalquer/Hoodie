@@ -83,7 +83,9 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
         b.outlined(178, 235, 226, 240, 0xFF8E5435.toInt(), P.OUTLINE)
         val state = env.restaurantGuestTable
         drawGuestPlate(b, state?.foodAmount ?: RestaurantFoodAmount.EMPTY, timeMs)
-        drawGuestGlass(b, state?.drinkAmount ?: RestaurantDrinkAmount.FULL)
+        // Microevento: o copo virou e o suco escorreu pela mesa até o garçom limpar.
+        val spilled = env.sceneStory?.objects?.any { it.holder == com.hoodie.app.pixel.npc.events.StoryObjectHolder.SPILLED } == true
+        if (spilled) drawSpilledGlass(b) else drawGuestGlass(b, state?.drinkAmount ?: RestaurantDrinkAmount.FULL)
         if (state?.mealState == RestaurantMealState.SERVED || state?.mealState == RestaurantMealState.EATING) {
             val steamFrame = (timeMs / 360L).toInt() % 3
             for (i in 0..1) {
@@ -126,6 +128,16 @@ class RestaurantScene : PixelScene(SceneId.RESTAURANT) {
         }
         if (amount != RestaurantDrinkAmount.EMPTY) b.box(215, top, 216, 235, 0xFFF29B4A.toInt())
         b.set(214, 230, P.WHITE)
+    }
+
+    private fun drawSpilledGlass(b: PixelBuffer) {
+        // Poça de suco no tampo (escorre até a borda) e o copo deitado, com a boca virada para a poça.
+        b.box(186, 230, 222, 234, 0xFFF29B4A.toInt())
+        b.box(190, 229, 216, 229, 0xFFF6B878.toInt())
+        b.box(184, 235, 187, 237, 0xFFF29B4A.toInt())
+        b.outlined(212, 228, 223, 234, 0xFFDCECF4.toInt(), P.OUTLINE)
+        b.vline(212, 229, 233, 0xFFF29B4A.toInt())
+        b.set(220, 229, P.WHITE)
     }
 
     private fun drawGuestTableFront(b: PixelBuffer) {

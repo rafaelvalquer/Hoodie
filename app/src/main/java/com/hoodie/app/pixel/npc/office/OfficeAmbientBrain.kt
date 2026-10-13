@@ -194,7 +194,8 @@ class OfficeAmbientBrain(
     fun frameStateAt(timeMs: Long): OfficeNpcFrameState {
         val state = stateAt(timeMs)
         val movement = movementAt(timeMs, state)
-        val speech = socialSession?.speechEventAt(npcId, timeMs) ?: executiveSpeechEventAt(timeMs)
+        val speech = socialSession?.deliveries?.speechAt(npcId, timeMs)
+            ?: socialSession?.speechEventAt(npcId, timeMs) ?: executiveSpeechEventAt(timeMs)
         val phase = when {
             movement.animation == NpcAnimation.STAND_UP -> OfficeActionPhase.STANDING_UP
             movement.phase == PathPhase.TURN -> OfficeActionPhase.TURNING

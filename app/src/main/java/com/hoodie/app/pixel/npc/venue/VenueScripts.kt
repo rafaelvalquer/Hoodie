@@ -93,7 +93,10 @@ internal object VenueScripts {
      */
     inline fun serveOrder(
         s: VenueNpcSession, c: VenueCursor, order: VenueInteractionCoordinator.VenueOrder, register: String,
-        greeting: String?, readyEvent: VenueEvent?, prepare: () -> String,
+        greeting: String?, readyEvent: VenueEvent?,
+        /** Logo antes de entregar (já de frente no ponto de entrega): chamar o cliente, por exemplo. */
+        beforeHandoff: () -> Unit = {},
+        prepare: () -> String,
     ) {
         s.walkTo(c, register, VenueNpcState.NAVIGATING, VenueAction.SERVE)
         s.turnIntoFront(c, VenueNpcState.INTERACTING, VenueAction.SERVE)
@@ -103,6 +106,7 @@ internal object VenueScripts {
         val handoff = prepare()
         s.walkTo(c, handoff, VenueNpcState.NAVIGATING, VenueAction.SERVE)
         s.turnIntoFront(c, VenueNpcState.INTERACTING, VenueAction.SERVE)
+        beforeHandoff()
         val start = c.time
         s.stay(c, NpcPoseLibrary.SERVE_MS, VenueNpcState.INTERACTING, VenueAction.SERVE, NpcAnimation.SERVE, Facing.FRONT)
         c.held = Item.NONE

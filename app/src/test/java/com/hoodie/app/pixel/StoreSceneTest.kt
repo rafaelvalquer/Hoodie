@@ -183,13 +183,13 @@ class StoreSceneTest {
     @Test
     fun `o comprador do mercado tambem visita a loja, com planta e falas proprias`() {
         val env = SceneEnv(DayPeriod.DAY, 600, daySeed = 3)
-        val slot = NpcDirector.plan(SceneId.STORE, env).single()
+        val slot = NpcDirector.plan(SceneId.STORE, env).single { it.shoppingBrain != null }
         val brain = slot.shoppingBrain!!
         assertEquals(StoreNavigationGraph, brain.floor)
         assertEquals(StoreSpeechLibrary, brain.speech)
         // O mercado segue com a planta e as falas dele.
-        assertEquals(ShoppingNavigationGraph, NpcDirector.plan(SceneId.SHOPPING, env).single().shoppingBrain!!.floor)
-        assertEquals(ShoppingSpeechLibrary, NpcDirector.plan(SceneId.SHOPPING, env).single().shoppingBrain!!.speech)
+        assertEquals(ShoppingNavigationGraph, NpcDirector.plan(SceneId.SHOPPING, env).single { it.shoppingBrain != null }.shoppingBrain!!.floor)
+        assertEquals(ShoppingSpeechLibrary, NpcDirector.plan(SceneId.SHOPPING, env).single { it.shoppingBrain != null }.shoppingBrain!!.speech)
 
         val visited = mutableSetOf<ShoppingNpcSpot>()
         val lines = mutableSetOf<String>()

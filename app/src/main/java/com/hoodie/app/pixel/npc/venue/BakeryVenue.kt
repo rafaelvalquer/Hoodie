@@ -3,6 +3,11 @@ package com.hoodie.app.pixel.npc.venue
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.NpcPoseLibrary
+import com.hoodie.app.pixel.npc.events.SceneStoryEvent
+import com.hoodie.app.pixel.npc.events.SceneStoryEventType
+import com.hoodie.app.pixel.npc.events.StoryObjectHolder
+import com.hoodie.app.pixel.npc.events.StoryObjectStep
+import com.hoodie.app.pixel.npc.events.StoryObjectTimeline
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.sprite.Facing
 import com.hoodie.app.pixel.sprite.Item
@@ -196,6 +201,7 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
             }
             Phase.TO_ORDER -> goOrder(s, c, COFFEE)
             Phase.WAITING -> if (collect(s, c, PICKUP, Item.MUG, VenueEvent.CUP_PICKED)) {
+                s.coordinator.order(c.orderId)?.let { thankForHandoff(s, c, it) }
                 c.phase = Phase.CONSUMING
                 c.visits = 0
             }
@@ -321,7 +327,8 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
 
     private fun serve(s: VenueNpcSession, c: VenueCursor, order: VenueInteractionCoordinator.VenueOrder) {
         val coffee = order.product == COFFEE
-        VenueScripts.serveOrder(s, c, order, B_REGISTER, BARISTA_LINES[Math.floorMod(order.id, BARISTA_LINES.size)], if (coffee) VenueEvent.COFFEE_READY else null) {
+        VenueScripts.serveOrder(s, c, order, B_REGISTER, BARISTA_LINES[Math.floorMod(order.id, BARISTA_LINES.size)], if (coffee) VenueEvent.COFFEE_READY else null,
+            beforeHandoff = { if (coffee) announceHandoff(s, c, order) }) {
             if (coffee) {
                 // Xícara na máquina, preparo visível, entrega na área de retirada.
                 s.walkTo(c, B_MACHINE, VenueNpcState.NAVIGATING, VenueAction.PREPARE)
@@ -340,6 +347,54 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
                 B_REGISTER
             }
         }
+    }
+
+    // ───────────── Microevento: entrega na mão (CAFE_ORDER_HANDOFF) ─────────────
+
+    private fun handoffId(s: VenueNpcSession, orderId: Int) = "cafe-handoff:${s.seed}:$orderId"
+
+    /**
+     * O cliente já está esperando na retirada quando o café fica pronto: o barista chama, entrega
+     * por cima do balcão e o cliente agradece ao pegar. A xícara é a do pedido: barista → balcão
+     * (um instante) → cliente. Só com o balão livre e dentro do orçamento de microeventos.
+     */
+    private fun announceHandoff(s: VenueNpcSession, c: VenueCursor, order: VenueInteractionCoordinator.VenueOrder) {
+        val customer = s.cursor(order.customerId) ?: return
+        val waiting = customer.node == PICKUP && customer.phase == Phase.WAITING && customer.time <= c.time + VenueNpcSession.WAIT_SLICE_MS
+        val participants = listOf(c.npcId, customer.npcId)
+        if (!waiting || s.rand(c, 61) >= HANDOFF_CHANCE) return
+        if (!s.stories.canStart(SceneStoryEventType.CAFE_ORDER_HANDOFF, c.time, participants)) return
+        if (!s.coordinator.speechFree(c.time, c.time + CALL_MS)) return
+        val start = c.time
+        s.say(c, CALL_LINES[Math.floorMod(order.id, CALL_LINES.size)], CALL_MS, VenueNpcState.INTERACTING, VenueAction.SERVE, Facing.FRONT)
+        val ready = c.time + VenueScripts.SERVE_RELEASE_MS
+        s.stories.record(VenueStoryRecord(
+            SceneStoryEvent(
+                id = handoffId(s, order.id), type = SceneStoryEventType.CAFE_ORDER_HANDOFF, scene = SceneId.BAKERY,
+                participants = participants, requiredSpots = listOf(B_HANDOFF, PICKUP),
+                startAt = start, durationMs = ready + THANKS_MS + VenueScripts.PICK_MS - start, priority = 2, cooldownMs = HANDOFF_COOLDOWN_MS,
+                interactAt = c.time, resolveAt = ready,
+            ),
+            listOf(StoryObjectTimeline("cup:${order.id}", Item.MUG, listOf(
+                StoryObjectStep(start, StoryObjectHolder.HELD_BY_HELPER),
+                StoryObjectStep(ready, StoryObjectHolder.ON_COUNTER),
+            ))),
+        ))
+    }
+
+    /** Pegou a xícara entregue na mão: completa o registro e agradece. */
+    private fun thankForHandoff(s: VenueNpcSession, c: VenueCursor, order: VenueInteractionCoordinator.VenueOrder) {
+        val record = s.stories.find(handoffId(s, order.id)) ?: return
+        val picked = order.pickedAt ?: c.time
+        if (s.coordinator.speechFree(c.time, c.time + THANKS_MS)) {
+            s.say(c, CUP_THANKS[Math.floorMod(order.id, CUP_THANKS.size)], THANKS_MS, VenueNpcState.INTERACTING, VenueAction.ORDER, Facing.FRONT)
+        }
+        val e = record.event
+        val cup = record.objects.first()
+        s.stories.record(record.copy(
+            event = e.copy(durationMs = maxOf(e.durationMs, c.time - e.startAt + 1), resolveAt = maxOf(e.interactAt, picked)),
+            objects = listOf(cup.copy(steps = cup.steps + StoryObjectStep(picked, StoryObjectHolder.HELD_BY_OWNER))),
+        ))
     }
 
     private fun dirtyCupsAt(s: VenueNpcSession, t: Long): Int {
@@ -371,6 +426,13 @@ internal object BakeryVenue : VenueBlueprint(SceneId.BAKERY) {
             registerActive = paying,
         )
     }
+
+    private const val HANDOFF_CHANCE = 0.6f
+    private const val CALL_MS = 1_300L
+    private const val THANKS_MS = 1_300L
+    private const val HANDOFF_COOLDOWN_MS = 90_000L
+    private val CALL_LINES = listOf("Seu cafe!", "Cafe saindo, aqui!")
+    private val CUP_THANKS = listOf("Obrigado!", "Valeu!")
 
     private val SEATS = listOf(SEAT_A, SEAT_B)
     private const val ORDER_MS = 1_500L

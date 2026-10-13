@@ -52,7 +52,8 @@ class VenuePropSyncTest {
         }
         // A xícara do barista durante o preparo vira a do cliente: entre pronto e retirado ninguém a segura.
         orders.forEach { o ->
-            val ready = o.readyAt!!; val picked = o.pickedAt ?: return@forEach
+            // Um pedido ainda em preparo no fim da janela não tem o que conferir.
+            val ready = o.readyAt ?: return@forEach; val picked = o.pickedAt ?: return@forEach
             shots.filter { it.timeMs in ready + 50 until picked }.forEach { snap ->
                 assertTrue("t=${snap.timeMs}: xícara pronta na mão de alguém", snap.npcs.none { it.held == Item.MUG && it.npcId == o.customerId })
             }

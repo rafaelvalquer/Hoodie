@@ -42,9 +42,22 @@ data class SceneStoryEvent(
 }
 
 /** Quem está com um objeto da história. Um objeto tem um único dono por vez: nunca há cópias. */
-enum class StoryObjectHolder { ON_DESK, HELD_BY_RABBIT, HELD_BY_BULLDOG, CARRIED_OUT, ON_TABLE, ON_FLOOR, HELD_BY_OWNER, HELD_BY_HELPER }
+enum class StoryObjectHolder {
+    ON_DESK, HELD_BY_RABBIT, HELD_BY_BULLDOG, CARRIED_OUT, ON_TABLE, ON_FLOOR, HELD_BY_OWNER, HELD_BY_HELPER,
+    /** Copo virado na mesa, com a bebida derramada. */
+    SPILLED,
+    /** Em cima do balcão, entre quem entrega e quem recebe. */
+    ON_COUNTER,
+}
 
-data class StoryObjectState(val objectId: String, val holder: StoryObjectHolder)
+/** [x]/[y]: onde o objeto está desenhado quando não está na mão de ninguém (chão, mesa). */
+data class StoryObjectState(
+    val objectId: String,
+    val holder: StoryObjectHolder,
+    val item: com.hoodie.app.pixel.sprite.Item = com.hoodie.app.pixel.sprite.Item.NONE,
+    val x: Int? = null,
+    val y: Int? = null,
+)
 
 data class SceneStorySnapshot(
     val event: SceneStoryEvent,

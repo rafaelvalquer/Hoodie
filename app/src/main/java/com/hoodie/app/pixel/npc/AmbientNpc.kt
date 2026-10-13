@@ -63,6 +63,8 @@ data class AmbientNpcSlot(
     val leisureActor: com.hoodie.app.pixel.npc.leisure.LeisureNpcActor? = null,
     /** Personagem de estabelecimento (padaria, praia, cinema...): tudo vem da sessão da cena. */
     val venueActor: com.hoodie.app.pixel.npc.venue.VenueNpcActor? = null,
+    /** Microeventos da cena (copo derramado, sacola caída...): o roteiro tem a vez enquanto dura. */
+    val story: com.hoodie.app.pixel.npc.events.SceneStoryOverlay? = null,
 ) {
     val scale: Float get() = NpcScalePolicy.scale(definition.characterStyle, depth)
 }
@@ -219,6 +221,11 @@ object NpcRenderer {
         var scaleNanos = 0L
         var compositeNanos = 0L
         var speechNanos = 0L
+        // Microevento: quem só existe para ele fica fora de cena; quem participa segue o roteiro.
+        val npcId = slot.definition.id
+        if (slot.story?.hiddenAt(npcId, timeMs) == true) return
+        val storyMovement = slot.story?.movementAt(npcId, timeMs)
+        val storySpeech = slot.story?.speechAt(npcId, timeMs)
         val restaurantBrain = slot.restaurantBrain
         val restaurantState = restaurantBrain?.stateAt(timeMs)
         val officeFrameState = officeFrameStateOverride ?: slot.officeBrain?.frameStateAt(timeMs)
@@ -226,7 +233,7 @@ object NpcRenderer {
         val venueFrameState = slot.venueActor?.frameStateAt(timeMs)
         // Dentro de uma loja, no elevador ou fora de cena: não existe na tela.
         if (venueFrameState?.hidden == true) return
-        val movement = movementOverride ?: if (restaurantBrain != null && restaurantState != null) {
+        val movement = movementOverride ?: storyMovement ?: if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.movementAt(timeMs, restaurantState)
         } else officeFrameState?.movement ?: leisureFrameState?.movement ?: venueFrameState?.movement
             ?: NpcMotionController.movement(slot, timeMs)
@@ -247,6 +254,7 @@ object NpcRenderer {
         val leisureSpeech = leisureFrameState?.speech
         val venueSpeech = venueFrameState?.speech
         val speechAllowed = when {
+            storyMovement != null -> storySpeech != null
             restaurantBrain != null -> restaurantLine != null
             slot.officeBrain != null -> officeSpeech != null
             slot.leisureActor != null -> leisureSpeech != null
@@ -255,7 +263,7 @@ object NpcRenderer {
         }
         val animation = if (
             movement.animation == NpcAnimation.TALK && speechProfile != null && !speechAllowed && slot.officeBrain == null &&
-            slot.leisureActor == null && slot.venueActor == null
+            slot.leisureActor == null && slot.venueActor == null && storyMovement == null
         ) {
             if (restaurantBrain != null) {
                 NpcAnimation.IDLE
@@ -308,7 +316,8 @@ object NpcRenderer {
             compositeNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
             stageStarted = ScenePerformanceMonitor.nowNanos()
         }
-        if (slot.shoppingBrain != null && (movement.x in 0..239 || movement.phase == PathPhase.ENTER || movement.phase == PathPhase.EXIT)) {
+        // Durante um microevento o objeto segue o roteiro (na mão de quem está, no chão), não a cesta de sempre.
+        if (storyMovement == null && slot.shoppingBrain != null && (movement.x in 0..239 || movement.phase == PathPhase.ENTER || movement.phase == PathPhase.EXIT)) {
             val shoppingState = slot.shoppingBrain.stateAt(timeMs)
             val heldItem = if (shoppingState.currentIntent == com.hoodie.app.pixel.npc.shopping.ShoppingNpcIntent.EXIT_STORE) Item.SHOPPING_BAG else Item.BASKET
             val propHand = frame.anchors.leftHand
@@ -319,7 +328,7 @@ object NpcRenderer {
                 for (i in 0 until count) b.set(left + propHand.x - 3 + i * 3, top + propHand.y - 2, colors[i])
             }
         }
-        slot.shoppingBrain?.stateAt(timeMs)?.let { state ->
+        slot.shoppingBrain?.takeIf { storyMovement == null }?.stateAt(timeMs)?.let { state ->
             val line = state.speechLine ?: return@let
             NpcSpeechBubbleRenderer.draw(
                 b, NpcSpeechProfile(listOf(line), visibleMs = 1_500), movement.x, movement.floorY,
@@ -328,14 +337,16 @@ object NpcRenderer {
             )
         }
         if (movement.animation == NpcAnimation.TALK && speechAllowed) {
-            val speech = officeSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
+            val speech = storySpeech?.let { NpcSpeechProfile(listOf(it.first), visibleMs = it.third) }
+                ?: officeSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
                 ?: leisureSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
                 ?: venueSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
                 ?: speechProfile
             speech?.let { activeProfile ->
             NpcSpeechBubbleRenderer.draw(
                 b, activeProfile, movement.x, movement.floorY, slot.seed, timeMs,
-                officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
+                storySpeech?.let { (timeMs - it.second).coerceAtLeast(0) }
+                    ?: officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
                     ?: leisureSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
                     ?: venueSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
                     ?: movement.localTimeMs, frame.anchors.head.y,

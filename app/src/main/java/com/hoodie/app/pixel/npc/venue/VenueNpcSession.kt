@@ -163,6 +163,8 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
     private var cursors: List<VenueCursor> = newCursors()
     internal val reservation = VenueSpotReservation(blueprint.hoodieSpots(variant))
     internal val coordinator = VenueInteractionCoordinator(seed)
+    /** Microeventos (entrega no balcão, foto em dupla, ajuda com a mala) planejados nesta simulação. */
+    internal val stories = VenueStoryLog()
 
     private var cachedAt = Long.MIN_VALUE
     private var cached: VenueFrameSnapshot? = null
@@ -208,6 +210,20 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         return snapshot
     }
 
+    /** Microevento em [timeMs] e onde estão os objetos dele (null = nenhum). */
+    @Synchronized
+    fun storySnapshotAt(timeMs: Long): com.hoodie.app.pixel.npc.events.SceneStorySnapshot? {
+        snapshotAt(timeMs)
+        return stories.snapshotAt(timeMs.coerceAtLeast(0L))
+    }
+
+    /** Microeventos já planejados até [timeMs] (testes e folhas de revisão). */
+    @Synchronized
+    internal fun storiesUntil(timeMs: Long): List<VenueStoryRecord> {
+        snapshotAt(timeMs)
+        return stories.all().filter { it.event.startAt <= timeMs }
+    }
+
     /** Linha do tempo de um personagem entre dois instantes (testes e folhas de revisão). */
     @Synchronized
     internal fun segmentsBetween(index: Int, from: Long, until: Long): List<Segment> {
@@ -233,6 +249,7 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         timelines.forEach { it.clear() }
         reservation.clear()
         coordinator.reset()
+        stories.clear()
         cached = null
     }
 
@@ -286,6 +303,7 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         cursors = newCursors()
         reservation.clear()
         coordinator.reset()
+        stories.clear()
         cachedAt = Long.MIN_VALUE
         cached = null
         cursors.forEach { blueprint.initialize(this, it) }
@@ -316,7 +334,10 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         }
         // Pedidos e eventos antigos só são descartados aquém da janela consultável.
         val queryable = retainedFrom.max()
-        if (queryable > 0) coordinator.prune(queryable - VenueInteractionCoordinator.EVENT_MEMORY_MS)
+        if (queryable > 0) {
+            coordinator.prune(queryable - VenueInteractionCoordinator.EVENT_MEMORY_MS)
+            stories.prune(queryable - VenueInteractionCoordinator.EVENT_MEMORY_MS)
+        }
     }
 
     // ───────────── Construção de segmentos (primitivas das cenas) ─────────────

@@ -58,27 +58,59 @@ class OfficeDocumentDeliveries internal constructor(
     private val planned = ArrayList<OfficeDocumentDelivery?>()
     private val accepted = ArrayList<SceneStoryEvent>()
     private var visitWindows: List<Pair<OfficeNpcSpot, LongRange>>? = null
+    private var chatWindowsCache: List<Pair<OfficeNpcSpot, LongRange>>? = null
     @Volatile private var disposed = false
 
+    private val chats = ArrayList<OfficeCoffeeChat?>()
+
     override fun canStart(type: SceneStoryEventType, at: Long): Boolean =
-        type == SceneStoryEventType.OFFICE_DOCUMENT_DELIVERY && !disposed &&
+        type in setOf(SceneStoryEventType.OFFICE_DOCUMENT_DELIVERY, SceneStoryEventType.OFFICE_COFFEE_CHAT) && !disposed &&
             SceneEventDirector.budgetAllows(accepted, at) && SceneEventDirector.cooldownAllows(accepted, type, at)
 
     @Synchronized override fun dispose() {
         disposed = true
-        planned.clear(); accepted.clear(); visitWindows = null
+        planned.clear(); chats.clear(); accepted.clear(); visitWindows = null
+    }
+
+    /** Ciclos são planejados em ordem: o orçamento de eventos olha os anteriores. */
+    private fun ensure(cycle: Long) {
+        while (planned.size <= cycle) {
+            val k = planned.size.toLong()
+            val delivery = plan(k)
+            planned += delivery
+            // Visita sem entrega: às vezes o chefe para com o café e puxa conversa com o Hoodie.
+            chats += if (delivery == null) planChat(k) else null
+        }
     }
 
     /** Entrega do ciclo de visita que contém [timeMs] (null = não há entrega nesse ciclo). */
     @Synchronized fun deliveryAt(timeMs: Long): OfficeDocumentDelivery? {
         if (disposed || timeMs < 0) return null
         val cycle = timeMs / OfficeExecutiveTimeline.CYCLE_MS
-        // Ciclos são planejados em ordem: o orçamento de eventos olha os anteriores.
-        while (planned.size <= cycle) planned += plan(planned.size.toLong())
+        ensure(cycle)
         return planned[cycle.toInt()]
     }
 
+    /** Conversa do café do ciclo que contém [timeMs] (null = não há). */
+    @Synchronized fun chatAt(timeMs: Long): OfficeCoffeeChat? {
+        if (disposed || timeMs < 0) return null
+        val cycle = timeMs / OfficeExecutiveTimeline.CYCLE_MS
+        ensure(cycle)
+        return chats[cycle.toInt()]
+    }
+
+    /** Fala do microevento (o chefe falando com o Hoodie). */
+    fun speechAt(npcId: String, timeMs: Long): OfficeSpeechEvent? {
+        if (npcId != BULLDOG) return null
+        val chat = chatAt(timeMs) ?: return null
+        return if (timeMs in chat.talkAt until chat.talkEndsAt) OfficeSpeechEvent(BULLDOG, chat.line, chat.talkAt, chat.talkEndsAt - chat.talkAt, HOODIE) else null
+    }
+
     override fun snapshotAt(timeMs: Long): SceneStorySnapshot? {
+        chatAt(timeMs)?.takeIf { timeMs in it.event.startAt until it.event.endsAt }?.let { chat ->
+            return SceneStorySnapshot(chat.event, SceneEventDirector.phaseAt(chat.event, timeMs),
+                listOf(StoryObjectState("mug:${chat.event.id}", StoryObjectHolder.HELD_BY_OWNER, Item.MUG)))
+        }
         val d = deliveryAt(timeMs) ?: return null
         if (timeMs < d.cycleStart) return null
         val holder = when {
@@ -92,6 +124,7 @@ class OfficeDocumentDeliveries internal constructor(
 
     /** Movimento do participante durante a entrega (null = segue a rotina normal). */
     fun movementAt(npcId: String, timeMs: Long): NpcMovement? {
+        if (npcId == BULLDOG) chatAt(timeMs)?.let { chat -> chatMovement(chat, timeMs)?.let { return it } }
         val d = deliveryAt(timeMs) ?: return null
         return when (npcId) {
             RABBIT -> if (timeMs in d.startAt until d.endsAt) rabbitMovement(d, timeMs) else null
@@ -190,6 +223,57 @@ class OfficeDocumentDeliveries internal constructor(
         return null
     }
 
+    /**
+     * OFFICE_COFFEE_CHAT: parado num ponto, com a caneca na mão, o chefe vira de frente para a mesa
+     * do Hoodie, puxa conversa e volta ao que fazia. Nunca por cima das falas dele da visita.
+     */
+    private fun planChat(cycle: Long): OfficeCoffeeChat? {
+        if (NpcDeterministicRandom.value("office-coffee-chat", daySeed, cycle) >= CHAT_CHANCE) return null
+        val visitStart = cycle * OfficeExecutiveTimeline.CYCLE_MS + OfficeExecutiveTimeline.ENTRY_MS
+        for ((spot, window) in chatWindows()) {
+            val start = window.first + SETTLE_MS
+            val end = start + CHAT_MS
+            if (end > window.last) continue
+            if (SPEECH_WINDOWS.any { it.first < end && start < it.last }) continue
+            val at = visitStart + start
+            if (!canStart(SceneStoryEventType.OFFICE_COFFEE_CHAT, at)) return null
+            val event = SceneStoryEvent(
+                id = "office-chat:$daySeed:$cycle", type = SceneStoryEventType.OFFICE_COFFEE_CHAT, scene = SceneId.OFFICE,
+                participants = listOf(BULLDOG, HOODIE), requiredSpots = listOf(spot.name),
+                startAt = at, durationMs = CHAT_MS, priority = 1, cooldownMs = COOLDOWN_MS,
+                interactAt = at + NpcPoseLibrary.TURN_MS, resolveAt = at + CHAT_MS - NpcPoseLibrary.TURN_MS,
+            )
+            accepted += event
+            val talkAt = at + NpcPoseLibrary.TURN_MS + CHAT_SIP_MS
+            return OfficeCoffeeChat(event, spot, talkAt, talkAt + CHAT_TALK_MS, CHAT_LINES[Math.floorMod(cycle.toInt() + daySeed, CHAT_LINES.size)])
+        }
+        return null
+    }
+
+    /** Janelas paradas do chefe em qualquer ponto livre (inclusive o do café), exceto mesas e porta. */
+    private fun chatWindows(): List<Pair<OfficeNpcSpot, LongRange>> {
+        windows()
+        return chatWindowsCache ?: emptyList()
+    }
+
+    private fun chatMovement(chat: OfficeCoffeeChat, t: Long): NpcMovement? {
+        val e = chat.event
+        if (t !in e.startAt until e.endsAt) return null
+        val p = OfficeNavigationGraph.spots.getValue(chat.spot)
+        val local = t - e.startAt
+        val back = e.endsAt - NpcPoseLibrary.TURN_MS
+        return when {
+            local < NpcPoseLibrary.TURN_MS -> NpcMovement(p.x, p.floorY, false, NpcAnimation.TURN_LEFT, local,
+                phase = PathPhase.TURN, facing = Facing.FRONT, heldItem = Item.MUG)
+            t in chat.talkAt until chat.talkEndsAt -> NpcMovement(p.x, p.floorY, false, NpcAnimation.TALK, t - chat.talkAt,
+                phase = PathPhase.STOP, facing = Facing.FRONT, heldItem = Item.MUG)
+            t < back -> NpcMovement(p.x, p.floorY, false, NpcAnimation.IDLE, local, phase = PathPhase.STOP,
+                facing = Facing.FRONT, heldItem = Item.MUG)
+            else -> NpcMovement(p.x, p.floorY, false, NpcAnimation.TURN_RIGHT, t - back, phase = PathPhase.TURN,
+                facing = Facing.FRONT, heldItem = Item.MUG)
+        }
+    }
+
     /** Coelho/gato sentado na própria mesa, na mesma ação, do começo ao fim da entrega. */
     private fun seatedThrough(npcId: String, desk: OfficeNpcSpot, from: Long, until: Long): Boolean {
         val brain = session.brain(npcId) ?: return false
@@ -213,14 +297,18 @@ class OfficeDocumentDeliveries internal constructor(
         val bulldog = session.brain(BULLDOG) ?: return emptyList()
         val visitEnd = OfficeExecutiveTimeline.RETURN_START_MS - OfficeExecutiveTimeline.ENTRY_MS
         val result = mutableListOf<Pair<OfficeNpcSpot, LongRange>>()
+        val chat = mutableListOf<Pair<OfficeNpcSpot, LongRange>>()
         var e = 0L
         while (e < visitEnd) {
             val action = bulldog.baseActionAt(e)
             val from = maxOf(action.arrivedAt, EARLIEST_VISIT_MS)
             val until = minOf(action.finishedAt, visitEnd - 1)
             if (action.destination in MEETING_SPOTS && until - from >= SETTLE_MS + HANDOFF_MS) result += action.destination to (from..until)
+            if (action.destination in CHAT_SPOTS && until - from >= SETTLE_MS + CHAT_MS) chat += action.destination to (from..until)
             e = maxOf(action.finishedAt, e + 1)
         }
+        // O café primeiro: é onde a conversa faz mais sentido.
+        chatWindowsCache = chat.sortedBy { if (it.first == OfficeNpcSpot.COFFEE) 0 else 1 }
         result.also { visitWindows = it }
     }
 
@@ -244,5 +332,23 @@ class OfficeDocumentDeliveries internal constructor(
         /** Falas do bulldog (tempo da visita); a entrega não cobre nenhuma delas. */
         val SPEECH_WINDOWS = listOf(2_500L..4_300L, 27_000L..28_800L)
         val SEATED_INTENTS = setOf(NpcIntent.WORK, NpcIntent.IDLE, NpcIntent.CHECK_PHONE)
+
+        const val HOODIE = "hoodie"
+        const val CHAT_CHANCE = 0.5f
+        const val CHAT_SIP_MS = 700L
+        const val CHAT_TALK_MS = 1_900L
+        val CHAT_MS: Long = 2 * NpcPoseLibrary.TURN_MS + CHAT_SIP_MS + CHAT_TALK_MS + 800L
+        val CHAT_SPOTS = setOf(OfficeNpcSpot.COFFEE, OfficeNpcSpot.WINDOW, OfficeNpcSpot.CENTER_LEFT, OfficeNpcSpot.CENTER,
+            OfficeNpcSpot.CENTER_RIGHT, OfficeNpcSpot.WHITEBOARD, OfficeNpcSpot.PRINTER)
+        val CHAT_LINES = listOf("E aí, Hoodie! Um café?", "Bom trabalho por aí!", "Esse café está ótimo.")
     }
 }
+
+/** Conversa do café: o chefe, de frente para a mesa do Hoodie, com a caneca na mão. */
+data class OfficeCoffeeChat(
+    val event: SceneStoryEvent,
+    val spot: OfficeNpcSpot,
+    val talkAt: Long,
+    val talkEndsAt: Long,
+    val line: String,
+)

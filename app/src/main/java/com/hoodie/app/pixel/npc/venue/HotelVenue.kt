@@ -50,9 +50,13 @@ object LuggageAttachment {
         val last = s.coordinator.lastEvent(t, setOf(VenueEvent.SUITCASE_DOWN, VenueEvent.SUITCASE_PICKED), null)
             ?.takeIf { it.actorId == guest } ?: return null
         if (last.event != VenueEvent.SUITCASE_DOWN) return null
+        // Deixada pelo visitante na frente do elevador (microevento) ou no chão do check-in.
+        if (last.tag == ELEVATOR_TAG) return s.spot(HotelVenue.ELEV_FRONT).let { it.x - FLOOR_DX to it.floorY }
         val spot = s.spot(HotelVenue.DESK_FRONT)
         return spot.x + FLOOR_DX to spot.floorY
     }
+
+    const val ELEVATOR_TAG = "elevator"
 }
 
 /** Objetos do hotel: porta do elevador dos hóspedes, mala no chão e a recepção. */
@@ -96,6 +100,9 @@ internal object HotelVenue : VenueBlueprint(SceneId.HOTEL) {
     const val R_DESK = "r_desk"
     const val R_KEYS = "r_keys"
     const val R_COMPUTER = "r_computer"
+    const val HELP_SPOT = "luggage_help"
+    const val HELP_X = 74
+    const val HELP_Y = 238
 
     /** Pés da recepcionista atrás do balcão (o tampo em y 176 a mostra da cintura para cima). */
     const val CLERK_Y = 198
@@ -126,9 +133,11 @@ internal object HotelVenue : VenueBlueprint(SceneId.HOTEL) {
             VenueSpot(R_DESK, 44, CLERK_Y, interaction = "recepção por dentro"),
             VenueSpot(R_KEYS, 20, CLERK_Y, interaction = "quadro de chaves"),
             VenueSpot(R_COMPUTER, 84, CLERK_Y, interaction = "computador"),
+            // Ao lado do balcão: onde o visitante recebe a mala do hóspede (HOTEL_LUGGAGE_HELP).
+            VenueSpot(HELP_SPOT, HELP_X, HELP_Y, interaction = "ajuda com a mala"),
         ),
         edges = listOf(
-            DOOR to ENTRY, ENTRY to MID, MID to DESK_FRONT, DESK_FRONT to QUEUE, MID to QUEUE,
+            DOOR to ENTRY, ENTRY to MID, MID to DESK_FRONT, DESK_FRONT to QUEUE, MID to QUEUE, MID to HELP_SPOT,
             MID to ELEV_FRONT, ELEV_FRONT to ELEV_IN, MID to SOFA_NPC, MID to ARMCHAIR,
             R_KEYS to R_DESK, R_DESK to R_COMPUTER,
         ),
@@ -232,7 +241,7 @@ internal object HotelVenue : VenueBlueprint(SceneId.HOTEL) {
             // Chega da rua com a mala (já na mão desde o primeiro passo pela porta).
             c.held = Item.SUITCASE
             s.enter(c, DOOR, ENTRY, VenueAction.CHECK_IN)
-            c.phase = Phase.QUEUE; c.orderId = -1
+            c.phase = Phase.QUEUE; c.orderId = -1; c.target = null
             return
         }
         when (c.phase) {
@@ -271,7 +280,7 @@ internal object HotelVenue : VenueBlueprint(SceneId.HOTEL) {
                 s.say(c, VenueScripts.line(THANKS, c), 1_300, VenueNpcState.INTERACTING, VenueAction.CHECK_IN, Facing.FRONT)
                 c.phase = Phase.TO_ELEVATOR
             }
-            Phase.TO_ELEVATOR -> rideUp(s, c)
+            Phase.TO_ELEVATOR -> if (!luggageHelp(s, c)) rideUp(s, c)
             Phase.UPSTAIRS -> rideDown(s, c)
             else -> {
                 s.leave(c, DOOR, 30_000 + (s.rand(c, 41) * 40_000).toLong())
@@ -314,6 +323,7 @@ internal object HotelVenue : VenueBlueprint(SceneId.HOTEL) {
             c.phase = 1; c.visits = 0; c.orderId = -1
             return
         }
+        if (c.phase == 1 && helpGuest(s, c)) return
         when (c.phase) {
             Phase.QUEUE -> { if (VenueScripts.queueAndOrder(s, c, SERVICE, DESK_FRONT, listOf(QUEUE), QUESTION, VenueScripts.line(VISITOR_LINES, c))) c.phase = Phase.WAITING_KEY; return }
             Phase.WAITING_KEY -> { if (VenueScripts.collect(s, c, DESK_FRONT, Item.NONE, VenueEvent.ORDER_TAKEN)) c.phase = 1; return }
@@ -338,6 +348,116 @@ internal object HotelVenue : VenueBlueprint(SceneId.HOTEL) {
         // Espera alguém: olha a porta e o elevador, ou o celular.
         s.stay(c, hold, VenueNpcState.WAITING, action, if (action == VenueAction.PHONE) NpcAnimation.SIT_PHONE else NpcAnimation.SIT_LOOK, Facing.FRONT)
     }
+
+    // ───── Microevento: ajuda com a mala (HOTEL_LUGGAGE_HELP) ─────
+
+    private fun helpId(s: VenueNpcSession, requestAt: Long) = "hotel-luggage:${s.seed}:$requestAt"
+    private fun helpTag(guest: String, requestAt: Long) = "$guest:$requestAt"
+
+    /**
+     * Hóspede com a mala depois do check-in: às vezes pede ajuda e espera um pouco. Se o visitante
+     * aceitar, entrega a mala, espera ele deixá-la na frente do elevador e sair do caminho, e só
+     * então vai até lá, pega a mala e sobe. Ninguém aceitou: sobe sozinho. true = planejou algo.
+     */
+    private fun luggageHelp(s: VenueNpcSession, c: VenueCursor): Boolean {
+        val requestAt = c.target?.removePrefix("help:")?.toLongOrNull()
+        if (requestAt == null) {
+            if (c.target == "help:done") { c.target = null; return false }
+            val visitor = s.allCursors().firstOrNull { it.role == VenueRole.HOTEL_VISITOR } ?: return false
+            if (visitor.offstage || visitor.phase != 1 || (visitor.node != SOFA_NPC && visitor.node != ARMCHAIR)) return false
+            if (s.rand(c, 83) >= HELP_CHANCE) return false
+            if (!s.stories.canStart(com.hoodie.app.pixel.npc.events.SceneStoryEventType.HOTEL_LUGGAGE_HELP, c.time, listOf(c.npcId, visitor.npcId))) return false
+            s.coordinator.emit(c.time, VenueEvent.HELP_REQUESTED, c.npcId)
+            c.target = "help:${c.time}"
+            s.waitSlice(c, VenueAction.CHECK_IN, NpcAnimation.CHECKOUT_WAIT, Facing.FRONT)
+            return true
+        }
+        val accepted = s.coordinator.events().any { it.event == VenueEvent.HELP_ACCEPTED && it.tag == helpTag(c.npcId, requestAt) }
+        val record = s.stories.find(helpId(s, requestAt))
+        if (!accepted || record == null) {
+            if (c.time - requestAt > HELP_WAIT_MS) { c.target = "help:done"; s.endWait(c); return false }
+            s.waitSlice(c, VenueAction.CHECK_IN, NpcAnimation.CHECKOUT_WAIT, Facing.FRONT)
+            return true
+        }
+        s.endWait(c)
+        val handAt = record.event.interactAt
+        val half = HAND_MS / 2
+        if (c.time < handAt - half) s.stay(c, handAt - half - c.time, VenueNpcState.WAITING, VenueAction.CHECK_IN, NpcAnimation.CHECKOUT_WAIT, Facing.FRONT)
+        s.stay(c, half, VenueNpcState.INTERACTING, VenueAction.CHECK_IN, NpcAnimation.SERVE, Facing.FRONT)
+        c.held = Item.NONE
+        s.stay(c, half, VenueNpcState.INTERACTING, VenueAction.CHECK_IN, NpcAnimation.SERVE, Facing.FRONT, localOffsetMs = half)
+        if (s.coordinator.speechFree(c.time, c.time + 1_300)) s.say(c, VenueScripts.line(HELP_THANKS, c), 1_300, VenueNpcState.INTERACTING, VenueAction.CHECK_IN, Facing.FRONT)
+        val clear = record.event.resolveAt
+        if (c.time < clear) s.stay(c, clear - c.time, VenueNpcState.WAITING, VenueAction.CHECK_IN, NpcAnimation.LOOK, Facing.FRONT)
+        s.walkTo(c, ELEV_FRONT, VenueNpcState.NAVIGATING, VenueAction.ELEVATOR)
+        s.turnIntoFront(c, VenueNpcState.PERFORMING_ACTION, VenueAction.ELEVATOR)
+        s.stay(c, 500, VenueNpcState.PERFORMING_ACTION, VenueAction.ELEVATOR, NpcAnimation.STAND_PICK_PRODUCT, Facing.FRONT)
+        c.held = Item.SUITCASE
+        s.coordinator.emit(c.time, VenueEvent.SUITCASE_PICKED, c.npcId, LuggageAttachment.ELEVATOR_TAG)
+        val suitcase = record.objects.first()
+        s.stories.record(record.copy(
+            event = record.event.copy(durationMs = c.time - record.event.startAt),
+            objects = listOf(suitcase.copy(steps = suitcase.steps + com.hoodie.app.pixel.npc.events.StoryObjectStep(c.time, com.hoodie.app.pixel.npc.events.StoryObjectHolder.HELD_BY_OWNER))),
+        ))
+        c.target = null
+        rideUp(s, c)
+        return true
+    }
+
+    /** Visitante sentado vê o pedido de ajuda: leva a mala até a frente do elevador e volta. */
+    private fun helpGuest(s: VenueNpcSession, c: VenueCursor): Boolean {
+        val request = s.coordinator.events().lastOrNull { it.event == VenueEvent.HELP_REQUESTED && it.at <= c.time } ?: return false
+        if (c.time - request.at > HELP_ACCEPT_MS) return false
+        val tag = helpTag(request.actorId, request.at)
+        if (s.coordinator.events().any { it.event == VenueEvent.HELP_ACCEPTED && it.tag == tag }) return false
+        val guest = s.cursor(request.actorId) ?: return false
+        val horizon = c.time + s.estimateRouteMs(c, HELP_SPOT) + 8_000
+        if (!s.isFree(c, HELP_SPOT, c.time, horizon) || !s.isFree(c, ELEV_FRONT, c.time, horizon + 4_000)) return false
+        val start = c.time
+        s.coordinator.emit(start, VenueEvent.HELP_ACCEPTED, c.npcId, tag)
+        s.reserveFor(c, HELP_SPOT, 4_000)
+        s.walkTo(c, HELP_SPOT, VenueNpcState.NAVIGATING, VenueAction.SOCIAL)
+        s.turnSide(c, false, VenueNpcState.INTERACTING, VenueAction.SOCIAL)
+        s.say(c, VenueScripts.line(HELP_OFFERS, c), 1_300, VenueNpcState.INTERACTING, VenueAction.SOCIAL)
+        val half = HAND_MS / 2
+        val handAt = c.time + half
+        s.stay(c, half, VenueNpcState.INTERACTING, VenueAction.SOCIAL, NpcAnimation.STAND_PICK_PRODUCT)
+        c.held = Item.SUITCASE
+        s.stay(c, half, VenueNpcState.INTERACTING, VenueAction.SOCIAL, NpcAnimation.STAND_PICK_PRODUCT, localOffsetMs = half)
+        s.reserveFor(c, ELEV_FRONT, 2_000)
+        s.walkTo(c, ELEV_FRONT, VenueNpcState.NAVIGATING, VenueAction.SOCIAL)
+        s.turnIntoFront(c, VenueNpcState.PERFORMING_ACTION, VenueAction.SOCIAL)
+        s.stay(c, 500, VenueNpcState.PERFORMING_ACTION, VenueAction.SOCIAL, NpcAnimation.STAND_PICK_PRODUCT, Facing.FRONT)
+        c.held = Item.NONE
+        val downAt = c.time
+        s.coordinator.emit(downAt, VenueEvent.SUITCASE_DOWN, guest.npcId, LuggageAttachment.ELEVATOR_TAG)
+        s.walkTo(c, MID, VenueNpcState.NAVIGATING, VenueAction.SOCIAL)
+        val clearAt = c.time + 400
+        s.stories.record(VenueStoryRecord(
+            com.hoodie.app.pixel.npc.events.SceneStoryEvent(
+                id = helpId(s, request.at), type = com.hoodie.app.pixel.npc.events.SceneStoryEventType.HOTEL_LUGGAGE_HELP, scene = SceneId.HOTEL,
+                participants = listOf(guest.npcId, c.npcId), requiredSpots = listOf(HELP_SPOT, ELEV_FRONT),
+                startAt = start, durationMs = clearAt - start + 6_000, priority = 2, cooldownMs = HELP_COOLDOWN_MS,
+                interactAt = handAt, resolveAt = clearAt,
+            ),
+            listOf(com.hoodie.app.pixel.npc.events.StoryObjectTimeline("suitcase:${request.at}", Item.SUITCASE, listOf(
+                com.hoodie.app.pixel.npc.events.StoryObjectStep(start, com.hoodie.app.pixel.npc.events.StoryObjectHolder.HELD_BY_OWNER),
+                com.hoodie.app.pixel.npc.events.StoryObjectStep(handAt, com.hoodie.app.pixel.npc.events.StoryObjectHolder.HELD_BY_HELPER),
+                com.hoodie.app.pixel.npc.events.StoryObjectStep(downAt, com.hoodie.app.pixel.npc.events.StoryObjectHolder.ON_FLOOR),
+            ))),
+        ))
+        c.remember(VenueAction.SOCIAL)
+        c.visits++
+        return true
+    }
+
+    private const val HELP_CHANCE = 0.5f
+    private const val HELP_WAIT_MS = 3_600L
+    private const val HELP_ACCEPT_MS = 3_000L
+    private const val HAND_MS = 800L
+    private const val HELP_COOLDOWN_MS = 120_000L
+    private val HELP_OFFERS = listOf("Deixa que eu levo!", "Eu ajudo com a mala!")
+    private val HELP_THANKS = listOf("Muito obrigado!", "Que gentileza!")
 
     override fun ambient(s: VenueNpcSession, t: Long): HotelAmbient {
         var computer = false; var door = false

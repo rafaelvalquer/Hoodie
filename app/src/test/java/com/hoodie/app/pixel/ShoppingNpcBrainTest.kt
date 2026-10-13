@@ -22,7 +22,7 @@ class ShoppingNpcBrainTest {
             com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph to com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary,
         )
         plans.forEach { (floor, speech) ->
-            val shopper = ShoppingNpcDirector.createSession(env(), floor, speech).npcSlots.single().shoppingBrain!!
+            val shopper = ShoppingNpcDirector.createSession(env(), floor, speech).npcSlots.single { it.shoppingBrain != null }.shoppingBrain!!
             val timestamps = listOf(0L, 25_000L, 75_000L, 150_000L, 240_000L)
             val original = timestamps.map { Triple(shopper.stateAt(it), shopper.movementAt(it), shopper.visualStateAt(it)) }
             for (cycle in 1L..288L) {
@@ -43,7 +43,7 @@ class ShoppingNpcBrainTest {
     private fun env(seed: Int = 42, period: DayPeriod = DayPeriod.DAY) =
         SceneEnv(period, 9 * 60, variant = seed, daySeed = seed)
 
-    private fun brain(seed: Int = 42) = ShoppingNpcDirector.plan(env(seed)).single().shoppingBrain!!
+    private fun brain(seed: Int = 42) = ShoppingNpcDirector.plan(env(seed)).single { it.shoppingBrain != null }.shoppingBrain!!
 
     @Test fun sameSeedRebuildsTheSameFiveMinuteStoryAndDifferentSeedsVaryIt() {
         val first = brain(42)
@@ -126,7 +126,8 @@ class ShoppingNpcBrainTest {
     @Test fun checkoutAndShelfChangesAreNpcLocalAndRenderWithTheMarket() {
         val env = env()
         val scene = ShoppingScene()
-        val shopper = scene.ambientNpcs(env).single()
+        // O ajudante da cesta caída só existe para o microevento; o comprador é o que tem cérebro.
+        val shopper = scene.ambientNpcs(env).single { it.shoppingBrain != null }
         val brain = shopper.shoppingBrain!!
         val payAt = (0L..300_000L step 100).first { brain.stateAt(it).currentIntent == ShoppingNpcIntent.PAY }
         val pickAt = (0L..300_000L step 100).first { brain.stateAt(it).currentIntent == ShoppingNpcIntent.READ_LABEL }

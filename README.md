@@ -163,8 +163,9 @@ HoodieActivity → VisualDirector → AnimationStateMachine → AnimationId + Di
   descanso 70, espontaneidade 50) puxam café, descanso e gestos sem forçar nada; momentos do dia (primeira abertura,
   chegada ao trabalho, pausa, lugar novo, volta para casa, fim do dia...) viram um gesto curto e uma fala de
   `personality-dialogues.json`, com limites de frequência e sem cobrança. Microeventos de NPC
-  (`SCENE_STORY_EVENTS`, até 2 a cada 10 min): no escritório, o coelho leva uma folha ao bulldog. Detalhes em
-  `docs/hoodie-personality.md`.
+  (`SCENE_STORY_EVENTS`, até 2 a cada 10 min): entrega de documento e conversa do café no escritório, copo
+  derramado no restaurante, cesta que cai nas compras, café entregue na mão na padaria, selfie na praia, ajuda com
+  a mala no hotel e vista compartilhada no passeio. Detalhes em `docs/hoodie-personality.md`.
 * **Transporte**: perfis únicos para caminhada, carro, ônibus, trem, metrô, bicicleta, outro veículo e transporte público não identificado; cada perfil liga cena, entrada/saída, animações, balanço/paralaxe e visual da rota/Jornada. Modais identificados têm cenas próprias e alternativas desconhecidas usam apresentação neutra.
 * Iluminação por overlay (manhã, dia, entardecer, noite) com áreas emissivas e halos de lâmpada em degraus.
 * **Personagens ambientais (NPC Art System V3)**: Bulldog executivo, cachorros, coelhos, rato, pato, guaxinim

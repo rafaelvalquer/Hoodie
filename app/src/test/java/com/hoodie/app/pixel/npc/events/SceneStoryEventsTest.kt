@@ -157,6 +157,32 @@ class SceneStoryEventsTest {
     }
 
     @Test
+    fun `chefe puxa conversa com o Hoodie no cafe, sem cruzar a entrega nem as falas dele`() {
+        var chats = 0
+        (1..12).forEach { seed ->
+            val s = session(seed)
+            val d = s.social.deliveries!!
+            val bulldog = s.npcSlots(9 * 60).first { it.definition.id == "bulldog_exec" }.officeBrain!!
+            (0 until 20L).forEach { cycle ->
+                val t0 = cycle * OfficeExecutiveTimeline.CYCLE_MS
+                val chat = d.chatAt(t0) ?: return@forEach
+                chats++
+                assertNull("entrega e conversa no mesmo ciclo", d.deliveryAt(t0))
+                val visitStart = t0 + OfficeExecutiveTimeline.ENTRY_MS
+                OfficeDocumentDeliveries.SPEECH_WINDOWS.forEach { w ->
+                    assertFalse(visitStart + w.first < chat.event.endsAt && chat.event.startAt < visitStart + w.last)
+                }
+                val talk = bulldog.frameStateAt((chat.talkAt + chat.talkEndsAt) / 2)
+                assertEquals(NpcAnimation.TALK, talk.movement.animation)
+                assertEquals(chat.line, talk.speech?.line)
+                assertEquals(Item.MUG, talk.movement.heldItem)
+                assertEquals(com.hoodie.app.pixel.sprite.Facing.FRONT, talk.movement.facing)
+            }
+        }
+        assertTrue("só $chats conversas", chats >= 4)
+    }
+
+    @Test
     fun `cena desenha a folha so enquanto esta na mesa`() {
         val (deliveries, found) = (1..12).map { deliveries(it) }.first { it.second.isNotEmpty() }
         val d = found.first()

@@ -36,7 +36,7 @@ object ShoppingNpcDirector {
             reactions = false,
         )
         val definition = AmbientNpcDefinition(style.id, style, behavior)
-        val slots = listOf(AmbientNpcSlot(
+        val shopper = AmbientNpcSlot(
             definition = definition,
             x = floor.spots.getValue(ShoppingNpcSpot.OFFSCREEN).x,
             floorY = floor.spots.getValue(ShoppingNpcSpot.OFFSCREEN).floorY,
@@ -44,7 +44,12 @@ object ShoppingNpcDirector {
             seed = daySeed,
             depth = NpcDepth.SCENE,
             shoppingBrain = brain,
-        ))
+        )
+        // Microevento (cesta que cai): o comprador ganha o roteiro e entra o cliente que ajuda.
+        val slots = if (com.hoodie.app.core.config.HoodieConfig.SCENE_STORY_EVENTS) {
+            val story = ShoppingStoryEvents(brain, floor)
+            listOf(shopper.copy(story = story.overlay), story.helperSlot)
+        } else listOf(shopper)
         return ShoppingNpcSession(daySeed, env.shoppingVenue, slots, floor)
     }
 }
