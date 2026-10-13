@@ -22,11 +22,13 @@ class PixelBuffer(val width: Int, val height: Int) {
 
     fun clear() = pixels.fill(0)
 
+    /** Retângulo recortado nas quatro bordas: o que cai fora do buffer é simplesmente ignorado. */
     fun rect(x: Int, y: Int, w: Int, h: Int, color: Int) {
         val x0 = x.coerceAtLeast(0); val y0 = y.coerceAtLeast(0)
-        val x1 = (x + w).coerceAtMost(width); val y1 = (y + h).coerceAtMost(height)
+        val x1 = (x.toLong() + w).coerceIn(0L, width.toLong()).toInt(); val y1 = (y.toLong() + h).coerceIn(0L, height.toLong()).toInt()
+        if (x0 >= x1 || y0 >= y1) return
         if ((color ushr 24) == 255) {
-            for (yy in y0 until y1) pixels.fill(color, yy * width + x0, yy * width + x1.coerceAtLeast(x0))
+            for (yy in y0 until y1) pixels.fill(color, yy * width + x0, yy * width + x1)
         } else {
             for (yy in y0 until y1) for (xx in x0 until x1) set(xx, yy, color)
         }
