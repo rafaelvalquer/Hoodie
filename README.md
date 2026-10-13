@@ -60,7 +60,7 @@ O plano e a evidência de implementação estão em
 | Camada | Pacote | Papel |
 |---|---|---|
 | Modelo/tempo | `core.model`, `core.time` | `UserContextType`, `HoodieActivity`, `ClockProvider`, `DayPeriod`, janelas de horário |
-| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v11 (27 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
+| Persistência | `core.database`, `core.datastore`, `data.repository` | Room v12 (29 tabelas, migrações versionadas) + DataStore; timeline ligada à origem (`TimelineRepository`) |
 | Segurança | `core.security` | Banco inteiro cifrado com SQLCipher (senha aleatória embrulhada por chave do Android Keystore) + coordenadas cifradas (AES‑256‑GCM) |
 | Sensores | `core.location`, `core.geofence`, `receiver` | Permissão em etapas (`LocationPermissionState`), até 95 geofences priorizados, erros visíveis, reboot/fuso/hora |
 | Regras puras | `engine.context.ContextScorer`, `ConfirmationPolicy`, `engine.routine`, `engine.hoodie.HoodieDecisionEngine`, `NeedsEngine`, `HoodieSimulator` | Sem Android: 100% testáveis |
@@ -371,7 +371,7 @@ instrumentados num emulador. Geofence real, reboot e homologação por aparelho 
 
 O plano técnico é acompanhado em [stability-architecture-progress.md](docs/stability-architecture-progress.md). A versão permanece dev enquanto os gates de teste, UI e revisão artística estão em andamento.
 
-O banco atual é Room v11: v5 completa o histórico digital, v6 adiciona mobilidade e v7 acrescenta índices compostos sem reescrever dados e v8 adiciona estado do dia, auditoria de correções, rotina aprendida e padrões de transporte. A v9 preserva o tipo de estabelecimento corrigido; a v10 acrescenta evidências de mobilidade; a v11 isola agregados por período em veículo, registra a confirmação da caminhada e versiona a rotina efetiva. Sessões individuais são mantidas por 365 dias; agregados diários permanecem. Ver [auditoria dos índices](docs/database-index-audit.md).
+O banco atual é Room v12: v5 completa o histórico digital, v6 adiciona mobilidade e v7 acrescenta índices compostos sem reescrever dados e v8 adiciona estado do dia, auditoria de correções, rotina aprendida e padrões de transporte. A v9 preserva o tipo de estabelecimento corrigido; a v10 acrescenta evidências de mobilidade; a v11 isola agregados por período em veículo, registra a confirmação da caminhada e versiona a rotina efetiva; a v12 adiciona correções reversíveis (`correction_undo`, Desfazer) e a fila de entrega de notificações (`notification_delivery`). Sessões individuais são mantidas por 365 dias; agregados diários permanecem. Ver [auditoria dos índices](docs/database-index-audit.md).
 
 O Diário Digital começa desativado. Ativar solicita o acesso ao uso do Android; a análise só liga após a permissão. A ajuda de Configurações restritas está disponível na tela de ativação. A permissão Android sozinha não equivale a consentimento no app.
 

@@ -52,7 +52,9 @@ abstract class BindingsModule {
     @Binds abstract fun geofenceRegistrar(impl: GeofenceManager): GeofenceRegistrar
     @Binds abstract fun currentPosition(impl: LocationProvider): CurrentPosition
     @Binds abstract fun locationSource(impl: LocationProvider): LocationSource
-    @Binds abstract fun notifier(impl: HoodieNotifier): Notifier
+    @Binds abstract fun notifier(impl: com.hoodie.app.core.notification.SmartNotifier): Notifier
+    @Binds abstract fun notificationGate(impl: HoodieNotifier): com.hoodie.app.core.notification.NotificationGate
+    @Binds abstract fun deliverySignalSource(impl: com.hoodie.app.engine.notification.DefaultDeliverySignalSource): com.hoodie.app.engine.notification.DeliverySignalSource
     @Binds abstract fun checkScheduler(impl: WorkScheduler): CheckScheduler
     @Binds abstract fun mobilityScheduler(impl: WorkScheduler): com.hoodie.app.worker.MobilityScheduler
     @Binds abstract fun speedSampleScheduler(impl: WorkScheduler): com.hoodie.app.worker.SpeedSampleScheduler
@@ -69,6 +71,7 @@ abstract class BindingsModule {
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
     @Provides fun intelligenceDao(db: HoodieDatabase) = db.intelligenceDao()
+    @Provides fun notificationDeliveryDao(db: HoodieDatabase) = db.notificationDeliveryDao()
     @Provides @Singleton
     fun database(@ApplicationContext context: Context, gate: DatabaseGate): HoodieDatabase {
         SqlCipherNativeLoader.ensureLoaded()

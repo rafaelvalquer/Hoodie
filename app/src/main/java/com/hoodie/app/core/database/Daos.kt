@@ -136,6 +136,15 @@ interface ConfirmationDao {
     @Insert
     suspend fun insert(c: ContextConfirmationEntity)
 
+    @Query("SELECT MAX(id) FROM context_confirmations")
+    suspend fun maxId(): Long?
+
+    @Query("SELECT id FROM context_confirmations WHERE id > :afterId")
+    suspend fun idsAfter(afterId: Long): List<Long>
+
+    @Query("DELETE FROM context_confirmations WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
+
     @Query("SELECT * FROM context_confirmations WHERE timestamp >= :since")
     suspend fun since(since: Long): List<ContextConfirmationEntity>
 }

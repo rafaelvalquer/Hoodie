@@ -89,6 +89,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val busy by vm.busy.collectAsStateWithLifecycle()
     val dayState by vm.dayState.collectAsStateWithLifecycle(initialValue = null)
     val homeNow by vm.homeNow.collectAsStateWithLifecycle()
+    val savedPlaces by vm.savedPlaces.collectAsStateWithLifecycle()
     val zone = vm.zone
     val snackbar = remember { SnackbarHostState() }
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
@@ -115,6 +116,13 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
                     is HomeUiEvent.React -> reactions.emit(event.animation)
                     is HomeUiEvent.ShowError -> launch { snackbar.showSnackbar(context.appErrorText(event.error)) }
                     is HomeUiEvent.ShowMessage -> launch { snackbar.showSnackbar(event.message) }
+                    is HomeUiEvent.OfferUndo -> launch {
+                        // ~15 s para desfazer; ao expirar a Snackbar some e a correção segue valendo.
+                        val result = kotlinx.coroutines.withTimeoutOrNull(15_000L) {
+                            snackbar.showSnackbar(event.message, actionLabel = context.getString(R.string.home_undo), duration = androidx.compose.material3.SnackbarDuration.Indefinite)
+                        }
+                        if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) vm.undoCorrection(event.operationId)
+                    }
                 }
             }
         }
@@ -137,7 +145,11 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             saveDiscoveredPlace = { id, name, reuseId, position -> vm.saveDiscoveredPlace(id, name, reuseId, position) },
             updateNewPlacePosition = vm::updateNewPlacePosition,
             correctContext = { type, historical, expectedEventId -> vm.correctCurrentContext(type, historical, expectedEventId) },
+            confirmContext = vm::confirmContext,
+            quickCorrect = vm::quickCorrect,
         ),
+        savedPlaces = savedPlaces,
+        setupCard = { if (com.hoodie.app.core.config.HoodieConfig.PROGRESSIVE_ONBOARDING) com.hoodie.app.presentation.screens.onboarding.SetupProgressHost(onOpen) },
         reactions = reactions,
         snackbar = snackbar,
         dayState = dayState,
@@ -158,6 +170,8 @@ internal data class HomeActions(
     val saveDiscoveredPlace: (Long, String, Long?, Pair<Double, Double>?) -> Unit = { _, _, _, _ -> },
     val updateNewPlacePosition: (Long, Pair<Double, Double>?) -> Unit = { _, _ -> },
     val correctContext: suspend (PlaceType, Boolean, Long?) -> Boolean = { _, _, _ -> false },
+    val confirmContext: (Long) -> Unit = {},
+    val quickCorrect: suspend (com.hoodie.app.domain.correction.QuickContextCorrection) -> Boolean = { false },
 )
 
 /** Production UI shared by the connected screen and deterministic visual fixtures. */
@@ -174,12 +188,25 @@ internal fun HomeContent(
     dayState: com.hoodie.app.domain.daystate.DayStateSnapshot? = null,
     homeNow: com.hoodie.app.domain.home.HomeNowSnapshot? = null,
     onScenePresented: (com.hoodie.app.pixel.scene.SceneId) -> Unit = {},
+    savedPlaces: List<com.hoodie.app.core.model.Place> = emptyList(),
+    setupCard: @Composable () -> Unit = {},
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
     var correctionOpen by remember { mutableStateOf(false) }
     var correctionExpectedEventId by remember { mutableStateOf<Long?>(null) }
     var correctionSnapshot by remember { mutableStateOf<com.hoodie.app.domain.home.HomeNowSnapshot?>(null) }
+    val openCorrection: () -> Unit = {
+        correctionSnapshot = homeNow ?: state.context?.let { current ->
+            com.hoodie.app.engine.home.HomeNowAssembler.assemble(
+                dayState, current, state.contextPlaceName, null, null, state.now, state.locationStatus,
+            )
+        }
+        correctionExpectedEventId = correctionSnapshot?.contextEventId ?: state.context?.id
+        correctionOpen = true
+    }
+    val ux2 = com.hoodie.app.core.config.HoodieConfig.HOME_UX_V2
+    val primary = if (ux2) HomePresentationMapper.primaryAction(state) else null
     if (state.loading) {
         HomeLoadingSkeleton()
         return
@@ -203,15 +230,7 @@ internal fun HomeContent(
             IconLabel(PixelIcons.of(state.period), state.period.label, color = periodColor(state.period), style = MaterialTheme.typography.labelLarge, iconSize = 20.dp)
             Spacer(Modifier.weight(1f))
             if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {
-                HomeMoreMenu(onAdjust = {
-                    correctionSnapshot = homeNow ?: state.context?.let { current ->
-                        com.hoodie.app.engine.home.HomeNowAssembler.assemble(
-                            dayState, current, state.contextPlaceName, null, null, state.now, state.locationStatus,
-                        )
-                    }
-                    correctionExpectedEventId = correctionSnapshot?.contextEventId ?: state.context?.id
-                    correctionOpen = true
-                })
+                HomeMoreMenu(onAdjust = openCorrection)
             }
             HeaderIcon(PixelIcons.SPARKLE, HoodieColors.Gold, stringResource(R.string.home_memories)) { onOpen(Routes.MEMORIES) }
             HeaderIcon(PixelIcons.CAT, HoodieColors.Hood, stringResource(R.string.home_profile)) { onOpen(Routes.PROFILE) }
@@ -244,6 +263,10 @@ internal fun HomeContent(
                     homeNow, state.now, zone,
                     activity = state.snapshot?.state?.activity, activityStartedAt = state.snapshot?.state?.startedAt, catName = state.catName,
                 )
+                if (ux2) HomeNowQuickActions(
+                    HomePresentationMapper.quickActions(homeNow), onConfirm = actions.confirmContext, onCorrect = openCorrection,
+                    enabled = !busy, modifier = Modifier.padding(top = 8.dp),
+                )
             }
         } else state.snapshot?.let { snap ->
             val a = snap.state.activity
@@ -260,9 +283,10 @@ internal fun HomeContent(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
             state.question?.takeUnless { state.vehicleMoving && it.kind in setOf(QuestionKind.NEW_PLACE, QuestionKind.SAVE_PLACE) }
+                ?.takeIf { !ux2 || primary is HomePrimaryAction.PendingQuestion }
                 ?.let { q -> QuestionCard(q, actions, state.newPlaceSaveOptions, busy) }
 
-            if (state.probableMode || state.locationStatus != LocationStatus.OK) {
+            if (if (ux2) primary is HomePrimaryAction.MonitoringWarning else (state.probableMode || state.locationStatus != LocationStatus.OK)) {
                 PixelPanel(Modifier.fillMaxWidth(), color = HoodieColors.PanelLight) {
                     Text(
                         when (state.locationStatus) {
@@ -275,7 +299,7 @@ internal fun HomeContent(
                 }
             }
 
-            state.suggestSavePlace?.let { type ->
+            state.suggestSavePlace?.takeIf { !ux2 || primary is HomePrimaryAction.SuggestPlace }?.let { type ->
                 PixelPanel(Modifier.fillMaxWidth()) {
                     val title = when {
                         state.canSaveHere && type == PlaceType.WORK -> uiTextContext.getString(R.string.ui_extra_home_screen_4)
@@ -293,6 +317,9 @@ internal fun HomeContent(
                     PixelButton(stringResource(R.string.ui_home_screen_1), { onOpen(Routes.placePicker(type)) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
                 }
             }
+
+            // Configuração gradual: só quando não há nenhuma outra pendência e não está em veículo.
+            if (ux2 && primary == null && !state.vehicleMoving) setupCard()
 
             // Você.
             if (!com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) PixelPanel(Modifier.fillMaxWidth()) {
@@ -331,8 +358,17 @@ internal fun HomeContent(
     if (correctionOpen) HomeNowCorrectionSheet(
         snapshot = correctionSnapshot,
         onDismiss = { correctionOpen = false },
-        onSave = { type, historical -> actions.correctContext(type, historical, correctionExpectedEventId) },
+        onSave = { type, historical, placeId ->
+            val expected = correctionExpectedEventId
+            if (com.hoodie.app.core.config.HoodieConfig.QUICK_CORRECTION_V2 && expected != null) actions.quickCorrect(
+                com.hoodie.app.domain.correction.QuickContextCorrection(
+                    expected, type, placeId,
+                    if (historical) com.hoodie.app.domain.correction.CorrectionScope.SINCE_CURRENT_ARRIVAL else com.hoodie.app.domain.correction.CorrectionScope.FROM_NOW,
+                ),
+            ) else actions.correctContext(type, historical, expected)
+        },
         saving = busy,
+        savedPlaces = savedPlaces,
     )
 }
 

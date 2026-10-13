@@ -377,6 +377,52 @@ class HomeViewModel @Inject constructor(
         _events.send(HomeUiEvent.React(AnimationId.HAPPY))
     }
 
+    /** Lugares cadastrados, para escolher o local exato quando há mais de um do mesmo tipo. */
+    val savedPlaces: StateFlow<List<Place>> = places.places.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Correção rápida com lugar exato; oferece Desfazer quando é seguro. */
+    suspend fun quickCorrect(correction: com.hoodie.app.domain.correction.QuickContextCorrection): Boolean {
+        if (_busy.value) return false
+        _busy.value = true
+        return try {
+            when (val result = withContext(Dispatchers.IO) { contextEngine.correctWithUndo(correction) }) {
+                com.hoodie.app.domain.correction.QuickCorrectionResult.Stale -> {
+                    _events.send(HomeUiEvent.ShowMessage("O Hoodie identificou uma mudança. Confira sua atividade atual antes de salvar."))
+                    false
+                }
+                is com.hoodie.app.domain.correction.QuickCorrectionResult.Applied -> {
+                    if (correction.scope == com.hoodie.app.domain.correction.CorrectionScope.FROM_NOW) {
+                        withContext(Dispatchers.IO) { mobility.onManualContext(correction.placeType.toContext(), clock.nowMillis()) }
+                    }
+                    _events.send(HomeUiEvent.React(AnimationId.HAPPY))
+                    result.operationId?.let { _events.send(HomeUiEvent.OfferUndo(it, "Correção salva.")) }
+                    true
+                }
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Log.e(TAG, "Failed to save quick correction", error)
+            _events.send(HomeUiEvent.ShowMessage("Não foi possível salvar a correção. Tente novamente."))
+            false
+        } finally {
+            _busy.value = false
+        }
+    }
+
+    fun undoCorrection(operationId: String) = action {
+        val message = when (val r = contextEngine.undoCorrection(operationId)) {
+            com.hoodie.app.domain.correction.UndoResult.Restored -> "Correção desfeita."
+            com.hoodie.app.domain.correction.UndoResult.NotFound -> "Não encontrei essa correção."
+            is com.hoodie.app.domain.correction.UndoResult.Blocked -> when (r.reason) {
+                com.hoodie.app.domain.correction.UndoBlockReason.EXPIRED -> "Já não é seguro desfazer. Edite manualmente no Diário."
+                com.hoodie.app.domain.correction.UndoBlockReason.ALREADY_UNDONE -> "Essa correção já foi desfeita."
+                com.hoodie.app.domain.correction.UndoBlockReason.CONFLICT -> "Algo mudou depois da correção, então não desfiz para não perder dados. Edite manualmente no Diário."
+            }
+        }
+        _events.send(HomeUiEvent.ShowMessage(message))
+    }
+
     fun confirmContext(expectedEventId: Long) = action {
         val confirmed = contextEngine.confirmCurrentContext(expectedEventId, clock.nowMillis())
         if (confirmed) _events.send(HomeUiEvent.React(AnimationId.HAPPY))
