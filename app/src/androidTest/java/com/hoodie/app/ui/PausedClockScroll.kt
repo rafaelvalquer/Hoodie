@@ -6,12 +6,13 @@ import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 
 /** Scrolls real controls while allowing a manually controlled inspector to draw. */
-internal fun ComposeContentTestRule.scrollWithPausedClock(
+internal fun ComposeTestRule.scrollWithPausedClock(
     node: SemanticsNodeInteraction,
 ): SemanticsNodeInteraction {
+    var lastGeometry = ""
     repeat(12) {
         val target = node.fetchSemanticsNode()
         val scroll = generateSequence(target.parent) { it.parent }
@@ -26,14 +27,24 @@ internal fun ComposeContentTestRule.scrollWithPausedClock(
             return@repeat
         }
         // Keep touch centres away from edge-to-edge status/navigation bars.
-        val inset = 32f * scroll.layoutInfo.density.density
+        val inset = 16f * scroll.layoutInfo.density.density
         val viewportTop = viewport.top + inset
         val viewportBottom = viewport.bottom - inset
         val top = target.positionInRoot.y
         val bottom = top + target.size.height
+        val center = (top + bottom) / 2f
+        lastGeometry = "target=$top..$bottom viewport=$viewport centre=$center"
+        // The touch centre needs the system-bar margin; requiring that margin
+        // around the whole last button can be impossible at maximum scroll.
+        if (top >= viewport.top && bottom <= viewport.bottom && center in viewportTop..viewportBottom) {
+            node.assertIsDisplayed()
+            return node
+        }
         val delta = when {
-            top < viewportTop -> top - viewportTop
-            bottom > viewportBottom -> if (target.size.height > viewportBottom - viewportTop) top - viewportTop else bottom - viewportBottom
+            top < viewport.top -> top - viewport.top
+            bottom > viewport.bottom -> if (target.size.height > viewport.height) top - viewport.top else bottom - viewport.bottom
+            center < viewportTop -> center - viewportTop
+            center > viewportBottom -> center - viewportBottom
             else -> 0f
         }
         if (kotlin.math.abs(delta) < 0.5f) {
@@ -43,5 +54,5 @@ internal fun ComposeContentTestRule.scrollWithPausedClock(
         runOnUiThread { scroll.config[SemanticsActions.ScrollBy].action?.invoke(0f, delta) }
         mainClock.advanceTimeBy(400L)
     }
-    throw AssertionError("O controle não ficou visível após 12 avanços de rolagem")
+    throw AssertionError("O controle não ficou visível após 12 avanços de rolagem: $lastGeometry")
 }

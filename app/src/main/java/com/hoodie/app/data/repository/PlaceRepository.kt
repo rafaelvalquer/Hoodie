@@ -25,11 +25,25 @@ class PlaceRepository @Inject constructor(
 
     suspend fun firstOfType(type: PlaceType): Place? = all().firstOrNull { it.type == type }
 
-    suspend fun add(name: String, type: PlaceType, lat: Double, lng: Double, radius: Float, now: Long): Place {
+    /** Proximity suggests candidates only; callers must ask before reusing a place. */
+    suspend fun findNearby(latitude: Double, longitude: Double, maxDistanceMeters: Float): List<Place> {
+        require(latitude.isFinite() && latitude in -90.0..90.0)
+        require(longitude.isFinite() && longitude in -180.0..180.0)
+        require(maxDistanceMeters.isFinite() && maxDistanceMeters >= 0f)
+        return all().map { it to Geo.distanceMeters(latitude, longitude, it.latitude, it.longitude) }
+            .filter { it.second <= maxDistanceMeters }
+            .sortedWith(compareBy<Pair<Place, Double>> { it.second }.thenBy { it.first.id })
+            .map { it.first }
+    }
+
+    suspend fun setFavorite(id: Long, favorite: Boolean) = dao.setFavorite(id, favorite)
+
+    suspend fun add(name: String, type: PlaceType, lat: Double, lng: Double, radius: Float, now: Long,
+        visitedAt: Long? = now): Place {
         val id = dao.insert(
             PlaceEntity(
                 name = name, type = type, encryptedCoordinates = cipher.encrypt(lat, lng),
-                radiusMeters = radius, confidence = 1f, createdAt = now, lastVisitedAt = now,
+                radiusMeters = radius, confidence = 1f, createdAt = now, lastVisitedAt = visitedAt,
             ),
         )
         return requireNotNull(byId(id))
@@ -50,10 +64,9 @@ class PlaceRepository @Inject constructor(
     suspend fun markVisited(id: Long, at: Long) = dao.markVisited(id, at)
 
     /** Lugar conhecido que contém o ponto (para reconciliar um geofence perdido). */
-    suspend fun containing(lat: Double, lng: Double): Place? = all()
-        .map { it to Geo.distanceMeters(lat, lng, it.latitude, it.longitude) }
-        .filter { (p, d) -> d <= p.radiusMeters }
-        .minByOrNull { it.second }?.first
+    suspend fun containing(lat: Double, lng: Double): Place? = com.hoodie.app.core.geofence.PlaceArrivalPolicy.select(
+        all(), com.hoodie.app.core.geofence.PlaceArrivalPosition(lat, lng),
+    )
 
     private fun toDomain(e: PlaceEntity): Place? {
         val (lat, lng) = cipher.decrypt(e.encryptedCoordinates) ?: return null

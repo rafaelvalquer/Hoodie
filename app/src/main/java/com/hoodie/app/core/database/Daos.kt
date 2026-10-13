@@ -30,7 +30,12 @@ interface PlaceDao {
     @Query("DELETE FROM places WHERE id = :id")
     suspend fun delete(id: Long)
 
-    @Query("UPDATE places SET confirmationCount = confirmationCount + 1, lastVisitedAt = :at WHERE id = :id")
+    @Query("UPDATE places SET isFavorite = :favorite WHERE id = :id")
+    suspend fun setFavorite(id: Long, favorite: Boolean)
+
+    @Query("""UPDATE places SET confirmationCount = confirmationCount + 1,
+        lastVisitedAt = CASE WHEN lastVisitedAt IS NULL OR lastVisitedAt < :at THEN :at ELSE lastVisitedAt END
+        WHERE id = :id""")
     suspend fun markVisited(id: Long, at: Long)
 }
 

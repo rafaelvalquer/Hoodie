@@ -16,6 +16,26 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ShoppingNpcBrainTest {
+    @Test fun dayLongCacheIsBoundedAndEvictedTripsReplayIdenticallyForBothFloorPlans() {
+        val plans = listOf(
+            ShoppingNavigationGraph to com.hoodie.app.pixel.npc.shopping.ShoppingSpeechLibrary,
+            com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph to com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary,
+        )
+        plans.forEach { (floor, speech) ->
+            val shopper = ShoppingNpcDirector.createSession(env(), floor, speech).npcSlots.single().shoppingBrain!!
+            val timestamps = listOf(0L, 25_000L, 75_000L, 150_000L, 240_000L)
+            val original = timestamps.map { Triple(shopper.stateAt(it), shopper.movementAt(it), shopper.visualStateAt(it)) }
+            for (cycle in 1L..288L) {
+                shopper.stateAt(cycle * 300_000 + 75_000)
+                assertTrue(shopper.cachedTripCount <= com.hoodie.app.pixel.npc.shopping.ShoppingNpcBrain.MAX_CACHED_TRIPS)
+            }
+            assertEquals(com.hoodie.app.pixel.npc.shopping.ShoppingNpcBrain.MAX_CACHED_TRIPS, shopper.cachedTripCount)
+            val replayed = timestamps.map { Triple(shopper.stateAt(it), shopper.movementAt(it), shopper.visualStateAt(it)) }
+            assertEquals(original, replayed)
+            assertTrue(shopper.cachedTripCount <= com.hoodie.app.pixel.npc.shopping.ShoppingNpcBrain.MAX_CACHED_TRIPS)
+        }
+    }
+
     private fun copyImage(source: PixelBuffer) = PixelBuffer(source.width, source.height).also {
         System.arraycopy(source.pixels, 0, it.pixels, 0, source.pixels.size)
     }

@@ -71,4 +71,6 @@ data class MobilitySegmentEntity(
     val confidence: Float,
     val confirmed: Boolean = false,
     val source: MobilitySource,
+    val evidenceId: Long? = null,
+    val confirmedAt: Long? = null,
 )

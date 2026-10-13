@@ -167,7 +167,7 @@ class FullDayIntelligenceIntegrationTest {
                 "Casa", null, null, g.clock.millis)
             assertEquals(DayState.SLEEPING, homeNow.dayState?.state)
             assertEquals(UserContextType.HOME, homeNow.context)
-            assertEquals(HomeNowStatus.PROBABLE, homeNow.status)
+            assertEquals(HomeNowStatus.IDENTIFIED, homeNow.status)
             assertEquals(7, g.db.intelligenceDao().correctionsSince(0).size)
         } finally { g.close() }
     }

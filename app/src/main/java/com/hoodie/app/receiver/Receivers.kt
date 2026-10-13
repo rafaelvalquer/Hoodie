@@ -56,12 +56,21 @@ class GeofenceReceiver : BroadcastReceiver() {
         }
         val ids = event.triggeringGeofences.orEmpty().mapNotNull { it.requestId.toLongOrNull() }
         val at = clock.nowMillis()
+        val position = event.triggeringLocation?.takeIf { at - it.time in 0..120_000 }?.let {
+            com.hoodie.app.core.geofence.PlaceArrivalPosition(it.latitude, it.longitude, it.accuracy.takeIf { _ -> it.hasAccuracy() })
+        }
         runAsync {
             if (!gate.isReady()) return@runAsync
-            ids.forEach {
-                // Contexto primeiro (autoridade sobre Casa/Trabalho/…); a mobilidade enriquece depois.
-                contextEngine.get().onGeofence(it, transition, at)
-                mobilityEngine.get().onGeofence(it, transition, at)
+            if (transition == GeofenceTransition.EXIT) {
+                ids.forEach {
+                    contextEngine.get().onGeofence(it, transition, at)
+                    mobilityEngine.get().onGeofence(it, transition, at)
+                }
+            } else {
+                // Resolve overlapping fences once; only the selected place can finish a trip.
+                contextEngine.get().onArrivalGeofences(ids, transition, at, position)?.let {
+                    mobilityEngine.get().onGeofence(it, transition, at)
+                }
             }
         }
     }

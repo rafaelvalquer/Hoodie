@@ -70,6 +70,7 @@ class RoutineViewModel @Inject constructor(
     private val hoodie: HoodieEngine,
     private val clock: ClockProvider,
     private val contextEvents: ContextEventDao,
+    private val effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
 ) : ViewModel() {
     private data class DayOffObservation(
         val date: LocalDate,
@@ -119,9 +120,15 @@ class RoutineViewModel @Inject constructor(
 
     suspend fun load(): Pair<Routine, SleepSchedule> = routines.get() to settings.current().sleep
 
-    fun save(r: Routine, sleep: SleepSchedule, done: () -> Unit) = viewModelScope.launch {
-        routines.save(r, clock.nowMillis())
-        settings.setSleep(sleep)
+    suspend fun automaticEvents(): Set<String> = settings.current().automaticRoutineEvents
+
+    fun save(r: Routine, sleep: SleepSchedule, done: () -> Unit, automatic: Set<String>? = null) = viewModelScope.launch {
+        if (effectiveRoutine != null) effectiveRoutine.saveManual(r, sleep, automatic ?: settings.current().automaticRoutineEvents)
+        else {
+            routines.save(r, clock.nowMillis())
+            settings.setSleep(sleep)
+            if (automatic != null) settings.setAutomaticRoutineEvents(automatic)
+        }
         hoodie.resolve()
         done()
     }
@@ -224,8 +231,9 @@ class RoutineViewModel @Inject constructor(
 fun RoutineScreen(onBack: () -> Unit, vm: RoutineViewModel = hiltViewModel()) {
     var routine by remember { mutableStateOf<Routine?>(null) }
     var sleep by remember { mutableStateOf(SleepSchedule()) }
+    var automatic by remember { mutableStateOf(emptySet<String>()) }
     val dayException by vm.dayExceptionState.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { vm.load().let { routine = it.first; sleep = it.second } }
+    LaunchedEffect(Unit) { vm.load().let { routine = it.first; sleep = it.second }; automatic = vm.automaticEvents() }
     val r = routine ?: return
     Column(
         Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -257,7 +265,26 @@ fun RoutineScreen(onBack: () -> Unit, vm: RoutineViewModel = hiltViewModel()) {
             TimeField("Acordar", sleep.wakeMinute, { sleep = sleep.copy(wakeMinute = it) }, Modifier.weight(1f))
             TimeField("Dormir", sleep.sleepMinute, { sleep = sleep.copy(sleepMinute = it) }, Modifier.weight(1f))
         }
-        PixelButton("Salvar", { vm.save(r, sleep, onBack) }, Modifier.fillMaxWidth())
+        SectionLabel("Horários: manual ou automático")
+        Text("No automático, um padrão confiável substitui o horário de referência. Sem dados, o horário manual continua valendo.", style = MaterialTheme.typography.bodySmall)
+        com.hoodie.app.domain.routine.RoutineEventType.entries.forEach { type ->
+            Text(type.routineLabel(), style = MaterialTheme.typography.labelLarge)
+            ChipRow(listOf("Manual", "Automático"), if (type.name in automatic) 1 else 0,
+                { automatic = if (it == 1) automatic + type.name else automatic - type.name })
+        }
+        PixelButton("Salvar", { vm.save(r, sleep, onBack, automatic) }, Modifier.fillMaxWidth())
         PixelButton("Voltar", onBack, Modifier.fillMaxWidth(), color = HoodieColors.PanelLight, textColor = HoodieColors.Ink)
     }
+}
+
+private fun com.hoodie.app.domain.routine.RoutineEventType.routineLabel(): String = when (this) {
+    com.hoodie.app.domain.routine.RoutineEventType.WAKE -> "Acordar"
+    com.hoodie.app.domain.routine.RoutineEventType.SLEEP -> "Dormir"
+    com.hoodie.app.domain.routine.RoutineEventType.WORK_START -> "Entrada no trabalho"
+    com.hoodie.app.domain.routine.RoutineEventType.WORK_END -> "Fim do expediente"
+    com.hoodie.app.domain.routine.RoutineEventType.LUNCH_START -> "Início do almoço"
+    com.hoodie.app.domain.routine.RoutineEventType.LUNCH_END -> "Fim do almoço"
+    com.hoodie.app.domain.routine.RoutineEventType.LEAVE_HOME -> "Previsão de saída de casa"
+    com.hoodie.app.domain.routine.RoutineEventType.GYM_START -> "Previsão de academia"
+    com.hoodie.app.domain.routine.RoutineEventType.HOME_RETURN -> "Previsão de retorno para casa"
 }

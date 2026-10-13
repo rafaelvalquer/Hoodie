@@ -12,6 +12,40 @@ import com.hoodie.app.core.time.MINUTE_MS
 
 /** Internal handler; synchronization belongs exclusively to ContextEngine. */
 internal class GeofenceContextHandler(private val processor: ContextSignalProcessor) {
+    suspend fun onArrivalGeofences(ids: List<Long>, transition: GeofenceTransition, at: Long,
+        position: com.hoodie.app.core.geofence.PlaceArrivalPosition?): Long? = with(processor) {
+        require(transition != GeofenceTransition.EXIT)
+        val all = places.all()
+        val triggered = all.filter { it.id in ids }
+        if (triggered.isEmpty()) return@with null
+        val currentId = contextDao.current()?.placeId
+        val candidates = if (position != null) all else {
+            val current = all.firstOrNull { it.id == currentId }
+            if (current != null && triggered.any {
+                    com.hoodie.app.core.util.Geo.distanceMeters(it.latitude, it.longitude, current.latitude, current.longitude) <
+                        it.radiusMeters + current.radiusMeters
+                }) (triggered + current).distinctBy { it.id } else triggered
+        }
+        triggered.forEach {
+            locationEventDao.insert(LocationEventEntity(placeId = it.id, transition = transition.name, timestamp = at))
+        }
+        val selected = com.hoodie.app.core.geofence.PlaceArrivalPolicy.select(candidates, position, currentId)
+        if (selected == null) {
+            log.log(DebugEventLogger.Category.GEOFENCE, "AMBIGUOUS ${triggered.joinToString { it.id.toString() }}")
+            scheduler.reconcileNow()
+            return@with null
+        }
+        // Keeping the current context during an ambiguous neighboring ENTER is not
+        // fresh arrival evidence: do not let it finish a mobility session.
+        if (position == null && selected.id !in ids) {
+            scheduler.reconcileNow()
+            return@with null
+        }
+        log.log(DebugEventLogger.Category.GEOFENCE, "${transition.name} ${selected.name}")
+        handleEnter(selected, at)
+        selected.id
+    }
+
     suspend fun onGeofence(placeId: Long, transition: GeofenceTransition, at: Long): Unit = with(processor) {
         val place = places.byId(placeId) ?: return@with
         log.log(DebugEventLogger.Category.GEOFENCE, "${transition.name} ${place.name}")
@@ -127,6 +161,7 @@ internal class GeofenceContextHandler(private val processor: ContextSignalProces
      * fluxo atual de lugar novo (UNKNOWN + pergunta, se [askNewPlace]).
      */
     suspend fun arriveAtPosition(lat: Double, lng: Double, askNewPlace: Boolean): Unit = with(processor) {
+        if (vehicleInMotion()) return@with
         val known = places.containing(lat, lng)
         if (known != null) {
             onGeofence(known.id, GeofenceTransition.ENTER, clock.nowMillis())

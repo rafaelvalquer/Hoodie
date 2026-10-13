@@ -109,6 +109,7 @@ class TestGraph(startAt: Long) {
         db.contextEventDao(), transitions, db.confirmationDao(), db.questionDao(), db.locationEventDao(),
         places, routines, settings, memory, hoodie, notifier, scheduler, location, geofences, PlainCipher, clock, log,
         db.intelligenceDao(), dagger.Lazy { diaryCorrections },
+        mobilityRepository = com.hoodie.app.data.repository.MobilityRepository(db),
     )
 
     val contextDao get() = db.contextEventDao()

@@ -82,6 +82,7 @@ class DiaryRepositoryTest {
     }
 
     private class PlaceDaoStub(private val rows: List<PlaceEntity>) : PlaceDao {
+        override suspend fun setFavorite(id: Long, favorite: Boolean) = error("unused")
         override suspend fun getAll() = rows
         override fun observeAll(): Flow<List<PlaceEntity>> = error("unused")
         override suspend fun getById(id: Long): PlaceEntity? = error("unused")

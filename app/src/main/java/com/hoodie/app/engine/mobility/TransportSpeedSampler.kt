@@ -1,72 +1,42 @@
 package com.hoodie.app.engine.mobility
 
-import com.hoodie.app.core.config.HoodieConfig
-import com.hoodie.app.core.debug.DebugEventLogger
-import com.hoodie.app.core.location.LocationSource
-import com.hoodie.app.core.mobility.DetectedMovement
-import com.hoodie.app.core.mobility.SpeedSampleReservation
 import com.hoodie.app.core.datastore.SettingsRepository
+import com.hoodie.app.core.location.LocationSource
+import com.hoodie.app.core.location.LocationPermissionState
+import com.hoodie.app.core.location.ProcessForegroundState
 import com.hoodie.app.core.time.ClockProvider
 import com.hoodie.app.data.repository.MobilityRepository
 import com.hoodie.app.worker.MobilityScheduler
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
+import com.hoodie.app.worker.SpeedSampleScheduler
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.NonCancellable
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Performs one reserved point speed lookup without holding MobilityEngine's mutex. */
+/** One suspended lookup. Its coroutine is owned and awaited by WorkManager. */
 @Singleton
 class TransportSpeedSampler @Inject constructor(
     private val repository: MobilityRepository,
     private val location: LocationSource,
-    private val features: TransportFeatureBuilder,
     private val settings: SettingsRepository,
     private val scheduler: MobilityScheduler,
+    private val speedScheduler: SpeedSampleScheduler,
+    private val foreground: ProcessForegroundState,
     private val clock: ClockProvider,
-    private val log: DebugEventLogger,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val lock = Any()
-    private val jobs = ConcurrentHashMap<Long, Job>()
-
-    fun request(reservation: SpeedSampleReservation) {
-        synchronized(lock) {
-            if (jobs.containsKey(reservation.sessionId)) return
-            jobs[reservation.sessionId] = scope.launch {
-                try {
-                    if (!settings.current().mobility.detectionEnabled) return@launch
-                    val sample = location.currentSpeed() ?: run {
-                        log.log(DebugEventLogger.Category.MOBILITY, "Amostra sem leitura de velocidade")
-                        return@launch
-                    }
-                    if (!HoodieConfig.TRANSPORT_CLASSIFIER_V2) return@launch
-                    val applied = repository.applySpeedSample(reservation, sample, clock.nowMillis(), TransportSpeedSamplingPolicy.MAX_AGE_MS)
-                    if (applied == null) {
-                        log.log(DebugEventLogger.Category.MOBILITY, "Amostra descartada: sessão/reserva ficou obsoleta")
-                        return@launch
-                    }
-                    features.beginSession(applied.id, applied.startedAt)
-                    features.restoreSpeedAggregates(applied.id, applied.speedSampleCount, applied.meanSpeedKmh, applied.maxSpeedKmh, applied.speedVariation)
-                    if (applied.currentMode.isVehicle) features.recordMovement(DetectedMovement.IN_VEHICLE, applied.lastVehicleAt ?: applied.startedAt)
-                    log.log(DebugEventLogger.Category.MOBILITY, "Amostra aplicada ${applied.speedSampleCount}/${TransportSpeedSamplingPolicy.MAX_ATTEMPTS}")
-                    scheduler.scheduleMobilityCheck(0L)
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (error: Exception) {
-                    log.log(DebugEventLogger.Category.MOBILITY, "Amostra de velocidade falhou (${error.javaClass.simpleName})")
-                } finally {
-                    synchronized(lock) { jobs.remove(reservation.sessionId) }
-                }
-            }
-        }
-    }
-
-    fun cancelSession(sessionId: Long) {
-        synchronized(lock) { jobs.remove(sessionId)?.cancel() }
+    private suspend fun allowed(): Boolean = com.hoodie.app.core.config.HoodieConfig.TRANSPORT_CLASSIFIER_V2 && settings.current().mobility.detectionEnabled &&
+        location.permissionState().let { it.canReadPosition && (it == LocationPermissionState.BACKGROUND || foreground.isVisible) }
+    fun enqueue(sessionId: Long, evidenceId: Long) = speedScheduler.enqueue(sessionId, evidenceId)
+    fun cancelSession(sessionId: Long) = speedScheduler.cancelSession(sessionId)
+    fun cancelAll() = speedScheduler.cancelSpeedSamples()
+    fun cancelEvidence(evidenceId: Long) = speedScheduler.cancelEvidence(evidenceId)
+    suspend fun sample(sessionId: Long, evidenceId: Long, workRequestId: String) {
+        if (!allowed()) return
+        val reservation = repository.reserveEvidenceSample(sessionId, evidenceId, workRequestId, clock.nowMillis()) ?: return
+        try {
+            val sample = withTimeoutOrNull(20_000L) { location.currentSpeed() } ?: return
+            if (allowed() && repository.applyEvidenceSample(reservation, sample, clock.nowMillis())) scheduler.scheduleMobilityCheck(0)
+        } finally { withContext(NonCancellable) { repository.releaseSpeedReservation(reservation) } }
     }
 }

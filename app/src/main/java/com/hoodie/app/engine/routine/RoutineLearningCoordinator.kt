@@ -13,14 +13,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class RoutineLearningCoordinator @Inject constructor(private val db: HoodieDatabase, private val clock: ClockProvider, private val settings: SettingsRepository) {
+class RoutineLearningCoordinator @Inject constructor(private val db: HoodieDatabase, private val clock: ClockProvider, private val settings: SettingsRepository, private val effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null) {
     suspend fun recompute() {
         if (!HoodieConfig.LEARNED_ROUTINE) return
+        effectiveRoutine?.beforeLearning()
         val today = clock.today()
         val firstDate = today.minusDays(28)
         val from = firstDate.atStartOfDay(clock.zone()).toInstant().toEpochMilli()
         val until = today.atStartOfDay(clock.zone()).toInstant().toEpochMilli()
-        val contexts = db.contextEventDao().overlapping(from, until)
+        val contexts = db.contextEventDao().overlapping(from, until).filter { it.source !in setOf(ContextSource.ROUTINE, ContextSource.ONBOARDING) }
         val exceptions = db.dayExceptionDao().range(firstDate.toEpochDay(), today.toEpochDay()).map { it.epochDay }.toSet()
         val s = settings.current()
         val observations = mutableListOf<RoutineObservation>()
@@ -37,7 +38,7 @@ class RoutineLearningCoordinator @Inject constructor(private val db: HoodieDatab
             }
             if (events.isEmpty() || unfinished || events.zipWithNext().any { (a, b) -> (a.endedAt ?: end) > b.startedAt }) continue
             fun add(type: RoutineEventType, timestamp: Long?, source: ContextSource, confidence: Float) {
-                if (timestamp == null || timestamp !in start until end) return
+                if (timestamp == null || timestamp !in start until end || source in setOf(ContextSource.ROUTINE, ContextSource.ONBOARDING)) return
                 val local = java.time.Instant.ofEpochMilli(timestamp).atZone(clock.zone())
                 val detectedSource = when (source) {
                     ContextSource.USER_CORRECTION -> DetectionSource.USER_CORRECTION
@@ -63,12 +64,13 @@ class RoutineLearningCoordinator @Inject constructor(private val db: HoodieDatab
             val phone = if (s.digital.analysisEnabled) db.deviceUsageDao().sessions(date.toEpochDay()).map { AppSession(it.packageName, it.startedAt, it.endedAt) } else emptyList()
             val mobility = if (s.mobility.detectionEnabled) db.mobilitySessionDao().overlapping(start, end) else emptyList()
             val window = DailyActivityWindowResolver.resolve(date, start, end, clock.nowMillis(), clock.zone(), s.sleep, events,
-                db.hoodieActivityDao().overlapping(start, end), db.timelineDao().range(start, end), phone, mobility, s.digital.analysisEnabled, s.mobility.detectionEnabled)
+                emptyList(), emptyList(), phone, mobility, s.digital.analysisEnabled, s.mobility.detectionEnabled)
             if (window.wakeConfidence != com.hoodie.app.domain.daycycle.WakeConfidence.LOW) add(RoutineEventType.WAKE, window.activeStartAt, ContextSource.GEOFENCE, .85f)
-            window.sleepAfterEnd?.takeIf { !it.provisional }?.let { add(RoutineEventType.SLEEP, it.startedAt, ContextSource.GEOFENCE, .85f) }
+            window.sleepAfterEnd?.takeIf { !it.provisional && it.reason != com.hoodie.app.domain.daycycle.SleepOnsetReason.SCHEDULE_FALLBACK && it.confidence != com.hoodie.app.domain.daycycle.SleepConfidence.LOW }?.let { add(RoutineEventType.SLEEP, it.startedAt, ContextSource.GEOFENCE, .85f) }
         }
         val learned = RoutineLearner.learn(observations, today.minusDays(1))
         db.intelligenceDao().replaceRoutineSlots(learned.map { LearnedRoutineSlotEntity(dayGroup = it.dayGroup, type = it.type.name,
             medianMinute = it.medianMinute, deviationMinutes = it.deviationMinutes, sampleCount = it.sampleCount, confidence = it.confidence.value, updatedAt = clock.nowMillis()) })
+        effectiveRoutine?.afterLearning()
     }
 }

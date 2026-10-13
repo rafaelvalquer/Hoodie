@@ -113,9 +113,9 @@ class MobilityRulesTest {
     }
 
     @Test
-    fun `seguranca - veiculo andando adia a pergunta, com app aberto pode`() {
+    fun `seguranca - veiculo andando adia a pergunta inclusive com app aberto`() {
         assertEquals(MobilityConfirmationPolicy.Verdict.DEFER, policy(QuestionKind.SELECT_TRANSPORT_MODE, moving = true))
-        assertEquals(MobilityConfirmationPolicy.Verdict.ASK, policy(QuestionKind.SELECT_TRANSPORT_MODE, moving = true, fg = true))
+        assertEquals(MobilityConfirmationPolicy.Verdict.DEFER, policy(QuestionKind.SELECT_TRANSPORT_MODE, moving = true, fg = true))
     }
 
     @Test

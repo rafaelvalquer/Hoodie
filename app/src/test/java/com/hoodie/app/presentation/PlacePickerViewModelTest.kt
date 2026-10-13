@@ -44,6 +44,7 @@ class PlacePickerViewModelTest {
     }
 
     private class FakeDao : PlaceDao {
+        override suspend fun setFavorite(id: Long, favorite: Boolean) = error("unused")
         val rows = MutableStateFlow<List<PlaceEntity>>(emptyList())
         var failWrites = false
         var failReads = false

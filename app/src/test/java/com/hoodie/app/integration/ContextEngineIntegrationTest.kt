@@ -255,18 +255,20 @@ class ContextEngineIntegrationTest {
     }
 
     @Test
-    fun `lugar novo vira contexto respondido com boundary e oferece salvar`() {
+    fun `lugar novo classifica o intervalo da visita e oferece salvar`() {
         step(MONDAY, 18, 0) { g.engine.onGeofence(homeId, GeofenceTransition.EXIT) }
         val commutingId = current()!!.id
         g.location.position = -23.9 to -46.9
         step(MONDAY, 18, 40) { g.engine.onCommuteCheck(commutingId) }
         assertEquals(UserContextType.UNKNOWN, current()!!.type)
+        val originalVisit = current()!!
         val newPlaceQ = g.notifier.questions.last().first
 
         step(MONDAY, 18, 45) { g.engine.answerNewPlace(newPlaceQ, PlaceType.GYM) }
         val gym = current()!!
         assertEquals(UserContextType.GYM, gym.type)
-        assertEquals(at(MONDAY, 18, 45).ms(), gym.startedAt)
+        assertEquals(originalVisit.id, gym.id)
+        assertEquals(at(MONDAY, 18, 40).ms(), gym.startedAt)
         assertHoodieFollows(UserContextType.GYM)
 
         val saveQ = runBlocking { g.db.questionDao().since(0).last() }

@@ -9,6 +9,8 @@ import com.hoodie.app.core.time.MINUTE_MS
  * referenciam estas constantes em vez de repetir valores soltos.
  */
 object HoodieConfig {
+    /** Candidate search only; never an automatic merge or the geofence radius. */
+    const val PLACE_MATCH_SEARCH_METERS = 75f
     // Day Intelligence: activate in dependency order after each integration gate.
     const val UNIFIED_CONFIDENCE_ENGINE = true
     const val DAY_STATE_ENGINE = true

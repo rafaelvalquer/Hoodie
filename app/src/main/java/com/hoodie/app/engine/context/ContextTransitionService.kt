@@ -47,6 +47,19 @@ class ContextTransitionService @Inject constructor(
     private val tx: TransactionRunner,
     private val log: DebugEventLogger,
 ) {
+    /** Groups the place, question and historical context writes in the same Room transaction. */
+    internal suspend fun <T> atomic(block: suspend () -> T): T = tx.run(block)
+
+    /** A discovered visit is classified in place, including answers received after departure. */
+    internal suspend fun classifyDiscoveredVisit(eventId: Long, type: UserContextType, venue: PlaceType) {
+        val event = contextDao.getById(eventId) ?: return
+        if (event.source == ContextSource.USER_CORRECTION) return
+        val classified = event.copy(type = type, confidence = 1f, source = ContextSource.CONFIRMATION,
+            venueType = venue.takeIf { type == UserContextType.SHOPPING })
+        contextDao.update(classified)
+        timeline.invalidateSource(TimelineSourceType.CONTEXT, eventId)
+        timeline.recordContext(eventId, type.emoji, describe(type, event.placeId, null), event.startedAt)
+    }
 
     suspend fun transition(
         to: UserContextType,
@@ -120,9 +133,13 @@ class ContextTransitionService @Inject constructor(
 
     /** O lugar do evento foi salvo depois (pergunta "salvar este lugar?"). */
     suspend fun attachPlace(eventId: Long, placeId: Long) {
-        val event = contextDao.getById(eventId)?.takeIf { it.endedAt == null } ?: return
+        val event = contextDao.getById(eventId) ?: return
         if (event.source == ContextSource.USER_CORRECTION) return
-        contextDao.update(event.copy(placeId = placeId))
+        if (event.placeId != null && event.placeId != placeId) return
+        val venue = places.byId(placeId)?.type?.takeIf { event.type == UserContextType.SHOPPING }
+        contextDao.update(event.copy(placeId = placeId, venueType = venue ?: event.venueType))
+        timeline.invalidateSource(TimelineSourceType.CONTEXT, eventId)
+        timeline.recordContext(eventId, event.type.emoji, describe(event.type, placeId, null), event.startedAt)
     }
 
     /**

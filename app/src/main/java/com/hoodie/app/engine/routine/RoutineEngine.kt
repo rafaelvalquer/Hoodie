@@ -11,7 +11,8 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 
 /** Próximo marco da rotina, mostrado na Home ("Próximo evento"). */
-data class UpcomingEvent(val emoji: String, val label: String, val minuteOfDay: Int, val tomorrow: Boolean) {
+data class UpcomingEvent(val emoji: String, val label: String, val minuteOfDay: Int, val tomorrow: Boolean,
+    val routineType: com.hoodie.app.domain.routine.RoutineEventType? = null) {
     val display: String get() = "$emoji $label ~${formatHm(minuteOfDay)}" + if (tomorrow) " (amanhã)" else ""
 }
 
@@ -20,6 +21,33 @@ data class UpcomingEvent(val emoji: String, val label: String, val minuteOfDay: 
  * horário, da rotina e das exceções de trabalho configuradas para o dia.
  */
 object RoutineEngine {
+    fun nextEvent(now: ZonedDateTime, today: com.hoodie.app.domain.routine.EffectiveRoutineSnapshot,
+        tomorrow: com.hoodie.app.domain.routine.EffectiveRoutineSnapshot): UpcomingEvent {
+        val candidates = listOf(today, tomorrow).flatMap { snapshot ->
+            snapshot.values.mapNotNull { (type, value) ->
+                val at = snapshot.date.atStartOfDay(now.zone).plusMinutes(value.minute.toLong()).toInstant()
+                if (at <= now.toInstant()) return@mapNotNull null
+                val workType = type in setOf(com.hoodie.app.domain.routine.RoutineEventType.WORK_START,
+                    com.hoodie.app.domain.routine.RoutineEventType.WORK_END, com.hoodie.app.domain.routine.RoutineEventType.LUNCH_START,
+                    com.hoodie.app.domain.routine.RoutineEventType.LUNCH_END)
+                if (workType && !isWorkDay(snapshot.date, snapshot.routine, snapshot.dayOff)) return@mapNotNull null
+                val label = when (type) {
+                    com.hoodie.app.domain.routine.RoutineEventType.WAKE -> "Acordar"
+                    com.hoodie.app.domain.routine.RoutineEventType.SLEEP -> "Hora de dormir"
+                    com.hoodie.app.domain.routine.RoutineEventType.WORK_START -> "Trabalho"
+                    com.hoodie.app.domain.routine.RoutineEventType.WORK_END -> "Fim do expediente"
+                    com.hoodie.app.domain.routine.RoutineEventType.LUNCH_START -> "Almoço"
+                    com.hoodie.app.domain.routine.RoutineEventType.LUNCH_END -> "Volta ao trabalho"
+                    com.hoodie.app.domain.routine.RoutineEventType.LEAVE_HOME -> "Previsão: sair de casa"
+                    com.hoodie.app.domain.routine.RoutineEventType.GYM_START -> "Previsão: academia"
+                    com.hoodie.app.domain.routine.RoutineEventType.HOME_RETURN -> "Previsão: voltar para casa"
+                }
+                at to UpcomingEvent("◷", label, value.minute, snapshot.date != today.date, type)
+            }
+        }
+        return candidates.minByOrNull { it.first }?.second ?: UpcomingEvent("☀️", "Acordar", tomorrow.sleep.wakeMinute, true,
+            com.hoodie.app.domain.routine.RoutineEventType.WAKE)
+    }
 
     /** Folga antes do início do almoço em que uma saída do trabalho já conta como "provável almoço". */
     const val LUNCH_SLACK_MIN = 30

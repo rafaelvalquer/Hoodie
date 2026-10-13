@@ -86,7 +86,7 @@ class Migration7To8Test {
     }
 
     @Test fun allHistoricalSchemasReachCurrentVersionWithoutDestructiveFallback() {
-        for (version in 1..7) {
+        for (version in 1..10) {
             context.deleteDatabase(DB)
             createVersion(version) {}
             val room = openCurrent()
@@ -112,6 +112,23 @@ class Migration7To8Test {
                 assertEquals(0f, cursor.getFloat(4))
                 assertTrue(cursor.isNull(5))
             }
+        } finally { room.close() }
+    }
+
+    @Test fun v10PreservesHistoricalAggregatesWithoutAssigningThemToVehicleEvidence() = runBlocking {
+        createVersion(10) { db ->
+            db.execSQL("INSERT INTO mobility_sessions (id, startedAt, initialMode, currentMode, state, confidence, confirmed, source, leftOrigin, arrivalAutoConfirmed, pendingModeQuestion, questionsAsked, speedSampleAttempts, speedSampleCount, meanSpeedKmh) VALUES (41, 1000, 'BUS', 'BUS', 'IN_VEHICLE', 0.9, 1, 'USER_CORRECTION', 1, 0, 0, 0, 5, 4, 45)")
+            db.execSQL("INSERT INTO mobility_segments (id, sessionId, mode, startedAt, confidence, confirmed, source) VALUES (42, 41, 'BUS', 1000, 1, 1, 'USER_CORRECTION')")
+        }
+        val room = openCurrent()
+        try {
+            assertEquals(4, room.mobilitySessionDao().getById(41)!!.speedSampleCount)
+            val segment = room.mobilitySegmentDao().forSession(41).single()
+            assertEquals(com.hoodie.app.core.mobility.MobilitySource.USER_CORRECTION, segment.source)
+            assertEquals(null, segment.evidenceId)
+            assertEquals(null, segment.confirmedAt)
+            assertEquals(null, room.transportEvidenceDao().current(41))
+            assertTrue(room.effectiveRoutineDao().all().isEmpty())
         } finally { room.close() }
     }
 

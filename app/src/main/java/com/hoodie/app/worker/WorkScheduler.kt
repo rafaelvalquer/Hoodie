@@ -30,13 +30,29 @@ interface MobilityScheduler {
     fun cancelMobilityCheck()
 }
 
+interface SpeedSampleScheduler {
+    fun enqueue(sessionId: Long, evidenceId: Long)
+    fun cancelSession(sessionId: Long)
+    fun cancelEvidence(evidenceId: Long)
+    fun cancelSpeedSamples()
+}
+
 /**
  * WorkManager só para reconciliar estado, checagens pontuais e manutenção —
  * nunca para rastrear GPS.
  */
 @Singleton
-class WorkScheduler @Inject constructor(@ApplicationContext private val context: Context) : CheckScheduler, MobilityScheduler {
+class WorkScheduler @Inject constructor(@ApplicationContext private val context: Context) : CheckScheduler, MobilityScheduler, SpeedSampleScheduler {
     private val wm get() = WorkManager.getInstance(context)
+    override fun enqueue(sessionId: Long, evidenceId: Long) {
+        wm.enqueueUniqueWork(TransportSpeedSampleWorker.evidenceName(evidenceId), ExistingWorkPolicy.KEEP,
+            OneTimeWorkRequestBuilder<TransportSpeedSampleWorker>()
+                .addTag(TransportSpeedSampleWorker.TAG).addTag(TransportSpeedSampleWorker.sessionTag(sessionId))
+                .setInputData(workDataOf(TransportSpeedSampleWorker.SESSION to sessionId, TransportSpeedSampleWorker.EVIDENCE to evidenceId)).build())
+    }
+    override fun cancelSession(sessionId: Long) { wm.cancelAllWorkByTag(TransportSpeedSampleWorker.sessionTag(sessionId)) }
+    override fun cancelEvidence(evidenceId: Long) { wm.cancelUniqueWork(TransportSpeedSampleWorker.evidenceName(evidenceId)) }
+    override fun cancelSpeedSamples() { wm.cancelAllWorkByTag(TransportSpeedSampleWorker.TAG) }
 
     fun schedulePeriodic() {
         if (HoodieConfig.LEARNED_ROUTINE) wm.enqueueUniquePeriodicWork(RoutineLearningWorker.NAME, ExistingPeriodicWorkPolicy.KEEP,
