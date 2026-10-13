@@ -90,17 +90,22 @@ class DigitalConsentTest {
         // The shell command completing does not guarantee that this process has
         // observed the AppOp cache invalidation from the previous test yet.
         val ops = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        runBlocking {
-            withTimeout(10_000) {
-                @Suppress("DEPRECATION")
-                while (ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName) != mode) {
-                    delay(25)
-                }
+        awaitStep("AppOp $label observed by the app") {
+            @Suppress("DEPRECATION")
+            while (ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName) != mode) {
+                delay(25)
             }
         }
     }
-    private fun awaitDigital(predicate: (DigitalSettings) -> Boolean) = runBlocking {
-        withTimeout(10_000) { settings.settings.first { predicate(it.digital) }.digital }
+    private fun <T> awaitStep(label: String, block: suspend () -> T): T = runBlocking {
+        try {
+            withTimeout(10_000) { block() }
+        } catch (timeout: TimeoutCancellationException) {
+            throw AssertionError("Digital consent timed out at: $label", timeout)
+        }
+    }
+    private fun awaitDigital(label: String, predicate: (DigitalSettings) -> Boolean) = awaitStep(label) {
+        settings.settings.first { predicate(it.digital) }.digital
     }
     private fun restart() {
         instrumentation.runOnMainSync { store.clear() }
@@ -121,14 +126,14 @@ class DigitalConsentTest {
         setMode(AppOpsManager.MODE_IGNORED)
         var viewModel = vm()
         instrumentation.runOnMainSync { viewModel.enableAnalysis() }
-        assertEquals(PhoneInsightsUiEvent.OpenUsageSettings, runBlocking { withTimeout(10_000) { viewModel.events.first() } })
-        assertFalse(awaitDigital { it.analysisRequested }.analysisEnabled)
+        assertEquals(PhoneInsightsUiEvent.OpenUsageSettings, awaitStep("OpenUsageSettings event after explicit request") { viewModel.events.first() })
+        assertFalse(awaitDigital("request persisted before reopening") { it.analysisRequested }.analysisEnabled)
         restart()
         assertTrue(runBlocking { settings.current().digital.analysisRequested })
         setMode(AppOpsManager.MODE_ALLOWED)
         viewModel = vm()
         instrumentation.runOnMainSync { viewModel.onResume() }
-        assertFalse(awaitDigital { it.analysisEnabled }.analysisRequested)
+        assertFalse(awaitDigital("analysis enabled after granted return") { it.analysisEnabled }.analysisRequested)
         restart()
         assertTrue(runBlocking { settings.current().digital.analysisEnabled })
         assertFalse(runBlocking { settings.current().digital.analysisRequested })
@@ -138,7 +143,7 @@ class DigitalConsentTest {
         setMode(AppOpsManager.MODE_IGNORED)
         var viewModel = vm()
         instrumentation.runOnMainSync { viewModel.enableAnalysis() }
-        awaitDigital { it.analysisRequested }
+        awaitDigital("request persisted before denied return") { it.analysisRequested }
         instrumentation.runOnMainSync { viewModel.onResume() }
         assertFalse(runBlocking { settings.current().digital.analysisEnabled })
         runBlocking { settings.setDigital(DigitalSettings()) }

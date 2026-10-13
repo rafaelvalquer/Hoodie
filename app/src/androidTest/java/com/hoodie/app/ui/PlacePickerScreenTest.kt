@@ -389,7 +389,26 @@ class PlacePickerScreenTest {
             Picker(editing(), modifier = Modifier.imePadding())
         }
         val view = rule.activity.window.decorView
-        rule.waitUntil(timeoutMillis = 10_000) { view.hasWindowFocus() }
+        try {
+            rule.waitUntil(timeoutMillis = 10_000) { view.hasWindowFocus() }
+        } catch (timeout: ComposeTimeoutException) {
+            val instrumentation = InstrumentationRegistry.getInstrumentation()
+            val screenshot = instrumentation.uiAutomation.takeScreenshot()
+            val output = java.io.File(rule.activity.getExternalFilesDir(null), "stabilization-window-focus-timeout.png")
+            screenshot?.let {
+                output.outputStream().use { stream -> it.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream) }
+                it.recycle()
+            }
+            val power = rule.activity.getSystemService(android.os.PowerManager::class.java)
+            val keyguard = rule.activity.getSystemService(android.app.KeyguardManager::class.java)
+            throw AssertionError(
+                "Janela sem foco antes de abrir IME: interactive=${power.isInteractive}, " +
+                    "keyguardLocked=${keyguard.isKeyguardLocked}, lifecycle=${rule.activity.lifecycle.currentState}, " +
+                    "attached=${view.isAttachedToWindow}, visibility=${view.windowVisibility}, " +
+                    "focus=${rule.activity.currentFocus}; captura=$output",
+                timeout,
+            )
+        }
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
         rule.onNodeWithTag(PlacePickerTags.NAME)
             .performSemanticsAction(SemanticsActions.RequestFocus) { it() }
