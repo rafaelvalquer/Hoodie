@@ -82,6 +82,8 @@ class DiaryRepositoryTest {
     }
 
     private class PlaceDaoStub(private val rows: List<PlaceEntity>) : PlaceDao {
+        override suspend fun updateDetails(id: Long, name: String, type: com.hoodie.app.core.model.PlaceType,
+            radius: Float, coordinates: String): Int = error("unused")
         override suspend fun setFavorite(id: Long, favorite: Boolean) = error("unused")
         override suspend fun getAll() = rows
         override fun observeAll(): Flow<List<PlaceEntity>> = error("unused")

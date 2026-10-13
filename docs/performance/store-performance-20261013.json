@@ -1,0 +1,276 @@
+{
+  "date": "2026-10-13",
+  "environment": "Pixel 8 AVD / Android 17 / debug / MainActivity STORE",
+  "ciCommitAtMeasurement": "37f074d7ccdcb96d466c87fd1c6a45feccf8dbb8",
+  "productionCodeChangedDuringMeasurement": false,
+  "meminfoWindow": {
+    "startedAt": "2026-10-13T16:35:32.560562+00:00",
+    "initialPid": "22291",
+    "durationTargetSeconds": 1800,
+    "status": "complete",
+    "samples": [
+      {
+        "minute": 0,
+        "elapsedSeconds": 0.0,
+        "pid": "22291",
+        "totalPssKb": 134224,
+        "totalFrames": 36,
+        "resumedActivity": "topResumedActivity=ActivityRecord{8442005 u0 com.hoodie.app/.MainActivity t3544}",
+        "nativeHeapAllocatedKb": 22984,
+        "dalvikHeapAllocatedKb": 39908,
+        "bitmapCount": 26
+      },
+      {
+        "minute": 5,
+        "elapsedSeconds": 300.0,
+        "pid": "22291",
+        "totalPssKb": 132644,
+        "totalFrames": 8607,
+        "resumedActivity": "topResumedActivity=ActivityRecord{8442005 u0 com.hoodie.app/.MainActivity t3544}",
+        "nativeHeapAllocatedKb": 23023,
+        "dalvikHeapAllocatedKb": 42388,
+        "bitmapCount": 26
+      },
+      {
+        "minute": 10,
+        "elapsedSeconds": 600.0,
+        "pid": "22291",
+        "totalPssKb": 150652,
+        "totalFrames": 17407,
+        "resumedActivity": "topResumedActivity=ActivityRecord{8442005 u0 com.hoodie.app/.MainActivity t3544}",
+        "nativeHeapAllocatedKb": 23047,
+        "dalvikHeapAllocatedKb": 42852,
+        "bitmapCount": 26
+      },
+      {
+        "minute": 15,
+        "elapsedSeconds": 900.0,
+        "pid": "22291",
+        "totalPssKb": 150020,
+        "totalFrames": 26346,
+        "resumedActivity": "topResumedActivity=ActivityRecord{8442005 u0 com.hoodie.app/.MainActivity t3544}",
+        "nativeHeapAllocatedKb": 23062,
+        "dalvikHeapAllocatedKb": 43556,
+        "bitmapCount": 26
+      },
+      {
+        "minute": 20,
+        "elapsedSeconds": 1200.0,
+        "pid": "22291",
+        "totalPssKb": 141938,
+        "totalFrames": 35320,
+        "resumedActivity": "topResumedActivity=ActivityRecord{8442005 u0 com.hoodie.app/.MainActivity t3544}",
+        "nativeHeapAllocatedKb": 23076,
+        "dalvikHeapAllocatedKb": 43620,
+        "bitmapCount": 26
+      },
+      {
+        "minute": 25,
+        "elapsedSeconds": 1500.0,
+        "pid": "22291",
+        "totalPssKb": 151758,
+        "totalFrames": 44271,
+        "resumedActivity": "topResumedActivity=ActivityRecord{8442005 u0 com.hoodie.app/.MainActivity t3544}",
+        "nativeHeapAllocatedKb": 23132,
+        "dalvikHeapAllocatedKb": 44692,
+        "bitmapCount": 26
+      },
+      {
+        "minute": 30,
+        "elapsedSeconds": 1800.0,
+        "pid": "22291",
+        "totalPssKb": 156986,
+        "totalFrames": 53249,
+        "resumedActivity": "topResumedActivity=ActivityRecord{8442005 u0 com.hoodie.app/.MainActivity t3544}",
+        "nativeHeapAllocatedKb": 23141,
+        "dalvikHeapAllocatedKb": 44196,
+        "bitmapCount": 26
+      }
+    ],
+    "explicitAppGc": false,
+    "platformMeminfoRequestsGc": true,
+    "methodCorrection": "ActivityThread.dumpMemInfo calls runtime.gc; original forcedGc=false flag described only the absence of direct calls in the script.",
+    "finalFrameP95Ms": 36,
+    "finalFrameP99Ms": 73
+  },
+  "kernelWindow": {
+    "startedAt": "2026-10-13T17:06:16.771569+00:00",
+    "initialPid": "22291",
+    "durationTargetSeconds": 600,
+    "memoryMethod": "/proc/PID/smaps_rollup via run-as",
+    "callsMeminfo": false,
+    "explicitAppGc": false,
+    "status": "complete",
+    "samples": [
+      {
+        "minute": 0,
+        "elapsedSeconds": 0.0,
+        "pid": "22291",
+        "pssKb": 154651,
+        "rssKb": 297128
+      },
+      {
+        "minute": 2,
+        "elapsedSeconds": 120.0,
+        "pid": "22291",
+        "pssKb": 143193,
+        "rssKb": 285824
+      },
+      {
+        "minute": 4,
+        "elapsedSeconds": 240.0,
+        "pid": "22291",
+        "pssKb": 142850,
+        "rssKb": 285488
+      },
+      {
+        "minute": 6,
+        "elapsedSeconds": 360.0,
+        "pid": "22291",
+        "pssKb": 146530,
+        "rssKb": 289180
+      },
+      {
+        "minute": 8,
+        "elapsedSeconds": 480.0,
+        "pid": "22291",
+        "pssKb": 143694,
+        "rssKb": 286348
+      },
+      {
+        "minute": 10,
+        "elapsedSeconds": 600.0,
+        "pid": "22291",
+        "pssKb": 151758,
+        "rssKb": 294428
+      }
+    ],
+    "totalFrames": 17971,
+    "frameP95Ms": 21,
+    "frameP99Ms": 34
+  },
+  "separateTrace": {
+    "durationSeconds": 30,
+    "bufferEntries": 714050,
+    "writtenEntries": 714050,
+    "sections": [
+      {
+        "pid": "22291",
+        "tid": "22291",
+        "mainThread": true,
+        "section": "Choreographer#doFrame",
+        "count": 1799,
+        "p50Ms": 1.5180000045802444,
+        "p95Ms": 3.8509999940288253,
+        "p99Ms": 13.900999998440966,
+        "maxMs": 36.05699999752687,
+        "over16_67Ms": 9,
+        "over33Ms": 1
+      },
+      {
+        "pid": "22291",
+        "tid": "22291",
+        "mainThread": true,
+        "section": "Hoodie.Store.bitmapUpdate",
+        "count": 896,
+        "p50Ms": 0.055999997130129486,
+        "p95Ms": 0.115999995614402,
+        "p99Ms": 0.40299999818671495,
+        "maxMs": 0.9450000070501119,
+        "over16_67Ms": 0,
+        "over33Ms": 0
+      },
+      {
+        "pid": "22291",
+        "tid": "22291",
+        "mainThread": true,
+        "section": "Hoodie.Store.draw",
+        "count": 896,
+        "p50Ms": 0.27299999783281237,
+        "p95Ms": 0.8589999997639097,
+        "p99Ms": 1.8609999970067292,
+        "maxMs": 8.577999993576668,
+        "over16_67Ms": 0,
+        "over33Ms": 0
+      },
+      {
+        "pid": "22291",
+        "tid": "22291",
+        "mainThread": true,
+        "section": "Hoodie.Store.npcPlanning",
+        "count": 896,
+        "p50Ms": 0.008000002708286047,
+        "p95Ms": 0.025000001187436283,
+        "p99Ms": 0.12000000424450263,
+        "maxMs": 1.6560000003664754,
+        "over16_67Ms": 0,
+        "over33Ms": 0
+      },
+      {
+        "pid": "22291",
+        "tid": "22291",
+        "mainThread": true,
+        "section": "Hoodie.Store.render",
+        "count": 896,
+        "p50Ms": 0.4090000002179295,
+        "p95Ms": 1.163000000815373,
+        "p99Ms": 4.0210000006482005,
+        "maxMs": 9.350000000267755,
+        "over16_67Ms": 0,
+        "over33Ms": 0
+      },
+      {
+        "pid": "22291",
+        "tid": "22291",
+        "mainThread": true,
+        "section": "Hoodie.Store.stateUpdate",
+        "count": 896,
+        "p50Ms": 0.03300000389572233,
+        "p95Ms": 0.07599999662488699,
+        "p99Ms": 0.36700000055134296,
+        "maxMs": 1.9830000019283034,
+        "over16_67Ms": 0,
+        "over33Ms": 0
+      }
+    ],
+    "note": "Trace marker elapsed durations include scheduling waits and tracing overhead; not isolated CPU time."
+  },
+  "rawEvidenceSha256": {
+    ".gradle-workspace/store-real-time-soak-20261013/00min-activity.txt": "69c8a879f5bcb3f913e8c1a41447250f9a8972bee1bdc5f396f56abc49293233",
+    ".gradle-workspace/store-real-time-soak-20261013/00min-gfxinfo.txt": "e3d7bff37f1394b1d03658bf229450415efb481e28ec5c9f98d986804cbeca44",
+    ".gradle-workspace/store-real-time-soak-20261013/00min-meminfo.txt": "5c5088e7fff624ab3cedc3d2b7da9cbc37d5682b26067b422ab11603a85c0a3c",
+    ".gradle-workspace/store-real-time-soak-20261013/05min-activity.txt": "1a4abc7a653f7238ba663ff072de3abbd83a4f901bbe1693e8a0f76abce69510",
+    ".gradle-workspace/store-real-time-soak-20261013/05min-gfxinfo.txt": "afe5a1ae01a6bdf0b9dcbc1a8911b3bf039666b34d562bde04347ceb25df827d",
+    ".gradle-workspace/store-real-time-soak-20261013/05min-meminfo.txt": "4663fbc6136f0b94e1cf8f49fda17d28703cad6130f2190bf17653287185ad32",
+    ".gradle-workspace/store-real-time-soak-20261013/10min-activity.txt": "3e75d1ee8279f861c852182b4c307bc86c8d136a6c64b6bc68bdf6191144f1aa",
+    ".gradle-workspace/store-real-time-soak-20261013/10min-gfxinfo.txt": "f58ef5259bd026cdad8cde17dafc6609728993c6e0d64cb7eea7bf88eff45986",
+    ".gradle-workspace/store-real-time-soak-20261013/10min-meminfo.txt": "ba59983af98d8d5d429f1dd1a825d49319c93af86189e771ca5eccecd351052f",
+    ".gradle-workspace/store-real-time-soak-20261013/15min-activity.txt": "c1041d89e8af38a2a72262eac47531e4aa1f8213ff462f858afbb54fed2880c8",
+    ".gradle-workspace/store-real-time-soak-20261013/15min-gfxinfo.txt": "7b9e28b9fe32f5648ad4632a09b06518c7190abc5b4183b8582bb38859bfbd91",
+    ".gradle-workspace/store-real-time-soak-20261013/15min-meminfo.txt": "e35cb9c9b8846861d3ed7a3f235e4e1370663d0acb89ff7555b2e63e9dc48f0d",
+    ".gradle-workspace/store-real-time-soak-20261013/20min-activity.txt": "1f0a0b041d5ecb33f43ac3459cb54d76e08675ad805329f59147cb93e7cb4be0",
+    ".gradle-workspace/store-real-time-soak-20261013/20min-gfxinfo.txt": "ecbadc8e4f87826910a601b7e1e17fa33170818b2c0bdc2b19a89f892efed87e",
+    ".gradle-workspace/store-real-time-soak-20261013/20min-meminfo.txt": "86df2bcdaac60e4106a995eb703d22d3401094ef587ba4f8955e629668b54438",
+    ".gradle-workspace/store-real-time-soak-20261013/25min-activity.txt": "63ff0b4140a08b28522caf74fec8e99040351a451cb275579a03b70de6048dda",
+    ".gradle-workspace/store-real-time-soak-20261013/25min-gfxinfo.txt": "c72a300d7914170c7dc4ac32ac23fba343f679aabbe9cb9d81d16b09217e784f",
+    ".gradle-workspace/store-real-time-soak-20261013/25min-meminfo.txt": "d5480f9d7cef8bc97772af13593b954102cbbdbfa8d75f85e34933fd2520ef9d",
+    ".gradle-workspace/store-real-time-soak-20261013/30min-activity.txt": "8072033edcfb7520292ed8d024975deaaca8dcf5b61860969af5cb51451fae87",
+    ".gradle-workspace/store-real-time-soak-20261013/30min-gfxinfo.txt": "f09914d9392c12b37b718dcc8cb46654c2a49db4a5f67e1a91b7fe706244c779",
+    ".gradle-workspace/store-real-time-soak-20261013/30min-meminfo.txt": "08d978a595392252c8405ac59dae1b6b18f9758470e09120a61191ab742d4199",
+    ".gradle-workspace/store-kernel-soak-20261013/00min-smaps_rollup.txt": "518cc77c52a4bde3f9d39f8ac8c874c8b4e39ecc21ba1fc58372beddaaf25434",
+    ".gradle-workspace/store-kernel-soak-20261013/02min-smaps_rollup.txt": "53e31e09ba545a143ff923e33eeea5a38911653dfa01272e65dde027eb4dc595",
+    ".gradle-workspace/store-kernel-soak-20261013/04min-smaps_rollup.txt": "04b96c1f16fbc84b921ecca5bc866d3a63639ffa7b02786f5361e891028275c3",
+    ".gradle-workspace/store-kernel-soak-20261013/06min-smaps_rollup.txt": "02526be9bd7d60fcc9a9779f90a5007f1f15586bb7a968476560ddd543635d53",
+    ".gradle-workspace/store-kernel-soak-20261013/08min-smaps_rollup.txt": "2f0965b4b6bb6eba41e9f417aa020b5165187032e92082b403a0710d03c6058d",
+    ".gradle-workspace/store-kernel-soak-20261013/10min-smaps_rollup.txt": "d7f1ad9878c43b43651936f43475594ce5b1f95f693f9a997cf807b6513af599",
+    ".gradle-workspace/store-kernel-soak-20261013/final-gfxinfo.txt": "c4042303958c4bc82cfd7264e6d790c8f35d835056162620e8dd07b5d1d07a91",
+    ".gradle-workspace/hoodie-store-baseline-trace.txt": "6d2b0d65dc23e78fa405d7cee992801eb22f0218c98bb3e438938d7ee98598ae"
+  },
+  "limitations": [
+    "Meminfo requests platform GC",
+    "No physical device available",
+    "Not a controlled comparison between windows",
+    "No proof of absence of all visible stalls or long-term memory leaks",
+    "Display presentation timestamps unavailable in sampled framestats"
+  ]
+}

@@ -31,7 +31,8 @@ object PlaceVisitBuilder {
                     com.hoodie.app.core.model.UserContextType.DINING -> PlaceType.RESTAURANT
                     com.hoodie.app.core.model.UserContextType.GYM -> PlaceType.GYM
                     com.hoodie.app.core.model.UserContextType.STUDY -> PlaceType.SCHOOL
-                    com.hoodie.app.core.model.UserContextType.SHOPPING -> PlaceType.MARKET
+                    com.hoodie.app.core.model.UserContextType.SHOPPING ->
+                        event.venueType?.takeIf { it == PlaceType.STORE || it == PlaceType.MARKET } ?: PlaceType.MARKET
                     com.hoodie.app.core.model.UserContextType.VISITING -> PlaceType.FAMILY
                     com.hoodie.app.core.model.UserContextType.LEISURE -> PlaceType.LEISURE
                     com.hoodie.app.core.model.UserContextType.UNKNOWN, com.hoodie.app.core.model.UserContextType.TRAVEL -> PlaceType.OTHER

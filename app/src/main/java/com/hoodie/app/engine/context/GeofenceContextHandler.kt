@@ -162,7 +162,7 @@ internal class GeofenceContextHandler(private val processor: ContextSignalProces
      */
     suspend fun arriveAtPosition(lat: Double, lng: Double, askNewPlace: Boolean): Unit = with(processor) {
         if (vehicleInMotion()) return@with
-        val known = places.containing(lat, lng)
+        val known = places.containing(lat, lng, contextDao.current()?.placeId)
         if (known != null) {
             onGeofence(known.id, GeofenceTransition.ENTER, clock.nowMillis())
             return@with
