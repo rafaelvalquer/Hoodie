@@ -278,7 +278,7 @@ class HomeViewModel @Inject constructor(
             preferredMode = i.settings.mobility.preferredMode,
             now = now,
         // A história ambiental do dia vem da jornada (data), separada da aparência (variant).
-        ).copy(daySeed = zoned.toLocalDate().toEpochDay().toInt())
+        ).copy(daySeed = zoned.toLocalDate().toEpochDay().toInt(), placeId = ctx?.placeId)
         visualDiagnostics.selected(visual, now)
         val userType = ctx?.type ?: UserContextType.HOME
         val tomorrowDate = zoned.toLocalDate().plusDays(1)

@@ -26,7 +26,10 @@ enum class NpcAnimation {
     STAND, STAND_UP, STAND_PHONE, STAND_PHOTO, STAND_COFFEE, TYPE, READ_DOCUMENT, STAND_READ, STRETCH,
     STAND_BROWSE, STAND_PICK_PRODUCT, STAND_READ_PRODUCT, STAND_COMPARE, STAND_LIST,
     STAND_BASKET, LOOK_PROMOTION, CHECKOUT_WAIT, CHECKOUT_PAY,
-    TURN_LEFT, TURN_RIGHT, ENTER, EXIT, REACTION;
+    TURN_LEFT, TURN_RIGHT, ENTER, EXIT, REACTION,
+
+    // Estabelecimentos: trabalho de balcão, praia e cinema. Sempre no fim.
+    PREPARE, SERVE, WIPE, RESTOCK, THROW_BALL, CATCH_BALL, SIT_WATCH, SIT_POPCORN;
 
     val seated: Boolean get() = name.startsWith("SIT")
 }
@@ -138,6 +141,14 @@ object NpcPoseLibrary {
             NpcAnimation.TURN_LEFT -> NpcFrame(if (facing == Facing.FRONT) turnToFront(t) else turn(t), base)
             NpcAnimation.TURN_RIGHT -> NpcFrame(if (facing == Facing.FRONT) turnToSide(t) else turn(t), base)
             NpcAnimation.REACTION -> NpcFrame(reaction(reaction ?: NpcReaction.LOOK_AT_HOODIE, t, seated), base)
+            NpcAnimation.PREPARE -> NpcFrame(prepare(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.SERVE -> NpcFrame(serve(t), base)
+            NpcAnimation.WIPE -> NpcFrame(wipe(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.RESTOCK -> NpcFrame(restock(t), base.copy(breath = breath(t, seed)))
+            NpcAnimation.THROW_BALL -> NpcFrame(throwBall(t), base)
+            NpcAnimation.CATCH_BALL -> NpcFrame(catchBall(t), base)
+            NpcAnimation.SIT_WATCH -> NpcFrame(sitWatch(t, seed), base.copy(breath = breath(t, seed)))
+            NpcAnimation.SIT_POPCORN -> NpcFrame(sitPopcorn(t, seed), base)
         }
         return if (facing != null && animation != NpcAnimation.TURN_LEFT && animation != NpcAnimation.TURN_RIGHT)
             f.copy(pose = f.pose.copy(facing = facing)) else f
@@ -483,6 +494,87 @@ object NpcPoseLibrary {
         }
     }
 
+    // ───── Estabelecimentos ─────
+
+    /** Na máquina/bancada: as duas mãos trabalham alternadas, olhos no que prepara. */
+    fun prepare(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 59L, 1_400L)
+        return CharacterPose(
+            facing = Facing.SIDE,
+            rightArm = if (k < 700L) Arm.FORWARD_UP else Arm.FORWARD_DOWN,
+            leftArm = if (k in 350L..1_049L) Arm.FORWARD_DOWN else Arm.HOLD_CHEST,
+            eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.FOCUSED,
+            headDy = if (k in 200L..500L) 1 else 0,
+            mouth = Mouth.SMILE,
+        )
+    }
+
+    /** Entrega: estende o objeto (o item vem da mão) e recolhe o braço já sem ele. */
+    fun serve(t: Long): CharacterPose = when {
+        t < 300L -> CharacterPose(facing = Facing.FRONT, rightArm = Arm.HOLD_CHEST, eyes = Eyes.OPEN)
+        t < 650L -> CharacterPose(facing = Facing.FRONT, rightArm = Arm.FORWARD_DOWN, eyes = Eyes.HAPPY, mouth = Mouth.SMILE)
+        else -> CharacterPose(facing = Facing.FRONT, rightArm = Arm.DOWN, eyes = Eyes.HAPPY, ears = Ears.ALERT)
+    }
+
+    /** Passa o pano na bancada em vaivém, olhando para baixo. */
+    fun wipe(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 37L, 1_000L)
+        return CharacterPose(
+            facing = Facing.FRONT, item = Item.CLOTH,
+            rightArm = if (k < 500L) Arm.FORWARD_DOWN else Arm.HOLD_CHEST,
+            eyes = Eyes.LOOK_DOWN, headDy = 1, mouth = if (k in 600L..800L) Mouth.FLAT else Mouth.SMILE,
+        )
+    }
+
+    /** Repõe a prateleira: alcança o alto com a caixinha, ajeita e volta. */
+    fun restock(t: Long): CharacterPose {
+        val k = Math.floorMod(t, 1_800L)
+        return CharacterPose(
+            facing = Facing.SIDE,
+            rightArm = if (k < 1_000L) Arm.UP else Arm.FORWARD_UP,
+            item = if (k < 700L) Item.PRODUCT else Item.NONE,
+            eyes = Eyes.LOOK_UP, ears = if (k in 700L..900L) Ears.ALERT else Ears.NORMAL,
+        )
+    }
+
+    /** Arremesso por cima: prepara, solta no topo do arco e acompanha com o olhar. */
+    fun throwBall(t: Long): CharacterPose = when {
+        t < 200L -> CharacterPose(facing = Facing.SIDE, rightArm = Arm.HOLD_CHEST, leftArm = Arm.HOLD_CHEST, eyes = Eyes.FOCUSED)
+        t < 420L -> CharacterPose(facing = Facing.SIDE, rightArm = Arm.UP, leftArm = Arm.UP, eyes = Eyes.FOCUSED, lift = 1)
+        else -> CharacterPose(facing = Facing.SIDE, rightArm = Arm.FORWARD_UP, eyes = Eyes.HAPPY, ears = Ears.ALERT)
+    }
+
+    /** Recebe: braços erguidos à frente esperando a bola, agarra e traz ao peito. */
+    fun catchBall(t: Long): CharacterPose = when {
+        t < 380L -> CharacterPose(facing = Facing.SIDE, rightArm = Arm.FORWARD_UP, leftArm = Arm.FORWARD_UP, eyes = Eyes.WIDE, ears = Ears.ALERT)
+        else -> CharacterPose(facing = Facing.SIDE, rightArm = Arm.HOLD_CHEST, leftArm = Arm.HOLD_CHEST, eyes = Eyes.HAPPY, bob = 1)
+    }
+
+    /** Plateia: sentado de frente, olhos na tela, uma piscada e um sorriso de vez em quando. */
+    fun sitWatch(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 211L, 5_200L)
+        return CharacterPose(
+            legs = Legs.SIT, facing = Facing.FRONT,
+            eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else if (k in 3_600L..4_200L) Eyes.HAPPY else Eyes.FOCUSED,
+            mouth = if (k in 3_600L..4_200L) Mouth.OPEN else Mouth.SMILE,
+            ears = if (k in 1_000L..1_200L) Ears.TWITCH_LEFT else Ears.NORMAL,
+        )
+    }
+
+    /** Pipoca no colo: pega um punhado, leva à boca e mastiga sem tirar os olhos da tela. */
+    fun sitPopcorn(t: Long, seed: Int): CharacterPose {
+        val k = Math.floorMod(t + seed * 97L, 2_400L)
+        return CharacterPose(
+            legs = Legs.SIT, facing = Facing.FRONT, item = Item.POPCORN, leftArm = Arm.HOLD_CHEST,
+            rightArm = when (k) { in 0L..599L -> Arm.HOLD_CHEST; in 600L..999L -> Arm.HOLD_MOUTH; else -> Arm.HOLD_CHEST },
+            mouth = if (k in 700L..1_600L && (k / 200) % 2 == 0L) Mouth.CHEW else Mouth.SMILE,
+            eyes = if (shouldBlink(t, seed)) Eyes.CLOSED else Eyes.FOCUSED,
+        )
+    }
+
     const val TURN_MS = 360L
     const val REACTION_MS = 1_600L
+    const val SERVE_MS = 900L
+    const val THROW_MS = 600L
+    const val CATCH_MS = 700L
 }

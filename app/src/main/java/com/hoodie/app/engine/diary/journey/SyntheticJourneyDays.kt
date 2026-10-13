@@ -99,6 +99,12 @@ object SyntheticJourneyDays {
         PlaceType.LEISURE -> "Parque"
         PlaceType.FAMILY -> "Família"
         PlaceType.OTHER -> "Lugar novo"
+        PlaceType.BAKERY -> "Padaria"
+        PlaceType.MALL -> "Shopping"
+        PlaceType.BEACH -> "Praia"
+        PlaceType.CINEMA -> "Cinema"
+        PlaceType.PHARMACY -> "Farmácia"
+        PlaceType.HOTEL -> "Hotel"
     }
 
     private fun t(h: Int, m: Int = 0) = LocalTime.of(h, m)

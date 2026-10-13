@@ -19,6 +19,7 @@ object NpcMotionController {
         slot.officeBrain?.let { return it.movementAt(timeMs) }
         slot.restaurantBrain?.let { return it.movementAt(timeMs) }
         slot.leisureActor?.let { return it.movementAt(timeMs) }
+        slot.venueActor?.let { return it.movementAt(timeMs) }
         val profile = slot.definition.behaviorProfile
         val path = slot.path ?: return stationary(slot, timeMs)
         val turns = turnFlags(path)
@@ -111,10 +112,36 @@ object NpcMotionController {
             walkedPx = movement.walkedPx, scale = slot.scale, seated = movement.seated,
             facing = movement.facing, reaction = movement.reaction,
         )
-        return if (movement.shoppingProductHeld) result.copy(pose = result.pose.copy(
+        if (movement.shoppingProductHeld) return result.copy(pose = result.pose.copy(
             item = Item.PRODUCT, rightArm = Arm.HOLD_CHEST, eyes = Eyes.LOOK_DOWN,
-        )) else result
+        ))
+        return carrying(result, movement)
     }
+
+    /**
+     * Objeto carregado entre ações: a pose da ação (beber, comer, pipoca) já traz o dela; nas
+     * outras (andar, esperar) a mão segura o objeto — sacola e mala pendem, o resto vai no peito.
+     */
+    private fun carrying(frame: NpcFrame, movement: NpcMovement): NpcFrame {
+        val item = movement.heldItem
+        if (item == Item.NONE || frame.pose.item != Item.NONE) return frame
+        // Entrega: o objeto sai da mão no meio do gesto.
+        if (movement.animation == NpcAnimation.SERVE) return if (movement.localTimeMs < SERVE_RELEASE_MS) frame.copy(pose = frame.pose.copy(item = item)) else frame
+        // Poses que já mexem o braço (falar, preparar, reagir) só ganham o objeto na mão.
+        if (movement.animation !in CARRY_POSES) return frame.copy(pose = frame.pose.copy(item = item))
+        val low = item in LOW_CARRY
+        return frame.copy(pose = frame.pose.copy(item = item, rightArm = if (low) Arm.FORWARD_DOWN else Arm.HOLD_CHEST))
+    }
+
+    /** Objetos levados com o braço estendido para baixo (não no peito). */
+    private val LOW_CARRY = setOf(Item.SHOPPING_BAG, Item.BASKET, Item.SUITCASE)
+
+    /** Poses neutras em que a mão passa a segurar o objeto carregado. */
+    private val CARRY_POSES = setOf(
+        NpcAnimation.WALK, NpcAnimation.ENTER, NpcAnimation.EXIT, NpcAnimation.IDLE, NpcAnimation.LOOK, NpcAnimation.LOOK_WINDOW,
+        NpcAnimation.STAND, NpcAnimation.CHECKOUT_WAIT, NpcAnimation.SIT_LOOK, NpcAnimation.TURN_LEFT, NpcAnimation.TURN_RIGHT,
+    )
+    private const val SERVE_RELEASE_MS = 650L
 
     /** Pose isolada (Pixel Lab, testes): mesma biblioteca usada na cena. */
     fun pose(animation: NpcAnimation, elapsedMs: Long, seed: Int, motion: SpeciesMotionProfile): CharacterPose =

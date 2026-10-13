@@ -25,6 +25,13 @@ object DiaryMapLayoutEngine {
         PlaceType.LEISURE to (3 to 1),
         PlaceType.FAMILY to (1 to 2),
         PlaceType.OTHER to (1 to 1),
+        // Estabelecimentos ficam perto da categoria mais parecida.
+        PlaceType.BAKERY to (2 to 1),
+        PlaceType.MALL to (4 to 1),
+        PlaceType.BEACH to (3 to 2),
+        PlaceType.CINEMA to (3 to 1),
+        PlaceType.PHARMACY to (0 to 1),
+        PlaceType.HOTEL to (1 to 0),
     )
 
     private const val LOT_COLUMNS = 5

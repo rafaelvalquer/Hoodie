@@ -23,6 +23,8 @@ import com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary
 import com.hoodie.app.pixel.npc.AmbientNpcSlot
 import com.hoodie.app.pixel.npc.leisure.LeisureNpcDirector
 import com.hoodie.app.pixel.npc.leisure.LeisureNpcSession
+import com.hoodie.app.pixel.npc.venue.VenueNpcDirector
+import com.hoodie.app.pixel.npc.venue.VenueNpcSession
 import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.pixel.scene.Prop
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
@@ -46,6 +48,8 @@ class SceneRenderer {
     private var shoppingSessionStartedAt: Long = 0L
     /** Passeio 2.0: simulação dos visitantes deste renderer (uma por dia/variante/noite). */
     private var leisureSession: LeisureNpcSession? = null
+    /** Estabelecimentos (padaria, praia, cinema...): uma sessão por cena/lugar/dia/variante/noite. */
+    private var venueSession: VenueNpcSession? = null
 
     private class OfficeDrawEntry(
         val prop: Prop? = null,
@@ -100,6 +104,18 @@ class SceneRenderer {
             return session.npcSlots
         }
         shoppingSession = null
+        if (VenueNpcDirector.supports(scene.id)) {
+            officeSession?.dispose(); officeSession = null; officeRenderPlan = null
+            leisureSession?.dispose(); leisureSession = null
+            val key = VenueNpcDirector.sessionKey(scene.id, env)
+            val session = venueSession?.takeIf { it.key == key } ?: run {
+                venueSession?.dispose()
+                VenueNpcDirector.createSession(key).also { venueSession = it }
+            }
+            return session.npcSlots
+        }
+        venueSession?.dispose()
+        venueSession = null
         if (scene.id == SceneId.LEISURE && HoodieConfig.LEISURE_LIVING_WORLD_V2) {
             officeSession?.dispose()
             officeSession = null
@@ -139,11 +155,13 @@ class SceneRenderer {
         shoppingSession = null
         leisureSession?.dispose()
         leisureSession = null
+        venueSession?.dispose()
+        venueSession = null
     }
 
-    /** Profundidade de desenho: visitantes do Passeio usam o chão onde estão agora. */
+    /** Profundidade de desenho: visitantes do Passeio e de estabelecimentos usam o chão onde estão agora. */
     private fun npcDepth(slot: AmbientNpcSlot, timeMs: Long): Int =
-        slot.leisureActor?.frameStateAt(timeMs)?.floorY ?: slot.baseline
+        slot.leisureActor?.frameStateAt(timeMs)?.floorY ?: slot.venueActor?.frameStateAt(timeMs)?.floorY ?: slot.baseline
 
     private fun background(scene: PixelScene, env: SceneEnv): PixelBuffer = synchronized(backgrounds) {
         val visualVariant = if (scene.id == SceneId.SHOPPING) {
@@ -355,8 +373,10 @@ class SceneRenderer {
         val tableState = restaurant?.tableStateAt(timeMs)
         val officeDoorFrame = npcs.firstNotNullOfOrNull { it.officeBrain?.officeDoorFrameAt(timeMs)?.takeIf { frame -> frame > 0 } }
         val leisureAmbient = npcs.firstNotNullOfOrNull { it.leisureActor }?.session?.snapshotAt(timeMs)?.ambient
+        val venueAmbient = npcs.firstNotNullOfOrNull { it.venueActor }?.session?.snapshotAt(timeMs)?.ambient
         return env.copy(
             leisureAmbient = leisureAmbient ?: env.leisureAmbient,
+            venueAmbient = venueAmbient ?: env.venueAmbient,
             shoppingNpc = shopperState ?: env.shoppingNpc,
             doorFrame = maxOf(env.doorFrame, officeDoorFrame ?: 0,
                 if (shopperState?.doorOpen == true) SceneEnv.DOOR_OPEN else 0),

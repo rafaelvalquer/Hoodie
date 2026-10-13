@@ -28,7 +28,14 @@ object RequiredAnchors {
             AnimationId.STUDY_WRITE, AnimationId.SHOP_PICK, AnimationId.SHOP_PAY, AnimationId.VISIT_SNACK, AnimationId.LEISURE_PHOTO,
             // Loja: cabide na mão e sacola.
             AnimationId.STORE_BROWSE_RACK, AnimationId.STORE_HOLD_GARMENT, AnimationId.STORE_FITTING_ROOM, AnimationId.STORE_BAG_EXIT,
+            // Estabelecimentos: salgado, sacola, sorvete, pipoca, produto, cartão e mala na mão.
+            AnimationId.WALK_BAG, AnimationId.WALK_SUITCASE,
+            AnimationId.BAKERY_WAIT_ORDER, AnimationId.BAKERY_EAT_PASTRY, AnimationId.MALL_ENTER_STORE,
+            AnimationId.BEACH_ICE_CREAM, AnimationId.CINEMA_BUY_POPCORN, AnimationId.CINEMA_EAT_POPCORN,
+            AnimationId.PHARMACY_EXAMINE, AnimationId.HOTEL_CHECK_IN,
         ).forEach { put(it, setOf(Anchor.FEET) + HAND) }
+        // Balde de pipoca nas duas mãos.
+        listOf(AnimationId.CINEMA_WATCH, AnimationId.CINEMA_REACT).forEach { put(it, setOf(Anchor.FEET) + BOTH_HANDS) }
         // Halteres nas duas mãos.
         listOf(AnimationId.LIFT_PICK, AnimationId.LIFT, AnimationId.LIFT_PUT).forEach { put(it, setOf(Anchor.FEET) + BOTH_HANDS) }
         // Mochila nas costas.

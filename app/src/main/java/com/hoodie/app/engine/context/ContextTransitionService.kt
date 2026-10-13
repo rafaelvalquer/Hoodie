@@ -55,7 +55,7 @@ class ContextTransitionService @Inject constructor(
         val event = contextDao.getById(eventId) ?: return
         if (event.source == ContextSource.USER_CORRECTION) return
         val classified = event.copy(type = type, confidence = 1f, source = ContextSource.CONFIRMATION,
-            venueType = venue.takeIf { type == UserContextType.SHOPPING })
+            venueType = PlaceType.venueFor(type, venue))
         contextDao.update(classified)
         timeline.invalidateSource(TimelineSourceType.CONTEXT, eventId)
         timeline.recordContext(eventId, type.emoji, describe(type, event.placeId, null), event.startedAt)
@@ -71,7 +71,8 @@ class ContextTransitionService @Inject constructor(
         note: String? = null,
         venueType: PlaceType? = null,
     ): TransitionResult = tx.run {
-        val resolvedVenue = if (to == UserContextType.SHOPPING) venueType ?: placeId?.let { places.byId(it)?.type } else null
+        // O tipo do lugar só é guardado onde ele escolhe uma cena (Loja, Padaria, Praia, Hotel...).
+        val resolvedVenue = PlaceType.venueFor(to, venueType ?: placeId?.let { places.byId(it)?.type })
         val current = contextDao.current()
         if (source != ContextSource.USER_CORRECTION) {
             val protected = contextDao.overlapping(at, at + 1).lastOrNull { it.source == ContextSource.USER_CORRECTION }
@@ -136,7 +137,7 @@ class ContextTransitionService @Inject constructor(
         val event = contextDao.getById(eventId) ?: return
         if (event.source == ContextSource.USER_CORRECTION) return
         if (event.placeId != null && event.placeId != placeId) return
-        val venue = places.byId(placeId)?.type?.takeIf { event.type == UserContextType.SHOPPING }
+        val venue = PlaceType.venueFor(event.type, places.byId(placeId)?.type)
         contextDao.update(event.copy(placeId = placeId, venueType = venue ?: event.venueType))
         timeline.invalidateSource(TimelineSourceType.CONTEXT, eventId)
         timeline.recordContext(eventId, event.type.emoji, describe(event.type, placeId, null), event.startedAt)

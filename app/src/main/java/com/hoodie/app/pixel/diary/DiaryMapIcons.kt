@@ -96,6 +96,66 @@ object DiaryMapIcons {
             "..#o#..",
             "...#...",
         ),
+        // Croissant.
+        PlaceType.BAKERY to listOf(
+            ".......",
+            "..###..",
+            ".#ooo#.",
+            "#o#o#o#",
+            "#ooooo#",
+            ".#####.",
+            ".......",
+        ),
+        // Sacola de compras com alça.
+        PlaceType.MALL to listOf(
+            "..###..",
+            ".#...#.",
+            "#######",
+            "#ooooo#",
+            "#oo#oo#",
+            "#ooooo#",
+            "#######",
+        ),
+        // Guarda-sol fincado na areia.
+        PlaceType.BEACH to listOf(
+            "..###..",
+            ".#ooo#.",
+            "#ooooo#",
+            "...#...",
+            "...#...",
+            "...#...",
+            "ooooooo",
+        ),
+        // Claquete.
+        PlaceType.CINEMA to listOf(
+            "#.#.#.#",
+            "#######",
+            "#ooooo#",
+            "#ooooo#",
+            "#ooooo#",
+            "#######",
+            ".......",
+        ),
+        // Cruz de farmácia (sem nenhum remédio ou sintoma).
+        PlaceType.PHARMACY to listOf(
+            "..###..",
+            "..#o#..",
+            "###o###",
+            "#ooooo#",
+            "###o###",
+            "..#o#..",
+            "..###..",
+        ),
+        // Cama com cabeceira.
+        PlaceType.HOTEL to listOf(
+            ".......",
+            "#......",
+            "#.##...",
+            "#oooooo",
+            "#######",
+            "#.....#",
+            ".......",
+        ),
     )
 
     const val SIZE = 7

@@ -61,6 +61,8 @@ data class AmbientNpcSlot(
     val busJoltPhaseMs: Long? = null,
     /** Visitante do Passeio 2.0: movimento, fala e profundidade vêm da sessão compartilhada. */
     val leisureActor: com.hoodie.app.pixel.npc.leisure.LeisureNpcActor? = null,
+    /** Personagem de estabelecimento (padaria, praia, cinema...): tudo vem da sessão da cena. */
+    val venueActor: com.hoodie.app.pixel.npc.venue.VenueNpcActor? = null,
 ) {
     val scale: Float get() = NpcScalePolicy.scale(definition.characterStyle, depth)
 }
@@ -148,7 +150,7 @@ object NpcDirector {
                 com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph.BASELINE,
             )
             SceneId.LEISURE -> LeisureNpcDirector.plan(env)
-            else -> emptyList()
+            else -> if (com.hoodie.app.pixel.npc.venue.VenueNpcDirector.supports(scene)) com.hoodie.app.pixel.npc.venue.VenueNpcDirector.plan(scene, env) else emptyList()
         }
     }
 
@@ -221,9 +223,13 @@ object NpcRenderer {
         val restaurantState = restaurantBrain?.stateAt(timeMs)
         val officeFrameState = officeFrameStateOverride ?: slot.officeBrain?.frameStateAt(timeMs)
         val leisureFrameState = leisureFrameStateOverride ?: slot.leisureActor?.frameStateAt(timeMs)
+        val venueFrameState = slot.venueActor?.frameStateAt(timeMs)
+        // Dentro de uma loja, no elevador ou fora de cena: não existe na tela.
+        if (venueFrameState?.hidden == true) return
         val movement = movementOverride ?: if (restaurantBrain != null && restaurantState != null) {
             restaurantBrain.movementAt(timeMs, restaurantState)
-        } else officeFrameState?.movement ?: leisureFrameState?.movement ?: NpcMotionController.movement(slot, timeMs)
+        } else officeFrameState?.movement ?: leisureFrameState?.movement ?: venueFrameState?.movement
+            ?: NpcMotionController.movement(slot, timeMs)
         if (!NpcMotionController.visible(movement)) {
             if (measureOffice) ScenePerformanceMonitor.recordNpcStages(
                 ScenePerformanceMonitor.nowNanos() - stageStarted, 0L, 0L, 0L, 0L, 0L,
@@ -239,15 +245,17 @@ object NpcRenderer {
         } ?: slot.definition.speechProfile
         val officeSpeech = officeFrameState?.speech
         val leisureSpeech = leisureFrameState?.speech
+        val venueSpeech = venueFrameState?.speech
         val speechAllowed = when {
             restaurantBrain != null -> restaurantLine != null
             slot.officeBrain != null -> officeSpeech != null
             slot.leisureActor != null -> leisureSpeech != null
+            slot.venueActor != null -> venueSpeech != null
             else -> shouldSpeak(slot, timeMs)
         }
         val animation = if (
             movement.animation == NpcAnimation.TALK && speechProfile != null && !speechAllowed && slot.officeBrain == null &&
-            slot.leisureActor == null
+            slot.leisureActor == null && slot.venueActor == null
         ) {
             if (restaurantBrain != null) {
                 NpcAnimation.IDLE
@@ -322,12 +330,14 @@ object NpcRenderer {
         if (movement.animation == NpcAnimation.TALK && speechAllowed) {
             val speech = officeSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
                 ?: leisureSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
+                ?: venueSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
                 ?: speechProfile
             speech?.let { activeProfile ->
             NpcSpeechBubbleRenderer.draw(
                 b, activeProfile, movement.x, movement.floorY, slot.seed, timeMs,
                 officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
                     ?: leisureSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
+                    ?: venueSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
                     ?: movement.localTimeMs, frame.anchors.head.y,
                 (slot.definition.characterStyle.species.headHeight * slot.scale).roundToInt().coerceAtLeast(1),
             )

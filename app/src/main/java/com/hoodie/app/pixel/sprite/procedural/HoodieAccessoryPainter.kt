@@ -122,6 +122,49 @@ internal object HoodieAccessoryPainter {
                 b.disc(rx + 2, ry - 3, 2, 0xFFD9A15A.toInt())
                 b.set(rx + 1, ry - 4, 0xFF6B3E26.toInt()); b.set(rx + 3, ry - 2, 0xFF6B3E26.toInt())
             }
+            Item.PASTRY -> {
+                // Salgado em forma de gota (coxinha) sobre um guardanapo.
+                b.box(rx - 2, ry - 1, rx + 5, ry, 0xFFF6F3EA.toInt())
+                b.disc(rx + 2, ry - 3, 3, o)
+                b.disc(rx + 2, ry - 3, 2, 0xFFE0A050.toInt())
+                b.vline(rx + 2, ry - 8, ry - 6, o); b.set(rx + 2, ry - 7, 0xFFE0A050.toInt())
+                b.set(rx + 1, ry - 4, 0xFFF2CF5B.toInt())
+            }
+            Item.POPCORN -> {
+                // Balde listrado de vermelho e branco com pipocas transbordando.
+                b.outlined(rx - 4, ry - 8, rx + 5, ry + 1, 0xFFF6F3EA.toInt(), o)
+                for (x in rx - 3..rx + 4 step 3) b.vline(x, ry - 7, ry, 0xFFC9544F.toInt())
+                for (dx in -4..5 step 2) b.disc(rx + dx, ry - 9, 1, 0xFFFFF1B8.toInt())
+                b.set(rx - 1, ry - 11, 0xFFFFF1B8.toInt()); b.set(rx + 2, ry - 11, 0xFFF2CF5B.toInt())
+            }
+            Item.SUITCASE -> {
+                // Mala de rodinhas: alça retrátil na mão, corpo até perto do chão.
+                b.vline(rx, ry - 2, ry + 6, o); b.vline(rx + 3, ry - 2, ry + 6, o); b.hline(rx, rx + 3, ry - 2, o)
+                b.outlined(rx - 3, ry + 6, rx + 7, ry + 20, 0xFF4F7FC9.toInt(), o)
+                b.vline(rx + 2, ry + 8, ry + 18, 0xFF3A5E9A.toInt())
+                b.hline(rx - 2, rx + 6, ry + 7, 0xFF86A9E8.toInt())
+                b.set(rx - 2, ry + 21, o); b.set(rx + 6, ry + 21, o)
+            }
+            Item.KEYCARD -> {
+                b.outlined(rx - 1, ry - 5, rx + 5, ry - 1, 0xFFF6F3EA.toInt(), o)
+                b.hline(rx, rx + 4, ry - 3, 0xFFC9A04A.toInt())
+            }
+            Item.ICE_CREAM -> {
+                // Casquinha com duas bolas.
+                b.line(rx, ry - 4, rx + 2, ry + 1, o); b.line(rx + 5, ry - 4, rx + 3, ry + 1, o)
+                b.hline(rx + 1, rx + 4, ry - 3, 0xFFD9A15A.toInt()); b.hline(rx + 2, rx + 3, ry - 1, 0xFFD9A15A.toInt())
+                b.disc(rx + 2, ry - 6, 2, 0xFFF29BC0.toInt()); b.disc(rx + 3, ry - 8, 2, 0xFFFFF4D8.toInt())
+                b.set(rx, ry - 6, o); b.set(rx + 5, ry - 7, o)
+            }
+            Item.TICKET -> {
+                b.outlined(rx - 2, ry - 5, rx + 5, ry - 1, 0xFFF2CF5B.toInt(), o)
+                b.vline(rx + 2, ry - 4, ry - 2, 0xFFC9544F.toInt())
+            }
+            Item.CLOTH -> {
+                // Pano de limpeza dobrado.
+                b.outlined(rx - 2, ry - 4, rx + 5, ry, 0xFF7FC4E0.toInt(), o)
+                b.hline(rx - 1, rx + 4, ry - 2, 0xFFB8E2F0.toInt())
+            }
             else -> Unit
         }
     }

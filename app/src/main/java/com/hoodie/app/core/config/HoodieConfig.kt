@@ -30,6 +30,18 @@ object HoodieConfig {
      * reservado ao Hoodie e reações do ambiente. false volta ao roteiro fixo do Passeio 1.0.
      */
     const val LEISURE_LIVING_WORLD_V2 = true
+
+    /**
+     * Cenas próprias por tipo de lugar (Venue Activity Engine). Cada uma só passa a ser escolhida
+     * pelo app depois de validada no Pixel Lab (onde todas aparecem sempre); desligada, o lugar
+     * abre a cena do contexto dele (Restaurante, Compras, Passeio, exterior genérico).
+     */
+    const val VENUE_BAKERY = false
+    const val VENUE_PHARMACY = false
+    const val VENUE_BEACH = false
+    const val VENUE_MALL = false
+    const val VENUE_CINEMA = false
+    const val VENUE_HOTEL = false
     /** Contexto é apresentado passivamente; só há alteração quando o usuário a solicita. */
     const val PASSIVE_CONTEXT_CONFIRMATION = true
     const val DAILY_INTELLIGENT_REPORT = true

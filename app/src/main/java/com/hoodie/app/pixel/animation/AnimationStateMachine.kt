@@ -227,8 +227,11 @@ class AnimationStateMachine(
 
         // variant escolhe a aparência; daySeed, a história do dia. Só o Passeio 2.0 usa a semente
         // separada por enquanto: as outras cenas mantêm a semente histórica (= variant).
-        val daySeed = if (sc.id == SceneId.LEISURE && HoodieConfig.LEISURE_LIVING_WORLD_V2) v.daySeed ?: v.variant else v.variant
-        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = daySeed, shoppingVenue = v.shoppingVenue)
+        // Estabelecimentos são cenas novas: já nascem com a semente do dia separada da aparência.
+        val separatedSeed = (sc.id == SceneId.LEISURE && HoodieConfig.LEISURE_LIVING_WORLD_V2) ||
+            com.hoodie.app.pixel.npc.venue.VenueNpcDirector.supports(sc.id)
+        val daySeed = if (separatedSeed) v.daySeed ?: v.variant else v.variant
+        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = daySeed, shoppingVenue = v.shoppingVenue, placeId = v.placeId)
         return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects, animation, direction, idx, occupancy(sc, v))
     }
 
@@ -370,6 +373,8 @@ class AnimationStateMachine(
         val sc = SceneRegistry[target.scene]
         scene = sc; visual = target; action = null
         flags.clear()
+        // O que ele traz de fora entra junto pela porta (a mala chegando ao hotel).
+        flags.addAll(target.steadyFlags.filter { it in CARRIED_IN })
         posture = Posture.STANDING
         idle.setGaze(target.gaze, now)
         val door = sc.spots[SpotId.DOOR]
@@ -382,7 +387,12 @@ class AnimationStateMachine(
 
     // ───────────────────────── Movimento e porta ─────────────────────────
 
-    private fun walkAnim() = VisualDirector.locomotion(scene?.id, visual?.backpackWalk == true)
+    /** Andar carregando o que está na mão (sacola do shopping, mala do hotel) ou a locomoção da cena. */
+    private fun walkAnim() = when {
+        SceneFlag.SUITCASE_HELD in flags -> AnimationId.WALK_SUITCASE
+        SceneFlag.BAG_HELD in flags && scene?.id == SceneId.MALL -> AnimationId.WALK_BAG
+        else -> VisualDirector.locomotion(scene?.id, visual?.backpackWalk == true)
+    }
 
     /** Move em direção ao alvo; true quando chegou. Um eixo por vez (estilo RPG). */
     private fun move(t: Spot, dt: Float): Boolean {
@@ -486,6 +496,22 @@ class AnimationStateMachine(
             AnimationEvent.CURTAIN_CLOSE -> flags += SceneFlag.CURTAIN_CLOSED
             AnimationEvent.CURTAIN_OPEN -> flags -= SceneFlag.CURTAIN_CLOSED
             AnimationEvent.BAG_TAKEN -> { flags -= SceneFlag.GARMENT_HELD; flags += SceneFlag.BAG_HELD }
+            AnimationEvent.HOODIE_ORDER -> flags += SceneFlag.ORDER_PENDING
+            AnimationEvent.ORDER_RECEIVED -> { flags -= SceneFlag.ORDER_PENDING; flags += SceneFlag.PASTRY_IN_HAND }
+            AnimationEvent.PASTRY_FINISHED -> flags -= SceneFlag.PASTRY_IN_HAND
+            AnimationEvent.STORE_ENTERED -> flags += SceneFlag.INSIDE_STORE
+            AnimationEvent.STORE_LEFT -> { flags -= SceneFlag.INSIDE_STORE; flags += SceneFlag.BAG_HELD }
+            AnimationEvent.ICE_CREAM_TAKEN -> flags += SceneFlag.ICE_CREAM_IN_HAND
+            AnimationEvent.ICE_CREAM_FINISHED -> flags -= SceneFlag.ICE_CREAM_IN_HAND
+            AnimationEvent.POPCORN_TAKEN -> flags += SceneFlag.POPCORN_HELD
+            AnimationEvent.SUITCASE_PUT_DOWN -> { flags -= SceneFlag.SUITCASE_HELD; flags += SceneFlag.SUITCASE_DOWN }
+            AnimationEvent.SUITCASE_PICKED_UP -> { flags -= SceneFlag.SUITCASE_DOWN; flags += SceneFlag.SUITCASE_HELD }
+            AnimationEvent.KEYCARD_RECEIVED -> flags += SceneFlag.KEYCARD_HELD
+            AnimationEvent.ELEVATOR_CALLED -> flags += SceneFlag.ELEVATOR_OPEN
+            AnimationEvent.ELEVATOR_ENTERED -> flags += SceneFlag.INSIDE_ELEVATOR
+            AnimationEvent.ELEVATOR_LEFT -> flags -= SceneFlag.INSIDE_ELEVATOR
+            AnimationEvent.ELEVATOR_CLOSED -> flags -= SceneFlag.ELEVATOR_OPEN
+            AnimationEvent.ITEM_RETURNED -> flags -= SceneFlag.ITEM_HELD
             AnimationEvent.PHOTO_TAKEN -> {
                 flags -= SceneFlag.CAMERA_ACTIVE
                 // Flash curto na mão que segura o celular.
@@ -501,5 +527,7 @@ class AnimationStateMachine(
     companion object {
         const val FADE_MS = 420L
         const val DOOR_FRAME_MS = 100L
+        /** Flags que acompanham o Hoodie desde a porta, não só quando a cena abre direto no loop. */
+        private val CARRIED_IN = setOf(SceneFlag.SUITCASE_HELD)
     }
 }

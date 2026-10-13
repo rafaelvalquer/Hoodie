@@ -172,6 +172,14 @@ object ReactionDirector {
         AnimGroup.VISIT -> listOf(AnimationId.WAVE)
         // Passeio: chama para ver a paisagem.
         AnimGroup.LEISURE -> listOf(AnimationId.WAVE, AnimationId.HAPPY)
+        // Padaria e praia: sorri com a boca cheia / acena da cadeira.
+        AnimGroup.BAKERY -> listOf(AnimationId.SMILE)
+        AnimGroup.BEACH -> listOf(AnimationId.WAVE)
+        // Shopping e farmácia: percebe o usuário entre uma vitrine e outra.
+        AnimGroup.MALL, AnimGroup.PHARMACY -> listOf(AnimationId.NOTICE, AnimationId.SMILE)
+        // Cinema: durante o filme, só um olhar rápido (ninguém fala na sessão).
+        AnimGroup.CINEMA -> listOf(AnimationId.GLANCE)
+        AnimGroup.HOTEL -> listOf(AnimationId.WAVE, AnimationId.SMILE)
         else -> listOf(AnimationId.HAPPY)
     }
 }
