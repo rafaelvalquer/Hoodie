@@ -78,7 +78,7 @@ class StabilizationDayIntegrationTest {
             assertEquals(store.id, m.context()!!.placeId)
             assertEquals(SceneId.STORE, scene(HoodieActivity.SHOPPING))
             val brain = NpcDirector.plan(SceneId.STORE, SceneEnv(DayPeriod.DAY, 13 * 60 + 25,
-                daySeed = MONDAY, shoppingVenue = PlaceType.STORE)).single().shoppingBrain!!
+                daySeed = MONDAY, shoppingVenue = PlaceType.STORE)).single { it.shoppingBrain != null }.shoppingBrain!!
             assertSame(StoreNavigationGraph, brain.floor)
             assertSame(StoreSpeechLibrary, brain.speech)
             val intents = (0L..300_000L step 250).map { brain.stateAt(it).currentIntent }.toSet()

@@ -79,7 +79,7 @@ class ShoppingSessionContinuityTest {
             val base = frame()
             renderer.render(base, 0)
             val previous = session(renderer)!!
-            val brain = previous.npcSlots.single().shoppingBrain!!
+            val brain = previous.npcSlots.single { it.shoppingBrain != null }.shoppingBrain!!
             val at = (0L..300_000L step 100).first { brain.stateAt(it).currentIntent == intent }
             renderer.render(base, at)
             if (intent == com.hoodie.app.pixel.npc.shopping.ShoppingNpcIntent.PAY) {
@@ -92,7 +92,7 @@ class ShoppingSessionContinuityTest {
             val restarted = session(renderer)!!
             assertNotSame(previous, restarted)
             assertEquals(at + 66, startedAt(renderer))
-            assertFalse(restarted.npcSlots.single().shoppingBrain!!.visualStateAt(0).checkoutActive)
+            assertFalse(restarted.npcSlots.single { it.shoppingBrain != null }.shoppingBrain!!.visualStateAt(0).checkoutActive)
             renderer.dispose()
         }
     }

@@ -126,6 +126,17 @@ object VisualDirector {
         if (HoodieConfig.VENUE_HOTEL) add(SceneId.HOTEL)
     }
 
+    /** Todas as cenas de estabelecimento, liberadas ou não pelas flags. */
+    val allVenueScenes: Set<SceneId> = setOf(SceneId.BAKERY, SceneId.MALL, SceneId.BEACH, SceneId.CINEMA, SceneId.PHARMACY, SceneId.HOTEL)
+
+    /**
+     * Cenas de estabelecimento que podem abrir agora. As flags controlam só o que o app escolhe
+     * sozinho; um lugar que o usuário escolheu (manual ou correção) sempre abre a cena dele —
+     * escolher "Shopping" e cair no mercado contradiz a própria escolha.
+     */
+    fun venueScenesFor(explicitChoice: Boolean, enabled: Set<SceneId> = enabledVenueScenes): Set<SceneId> =
+        if (explicitChoice) enabled + allVenueScenes else enabled
+
     /**
      * Cena do estabelecimento, se o tipo do lugar for compatível com o contexto (uma padaria no
      * almoço, não no trabalho) e a cena estiver liberada. "Outro" nunca escolhe uma cena nova.
@@ -188,7 +199,8 @@ object VisualDirector {
         } else null
         // Um deslocamento real vale mais que a visita anterior. Depois, o tipo do lugar escolhe a
         // cena (Mercado/Loja, Padaria, Praia...); [shoppingVenue] é o tipo do lugar de qualquer visita.
-        val scene = mobilityVisual?.profile?.scene ?: sceneFor(activity, context, homeOffice, commute, variant, mobilityMode, shoppingVenue, venueScenes)
+        val scene = mobilityVisual?.profile?.scene ?: sceneFor(activity, context, homeOffice, commute, variant, mobilityMode, shoppingVenue,
+            venueScenesFor(manualTransition, venueScenes))
         val tired = if (energy < 20) Expression.TIRED else null
         val currentMood = Mood(energy, mood, social, hunger, focus)
         val base = if (context == UserContextType.COMMUTING) {
