@@ -1,5 +1,6 @@
 package com.hoodie.app.pixel.animation
 
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.renderer.EffectKind
 import com.hoodie.app.pixel.scene.MicroAction
@@ -38,6 +39,8 @@ data class RenderFrame(
     val animation: AnimationId,
     val direction: Direction,
     val frameIndex: Int,
+    /** Onde o Hoodie está e para onde vai: o ambiente divide o espaço com ele (banco do Passeio). */
+    val occupancy: HoodieOccupancy = HoodieOccupancy.ABSENT,
 )
 
 /**
@@ -222,8 +225,28 @@ class AnimationStateMachine(
         transients.removeAll { it.until < now }
         transients.forEach { effects += it.kind to (it.x to it.y) }
 
-        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = v.variant, shoppingVenue = v.shoppingVenue)
-        return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects, animation, direction, idx)
+        // variant escolhe a aparência; daySeed, a história do dia. Só o Passeio 2.0 usa a semente
+        // separada por enquanto: as outras cenas mantêm a semente histórica (= variant).
+        val daySeed = if (sc.id == SceneId.LEISURE && HoodieConfig.LEISURE_LIVING_WORLD_V2) v.daySeed ?: v.variant else v.variant
+        val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = daySeed, shoppingVenue = v.shoppingVenue)
+        return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects, animation, direction, idx, occupancy(sc, v))
+    }
+
+    /**
+     * Intenção de ocupação: destino do trajeto em andamento, senão o spot da microação, senão o do
+     * estado. Assim o banco é "do Hoodie" desde que ele decide sentar, antes de chegar lá.
+     */
+    private fun occupancy(sc: PixelScene, v: VisualState): HoodieOccupancy {
+        val walking = step as? Step.Walk
+        val walkTarget = walking?.target?.let { target -> sc.spots.entries.firstOrNull { it.value == target }?.key }
+        val target = walkTarget ?: action?.spot ?: v.spot
+        val seated = posture == Posture.SITTING || posture == Posture.SIT_FRONT
+        val transition = when {
+            walking != null -> HoodieOccupancy.Transition.APPROACHING
+            fade < 1f -> HoodieOccupancy.Transition.LEAVING
+            else -> HoodieOccupancy.Transition.NONE
+        }
+        return HoodieOccupancy(true, x.toInt(), y.toInt(), target, animation, seated, transition)
     }
 
     // ───────────────────────── Passos ─────────────────────────

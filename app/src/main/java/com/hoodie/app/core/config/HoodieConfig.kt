@@ -23,6 +23,11 @@ object HoodieConfig {
 
     // Presentation release switches. Enabled after assembler and interaction gates pass.
     const val HOME_NOW_V2 = true
+    /**
+     * Passeio 2.0 (Leisure Living World V2): NPCs com rotina própria, encontros, banco
+     * reservado ao Hoodie e reações do ambiente. false volta ao roteiro fixo do Passeio 1.0.
+     */
+    const val LEISURE_LIVING_WORLD_V2 = true
     /** Contexto é apresentado passivamente; só há alteração quando o usuário a solicita. */
     const val PASSIVE_CONTEXT_CONFIRMATION = true
     const val DAILY_INTELLIGENT_REPORT = true

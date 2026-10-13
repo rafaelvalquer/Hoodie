@@ -1,5 +1,6 @@
 package com.hoodie.app.pixel.npc.leisure
 
+import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.character.CharacterStyle
 import com.hoodie.app.pixel.npc.AmbientNpcDefinition
@@ -26,7 +27,37 @@ import com.hoodie.app.pixel.sprite.Facing
  * Usa NpcPath/NpcBehaviorSequence e o painter universal dos outros ambientes.
  */
 object LeisureNpcDirector {
-    fun plan(env: SceneEnv): List<AmbientNpcSlot> {
+    /**
+     * Ponto de entrada do Passeio. Com [HoodieConfig.LEISURE_LIVING_WORLD_V2], cada chamada cria
+     * uma sessão nova e determinística (prévias e testes); o SceneRenderer guarda a sua com
+     * [createSession]. Sem a flag, volta ao roteiro fixo do Passeio 1.0 ([planLegacy]).
+     */
+    fun plan(env: SceneEnv): List<AmbientNpcSlot> =
+        if (HoodieConfig.LEISURE_LIVING_WORLD_V2) createSession(env).npcSlots else planLegacy(env)
+
+    fun sessionKey(env: SceneEnv) = LeisureSessionKey(env.daySeed, env.variant.mod(3), env.period == DayPeriod.NIGHT)
+
+    /** Sessão pertencente a um renderer: criada uma vez por chave (dia, variante, noite), não por quadro. */
+    fun createSession(env: SceneEnv): LeisureNpcSession {
+        val key = sessionKey(env)
+        val seed = key.daySeed * 37 + key.variant * 17
+        val explorer = LeisureActorSpec(
+            NpcCharacterRegistry.RABBIT_WALKER, LeisurePersonality.EXPLORER, seed + 11, LeisureStart.LEFT,
+            startDelayMs = 600L + Math.floorMod(key.daySeed, 5) * 200L,
+        )
+        val tourist = LeisureActorSpec(
+            NpcCharacterRegistry.CAT_COLLEAGUE, LeisurePersonality.TOURIST, seed + 53, LeisureStart.RIGHT,
+            startDelayMs = 1_600L + Math.floorMod(key.daySeed, 7) * 300L,
+        )
+        val reader = LeisureActorSpec(
+            NpcCharacterRegistry.MOUSE_COMMUTER, LeisurePersonality.CALM, seed + 97, LeisureStart.BENCH, startDelayMs = 0,
+        )
+        // À noite o parque fica mais calmo: dois visitantes e o banco livre.
+        return LeisureNpcSession(key, if (key.night) listOf(explorer, tourist) else listOf(explorer, tourist, reader))
+    }
+
+    /** Passeio 1.0: viajantes com percurso fixo e leitora parada no banco. */
+    fun planLegacy(env: SceneEnv): List<AmbientNpcSlot> {
         // As variantes 0 e 3 compartilham cenário e também devem compartilhar NPCs.
         val variant = env.variant.mod(3)
         val seed = env.daySeed * 37 + variant * 17

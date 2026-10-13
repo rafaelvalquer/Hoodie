@@ -81,6 +81,8 @@ data class SceneEnv(
     /** Estado visual da refeição do cliente, independente das interações de Hoodie. */
     val restaurantGuestTable: RestaurantTableState? = null,
     val shoppingVenue: com.hoodie.app.core.model.PlaceType? = null,
+    /** Patos, chafariz e borboleta do Passeio 2.0, reagindo aos visitantes (null = animação livre de antes). */
+    val leisureAmbient: com.hoodie.app.pixel.npc.leisure.LeisureAmbientState? = null,
 ) {
     companion object {
         const val DOOR_OPEN = 3
