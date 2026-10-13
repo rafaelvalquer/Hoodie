@@ -7,6 +7,7 @@ import com.hoodie.app.pixel.npc.NpcBehaviorProfile
 import com.hoodie.app.pixel.npc.NpcDepth
 import com.hoodie.app.pixel.npc.NpcMovement
 import com.hoodie.app.pixel.npc.NpcPoseLibrary
+import com.hoodie.app.pixel.npc.NpcReaction
 import com.hoodie.app.pixel.npc.PathPhase
 import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.npc.brain.NpcDeterministicRandom
@@ -151,6 +152,8 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         val toNode: String? = null,
         val endsFront: Boolean = facing == Facing.FRONT,
         val endsSeated: Boolean = seated,
+        /** Reação (riso, susto) quando a animação é REACTION. */
+        val reaction: NpcReaction? = null,
     ) {
         val distance: Int get() = max(abs(toX - fromX), abs(toY - fromY))
     }
@@ -259,7 +262,7 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         val movement = NpcMovement(
             x, y, facingRight, seg.animation, local + seg.localOffsetMs,
             walkedPx = seg.walkedStart + seg.distance * p,
-            phase = phase, seated = seg.seated, facing = seg.facing, heldItem = seg.held,
+            phase = phase, seated = seg.seated, facing = seg.facing, heldItem = seg.held, reaction = seg.reaction,
         )
         return VenueNpcFrameState(
             npcId = c.npcId,
@@ -342,6 +345,7 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         facing: Facing? = Facing.SIDE, spot: String? = c.node, speech: String? = null, localOffsetMs: Long = 0,
         seated: Boolean = c.seated, endsSeated: Boolean = seated, hidden: Boolean = false,
         endsFront: Boolean = facing == Facing.FRONT, facingRight: Boolean = c.facingRight,
+        reaction: NpcReaction? = null,
     ) {
         if (c.front && facing != Facing.FRONT && !seated) turnOutOfFront(c, c.facingRight, state, action)
         val start = c.time
@@ -350,6 +354,7 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
                 start, start + ms.coerceAtLeast(1), Kind.STAY, state, action, animation, c.x, c.y, c.x, c.y,
                 facingRight, facing, seated, c.walked, spot, c.held, speech, hidden = hidden,
                 localOffsetMs = localOffsetMs, toNode = c.node, endsFront = endsFront, endsSeated = endsSeated,
+                reaction = reaction,
             ),
         )
         val here = c.node

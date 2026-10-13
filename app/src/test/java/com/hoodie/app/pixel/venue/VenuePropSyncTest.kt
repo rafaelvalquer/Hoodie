@@ -219,6 +219,54 @@ class VenuePropSyncTest {
         }
     }
 
+    // ───── Cinema ─────
+
+    @Test fun cinemaRunsTheWholeSessionInOrder() {
+        val lc = com.hoodie.app.pixel.npc.venue.CinemaLightingController
+        val s = VenueTestFixtures.session(SceneId.CINEMA, 0, 82_000)
+        val seats = com.hoodie.app.pixel.npc.venue.CinemaVenue.NPC_SEATS.map { s.graph.spot(it) }
+        listOf("moviegoer", "moviegoer_snacker", "moviegoer_late").forEach { id ->
+            val track = VenueTestFixtures.track(s, id, 600_000, 100)
+            // Nenhuma pose sentada fora de uma poltrona.
+            track.filter { (_, st) -> !st.hidden && st.movement.animation.seated }.forEach { (t, st) ->
+                assertTrue("$id sentado fora da poltrona em t=$t (${st.x},${st.floorY})", seats.any { abs(it.x - st.x) <= 1 && abs(it.floorY - st.floorY) <= 1 })
+            }
+            // Na primeira sessão: entra, assiste sentado durante o filme e sai depois que as luzes acendem.
+            val inFilm = track.filter { (t, _) -> t in lc.SCREEN_AT + 20_000 until lc.LIGHTS_AT }
+            assertTrue("$id não assistiu ao filme", inFilm.all { (_, st) -> st.seated })
+            val leftAt = track.first { (t, st) -> t > lc.LIGHTS_AT && st.hidden }.first
+            assertTrue("$id saiu antes das luzes acenderem", leftAt > lc.LIGHTS_AT)
+        }
+        // O atrasado só chega quando a luz já está baixando.
+        val late = VenueTestFixtures.track(s, "moviegoer_late", 300_000, 100)
+        val arrived = late.first { !it.second.hidden }.first
+        assertTrue("atrasado chegou cedo ($arrived)", lc.phaseAt(arrived) != com.hoodie.app.pixel.npc.venue.CinemaPhase.LOBBY || arrived >= lc.DIM_AT - 2_000)
+    }
+
+    @Test fun cinemaLightsDimSmoothlyAndComeBack() {
+        val lc = com.hoodie.app.pixel.npc.venue.CinemaLightingController
+        assertEquals(1f, lc.lightAt(10_000), 0.001f)
+        assertEquals(lc.SCREENING_LIGHT, lc.lightAt(150_000), 0.001f)
+        assertEquals(1f, lc.lightAt(260_000), 0.001f)
+        // Sem saltos: a luz muda no máximo 0,1 a cada 200 ms.
+        (0L until 600_000L step 200L).zipWithNext().forEach { (a, b) -> assertTrue("salto de luz em $b", abs(lc.lightAt(a) - lc.lightAt(b)) <= 0.1f) }
+        assertTrue("luz baixa demais: personagens ilegíveis", lc.SCREENING_LIGHT >= 0.3f)
+    }
+
+    @Test fun reactionsToTheFilmAreNotSimultaneous() {
+        val s = VenueTestFixtures.session(SceneId.CINEMA, 0, 83_000)
+        val starts = mutableMapOf<String, MutableList<Long>>()
+        var last = emptyMap<String, Boolean>()
+        (0L until 300_000L step 50L).forEach { t ->
+            val now = s.snapshotAt(t).npcs.associate { it.npcId to (it.movement.animation == NpcAnimation.REACTION) }
+            now.forEach { (id, reacting) -> if (reacting && last[id] != true) starts.getOrPut(id) { mutableListOf() } += t }
+            last = now
+        }
+        assertTrue("ninguém reagiu ao filme", starts.values.sumOf { it.size } >= 4)
+        val all = starts.flatMap { (id, list) -> list.map { id to it } }
+        all.forEach { (a, ta) -> all.forEach { (b, tb) -> if (a != b) assertTrue("$a e $b reagiram juntos em $ta", abs(ta - tb) >= 150) } }
+    }
+
     @Test fun nightIsCalmer() {
         val night = VenueTestFixtures.session(SceneId.BAKERY, period = DayPeriod.NIGHT)
         val day = VenueTestFixtures.session(SceneId.BAKERY)

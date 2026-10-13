@@ -62,6 +62,13 @@ class VenueVisualGoldenTest {
             "mall_bench" to Shot(SpotId.BENCH, AnimationId.LEISURE_BENCH, 1_500, DayPeriod.EVENING, variant = 2),
             "mall_look" to Shot(SpotId.CENTER, AnimationId.LOOK_AROUND, 1_200, DayPeriod.NIGHT),
         ),
+        SceneId.CINEMA to linkedMapOf(
+            "cinema_popcorn" to Shot(SpotId.POPCORN, AnimationId.CINEMA_BUY_POPCORN, 2_400),
+            "cinema_lobby_seat" to Shot(SpotId.CINEMA_SEAT, AnimationId.CINEMA_WATCH, 30_000, DayPeriod.MORNING, setOf(SceneFlag.POPCORN_HELD)),
+            "cinema_screening" to Shot(SpotId.CINEMA_SEAT, AnimationId.CINEMA_WATCH, 120_000, steady = setOf(SceneFlag.POPCORN_HELD), variant = 1),
+            "cinema_eat" to Shot(SpotId.CINEMA_SEAT, AnimationId.CINEMA_EAT_POPCORN, 160_000, DayPeriod.EVENING, setOf(SceneFlag.POPCORN_HELD), variant = 2),
+            "cinema_lights_up" to Shot(SpotId.CINEMA_SEAT, AnimationId.CINEMA_WATCH, 246_000, DayPeriod.NIGHT, setOf(SceneFlag.POPCORN_HELD)),
+        ),
     )
 
     private fun shot(scene: SceneId, s: Shot): PixelBuffer {
