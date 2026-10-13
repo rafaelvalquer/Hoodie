@@ -21,6 +21,7 @@ import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcBrain
 import com.hoodie.app.pixel.npc.restaurant.RestaurantNpcDirector
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcBrain
 import com.hoodie.app.pixel.npc.shopping.ShoppingNpcDirector
+import com.hoodie.app.pixel.npc.leisure.LeisureNpcDirector
 import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.BuildConfig
@@ -126,7 +127,6 @@ object NpcDirector {
         ),
         lines = listOf("Cheiro bom.", "Vou pedir o de sempre."),
     )
-    private val walker = definition(NpcCharacterRegistry.RABBIT_WALKER, NpcAnimation.WALK)
 
     fun plan(scene: SceneId, env: SceneEnv): List<AmbientNpcSlot> {
         val v = env.variant and 1
@@ -145,10 +145,7 @@ object NpcDirector {
                 com.hoodie.app.pixel.npc.shopping.StoreSpeechLibrary,
                 com.hoodie.app.pixel.npc.shopping.StoreNavigationGraph.BASELINE,
             )
-            SceneId.LEISURE -> listOf(
-                AmbientNpcSlot(walker, 204, 252, 254, 91, walkerPath()),
-                AmbientNpcSlot(cat, 38, 252, 254, 92, strollPath()),
-            )
+            SceneId.LEISURE -> LeisureNpcDirector.plan(env)
             else -> emptyList()
         }
     }
@@ -190,23 +187,6 @@ object NpcDirector {
         millisPerPixel = 30,
     )
 
-    private fun walkerPath() = NpcPath(
-        points = listOf(
-            NpcPathPoint(212, 252, NpcAnimation.IDLE, 1_200),
-            NpcPathPoint(150, 252, NpcAnimation.LOOK, 1_800),
-            NpcPathPoint(212, 252),
-        ),
-        millisPerPixel = 26,
-    )
-
-    private fun strollPath() = NpcPath(
-        points = listOf(
-            NpcPathPoint(30, 252, NpcAnimation.IDLE, 1_600),
-            NpcPathPoint(78, 252, NpcAnimation.LOOK, 1_400),
-            NpcPathPoint(30, 252),
-        ),
-        millisPerPixel = 32,
-    )
 }
 
 /** Renderer de cena: resolve movimento, pinta a pose, escala por profundidade, sombra no chão e fala. */
