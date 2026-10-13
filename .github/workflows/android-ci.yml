@@ -159,4 +159,3 @@ jobs:
           name: instrumentation-reports
           path: app/build/reports/androidTests/
           if-no-files-found: ignore
-
