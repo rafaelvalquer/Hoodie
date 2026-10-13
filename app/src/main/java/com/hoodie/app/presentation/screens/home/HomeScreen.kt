@@ -250,6 +250,10 @@ internal fun HomeContent(
         }
         // A altura é a da própria cena (escala inteira pela largura): sem caixa 3:4 sobrando abaixo dela,
         // o texto "Hoodie está…" fica logo embaixo do cenário.
+        if (ux2) HomeHeroContent(
+            state, homeNow, zone, busy, reactions, onScenePresented,
+            onConfirm = actions.confirmContext, onCorrect = openCorrection,
+        ) else {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
             state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp, bottom = 6.dp)) }
@@ -278,6 +282,7 @@ internal fun HomeContent(
                     color = HoodieColors.Muted, style = MaterialTheme.typography.bodyMedium,
                 )
             }
+        }
         }
 
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

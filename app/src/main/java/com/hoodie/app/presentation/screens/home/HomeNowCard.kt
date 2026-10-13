@@ -65,7 +65,7 @@ internal fun HomeNowCard(
 }
 
 @Composable
-private fun userContextTitle(snapshot: HomeNowSnapshot): String {
+internal fun userContextTitle(snapshot: HomeNowSnapshot): String {
     val context = snapshot.context
     val contextTitle = when {
         snapshot.dayState?.state == DayState.SLEEPING && context == com.hoodie.app.core.model.UserContextType.HOME -> stringResource(R.string.home_now_resting)

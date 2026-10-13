@@ -597,4 +597,11 @@
     <string name="demo_title">Um dia com o Hoodie</string>
     <string name="demo_intro">Veja como o Hoodie conta seu dia. Nada aqui é gravado e nenhuma permissão é necessária.</string>    <string name="notif_mode_title">Como o Hoodie avisa</string>
     <string name="notif_mode_master_off">As notificações estão desligadas; as perguntas ficam só dentro do app.</string>
+    <string name="home_conf_place">Identificado porque você chegou ao raio de um lugar cadastrado.</string>
+    <string name="home_conf_routine">Estimado pela sua rotina, sem localização no momento.</string>
+    <string name="home_conf_confirmed">Você confirmou esta informação.</string>
+    <string name="home_conf_corrected">Você escolheu ou ajustou esta informação.</string>
+    <string name="home_conf_movement">Percebido pelo movimento do aparelho.</string>
+    <string name="home_conf_location">Conferido pela localização atual.</string>
+    <string name="home_conf_unknown">Ainda não sei de onde vem esta informação.</string>
 </resources>
