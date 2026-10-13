@@ -119,6 +119,13 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Update AVD command-line tools
+        run: |
+          # The runner's preinstalled device catalog may predate Pixel 8.
+          sdkmanager --install "cmdline-tools;latest"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list device > "$RUNNER_TEMP/avd-devices.txt"
+          cat "$RUNNER_TEMP/avd-devices.txt"
+          grep -q '"pixel_8"' "$RUNNER_TEMP/avd-devices.txt"
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -152,3 +159,4 @@ jobs:
           name: instrumentation-reports
           path: app/build/reports/androidTests/
           if-no-files-found: ignore
+
