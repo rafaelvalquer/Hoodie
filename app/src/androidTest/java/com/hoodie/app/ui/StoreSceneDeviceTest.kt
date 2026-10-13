@@ -3,6 +3,7 @@ package com.hoodie.app.ui
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -70,8 +71,9 @@ class StoreSceneDeviceTest {
         compose.onNodeWithContentDescription("Mais ações").performClick()
         waitForControl(hasText("Ajustar atividade"))
         compose.onNodeWithText("Ajustar atividade").performClick()
-        compose.mainClock.advanceTimeBy(800)
+        waitForControl(hasText(type.label))
         compose.scrollWithPausedClock(compose.onNodeWithText(type.label)).performClick()
+        waitForControl(hasText("Salvar correção", ignoreCase = true))
         compose.scrollWithPausedClock(compose.onNodeWithText("Salvar correção", ignoreCase = true)).performClick()
         waitForScene(expected)
     }
@@ -169,8 +171,11 @@ class StoreSceneDeviceTest {
                 waitForScene(SceneId.STORE)
                 runBlocking { assertEquals(store, graph.places().byId(store.id)?.copy(lastVisitedAt = store.lastVisitedAt, confirmationCount = store.confirmationCount)) }
                 compose.onNodeWithContentDescription(app.getString(R.string.nav_places)).performClick()
-                waitForControl(hasText(store.name))
-                compose.scrollWithPausedClock(compose.onNodeWithText(store.name)).assertIsDisplayed()
+                // During navigation, Home and Places can briefly show the same
+                // name. Wait for the actual clickable Places card, not Home's label.
+                val storeCard = hasText(store.name) and hasClickAction()
+                waitForControl(storeCard)
+                compose.scrollWithPausedClock(compose.onNode(storeCard)).assertIsDisplayed()
             }
         } finally {
             runBlocking {
