@@ -27,6 +27,11 @@ interface PlaceDao {
     @Update
     suspend fun update(place: PlaceEntity)
 
+    @Query("""UPDATE places SET name = :name, type = :type, radiusMeters = :radius,
+        encryptedCoordinates = :coordinates WHERE id = :id""")
+    suspend fun updateDetails(id: Long, name: String, type: com.hoodie.app.core.model.PlaceType,
+        radius: Float, coordinates: String): Int
+
     @Query("DELETE FROM places WHERE id = :id")
     suspend fun delete(id: Long)
 

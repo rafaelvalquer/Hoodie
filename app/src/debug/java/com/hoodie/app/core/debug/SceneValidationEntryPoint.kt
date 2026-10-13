@@ -17,4 +17,5 @@ interface SceneValidationEntryPoint {
     fun database(): HoodieDatabase
     fun contextEngine(): ContextEngine
     fun homeVisuals(): HomeVisualDiagnostics
+    fun coordinateCipher(): com.hoodie.app.core.security.CoordinateCipher
 }

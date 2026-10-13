@@ -43,7 +43,10 @@ class SceneRenderer {
     private var officeSession: OfficeNpcSession? = null
     private var officeRenderPlan: OfficeRenderPlan? = null
     private var shoppingSession: ShoppingNpcSession? = null
-    private var shoppingSessionStartedAt: Long = 0L
+    private data class ShoppingKey(val scene: SceneId, val day: Int, val variant: Int,
+        val venue: com.hoodie.app.core.model.PlaceType?)
+    private var shoppingKey: ShoppingKey? = null
+    private var shoppingSessionStartedAt: Long? = null
     /** Passeio 2.0: simulação dos visitantes deste renderer (uma por dia/variante/noite). */
     private var leisureSession: LeisureNpcSession? = null
 
@@ -90,16 +93,21 @@ class SceneRenderer {
             // Mercado e loja de roupas: o mesmo comprador, cada um com a sua planta e as suas falas.
             val store = scene.id == SceneId.STORE
             val floor = if (store) StoreNavigationGraph else ShoppingNavigationGraph
+            val key = ShoppingKey(scene.id, env.daySeed, env.variant, env.shoppingVenue)
             val current = shoppingSession
-            val session = current?.takeIf { it.floor == floor && it.venue == env.shoppingVenue && it.seed == (env.daySeed * 31 + env.variant * 17 + env.period.ordinal) }
+            // Lighting changes immediately; the shopper finishes the current story without restarting.
+            val session = current?.takeIf { shoppingKey == key && it.floor == floor }
                 ?: (if (store) ShoppingNpcDirector.createSession(env, StoreNavigationGraph, StoreSpeechLibrary, StoreNavigationGraph.BASELINE)
                 else ShoppingNpcDirector.createSession(env)).also {
                     shoppingSession = it
-                    shoppingSessionStartedAt = 0L
+                    shoppingKey = key
+                    shoppingSessionStartedAt = null
                 }
             return session.npcSlots
         }
         shoppingSession = null
+        shoppingKey = null
+        shoppingSessionStartedAt = null
         if (scene.id == SceneId.LEISURE && HoodieConfig.LEISURE_LIVING_WORLD_V2) {
             officeSession?.dispose()
             officeSession = null
@@ -137,6 +145,8 @@ class SceneRenderer {
         officeRenderPlan = null
         backgrounds.clear()
         shoppingSession = null
+        shoppingKey = null
+        shoppingSessionStartedAt = null
         leisureSession?.dispose()
         leisureSession = null
     }
@@ -163,40 +173,41 @@ class SceneRenderer {
     @Synchronized
     fun render(frame: RenderFrame, absoluteTimeMs: Long): PixelBuffer {
         val scene = frame.scene
-        val measureOffice = BuildConfig.DEBUG && scene.id == SceneId.OFFICE
-        val renderStart = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
-        if (measureOffice) ScenePerformanceMonitor.traceBegin("Hoodie.Office.render")
-        val planningStart = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
-        if (measureOffice) ScenePerformanceMonitor.traceBegin("Hoodie.Office.npcPlanning")
+        val measureScene = BuildConfig.DEBUG && (scene.id == SceneId.OFFICE || scene.id == SceneId.STORE)
+        val traceScene = if (scene.id == SceneId.STORE) "Store" else "Office"
+        val renderStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
+        if (measureScene) ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.render")
+        val planningStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
+        if (measureScene) ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.npcPlanning")
         val npcs = npcSlots(scene, frame.env)
-        if (measureOffice) ScenePerformanceMonitor.traceEnd()
-        val planningNanos = if (measureOffice) ScenePerformanceMonitor.nowNanos() - planningStart else 0L
+        if (measureScene) ScenePerformanceMonitor.traceEnd()
+        val planningNanos = if (measureScene) ScenePerformanceMonitor.nowNanos() - planningStart else 0L
         val shoppingScene = scene.id == SceneId.SHOPPING || scene.id == SceneId.STORE
-        if (shoppingScene && shoppingSessionStartedAt == 0L) shoppingSessionStartedAt = absoluteTimeMs
-        val timeMs = if (shoppingScene) (absoluteTimeMs - shoppingSessionStartedAt).coerceAtLeast(0L) else absoluteTimeMs
-        val stateStart = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
-        if (measureOffice) ScenePerformanceMonitor.traceBegin("Hoodie.Office.stateUpdate")
+        if (shoppingScene && shoppingSessionStartedAt == null) shoppingSessionStartedAt = absoluteTimeMs
+        val timeMs = if (shoppingScene) (absoluteTimeMs - checkNotNull(shoppingSessionStartedAt)).coerceAtLeast(0L) else absoluteTimeMs
+        val stateStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
+        if (measureScene) ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.stateUpdate")
         // O Passeio divide o banco com o Hoodie pelo destino da microação dele.
         if (scene.id == SceneId.LEISURE) leisureSession?.observeHoodie(timeMs, frame.occupancy)
         val env = envWithAmbientNpcState(frame.env, npcs, timeMs)
-        if (measureOffice) ScenePerformanceMonitor.traceEnd()
+        if (measureScene) ScenePerformanceMonitor.traceEnd()
         val officePlan = if (scene.id == SceneId.OFFICE) {
             officePlan(scene, npcs).also { plan ->
                 plan.update(timeMs)
             }
         } else null
-        val stateNanos = if (measureOffice) ScenePerformanceMonitor.nowNanos() - stateStart else 0L
-        val drawingStart = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
-        if (measureOffice) ScenePerformanceMonitor.beginOfficeFrame()
-        if (measureOffice) ScenePerformanceMonitor.traceBegin("Hoodie.Office.draw")
-        var stageStarted = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
+        val stateNanos = if (measureScene) ScenePerformanceMonitor.nowNanos() - stateStart else 0L
+        val drawingStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
+        if (measureScene) ScenePerformanceMonitor.beginOfficeFrame()
+        if (measureScene) ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.draw")
+        var stageStarted = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
         buffer.copyFrom(background(scene, env))
         var sceneCopyNanos = 0L
         var sceneObjectsNanos = 0L
         var sceneHoodieNanos = 0L
         var sceneLightingNanos = 0L
         var scenePostNanos = 0L
-        if (measureOffice) {
+        if (measureScene) {
             sceneCopyNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
             stageStarted = ScenePerformanceMonitor.nowNanos()
         }
@@ -211,16 +222,16 @@ class SceneRenderer {
             val behindProps = scene.sortedProps.filter { it.baseline <= frame.y }
             val behindNpcs = npcs.filter { npcDepth(it, timeMs) <= frame.y }
                 (behindProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
-                    behindNpcs.map { npcDepth(it, timeMs) to { NpcRenderer.draw(buffer, it, timeMs) } })
+                    behindNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } })
                     .sortedBy { it.first }.forEach { it.second() }
         }
-        if (measureOffice) {
+        if (measureScene) {
             npcBeforeCharacterNanos = npcDrawingNanos
             objectNanos = (ScenePerformanceMonitor.nowNanos() - stageStarted - npcBeforeCharacterNanos).coerceAtLeast(0L)
         }
 
         // O ponto dos pés do frame é alinhado ao chão: sprite sheets e procedural usam o mesmo contrato.
-        if (measureOffice) {
+        if (measureScene) {
             stageStarted = ScenePerformanceMonitor.nowNanos()
         }
         val sprite = frame.sprite
@@ -231,7 +242,7 @@ class SceneRenderer {
             val hand = sprite.anchors.rightHand
             HoodiePainter.drawItemAt(buffer, item, com.hoodie.app.pixel.sprite.Point(left + hand.x, top + hand.y))
         }
-        if (measureOffice) {
+        if (measureScene) {
             sceneHoodieNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
             stageStarted = ScenePerformanceMonitor.nowNanos()
         }
@@ -243,11 +254,11 @@ class SceneRenderer {
             val frontProps = scene.sortedProps.filter { it.baseline > frame.y }
             val frontNpcs = npcs.filter { npcDepth(it, timeMs) > frame.y }
             (frontProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
-                frontNpcs.map { npcDepth(it, timeMs) to { NpcRenderer.draw(buffer, it, timeMs) } })
+                frontNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } })
                 .sortedBy { it.first }.forEach { it.second() }
         }
 
-        if (measureOffice) {
+        if (measureScene) {
             val frontObjectsNanos = ScenePerformanceMonitor.nowNanos() - stageStarted -
                 (npcDrawingNanos - npcBeforeCharacterNanos)
             sceneObjectsNanos = objectNanos + frontObjectsNanos.coerceAtLeast(0L)
@@ -255,14 +266,14 @@ class SceneRenderer {
         }
         Lighting.apply(buffer, Lighting.map(scene, env))
         if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, env.transportAmbient?.lighting)
-        if (measureOffice) {
+        if (measureScene) {
             sceneLightingNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
             stageStarted = ScenePerformanceMonitor.nowNanos()
         }
         scene.drawPostLighting(buffer, env, timeMs)
         frame.effects.forEach { (kind, pos) -> Effects.draw(buffer, kind, pos.first, pos.second, timeMs) }
         Lighting.fade(buffer, frame.fade)
-        if (measureOffice) {
+        if (measureScene) {
             scenePostNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
             ScenePerformanceMonitor.traceEnd()
             val finishedAt = ScenePerformanceMonitor.nowNanos()
@@ -304,6 +315,12 @@ class SceneRenderer {
         val existing = officeRenderPlan
         if (existing != null && existing.scene === scene && existing.slots === slots) return existing
         return OfficeRenderPlan(scene, slots).also { officeRenderPlan = it }
+    }
+
+    private fun drawAmbientNpc(slot: com.hoodie.app.pixel.npc.AmbientNpcSlot, timeMs: Long, measure: Boolean): Long {
+        val started = if (measure) ScenePerformanceMonitor.nowNanos() else 0L
+        NpcRenderer.draw(buffer, slot, timeMs)
+        return if (measure) ScenePerformanceMonitor.nowNanos() - started else 0L
     }
 
     private fun drawOfficeEntry(entry: OfficeDrawEntry, env: SceneEnv, timeMs: Long): Long {

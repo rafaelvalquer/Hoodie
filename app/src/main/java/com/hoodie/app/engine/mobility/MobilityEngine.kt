@@ -237,11 +237,7 @@ class MobilityEngine @Inject constructor(
             }
             val latest = repo.open()
             if (latest != null && latest.stillSince == null) {
-                val evidence = repo.evidenceFor(latest.id)
-                val speedDelay = if (latest.currentMode.isVehicle && latest.pendingMovementAt == null && (evidence?.attempts ?: 0) < TransportSpeedSamplingPolicy.MAX_ATTEMPTS) {
-                    evidence?.lastAttemptAt?.let { (it + TransportSpeedSamplingPolicy.INTERVAL_MS - now).coerceAtLeast(0) }
-                        ?: TransportSpeedSamplingPolicy.INTERVAL_MS
-                } else Long.MAX_VALUE
+                val speedDelay = repo.speedSampleDelay(latest.id, now) ?: Long.MAX_VALUE
                 val walkDelay = latest.pendingMovementAt?.let {
                     (it + MobilityModeHysteresisPolicy.WALKING_CONFIRMATION_MS - now).coerceAtLeast(0)
                 } ?: Long.MAX_VALUE
@@ -377,7 +373,7 @@ class MobilityEngine @Inject constructor(
         val current = repo.session(session.id) ?: return
         if (current.endedAt != null || !current.currentMode.isVehicle || current.stillSince != null || current.pendingMovementAt != null) return
         val e = repo.ensureEvidence(current.id, now) ?: return
-        if (e.attempts >= 5 || e.lastAttemptAt?.let { now - it < 60_000 } == true) return
+        if (!repo.canSampleSpeed(current.id, now)) return
         speedSampler?.enqueue(current.id, e.id)
     }
 

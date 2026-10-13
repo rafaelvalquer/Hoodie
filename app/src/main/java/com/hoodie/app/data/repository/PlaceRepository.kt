@@ -50,13 +50,9 @@ class PlaceRepository @Inject constructor(
     }
 
     suspend fun update(place: Place) {
-        val existing = dao.getById(place.id) ?: throw PlaceException.NotFound(place.id)
-        dao.update(
-            existing.copy(
-                name = place.name, type = place.type, radiusMeters = place.radiusMeters,
-                encryptedCoordinates = cipher.encrypt(place.latitude, place.longitude),
-            ),
-        )
+        val changed = dao.updateDetails(place.id, place.name, place.type, place.radiusMeters,
+            cipher.encrypt(place.latitude, place.longitude))
+        if (changed == 0) throw PlaceException.NotFound(place.id)
     }
 
     suspend fun delete(id: Long) = dao.delete(id)
@@ -64,8 +60,8 @@ class PlaceRepository @Inject constructor(
     suspend fun markVisited(id: Long, at: Long) = dao.markVisited(id, at)
 
     /** Lugar conhecido que contém o ponto (para reconciliar um geofence perdido). */
-    suspend fun containing(lat: Double, lng: Double): Place? = com.hoodie.app.core.geofence.PlaceArrivalPolicy.select(
-        all(), com.hoodie.app.core.geofence.PlaceArrivalPosition(lat, lng),
+    suspend fun containing(lat: Double, lng: Double, currentPlaceId: Long? = null): Place? = com.hoodie.app.core.geofence.PlaceArrivalPolicy.select(
+        all(), com.hoodie.app.core.geofence.PlaceArrivalPosition(lat, lng), currentPlaceId,
     )
 
     private fun toDomain(e: PlaceEntity): Place? {

@@ -127,6 +127,81 @@ class MobilityEngineIntegrationTest {
     }
 
     @Test
+    fun `carro semaforo estacionamento e trabalho preservam diario apos reinicio`() = runBlocking {
+        m.close()
+        m = MobilityGraph(intelligenceEnabled = true)
+        // Preferência explicitamente configurada pelo usuário antes de dirigir.
+        m.g.settings.setMobility(m.g.settings.current().mobility.copy(preferredMode = MovementMode.CAR))
+        startConfirmedWalk()
+        m.at(MONDAY, 7, 54); m.move(DetectedMovement.IN_VEHICLE)
+        val id = m.open()!!.id
+        assertNull(m.pending(QuestionKind.SELECT_TRANSPORT_MODE))
+        assertEquals(SceneId.CAR, scene())
+
+        // Abrir o app em movimento não solicita interação.
+        m.engine.onAppOpened()
+        assertNull(m.pending(QuestionKind.SELECT_TRANSPORT_MODE))
+        val evidence = m.repo.evidenceFor(id)!!
+        m.at(MONDAY, 7, 56)
+        m.location.speedOverride = { com.hoodie.app.core.location.SpeedObservation(12f, m.now()) }
+        m.sampler!!.sample(id, evidence.id, "trip-speed")
+        assertEquals(1, m.location.speedReads)
+        assertEquals(1, m.repo.evidenceFor(id)!!.sampleCount)
+        assertNull(m.pending(QuestionKind.SELECT_TRANSPORT_MODE))
+        assertEquals(SceneId.CAR, scene())
+
+        // Semáforo: não cria caminhada nem reabre a pergunta do transporte.
+        m.at(MONDAY, 8, 5); m.move(DetectedMovement.STILL)
+        m.g.clock.millis += 20_000; m.check()
+        assertEquals(SceneId.CAR, scene())
+        m.move(DetectedMovement.IN_VEHICLE)
+        assertEquals(listOf(MovementMode.WALKING, MovementMode.CAR), m.segmentsOf(id).map { it.mode })
+        assertEquals(0, m.asked(QuestionKind.SELECT_TRANSPORT_MODE))
+
+        // Estacionamento: uma única observação de caminhada, persistida antes do reinício.
+        m.at(MONDAY, 8, 20); m.move(DetectedMovement.WALKING)
+        val walkingAt = m.now()
+        assertEquals(SceneId.CAR, scene())
+        m.restart()
+        m.g.clock.millis += 45_000
+        m.engine.onAppOpened()
+        m.check(); m.engine.onAppOpened()
+        assertEquals(SceneId.STREET, scene())
+        assertEquals(3, m.segmentsOf(id).size)
+        assertEquals(walkingAt, m.segmentsOf(id).last().startedAt)
+        assertEquals(walkingAt + 45_000, m.segmentsOf(id).last().confirmedAt)
+
+        m.at(MONDAY, 8, 31); m.geofence(m.work, GeofenceTransition.ENTER)
+        m.answer(QuestionKind.CONFIRM_ARRIVAL, true)
+        assertNull(m.open())
+        assertEquals(UserContextType.WORK, m.context()!!.type)
+        assertEquals(SceneId.OFFICE, VisualDirector.resolve(HoodieActivity.WORKING, m.context()!!.type).scene)
+        val trip = m.repo.tripsBetween(0, Long.MAX_VALUE).single()
+        assertEquals(m.home.id, trip.session.originPlaceId)
+        assertEquals(m.work.id, trip.session.destinationPlaceId)
+        assertEquals(true, trip.session.arrivalConfirmed)
+        val segments = m.segmentsOf(id)
+        assertEquals(listOf(MovementMode.WALKING, MovementMode.CAR, MovementMode.WALKING), segments.map { it.mode })
+        assertTrue(segments.all { it.endedAt != null && it.confidence in 0f..1f })
+        assertTrue(segments.zipWithNext().all { (a, b) -> a.endedAt == b.startedAt })
+        assertEquals(com.hoodie.app.core.mobility.MobilitySource.PREFERENCE, segments[1].source)
+        assertTrue(segments[1].confirmed)
+        assertEquals(com.hoodie.app.core.mobility.MobilitySource.ACTIVITY_RECOGNITION, segments.last().source)
+
+        val diary = DiaryMobilityMerger.merge(
+            com.hoodie.app.domain.diary.model.DailyDiary(
+                com.hoodie.app.domain.diary.model.DailySummary(java.time.LocalDate.of(2025, 1, 1)), emptyList(), emptyList(),
+                com.hoodie.app.domain.diary.model.DiaryMapData(), com.hoodie.app.domain.diary.model.ReplaySequence.EMPTY,
+            ), listOf(trip), 0, Long.MAX_VALUE, m.now(), m.g.clock.zone(),
+        )
+        assertEquals(listOf("🚶 07:47–07:54 · 7 min", "🚗 07:54–08:20 · 26 min", "🚶 08:20–08:31 · 11 min"),
+            diary.timeline.map { "${it.emoji} ${it.subtitle}" })
+        assertEquals(0, m.location.reads)
+        assertEquals(1, m.location.speedReads)
+        assertEquals(1, m.repo.session(id)!!.speedSampleAttempts)
+    }
+
+    @Test
     fun `veiculo depois a pe cria novo trecho`() {
         startConfirmedWalk()
         m.at(MONDAY, 7, 55); m.move(DetectedMovement.IN_VEHICLE)

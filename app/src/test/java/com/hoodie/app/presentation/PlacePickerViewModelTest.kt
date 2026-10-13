@@ -44,6 +44,14 @@ class PlacePickerViewModelTest {
     }
 
     private class FakeDao : PlaceDao {
+        override suspend fun updateDetails(id: Long, name: String, type: PlaceType,
+            radius: Float, coordinates: String): Int {
+            if (failWrites) error("disco cheio")
+            val changed = rows.value.any { it.id == id }
+            rows.value = rows.value.map { if (it.id == id) it.copy(name = name, type = type,
+                radiusMeters = radius, encryptedCoordinates = coordinates) else it }
+            return if (changed) 1 else 0
+        }
         override suspend fun setFavorite(id: Long, favorite: Boolean) = error("unused")
         val rows = MutableStateFlow<List<PlaceEntity>>(emptyList())
         var failWrites = false

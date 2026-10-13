@@ -38,6 +38,9 @@ data class TransportEvidenceEntity(
 
 @Dao
 interface TransportEvidenceDao {
+    @Query("""SELECT COALESCE(SUM(attempts), 0) AS attempts, MAX(lastAttemptAt) AS lastAttemptAt
+        FROM transport_evidence WHERE sessionId = :sessionId""")
+    suspend fun sampleBudget(sessionId: Long): TransportSampleBudget
     @Insert suspend fun insert(value: TransportEvidenceEntity): Long
     @Update suspend fun update(value: TransportEvidenceEntity)
     @Query("SELECT * FROM transport_evidence WHERE id = :id") suspend fun get(id: Long): TransportEvidenceEntity?
@@ -49,3 +52,5 @@ interface TransportEvidenceDao {
     suspend fun invalidate(sessionId: Long)
     @Query("UPDATE transport_evidence SET reservationId = NULL") suspend fun invalidateAll()
 }
+
+data class TransportSampleBudget(val attempts: Int, val lastAttemptAt: Long?)

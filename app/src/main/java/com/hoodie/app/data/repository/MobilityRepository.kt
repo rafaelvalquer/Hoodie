@@ -60,13 +60,47 @@ class MobilityRepository @Inject constructor(
         }
     }
 
-    /** Both the budget and the single-use reservation belong to the vehicle period, never to the trip. */
+    /** Merge legacy trip counters and period counters without counting the same attempts twice. */
+    private suspend fun speedBudget(s: MobilitySessionEntity): com.hoodie.app.core.database.TransportSampleBudget {
+        val periods = evidence.sampleBudget(s.id)
+        return periods.copy(attempts = maxOf(s.speedSampleAttempts, periods.attempts),
+            lastAttemptAt = listOfNotNull(s.lastSpeedSampleAt, periods.lastAttemptAt).maxOrNull())
+    }
+
+    private fun com.hoodie.app.core.database.TransportSampleBudget.allows(now: Long): Boolean =
+        attempts < HoodieConfig.TRANSPORT_SPEED_SAMPLE_MAX_ATTEMPTS &&
+            (lastAttemptAt == null || now - lastAttemptAt >= HoodieConfig.TRANSPORT_SPEED_SAMPLE_INTERVAL_MS)
+
+    /** A new vehicle period keeps its own features, but does not renew the trip's GPS budget. */
+    suspend fun canSampleSpeed(sessionId: Long, now: Long): Boolean = db.withTransaction {
+        val s = sessions.getById(sessionId) ?: return@withTransaction false
+        s.endedAt == null && s.currentMode.isVehicle && s.stillSince == null &&
+            s.pendingMovementAt == null && speedBudget(s).allows(now)
+    }
+
+    /** No further GPS checks are needed once this trip's persisted budget is exhausted. */
+    suspend fun speedSampleDelay(sessionId: Long, now: Long): Long? = db.withTransaction {
+        val s = sessions.getById(sessionId) ?: return@withTransaction null
+        if (s.endedAt != null || !s.currentMode.isVehicle || s.stillSince != null || s.pendingMovementAt != null) return@withTransaction null
+        val budget = speedBudget(s)
+        if (budget.attempts >= HoodieConfig.TRANSPORT_SPEED_SAMPLE_MAX_ATTEMPTS) return@withTransaction null
+        budget.lastAttemptAt?.let { (it + HoodieConfig.TRANSPORT_SPEED_SAMPLE_INTERVAL_MS - now).coerceAtLeast(0L) }
+            ?: HoodieConfig.TRANSPORT_SPEED_SAMPLE_INTERVAL_MS
+    }
+
     suspend fun reserveEvidenceSample(sessionId: Long, evidenceId: Long, workRequestId: String, now: Long): SpeedSampleReservation? = db.withTransaction {
         val s = sessions.getById(sessionId) ?: return@withTransaction null
         val e = evidence.current(sessionId)?.takeIf { it.id == evidenceId } ?: return@withTransaction null
         if (s.endedAt != null || !s.currentMode.isVehicle || s.stillSince != null || s.pendingMovementAt != null ||
-            e.attempts >= 5 || workRequestId in e.consumedWorkRequestIds.split(",") ||
-            e.lastAttemptAt?.let { now - it < 60_000 } == true) return@withTransaction null
+            workRequestId in e.consumedWorkRequestIds.split(",")) return@withTransaction null
+        val budget = speedBudget(s)
+        // Recover counters from periods recorded before trip-wide accounting was introduced.
+        if (budget.attempts != s.speedSampleAttempts || budget.lastAttemptAt != s.lastSpeedSampleAt) {
+            sessions.restoreSpeedBudget(s.id, budget.attempts, budget.lastAttemptAt)
+        }
+        if (!budget.allows(now)) return@withTransaction null
+        if (sessions.reserveSpeedAttempt(s.id, now, now - HoodieConfig.TRANSPORT_SPEED_SAMPLE_INTERVAL_MS,
+                HoodieConfig.TRANSPORT_SPEED_SAMPLE_MAX_ATTEMPTS) != 1) return@withTransaction null
         evidence.update(e.copy(attempts = e.attempts + 1, lastAttemptAt = now,
             lastWorkRequestId = workRequestId, consumedWorkRequestIds = (e.consumedWorkRequestIds.split(",").filter { it.isNotEmpty() } + workRequestId).joinToString(","), reservationId = workRequestId))
         SpeedSampleReservation(s.id, s.startedAt, now, e.sampleCount, e.attempts + 1, e.id, workRequestId)

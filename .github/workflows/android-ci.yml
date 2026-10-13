@@ -49,15 +49,24 @@ jobs:
             app/build/pixel-preview/new_place_scenes.png
           if-no-files-found: ignore
 
-      # Roda de novo isolado para o resultado aparecer explícito no log do PR.
-      - name: Sprite sheets entregues (arte final)
-        run: ./gradlew :app:testDebugUnitTest --tests '*ShippedSheetsValidationTest*'
-
+      # Preserve the full suite before the isolated sprite run replaces Gradle's report.
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+      # Roda de novo isolado para o resultado aparecer explícito no log do PR.
+      - name: Sprite sheets entregues (arte final)
+        run: ./gradlew :app:testDebugUnitTest --tests '*ShippedSheetsValidationTest*'
+
+      - name: Upload sprite sheet test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprite-sheet-test-reports
           path: app/build/reports/tests/
           if-no-files-found: ignore
 
@@ -119,6 +128,18 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Update AVD command-line tools
+        run: |
+          # Pin the catalog and make the emulator action use the installed version.
+          # Updating "latest" in place can install into "latest-2" on hosted runners.
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "cmdline-tools;23.0"
+          test ! -e "$ANDROID_HOME/cmdline-tools/preinstalled"
+          mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
+          ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
+          cat "$ANDROID_HOME/cmdline-tools/latest/source.properties"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list device > "$RUNNER_TEMP/avd-devices.txt"
+          cat "$RUNNER_TEMP/avd-devices.txt"
+          grep -q '"pixel_8"' "$RUNNER_TEMP/avd-devices.txt"
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -142,7 +163,9 @@ jobs:
             adb shell setprop debug.hwui.renderer skiagl
             adb shell settings put system font_scale 1.0
             adb shell settings put secure show_ime_with_hard_keyboard 1
-            ./gradlew :app:connectedDebugAndroidTest
+            # Test the virtual keyboard, without Gboard's first-run stylus tutorial.
+            adb shell settings put secure stylus_handwriting_enabled 0
+            bash .github/scripts/connected-tests.sh
       - name: Upload instrumentation reports
         if: always()
         uses: actions/upload-artifact@v4

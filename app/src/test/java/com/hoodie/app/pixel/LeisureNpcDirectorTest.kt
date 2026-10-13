@@ -8,6 +8,7 @@ import com.hoodie.app.pixel.npc.PathPhase
 import com.hoodie.app.pixel.npc.SpeciesMotionProfiles
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.leisure.LeisureNpcDirector
+import com.hoodie.app.pixel.npc.leisure.LeisureNpcFrameState
 import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.SceneRegistry
@@ -20,14 +21,14 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Regressões do comportamento do parque: atividades, banco, percursos e horário. */
+/** The fixed 1.0 fallback and the active 2.0 session have different planning contracts. */
 class LeisureNpcDirectorTest {
     private fun env(variant: Int = 0, daySeed: Int = 5, period: DayPeriod = DayPeriod.DAY) =
         SceneEnv(period, clockMinute = 14 * 60, variant = variant, daySeed = daySeed)
 
     @Test fun parqueTemVisitantesComAcoesDiferentesEmVezDePingPong() {
         for (variant in 0..2) {
-            val slots = LeisureNpcDirector.plan(env(variant))
+            val slots = LeisureNpcDirector.planLegacy(env(variant))
             assertEquals(3, slots.size)
             val explorer = slots.single { it.definition.id == "rabbit_walker" }
             val photographer = slots.single { it.definition.id == "cat_colleague" }
@@ -54,7 +55,7 @@ class LeisureNpcDirectorTest {
     }
 
     @Test fun percursosReiniciamForaDaTelaSemTeleporteVisivel() {
-        val moving = LeisureNpcDirector.plan(env()).filter { it.path != null }
+        val moving = LeisureNpcDirector.planLegacy(env()).filter { it.path != null }
         moving.forEach { slot ->
             val path = slot.path!!
             val first = path.points.first().x
@@ -74,17 +75,36 @@ class LeisureNpcDirectorTest {
     }
 
     @Test fun horariosVariantesESementesSaoPrevisiveis() {
-        val day = LeisureNpcDirector.plan(env())
-        assertEquals(day, LeisureNpcDirector.plan(env()))
-        assertEquals(LeisureNpcDirector.plan(env(variant = 0)), LeisureNpcDirector.plan(env(variant = 3)))
-        assertNotEquals(day, LeisureNpcDirector.plan(env(daySeed = 6)))
-        assertNotEquals(day, LeisureNpcDirector.plan(env(variant = 1)))
-        val night = LeisureNpcDirector.plan(env(period = DayPeriod.NIGHT))
+        val day = LeisureNpcDirector.planLegacy(env())
+        assertEquals(day, LeisureNpcDirector.planLegacy(env()))
+        assertEquals(LeisureNpcDirector.planLegacy(env(variant = 0)), LeisureNpcDirector.planLegacy(env(variant = 3)))
+        assertNotEquals(day, LeisureNpcDirector.planLegacy(env(daySeed = 6)))
+        assertNotEquals(day, LeisureNpcDirector.planLegacy(env(variant = 1)))
+        val night = LeisureNpcDirector.planLegacy(env(period = DayPeriod.NIGHT))
         assertEquals(2, night.size)
         assertFalse(night.any { it.definition.id == "mouse_commuter" })
         assertEquals(1, day.count { it.definition.speechProfile != null })
         assertEquals(1, night.count { it.definition.speechProfile != null })
-        assertEquals(day, SceneRegistry[SceneId.LEISURE].ambientNpcs(env()))
+    }
+
+    @Test fun planoPublico2UsaSessoesIndependentesComEstadosDeterministicos() {
+        fun states(environment: SceneEnv, fromScene: Boolean = false): List<List<LeisureNpcFrameState>> {
+            val slots = if (fromScene) SceneRegistry[SceneId.LEISURE].ambientNpcs(environment)
+                else LeisureNpcDirector.plan(environment)
+            assertTrue("2.0 uses actors, not fixed paths", slots.all { it.leisureActor != null && it.path == null })
+            return (0L..180_000L step 1_000).map { time -> slots.map { it.leisureActor!!.frameStateAt(time) } }
+        }
+        val day = states(env())
+        assertEquals(3, day.first().size)
+        // Each call owns new mutable actors; determinism compares their output, not object identity.
+        assertEquals(day, states(env()))
+        assertEquals(day, states(env(variant = 3)))
+        assertNotEquals(day, states(env(daySeed = 6)))
+        assertNotEquals(day, states(env(variant = 1)))
+        val night = states(env(period = DayPeriod.NIGHT))
+        assertEquals(2, night.first().size)
+        assertFalse(night.flatten().any { it.npcId == "mouse_commuter" })
+        assertEquals(day, states(env(), fromScene = true))
     }
 
     @Test fun fotoUsaCelularComPoseDiferenteDeConsultaDeMensagens() {
