@@ -147,8 +147,11 @@ private suspend fun renderAndPresent(
     onPresented: () -> Unit,
 ) {
     fun present(buffer: PixelBuffer) {
-        val bitmapStart = if (BuildConfig.DEBUG && frame.scene.id == SceneId.OFFICE) ScenePerformanceMonitor.nowNanos() else 0L
-        if (bitmapStart > 0L) ScenePerformanceMonitor.traceBegin("Hoodie.Office.bitmapUpdate")
+        val bitmapStart = if (BuildConfig.DEBUG && (frame.scene.id == SceneId.OFFICE || frame.scene.id == SceneId.STORE)) ScenePerformanceMonitor.nowNanos() else 0L
+        if (bitmapStart > 0L) {
+            val traceScene = if (frame.scene.id == SceneId.STORE) "Store" else "Office"
+            ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.bitmapUpdate")
+        }
         bitmap.setPixels(buffer.pixels, 0, buffer.width, 0, 0, buffer.width, buffer.height)
         if (bitmapStart > 0L) {
             ScenePerformanceMonitor.traceEnd()

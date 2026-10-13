@@ -11,7 +11,6 @@ import com.hoodie.app.pixel.character.CharacterPose
 import com.hoodie.app.pixel.npc.NpcCharacterRegistry
 import com.hoodie.app.pixel.npc.NpcAnimation
 import com.hoodie.app.pixel.npc.NpcRenderer
-import com.hoodie.app.pixel.npc.NpcDirector
 import com.hoodie.app.pixel.npc.NpcMotionController
 import com.hoodie.app.pixel.npc.NpcDepth
 import com.hoodie.app.pixel.npc.NpcScalePolicy
@@ -31,13 +30,14 @@ object NpcSceneReviewRenderer {
         SceneId.METRO,
         SceneId.RESTAURANT,
         SceneId.SHOPPING,
+        SceneId.STORE,
         SceneId.LEISURE,
     )
-    val nightScenes = setOf(SceneId.OFFICE, SceneId.BUS, SceneId.METRO, SceneId.RESTAURANT)
+    val nightScenes = setOf(SceneId.OFFICE, SceneId.BUS, SceneId.METRO, SceneId.RESTAURANT, SceneId.STORE)
 
-    fun render(sceneId: SceneId, period: DayPeriod, timeMs: Long = 2_400): PixelBuffer {
+    fun render(sceneId: SceneId, period: DayPeriod, timeMs: Long = 2_400, variant: Int = 0): PixelBuffer {
         val scene = SceneRegistry[sceneId]
-        val env = SceneEnv(period = period, clockMinute = if (period == DayPeriod.NIGHT) 1_320 else 600, variant = 0)
+        val env = SceneEnv(period = period, clockMinute = if (period == DayPeriod.NIGHT) 1_320 else 600, variant = variant)
         val rendered = SceneRenderer().renderEmpty(scene, env, timeMs)
         return PixelBuffer(rendered.width, rendered.height).also { it.copyFrom(rendered) }
     }
@@ -45,16 +45,16 @@ object NpcSceneReviewRenderer {
     private val moments = mapOf(
         SceneId.OFFICE to listOf("enter" to 500L, "walk" to 3_000L, "talk" to firstMoment(SceneId.OFFICE, NpcAnimation.TALK), "exit" to 8_750L),
         SceneId.BUS to listOf(
-            "phone" to 500L, "window-sleep" to 4_500L,
-            "head-drop" to firstMoment(SceneId.BUS, NpcAnimation.SIT_HEAD_DROP),
-            "wake" to firstMoment(SceneId.BUS, NpcAnimation.SIT_WAKE),
+            "phone" to firstMoment(SceneId.BUS, NpcAnimation.SIT_PHONE),
+            "window" to firstMoment(SceneId.BUS, NpcAnimation.SIT_LOOK),
+            "talk" to firstMoment(SceneId.BUS, NpcAnimation.TALK),
             "dog-reaction" to firstMoment(SceneId.BUS, NpcAnimation.REACTION),
         ),
         SceneId.TRAIN to listOf("reader" to 1_860L, "window" to 6_150L),
         SceneId.METRO to listOf(
             "ride" to 500L,
             "reaction" to firstMoment(SceneId.METRO, NpcAnimation.REACTION),
-            "talk" to firstMoment(SceneId.METRO, NpcAnimation.TALK),
+            "phone" to firstMoment(SceneId.METRO, NpcAnimation.SIT_PHONE),
             "ride-late" to 10_000L,
         ),
         SceneId.RESTAURANT to listOf(
@@ -63,12 +63,17 @@ object NpcSceneReviewRenderer {
             "rest" to 18_900L,
         ),
         SceneId.SHOPPING to listOf("standing" to 4_960L, "walking" to 2_860L, "looking" to 860L, "walking-late" to 3_860L),
+        SceneId.STORE to listOf(
+            "walking" to firstMoment(SceneId.STORE, NpcAnimation.WALK),
+            "looking" to firstMoment(SceneId.STORE, NpcAnimation.LOOK),
+            "payment" to firstMoment(SceneId.STORE, NpcAnimation.CHECKOUT_PAY),
+        ),
         SceneId.LEISURE to listOf("walking" to 2_164L, "turning" to 4_864L, "strolling" to 5_264L, "returning" to 6_000L),
     )
 
     /** Escolhe o primeiro frame em que a própria cena realmente apresenta o estado rotulado. */
-    private fun firstMoment(scene: SceneId, animation: NpcAnimation): Long {
-        val slots = NpcDirector.plan(scene, variant = 0)
+    private fun firstMoment(scene: SceneId, animation: NpcAnimation, variant: Int = 0): Long {
+        val slots = SceneRegistry[scene].ambientNpcs(SceneEnv(DayPeriod.DAY, 600, variant = variant))
         // Restaurant speech has long deterministic cooldowns; search a full meal before failing the scene gallery.
         return (0L..900_000L step 50L).firstOrNull { time ->
             slots.any { slot ->
@@ -87,12 +92,21 @@ object NpcSceneReviewRenderer {
             }
             if (scene in nightScenes) {
                 val nightTime = when (scene) {
-                    SceneId.OFFICE, SceneId.METRO, SceneId.RESTAURANT -> firstMoment(scene, NpcAnimation.TALK)
-                    SceneId.BUS -> firstMoment(scene, NpcAnimation.SIT_HEAD_DROP)
+                    SceneId.OFFICE, SceneId.RESTAURANT -> firstMoment(scene, NpcAnimation.TALK)
+                    SceneId.METRO -> firstMoment(scene, NpcAnimation.SIT_PHONE)
+                    SceneId.BUS -> firstMoment(scene, NpcAnimation.TALK)
                     else -> 2_400L
                 }
                 put("scene-$slug-night", render(scene, DayPeriod.NIGHT, nightTime))
             }
+        }
+        listOf(DayPeriod.MORNING, DayPeriod.EVENING).forEach { period ->
+            put("scene-store-${period.name.lowercase()}", render(SceneId.STORE, period, 75_000))
+        }
+        // Variant 0 seats the mouse in this metro layout; variant 1 seats the duck.
+        listOf("head-drop" to NpcAnimation.SIT_HEAD_DROP, "wake" to NpcAnimation.SIT_WAKE).forEach { (name, animation) ->
+            put("scene-metro-day-$name", render(SceneId.METRO, DayPeriod.DAY,
+                firstMoment(SceneId.METRO, animation, variant = 1), variant = 1))
         }
     }
 

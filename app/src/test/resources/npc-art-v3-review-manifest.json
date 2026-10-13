@@ -1,9 +1,9 @@
 {
   "version": "npc-art-v3",
-  "approval_state": "PENDING",
-  "golden_state": "TECHNICAL_REGRESSION_ONLY",
-  "reviewed_by": null,
-  "reviewed_at": null,
+  "approval_state": "APPROVED",
+  "golden_state": "APPROVED",
+  "reviewed_by": "Usuário deste chat",
+  "reviewed_at": "2026-10-13T11:57:32Z",
   "prior_review": {
     "reviewer": "Rafael",
     "groups": ["walk", "idle", "sleep", "work"],
@@ -11,24 +11,24 @@
     "scope_note": "Aprovação anterior preservada; não cobre os novos contact sheets e matrizes completos deste plano."
   },
   "characters": {
-    "bulldog_exec": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
-    "dog_worker": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
-    "rabbit_analyst": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
-    "mouse_commuter": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
-    "duck_sleepy": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
-    "raccoon_window": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"},
-    "cat_colleague": {"idle": "PENDING", "walk": "PENDING", "talk": "PENDING", "sit": "PENDING"}
+    "bulldog_exec": {"idle": "APPROVED", "walk": "APPROVED", "talk": "APPROVED", "sit": "APPROVED"},
+    "dog_worker": {"idle": "APPROVED", "walk": "APPROVED", "talk": "APPROVED", "sit": "APPROVED"},
+    "rabbit_analyst": {"idle": "APPROVED", "walk": "APPROVED", "talk": "APPROVED", "sit": "APPROVED"},
+    "mouse_commuter": {"idle": "APPROVED", "walk": "APPROVED", "talk": "APPROVED", "sit": "APPROVED"},
+    "duck_sleepy": {"idle": "APPROVED", "walk": "APPROVED", "talk": "APPROVED", "sit": "APPROVED"},
+    "raccoon_window": {"idle": "APPROVED", "walk": "APPROVED", "talk": "APPROVED", "sit": "APPROVED"},
+    "cat_colleague": {"idle": "APPROVED", "walk": "APPROVED", "talk": "APPROVED", "sit": "APPROVED"}
   },
-  "matrices": "PENDING",
-  "walk_all_species": "PENDING",
-  "turn_sit_talk_sheets": "PENDING",
-  "expressions_and_head_crops": "PENDING",
-  "outfits": "PENDING",
-  "props": "PENDING",
-  "scale_legibility_075_to_100": "PENDING",
-  "public_scenes": "PENDING",
-  "day_night_contrast": "PENDING",
-  "hoodie_bulldog_gate": "PENDING",
-  "hoodie_cat_gate": "PENDING",
-  "notes": "Os PNGs são candidatos técnicos. A arte só pode receber APPROVED após revisão humana explícita."
+  "matrices": "APPROVED",
+  "walk_all_species": "APPROVED",
+  "turn_sit_talk_sheets": "APPROVED",
+  "expressions_and_head_crops": "APPROVED",
+  "outfits": "APPROVED",
+  "props": "APPROVED",
+  "scale_legibility_075_to_100": "APPROVED",
+  "public_scenes": "APPROVED",
+  "day_night_contrast": "APPROVED",
+  "hoodie_bulldog_gate": "APPROVED",
+  "hoodie_cat_gate": "APPROVED",
+  "notes": "Matriz completa e novas cenas de Passeio aprovadas explicitamente pelo usuário neste chat em 13/10/2026: Aprovar a matriz e as cenas. Painel revisado: stabilization-20261013-review."
 }

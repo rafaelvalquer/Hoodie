@@ -13,6 +13,21 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class OverlappingPlacesIntegrationTest {
+    @Test fun anAmbiguousPointCheckRetainsTheCurrentRestaurantWithoutAskingAgain() = runBlocking {
+        val g = TestGraph(10_000)
+        try {
+            val cantina = g.places.add("Cantina", PlaceType.RESTAURANT, 0.0, 0.0, 150f, 1_000, visitedAt = null)
+            g.places.add("Padaria", PlaceType.RESTAURANT, 0.0, .0002, 150f, 1_000, visitedAt = null)
+            g.engine.onArrivalGeofences(listOf(cantina.id), GeofenceTransition.ENTER, 2_000,
+                PlaceArrivalPosition(0.0, 0.0, 3f))
+            val before = g.contextDao.current()
+            g.engine.arriveAtPosition(0.0, .0001, askNewPlace = true)
+            assertEquals(before, g.contextDao.current())
+            assertEquals(1, g.places.byId(cantina.id)!!.confirmationCount)
+            assertTrue(g.db.questionDao().since(0).none { it.kind == com.hoodie.app.core.model.QuestionKind.NEW_PLACE })
+        } finally { g.close() }
+    }
+
     @Test fun aBatchChoosesOneRestaurantAndRepeatedEnterDwellKeepOneVisit() = runBlocking {
         val g = TestGraph(10_000)
         try {

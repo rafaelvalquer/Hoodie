@@ -56,7 +56,7 @@ class VehicleEvidenceTest {
         return m.open()!!.id
     }
 
-    @Test fun multimodalPeriodsHaveIndependentAggregatesAndBudgetsButReclassificationKeepsIdentity() = runBlocking {
+    @Test fun multimodalPeriodsKeepIndependentAggregatesButShareTheTripBudgetAfterRestart() = runBlocking {
         val m = MobilityGraph(intelligenceEnabled = true)
         try {
             val id = vehicle(m)
@@ -82,7 +82,15 @@ class VehicleEvidenceTest {
             assertEquals(0, second.attempts)
             m.restart()
             assertEquals(second.id, m.repo.evidenceFor(id)!!.id)
-            assertNotNull(m.repo.reserveEvidenceSample(id, second.id, "second", m.now()))
+            assertNull(m.repo.reserveEvidenceSample(id, second.id, "second", m.now()))
+            assertFalse(m.repo.canSampleSpeed(id, m.now()))
+            assertNull(m.repo.speedSampleDelay(id, m.now()))
+            assertEquals(5, m.repo.session(id)!!.speedSampleAttempts)
+            val checks = m.scheduler.scheduled.size
+            val reads = m.speedScheduler.enqueued.size
+            m.check()
+            assertEquals(checks, m.scheduler.scheduled.size)
+            assertEquals(reads, m.speedScheduler.enqueued.size)
         } finally { m.close() }
     }
 
@@ -102,6 +110,63 @@ class VehicleEvidenceTest {
             assertEquals(observed, segments.last().startedAt)
             assertEquals(m.now(), segments.last().confirmedAt)
             assertEquals(observed, segments[segments.lastIndex - 1].endedAt)
+        } finally { m.close() }
+    }
+
+    @Test fun throttleContinuesAcrossVehiclePeriodsAndEngineRestart() = runBlocking {
+        val m = MobilityGraph(intelligenceEnabled = true)
+        try {
+            val id = vehicle(m); val first = m.repo.evidenceFor(id)!!; val start = m.now()
+            val reservation = m.repo.reserveEvidenceSample(id, first.id, "before-walk", start)!!
+            m.repo.releaseSpeedReservation(reservation)
+            m.g.clock.millis = start + 1_000; m.move(DetectedMovement.WALKING)
+            m.g.clock.millis = start + 46_000; m.check()
+            assertEquals(MovementMode.WALKING, m.open()!!.currentMode)
+            m.g.clock.millis = start + 47_000; m.move(DetectedMovement.IN_VEHICLE)
+            val second = m.repo.evidenceFor(id)!!
+            assertNotEquals(first.id, second.id)
+            m.restart()
+            assertFalse(m.repo.canSampleSpeed(id, start + 59_999))
+            assertEquals(1L, m.repo.speedSampleDelay(id, start + 59_999))
+            assertNull(m.repo.reserveEvidenceSample(id, second.id, "early", start + 59_999))
+            assertNotNull(m.repo.reserveEvidenceSample(id, second.id, "allowed", start + 60_000))
+            assertEquals(2, m.repo.session(id)!!.speedSampleAttempts)
+        } finally { m.close() }
+    }
+
+    @Test fun persistedPeriodAttemptsRestoreTripAccountingBeforeReservation() = runBlocking {
+        val m = MobilityGraph(intelligenceEnabled = true)
+        try {
+            val id = vehicle(m); val e = m.repo.evidenceFor(id)!!; val now = m.now()
+            // Database state written by the version that only counted attempts per period.
+            m.g.db.transportEvidenceDao().update(e.copy(attempts = 3, lastAttemptAt = now))
+            val restored = com.hoodie.app.data.repository.MobilityRepository(m.g.db)
+            assertNull(restored.reserveEvidenceSample(id, e.id, "early", now + 59_999))
+            assertEquals(3, restored.session(id)!!.speedSampleAttempts)
+            assertNotNull(restored.reserveEvidenceSample(id, e.id, "four", now + 60_000))
+            assertNotNull(restored.reserveEvidenceSample(id, e.id, "five", now + 120_000))
+            assertNull(restored.reserveEvidenceSample(id, e.id, "six", now + 180_000))
+            assertEquals(5, restored.session(id)!!.speedSampleAttempts)
+            assertEquals(0, restored.evidenceFor(id)!!.sampleCount)
+        } finally { m.close() }
+    }
+
+    @Test fun concurrentRepositoriesCannotExceedTheLastTripAttempt() = runBlocking {
+        val m = MobilityGraph(intelligenceEnabled = true)
+        try {
+            val id = vehicle(m); val e = m.repo.evidenceFor(id)!!; val now = m.now()
+            repeat(4) { i ->
+                val reservation = m.repo.reserveEvidenceSample(id, e.id, "attempt-$i", now + i * 60_000)!!
+                m.repo.releaseSpeedReservation(reservation)
+            }
+            val other = com.hoodie.app.data.repository.MobilityRepository(m.g.db)
+            val results = awaitAll(
+                async(Dispatchers.Default) { m.repo.reserveEvidenceSample(id, e.id, "last-a", now + 240_000) },
+                async(Dispatchers.Default) { other.reserveEvidenceSample(id, e.id, "last-b", now + 240_000) },
+            )
+            assertEquals(1, results.count { it != null })
+            assertEquals(5, m.repo.session(id)!!.speedSampleAttempts)
+            assertEquals(5, m.repo.evidenceFor(id)!!.attempts)
         } finally { m.close() }
     }
 
@@ -136,6 +201,7 @@ class VehicleEvidenceTest {
             val second = launch { m.sampler!!.sample(id, e.id, "cancel") }
             startedAgain.await(); second.cancelAndJoin(); cancelled.await()
             assertNull(m.repo.evidenceFor(id)!!.reservationId)
+            assertEquals(2, m.repo.session(id)!!.speedSampleAttempts)
         } finally { m.close() }
     }
 }

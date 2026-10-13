@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -23,6 +24,8 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,6 +74,58 @@ class StoreSceneDeviceTest {
         compose.scrollWithPausedClock(compose.onNodeWithText(type.label)).performClick()
         compose.scrollWithPausedClock(compose.onNodeWithText("Salvar correção", ignoreCase = true)).performClick()
         waitForScene(expected)
+    }
+
+    @Test fun discoveringAndNamingAStoreThroughHomePersistsTheVisitAndSelectsStoreScene() {
+        prepare()
+        val visitId = runBlocking {
+            graph.contextEngine().arriveAtPosition(0.0, 5.0, askNewPlace = false)
+            val visit = requireNotNull(graph.database().contextEventDao().current())
+            assertNull(visit.placeId)
+            // Seed the incoming question, avoiding dependence on the real GPS or
+            // previous tests' daily question budget. Answering uses production code.
+            graph.database().questionDao().insert(com.hoodie.app.core.database.ContextQuestionEntity(
+                kind = com.hoodie.app.core.model.QuestionKind.NEW_PLACE,
+                candidate = null, placeId = null,
+                encryptedCoordinates = graph.coordinateCipher().encrypt(0.0, 5.0),
+                contextEventId = visit.id, askedAt = System.currentTimeMillis(),
+            ))
+            visit.id
+        }
+        var savedId: Long? = null
+        try {
+            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                waitForControl(hasText("Loja", ignoreCase = true))
+                compose.scrollWithPausedClock(compose.onNodeWithText("Loja", ignoreCase = true)).performClick()
+                waitForControl(hasText("Nome (opcional)"))
+                compose.onNodeWithText("Nome (opcional)").performTextInput("Loja descoberta no teste")
+                compose.scrollWithPausedClock(compose.onNodeWithText("Salvar", ignoreCase = true)).performClick()
+                waitForScene(SceneId.STORE)
+                compose.waitUntil(20_000) {
+                    compose.mainClock.advanceTimeBy(100)
+                    runBlocking { graph.places().all().any { it.name == "Loja descoberta no teste" } }
+                }
+                runBlocking {
+                    val saved = graph.places().all().single { it.name == "Loja descoberta no teste" }
+                    savedId = saved.id
+                    assertEquals(PlaceType.STORE, saved.type)
+                    assertEquals(0.0, saved.latitude, 0.0)
+                    assertEquals(5.0, saved.longitude, 0.0)
+                    assertEquals(saved.id, graph.database().contextEventDao().getById(visitId)!!.placeId)
+                    assertNotNull(saved.lastVisitedAt)
+                    val payload = graph.database().placeDao().getById(saved.id)!!.encryptedCoordinates
+                    assertFalse(payload == "0.0,5.0")
+                    assertEquals(0.0 to 5.0, graph.coordinateCipher().decrypt(payload))
+                }
+                scenario.recreate()
+                waitForScene(SceneId.STORE)
+            }
+        } finally {
+            runBlocking {
+                graph.contextEngine().setManualPlace(PlaceType.HOME)
+                savedId?.let { graph.places().delete(it) }
+            }
+        }
     }
 
     @Test fun manualStoreSurvivesNavigationAndRecreationAndKeepsOtherVenuesDistinct() {

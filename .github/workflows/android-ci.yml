@@ -142,6 +142,8 @@ jobs:
             adb shell setprop debug.hwui.renderer skiagl
             adb shell settings put system font_scale 1.0
             adb shell settings put secure show_ime_with_hard_keyboard 1
+            # Test the virtual keyboard, without Gboard's first-run stylus tutorial.
+            adb shell settings put secure stylus_handwriting_enabled 0
             ./gradlew :app:connectedDebugAndroidTest
       - name: Upload instrumentation reports
         if: always()
