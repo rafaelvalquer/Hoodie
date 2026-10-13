@@ -302,7 +302,7 @@ class HomeViewModel @Inject constructor(
         val originSnapshot = if (next.tomorrow) tomorrow else i.effective
         val origin = next.routineType?.let { originSnapshot?.values?.get(it) }?.takeIf { it.origin != com.hoodie.app.domain.routine.RoutineValueOrigin.MANUAL }
         val originText = origin?.let { if (it.origin == com.hoodie.app.domain.routine.RoutineValueOrigin.LEARNED)
-            "Aprendido · ${(100 * (it.confidence ?: 0f)).toInt()}% · ${it.sampleCount} observações"
+            "Aprendido${if (it.shiftLimited) " · ajuste limitado a 90 min" else ""} · ${(100 * (it.confidence ?: 0f)).toInt()}% · ${it.sampleCount} observações"
             else if (it.fallbackReason == "NO_ELIGIBLE_PATTERN") "Automático · referência manual (sem padrão elegível)"
             else "Automático · referência manual (horários incompatíveis)" }
 

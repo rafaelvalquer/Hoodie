@@ -35,8 +35,11 @@ antes de fechar a viagem. A proteção de trechos corrigidos continua em vigor.
 
 O resolver puro recebe referências manuais, modos, padrões e exceção do dia.
 Confiança mínima: 0,60; validade: 28 dias; amostras mínimas: três por grupo,
-quatro para dia útil específico. Pares incompatíveis retornam ao par manual.
-Sono pode atravessar meia-noite. Saída, academia e retorno são somente previsões.
+quatro para dia útil específico; dispersão máxima: 45 minutos. Cada padrão pode
+deslocar seu horário manual em até 90 minutos, com a limitação indicada na Home.
+Pares incompatíveis retornam aos horários manuais, incluindo almoço mínimo de
+15 minutos e duração de sono entre quatro e doze horas. Sono pode atravessar
+meia-noite. Saída, academia e retorno são somente previsões.
 
 A tela de Rotina preserva os horários manuais e permite escolher Manual ou
 Automático para cada evento. A Home mostra a origem do próximo horário, confiança

@@ -59,8 +59,9 @@ class EffectiveRoutineRepository @Inject constructor(
                     if (existing != null) {
                         val frozen = decode(existing.snapshot)
                         val frozenPatterns = frozen.values.filter { it.value.origin == RoutineValueOrigin.LEARNED }
-                            .map { (type, value) -> RoutinePattern(if (value.sampleCount >= 4) date.dayOfWeek.name else routineDayGroup(date.dayOfWeek), type, value.minute,
-                                value.confidence ?: 0f, value.sampleCount, dayStart) }
+                            .map { (type, value) -> RoutinePattern(if (value.sampleCount >= 4) date.dayOfWeek.name else routineDayGroup(date.dayOfWeek), type,
+                                value.learnedMinute ?: value.minute, value.confidence ?: 0f, value.sampleCount, dayStart,
+                                value.deviationMinutes ?: 0) }
                         snapshot = EffectiveRoutineResolver.resolve(date, now, r, s.sleep, modes, frozenPatterns + patterns)
                     }
                     val from = if (existing == null && dayStart >= decode(requireNotNull(baseline).snapshot).effectiveFrom) dayStart else now
@@ -104,7 +105,7 @@ class EffectiveRoutineRepository @Inject constructor(
 
     private suspend fun patterns() = db.intelligenceDao().routineSlots().mapNotNull { row ->
         runCatching { RoutinePattern(row.dayGroup, RoutineEventType.valueOf(row.type), row.medianMinute,
-            row.confidence, row.sampleCount, row.updatedAt) }.getOrNull()
+            row.confidence, row.sampleCount, row.updatedAt, row.deviationMinutes) }.getOrNull()
     }
     private suspend fun prepareTomorrow(r: Routine, sleep: SleepSchedule, modes: Set<RoutineEventType>, key: String) {
         val date = clock.now().toLocalDate().plusDays(1)
@@ -142,6 +143,9 @@ class EffectiveRoutineRepository @Inject constructor(
         put("values", JSONObject().apply { s.values.forEach { (type, value) -> put(type.name, JSONObject().apply {
             put("minute", value.minute); put("origin", value.origin.name); put("confidence", value.confidence)
             put("count", value.sampleCount); put("reason", value.fallbackReason)
+            put("learnedMinute", value.learnedMinute ?: JSONObject.NULL)
+            put("deviation", value.deviationMinutes ?: JSONObject.NULL)
+            put("shiftLimited", value.shiftLimited)
         }) } })
     }.toString()
     private fun decode(text: String): EffectiveRoutineSnapshot {
@@ -150,7 +154,10 @@ class EffectiveRoutineRepository @Inject constructor(
             val value = v.getJSONObject(name)
             RoutineEventType.valueOf(name) to ResolvedRoutineValue(value.getInt("minute"), RoutineValueOrigin.valueOf(value.getString("origin")),
                 if (value.has("confidence")) value.getDouble("confidence").toFloat() else null,
-                value.getInt("count"), value.optString("reason").takeIf { it.isNotEmpty() })
+                value.getInt("count"), value.optString("reason").takeIf { it.isNotEmpty() },
+                if (value.has("learnedMinute") && !value.isNull("learnedMinute")) value.getInt("learnedMinute") else null,
+                if (value.has("deviation") && !value.isNull("deviation")) value.getInt("deviation") else null,
+                value.optBoolean("shiftLimited", false))
         }
         fun minute(type: RoutineEventType) = values.getValue(type).minute
         val days = o.getJSONArray("days")
