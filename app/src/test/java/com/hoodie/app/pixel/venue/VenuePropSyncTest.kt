@@ -186,6 +186,39 @@ class VenuePropSyncTest {
         assertTrue(a.wavePhase != b.wavePhase)
     }
 
+    // ───── Shopping ─────
+
+    @Test fun shopperDisappearsIntoTheStoreAndComesBackWithABag() {
+        val s = VenueTestFixtures.session(SceneId.MALL, 0, 80_000)
+        val track = VenueTestFixtures.track(s, "mall_shopper", 900_000, 100)
+        val inside = track.filter { (_, st) -> st.action == VenueAction.ENTER_STORE && st.hidden }
+        assertTrue("comprador nunca entrou na loja em 15 min", inside.isNotEmpty())
+        // Saiu da loja com a sacola e ficou com ela até ir embora.
+        val out = track.first { (t, st) -> t > inside.first().first && !st.hidden }
+        assertEquals(Item.SHOPPING_BAG, out.second.held)
+        // Some e reaparece na porta da loja C.
+        assertTrue(abs(out.second.x - com.hoodie.app.pixel.npc.venue.MallVenue.STORE_C_DOOR_X) <= 2)
+        val doorOpen = track.filter { (t, _) -> (s.snapshotAt(t).ambient as com.hoodie.app.pixel.npc.venue.MallAmbient).storeDoorOpen }
+        assertTrue("porta da loja nunca abriu", doorOpen.isNotEmpty())
+    }
+
+    @Test fun mallCrowdIsLimitedAndFriendsMeet() {
+        (0 until 3).forEach { v ->
+            val s = VenueTestFixtures.session(SceneId.MALL, v, 81_000 + v)
+            (0L until 900_000L step 500L).forEach { t ->
+                val visible = s.snapshotAt(t).npcs.count { !it.hidden }
+                assertTrue("v$v t=$t: $visible visitantes", visible <= com.hoodie.app.pixel.npc.venue.MallCrowdCoordinator.MAX_VISIBLE)
+            }
+            val encounters = s.coordinatorForTests().encounters()
+            assertTrue("amigos nunca se encontraram (v$v)", encounters.isNotEmpty())
+            encounters.forEach { e ->
+                val snap = s.snapshotAt((e.start + e.end) / 2).npcs
+                val a = snap.single { it.npcId == e.a }; val b = snap.single { it.npcId == e.b }
+                assertTrue("v$v conversa de costas", a.movement.facingRight == (b.x > a.x) && b.movement.facingRight == (a.x > b.x))
+            }
+        }
+    }
+
     @Test fun nightIsCalmer() {
         val night = VenueTestFixtures.session(SceneId.BAKERY, period = DayPeriod.NIGHT)
         val day = VenueTestFixtures.session(SceneId.BAKERY)

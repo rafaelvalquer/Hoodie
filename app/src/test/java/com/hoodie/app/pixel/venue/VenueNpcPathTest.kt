@@ -80,7 +80,8 @@ class VenueNpcPathTest {
     @Test fun visitorsAppearOnlyAtDoors() {
         VenueTestFixtures.scenes.forEach { scene ->
             val s = VenueTestFixtures.session(scene, 0, 45_000)
-            val doors = s.graph.spots.values.filter { it.offstage }
+            // Bordas/portas de fora e as portas internas (loja, elevador), onde se some de verdade.
+            val doors = s.graph.spots.values.filter { it.offstage || it.id.startsWith("door") || it.id.startsWith("elevator") }
             s.npcSlots.forEach { slot ->
                 VenueTestFixtures.track(s, slot.definition.id, 600_000, 50).zipWithNext().forEach { (p, q) ->
                     val a = p.second; val b = q.second
