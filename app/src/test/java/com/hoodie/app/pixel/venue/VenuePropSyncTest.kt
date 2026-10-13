@@ -267,6 +267,42 @@ class VenuePropSyncTest {
         all.forEach { (a, ta) -> all.forEach { (b, tb) -> if (a != b) assertTrue("$a e $b reagiram juntos em $ta", abs(ta - tb) >= 150) } }
     }
 
+    // ───── Hotel ─────
+
+    @Test fun elevatorNeverClosesOnSomeoneInTheDoorway() {
+        val hv = com.hoodie.app.pixel.npc.venue.HotelVenue
+        (0 until 3).forEach { v ->
+            val s = VenueTestFixtures.session(SceneId.HOTEL, v, 84_000 + v)
+            var rides = 0
+            var wasHidden = false
+            VenueTestFixtures.track(s, "hotel_guest", 900_000, 50).forEach { (t, st) ->
+                val a = s.snapshotAt(t).ambient as com.hoodie.app.pixel.npc.venue.HotelAmbient
+                val inDoorway = !st.hidden && abs(st.x - hv.NPC_ELEVATOR_X) <= 1 && st.floorY in hv.ELEVATOR_Y - 2 until 196
+                if (inDoorway) assertEquals("v$v t=$t: porta ${a.elevator.door} com o hóspede na soleira", com.hoodie.app.pixel.npc.venue.ElevatorDoor.OPEN, a.elevator.door)
+                val hiddenInCabin = st.hidden && st.action == VenueAction.ELEVATOR
+                if (hiddenInCabin && !wasHidden) rides++
+                wasHidden = hiddenInCabin
+            }
+            assertTrue("hóspede não usou o elevador (v$v)", rides >= 1)
+        }
+    }
+
+    @Test fun suitcaseFollowsTheGuestAndRestsOnTheFloorAtTheDesk() {
+        val s = VenueTestFixtures.session(SceneId.HOTEL, 0, 85_000)
+        val track = VenueTestFixtures.track(s, "hotel_guest", 300_000, 100)
+        val firstVisible = track.first { !it.second.hidden }.first
+        val keyAt = track.first { it.second.held == Item.KEYCARD }.first
+        // Chegando: mala na mão até o balcão.
+        track.filter { (t, st) -> t in firstVisible until keyAt && !st.hidden && st.movement.animation == NpcAnimation.WALK }
+            .forEach { (t, st) -> assertEquals("t=$t sem a mala andando", Item.SUITCASE, st.held) }
+        // No atendimento: mala no chão, ao lado do balcão.
+        val down = (s.snapshotAt(keyAt - 200).ambient as com.hoodie.app.pixel.npc.venue.HotelAmbient).suitcaseOnFloor
+        assertTrue("mala não está no chão durante o check-in", down != null)
+        // Depois: de volta à mão até o elevador.
+        val after = track.first { (t, st) -> t > keyAt && st.held == Item.SUITCASE }.first
+        assertTrue((s.snapshotAt(after + 100).ambient as com.hoodie.app.pixel.npc.venue.HotelAmbient).suitcaseOnFloor == null)
+    }
+
     @Test fun nightIsCalmer() {
         val night = VenueTestFixtures.session(SceneId.BAKERY, period = DayPeriod.NIGHT)
         val day = VenueTestFixtures.session(SceneId.BAKERY)

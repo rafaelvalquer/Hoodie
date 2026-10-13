@@ -51,8 +51,18 @@ class VenueInteractionCoordinator(private val seed: Int) {
     private var nextOrderId = 1
 
     fun reset() {
-        orders.clear(); encounters.clear(); speech.clear(); events.clear(); flights.clear(); nextOrderId = 1
+        orders.clear(); encounters.clear(); speech.clear(); events.clear(); flights.clear(); intervals.clear(); nextOrderId = 1
     }
+
+    // ───── Intervalos nomeados (porta do elevador aberta etc.) ─────
+
+    data class Interval(val name: String, val start: Long, val end: Long)
+
+    private val intervals = ArrayList<Interval>()
+
+    fun addInterval(name: String, start: Long, end: Long) { intervals += Interval(name, start, end) }
+
+    fun intervals(name: String): List<Interval> = intervals.filter { it.name == name }
 
     // ───── Objetos em voo ─────
 
@@ -136,9 +146,10 @@ class VenueInteractionCoordinator(private val seed: Int) {
         // Guarda sempre o último voo antigo: ele diz quem está com a bola.
         val keep = flights.filter { it.arrive < before }.maxByOrNull { it.release }
         flights.removeAll { it.arrive < before && it !== keep }
+        intervals.removeAll { it.end < before - EVENT_MEMORY_MS }
     }
 
-    internal val retainedSize: Int get() = orders.size + encounters.size + speech.size + events.size + flights.size
+    internal val retainedSize: Int get() = orders.size + encounters.size + speech.size + events.size + flights.size + intervals.size
 
     companion object {
         const val COOLDOWN_MIN_MS = 60_000L

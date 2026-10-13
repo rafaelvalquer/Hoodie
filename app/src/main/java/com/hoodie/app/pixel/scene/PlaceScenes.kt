@@ -405,7 +405,7 @@ object SceneRegistry {
             BicycleScene(), GenericRideScene(),
             SchoolScene(), ShoppingScene(), StoreScene(), FamilyScene(), LeisureScene(),
             UnknownScene(), GenericIndoorScene(), GenericOutdoorScene(),
-            BakeryScene(), PharmacyScene(), BeachScene(), MallScene(), CinemaScene(),
+            BakeryScene(), PharmacyScene(), BeachScene(), MallScene(), CinemaScene(), HotelScene(),
         ).associateBy { it.id }
     }
 
