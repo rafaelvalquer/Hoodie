@@ -26,7 +26,7 @@ object HoodieConfig {
     // ── UX 2.0 (liga/desliga cada módulo sem tocar no histórico do usuário) ──
     /** Home 2.0: ação principal única + confirmação rápida. false = Home anterior. */
     const val HOME_UX_V2 = true
-    const val QUICK_CORRECTION_V2 = false
+    const val QUICK_CORRECTION_V2 = true
     const val PROGRESSIVE_ONBOARDING = false
     const val SMART_NOTIFICATIONS_V2 = false
     // Presentation release switches. Enabled after assembler and interaction gates pass.

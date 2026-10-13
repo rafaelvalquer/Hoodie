@@ -40,12 +40,12 @@ internal class ManualContextHandler(private val processor: ContextSignalProcesso
         hoodie.resolve()
     }
 
-    suspend fun correctCurrentPlace(expectedEventId: Long?, placeType: PlaceType): Boolean = with(processor) {
+    suspend fun correctCurrentPlace(expectedEventId: Long?, placeType: PlaceType, explicitPlaceId: Long? = null): Boolean = with(processor) {
         val current = contextDao.current()
         if (current?.id != expectedEventId) return@with false
         val now = clock.nowMillis()
         val type = placeType.toContext()
-        val placeId = places.firstOfType(placeType)?.id
+        val placeId = explicitPlaceId ?: places.firstOfType(placeType)?.id
         scheduler.cancelChecks()
         if (current == null) switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL, venueType = placeType)
         else switchTo(type, now, 1f, placeId, ContextSource.USER_CORRECTION, TransitionReason.MANUAL, venueType = placeType)

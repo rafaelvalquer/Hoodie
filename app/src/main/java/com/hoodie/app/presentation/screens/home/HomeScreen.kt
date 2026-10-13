@@ -89,6 +89,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val busy by vm.busy.collectAsStateWithLifecycle()
     val dayState by vm.dayState.collectAsStateWithLifecycle(initialValue = null)
     val homeNow by vm.homeNow.collectAsStateWithLifecycle()
+    val savedPlaces by vm.savedPlaces.collectAsStateWithLifecycle()
     val zone = vm.zone
     val snackbar = remember { SnackbarHostState() }
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
@@ -115,6 +116,13 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
                     is HomeUiEvent.React -> reactions.emit(event.animation)
                     is HomeUiEvent.ShowError -> launch { snackbar.showSnackbar(context.appErrorText(event.error)) }
                     is HomeUiEvent.ShowMessage -> launch { snackbar.showSnackbar(event.message) }
+                    is HomeUiEvent.OfferUndo -> launch {
+                        // ~15 s para desfazer; ao expirar a Snackbar some e a correção segue valendo.
+                        val result = kotlinx.coroutines.withTimeoutOrNull(15_000L) {
+                            snackbar.showSnackbar(event.message, actionLabel = context.getString(R.string.home_undo), duration = androidx.compose.material3.SnackbarDuration.Indefinite)
+                        }
+                        if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) vm.undoCorrection(event.operationId)
+                    }
                 }
             }
         }
@@ -138,7 +146,9 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             updateNewPlacePosition = vm::updateNewPlacePosition,
             correctContext = { type, historical, expectedEventId -> vm.correctCurrentContext(type, historical, expectedEventId) },
             confirmContext = vm::confirmContext,
+            quickCorrect = vm::quickCorrect,
         ),
+        savedPlaces = savedPlaces,
         reactions = reactions,
         snackbar = snackbar,
         dayState = dayState,
@@ -160,6 +170,7 @@ internal data class HomeActions(
     val updateNewPlacePosition: (Long, Pair<Double, Double>?) -> Unit = { _, _ -> },
     val correctContext: suspend (PlaceType, Boolean, Long?) -> Boolean = { _, _, _ -> false },
     val confirmContext: (Long) -> Unit = {},
+    val quickCorrect: suspend (com.hoodie.app.domain.correction.QuickContextCorrection) -> Boolean = { false },
 )
 
 /** Production UI shared by the connected screen and deterministic visual fixtures. */
@@ -176,6 +187,7 @@ internal fun HomeContent(
     dayState: com.hoodie.app.domain.daystate.DayStateSnapshot? = null,
     homeNow: com.hoodie.app.domain.home.HomeNowSnapshot? = null,
     onScenePresented: (com.hoodie.app.pixel.scene.SceneId) -> Unit = {},
+    savedPlaces: List<com.hoodie.app.core.model.Place> = emptyList(),
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
@@ -341,8 +353,17 @@ internal fun HomeContent(
     if (correctionOpen) HomeNowCorrectionSheet(
         snapshot = correctionSnapshot,
         onDismiss = { correctionOpen = false },
-        onSave = { type, historical -> actions.correctContext(type, historical, correctionExpectedEventId) },
+        onSave = { type, historical, placeId ->
+            val expected = correctionExpectedEventId
+            if (com.hoodie.app.core.config.HoodieConfig.QUICK_CORRECTION_V2 && expected != null) actions.quickCorrect(
+                com.hoodie.app.domain.correction.QuickContextCorrection(
+                    expected, type, placeId,
+                    if (historical) com.hoodie.app.domain.correction.CorrectionScope.SINCE_CURRENT_ARRIVAL else com.hoodie.app.domain.correction.CorrectionScope.FROM_NOW,
+                ),
+            ) else actions.correctContext(type, historical, expected)
+        },
         saving = busy,
+        savedPlaces = savedPlaces,
     )
 }
 

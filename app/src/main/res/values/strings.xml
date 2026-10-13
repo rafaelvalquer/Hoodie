@@ -561,4 +561,7 @@
     <string name="clock2_bar_description">Tempo por lugar: %1$s</string>
     <string name="home_quick_confirm">Sim, correto</string>
     <string name="home_quick_correct">Corrigir</string>
+    <string name="home_undo">Desfazer</string>
+    <string name="home_correct_see_all">Ver todos</string>
+    <string name="home_correct_pick_place">Qual lugar?</string>
 </resources>
