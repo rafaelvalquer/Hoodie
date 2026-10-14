@@ -11,7 +11,10 @@ enum class DayChapter { MORNING, AFTERNOON, NIGHT }
 /** Construção do overworld que representa cada tipo de lugar. */
 enum class BiomeType {
     HOUSE, OFFICE_CASTLE, TEMPLE, TAVERN, CAFE, WIZARD_TOWER,
-    MARKET, PARK, FAMILY_LODGE, CAMP, MILESTONE;
+    MARKET, PARK, FAMILY_LODGE, CAMP, MILESTONE,
+
+    // Construções próprias de lugares com cena própria. Sempre no fim.
+    MALL, BAKERY;
 
     companion object {
         /** Restaurante curto (ou café do Hoodie) é a cabana do café; refeição de verdade é a taverna. */
@@ -28,8 +31,9 @@ enum class BiomeType {
             PlaceType.FAMILY -> FAMILY_LODGE
             PlaceType.OTHER -> CAMP
             // Estabelecimentos com cena própria usam a construção mais próxima do mapa.
-            PlaceType.BAKERY -> CAFE
-            PlaceType.MALL, PlaceType.PHARMACY -> MARKET
+            PlaceType.BAKERY -> BAKERY
+            PlaceType.MALL -> MALL
+            PlaceType.PHARMACY -> MARKET
             PlaceType.BEACH, PlaceType.CINEMA -> PARK
             PlaceType.HOTEL -> CAMP
         }

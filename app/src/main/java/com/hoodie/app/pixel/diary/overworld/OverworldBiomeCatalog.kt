@@ -34,6 +34,8 @@ object OverworldBiomeCatalog {
         BiomeType.FAMILY_LODGE -> FamilyLodgeBiome
         BiomeType.CAMP -> CampBiome
         BiomeType.MILESTONE -> MilestoneBiome
+        BiomeType.MALL -> com.hoodie.app.pixel.diary.overworld.biomes.MallBiome
+        BiomeType.BAKERY -> com.hoodie.app.pixel.diary.overworld.biomes.BakeryBiome
     }
 
     fun biomeFor(type: PlaceType?): BiomeType = type?.let { BiomeType.of(it) } ?: BiomeType.CAMP

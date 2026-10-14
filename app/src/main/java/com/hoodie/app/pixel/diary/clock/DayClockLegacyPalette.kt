@@ -25,6 +25,8 @@ object DayClockLegacyPalette {
         BiomeType.PARK -> 0xFF4FB676.toInt()
         BiomeType.FAMILY_LODGE -> 0xFFF2CF5B.toInt()
         BiomeType.MILESTONE -> OverworldPalette.STONE_LIGHT
+        BiomeType.MALL -> OverworldPalette.MALL_SIGN
+        BiomeType.BAKERY -> OverworldPalette.CRUST
         BiomeType.CAMP, null -> 0xFFC9B79A.toInt()
     }
 }

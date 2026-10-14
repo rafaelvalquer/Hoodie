@@ -60,6 +60,13 @@ object OverworldPalette {
     const val SIGN_LIGHT = 0xFFE2B07C.toInt()
     const val ARROW = 0xFFFFF4B8.toInt()
     const val FIREFLY = 0xFFF8FF9A.toInt()
+    // Shopping e padaria.
+    const val MALL_SIGN = 0xFFD9578E.toInt()
+    const val MALL_SIGN_DARK = 0xFFA33D6B.toInt()
+    const val BAKERY_ROOF = 0xFF8A5A3B.toInt()
+    const val BAKERY_ROOF_DARK = 0xFF6B4026.toInt()
+    const val BAKERY_WALL = 0xFFF3E3C3.toInt()
+    const val CRUST = 0xFFE0A050.toInt()
 
     /** Aplica o estado a uma cor de construção. */
     fun state(color: Int, s: BiomeState): Int = when (s) {

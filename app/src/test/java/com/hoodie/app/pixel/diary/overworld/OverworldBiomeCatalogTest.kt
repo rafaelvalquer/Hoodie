@@ -21,6 +21,14 @@ class OverworldBiomeCatalogTest {
         assertEquals(BiomeType.OFFICE_CASTLE, OverworldBiomeCatalog.biomeFor(PlaceType.WORK))
     }
 
+    @Test fun mallAndBakeryHaveTheirOwnBuildings() {
+        assertEquals(BiomeType.MALL, OverworldBiomeCatalog.biomeFor(PlaceType.MALL))
+        assertEquals(BiomeType.BAKERY, OverworldBiomeCatalog.biomeFor(PlaceType.BAKERY))
+        // Café curto no restaurante continua na cabana do café; farmácia continua no mercado.
+        assertEquals(BiomeType.CAFE, BiomeType.of(PlaceType.RESTAURANT, 15 * 60_000L))
+        assertEquals(BiomeType.MARKET, OverworldBiomeCatalog.biomeFor(PlaceType.PHARMACY))
+    }
+
     @Test fun shortRestaurantOrCoffeeIsTheCafeAndRealMealIsTheTavern() {
         assertEquals(BiomeType.CAFE, BiomeType.of(PlaceType.RESTAURANT, 15 * 60_000L))
         assertEquals(BiomeType.CAFE, BiomeType.of(PlaceType.RESTAURANT, 90 * 60_000L, HoodieActivity.COFFEE))
