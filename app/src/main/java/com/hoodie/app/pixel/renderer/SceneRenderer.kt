@@ -38,7 +38,14 @@ private const val FLOOR_ITEM_LIFT = 2
  * Compõe um frame: fundo (cacheado) → objetos atrás → Hoodie → objetos na frente
  * (ordenados por Y) → iluminação → efeitos → fade.
  */
-class SceneRenderer {
+class SceneRenderer(private val collectInteractionElements: Boolean = false) {
+    var lastInteractionElements: Set<com.hoodie.app.engine.interaction.InteractionElement> = emptySet()
+        private set
+    // Double buffering avoids allocating a scene-sized mask every frame or mutating the presented one.
+    private val interactionMasks = if (collectInteractionElements) arrayOf(ByteArray(PixelScene.SCENE_W * PixelScene.SCENE_H), ByteArray(PixelScene.SCENE_W * PixelScene.SCENE_H)) else null
+    private var interactionMaskIndex = 0
+    var lastInteractionHitMask: ByteArray? = null
+        private set
     val buffer = PixelBuffer(PixelScene.SCENE_W, PixelScene.SCENE_H)
 
     private data class BgKey(val scene: SceneId, val period: DayPeriod, val variant: Int)
@@ -170,6 +177,28 @@ class SceneRenderer {
         return session.npcSlots(env.clockMinute)
     }
 
+    private fun interactionElements(
+        scene: PixelScene, npcs: List<AmbientNpcSlot>, timeMs: Long, frame: RenderFrame,
+    ): Set<com.hoodie.app.engine.interaction.InteractionElement> = buildSet {
+        if (scene.id == SceneId.OFFICE) {
+            npcs.forEach { slot ->
+                val brain = slot.officeBrain ?: return@forEach
+                val movement = brain.movementAt(timeMs)
+                val nearby = kotlin.math.abs(movement.x - frame.x) <= 100 && kotlin.math.abs(movement.floorY - frame.y) <= 80
+                if (!brain.isOffscreenAt(timeMs) && movement.x in 0..239 && nearby) {
+                    when (brain.npcId) {
+                        "bulldog_exec" -> add(com.hoodie.app.engine.interaction.InteractionElement.BULLDOG)
+                        "rabbit_analyst" -> add(com.hoodie.app.engine.interaction.InteractionElement.RABBIT)
+                    }
+                }
+            }
+        }
+        // LeisureScene only paints a butterfly in this concrete variant.
+        if (scene.id == SceneId.LEISURE && frame.env.variant.mod(3) == 2) {
+            add(com.hoodie.app.engine.interaction.InteractionElement.BUTTERFLY)
+        }
+    }
+
     /** Releases scene-local mutable brains and their planned timeline on renderer disposal. */
     @Synchronized
     fun dispose() {
@@ -218,6 +247,11 @@ class SceneRenderer {
 
     @Synchronized
     fun render(frame: RenderFrame, absoluteTimeMs: Long): PixelBuffer {
+        interactionMasks?.let { masks ->
+            interactionMaskIndex = 1 - interactionMaskIndex
+            buffer.drawOwnership = masks[interactionMaskIndex]
+            buffer.drawOwner = 0
+        }
         val scene = frame.scene
         val measureScene = BuildConfig.DEBUG && (scene.id == SceneId.OFFICE || scene.id == SceneId.STORE)
         val traceScene = if (scene.id == SceneId.STORE) "Store" else "Office"
@@ -236,6 +270,7 @@ class SceneRenderer {
         // O Passeio divide o banco com o Hoodie pelo destino da microação dele.
         if (scene.id == SceneId.LEISURE) leisureSession?.observeHoodie(timeMs, frame.occupancy)
         val env = envWithAmbientNpcState(frame.env, npcs, timeMs)
+        if (collectInteractionElements) lastInteractionElements = interactionElements(scene, npcs, timeMs, frame)
         if (measureScene) ScenePerformanceMonitor.traceEnd()
         val officePlan = if (scene.id == SceneId.OFFICE) {
             officePlan(scene, npcs).also { plan ->
@@ -286,6 +321,7 @@ class SceneRenderer {
         val sprite = frame.sprite
         val left = frame.x - sprite.anchors.feet.x
         val top = frame.y - sprite.anchors.feet.y
+        buffer.drawOwner = 1
         actorMask.track(buffer) {
             scene.drawCharacter(buffer, sprite, left, top, timeMs, env)
             sprite.itemOverlay?.let { item ->
@@ -293,6 +329,7 @@ class SceneRenderer {
                 HoodiePainter.drawItemAt(buffer, item, com.hoodie.app.pixel.sprite.Point(left + hand.x, top + hand.y))
             }
         }
+        buffer.drawOwner = 0
         if (measureScene) {
             sceneHoodieNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
             stageStarted = ScenePerformanceMonitor.nowNanos()
@@ -336,6 +373,7 @@ class SceneRenderer {
             )
             ScenePerformanceMonitor.traceEnd()
         }
+        lastInteractionHitMask = buffer.drawOwnership
         return buffer
     }
 

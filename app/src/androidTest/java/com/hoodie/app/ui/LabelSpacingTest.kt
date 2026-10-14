@@ -90,7 +90,7 @@ class LabelSpacingTest(private val fontScale: Float) {
                 busy = false, zone = java.time.ZoneId.of("America/Sao_Paulo"), onOpen = {}, homeNow = homeNow,
             )
         }
-        assertStacked("Meu Dia Agora", rule.onNodeWithText(context.getString(R.string.home_now_title), useUnmergedTree = true), rule.onNodeWithText(context.getString(R.string.home_now_home), useUnmergedTree = true))
+        assertStacked("Contexto do usuário", rule.onNodeWithText(context.getString(R.string.home_now_you).uppercase(), useUnmergedTree = true), rule.onNodeWithText(context.getString(R.string.home_now_home), useUnmergedTree = true))
     }
 
     companion object {

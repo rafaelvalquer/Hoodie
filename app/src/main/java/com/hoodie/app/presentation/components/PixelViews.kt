@@ -57,6 +57,16 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
+import com.hoodie.app.engine.interaction.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+
+private class InteractionPresentation {
+    var frame: RenderFrame? = null
+    var request: InteractionRequest? = null
+    var active = true
+}
 
 /** Fixed animation time for previews and visual regression captures. Null keeps live rendering. */
 data class PixelRenderFrame(
@@ -88,12 +98,44 @@ fun HoodieSceneView(
     periodOverride: DayPeriod? = null,
     sceneOverride: PixelScene? = null,
     onScenePresented: ((SceneId) -> Unit)? = null,
+    interactionsEnabled: Boolean = false,
+    interactionRequests: Flow<InteractionRequest>? = null,
+    onHoodieGesture: (InteractionGesture, RenderFrame) -> Unit = { _, _ -> },
+    interactionAllowed: (InteractionRequest, RenderFrame) -> Boolean = { _, _ -> true },
+    onInteractionStarted: (InteractionRequest) -> Unit = {},
+    onInteractionFinished: (InteractionRequest) -> Unit = {},
 ) {
     val fixedFrame = LocalPixelRenderFrame.current
     val machine = remember(fixedFrame != null) {
         AnimationStateMachine(if (fixedFrame != null) Random(0) else Random(System.nanoTime()))
     }
-    val renderer = remember { SceneRenderer() }
+    val renderer = remember(interactionsEnabled) { SceneRenderer(interactionsEnabled) }
+    val interaction = remember { InteractionPresentation() }
+    val gestureCallback by rememberUpdatedState(onHoodieGesture)
+    val allowedCallback by rememberUpdatedState(interactionAllowed)
+    val startedCallback by rememberUpdatedState(onInteractionStarted)
+    val finishedCallback by rememberUpdatedState(onInteractionFinished)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(machine, lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) interaction.active = true
+            if (event == Lifecycle.Event.ON_STOP) {
+                interaction.active = false
+                machine.cancelInteractiveReactions()
+                interaction.request?.let { finishedCallback(it) }
+                interaction.request = null
+                interaction.frame = null
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
+            machine.cancelInteractiveReactions()
+            interaction.request?.let { finishedCallback(it) }
+            interaction.request = null
+            interaction.frame = null
+        }
+    }
     val rendererMutex = remember(renderer) { Mutex() }
     DisposableEffect(renderer) { onDispose { renderer.dispose() } }
     val bitmap = remember { Bitmap.createBitmap(PixelScene.SCENE_W, PixelScene.SCENE_H, Bitmap.Config.ARGB_8888) }
@@ -104,6 +146,28 @@ fun HoodieSceneView(
     val currentPeriod by rememberUpdatedState(periodOverride)
     val currentScenePresented by rememberUpdatedState(onScenePresented)
 
+    fun presented(frame: RenderFrame) {
+        val actual = frame.copy(interactionElements = renderer.lastInteractionElements, interactionHitMask = renderer.lastInteractionHitMask)
+        interaction.frame = actual
+        val request = interaction.request
+        if (request != null) {
+            if (actual.interactionStarted === request.response) startedCallback(request)
+            if (!actual.interactionBusy) { finishedCallback(request); interaction.request = null }
+        }
+        frames++
+        currentScenePresented?.invoke(frame.scene.id)
+    }
+
+    LaunchedEffect(interactionRequests, interactionsEnabled) {
+        if (interactionsEnabled) interactionRequests?.collect { request ->
+            val frame = interaction.frame
+            if (interaction.active && frame != null && allowedCallback(request, frame) &&
+                machine.interact(request.response, request.scene, clock.now(currentSpeed))) interaction.request = request
+            else finishedCallback(request)
+        }
+        else machine.cancelInteractiveReactions()
+    }
+
     LaunchedEffect(visual, fixedFrame) {
         // Ao abrir o app o ReactionDirector decide se ele reage (olha, acena, sorri…).
         visual?.let { machine.setVisual(it, if (fixedFrame != null) 1L else clock.now(currentSpeed), greet = greet) }
@@ -113,7 +177,7 @@ fun HoodieSceneView(
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
                 val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis) { frames++; currentScenePresented?.invoke(rendered.scene.id) }
+                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis) { presented(rendered) }
             }
             return@LaunchedEffect
         }
@@ -125,14 +189,26 @@ fun HoodieSceneView(
                 lastFrameNanos = frameNanos
                 val time = LocalTime.now()
                 val period = currentPeriod ?: DayPeriod.of(time.hour)
+                interaction.request?.let { request ->
+                    val frame = interaction.frame
+                    if (!interaction.active || frame == null || !allowedCallback(request, frame)) {
+                        machine.cancelInteractiveReactions()
+                        finishedCallback(request)
+                        interaction.request = null
+                    }
+                }
                 machine.frame(t, time.hour * 60 + time.minute, period)?.let { f ->
                     val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t) { frames++; currentScenePresented?.invoke(rendered.scene.id) }
+                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t) { presented(rendered) }
                 }
             }
         }
     }
-    PixelImage(image, PixelScene.SCENE_W, PixelScene.SCENE_H, modifier) { frames }
+    PixelImageContent(image, PixelScene.SCENE_W, PixelScene.SCENE_H, modifier,
+        Modifier.hoodieInteractionTarget(interactionsEnabled, { interaction.frame }) { gesture, frame ->
+            if (interaction.active) gestureCallback(gesture, frame)
+        },
+    ) { frames }
 }
 
 /** All scenes share one renderer and pixel buffer, so its lock spans both drawing and bitmap
@@ -190,6 +266,14 @@ private const val FRAME_INTERVAL_NANOS = 33_000_000L
  */
 @Composable
 fun PixelImage(image: ImageBitmap, logicalW: Int, logicalH: Int, modifier: Modifier = Modifier, invalidate: () -> Int = { 0 }) {
+    PixelImageContent(image, logicalW, logicalH, modifier, Modifier, invalidate)
+}
+
+/** Input belongs to the drawn canvas, giving scene and character targets distinct semantics nodes. */
+@Composable
+private fun PixelImageContent(image: ImageBitmap, logicalW: Int, logicalH: Int, modifier: Modifier,
+    canvasModifier: Modifier, invalidate: () -> Int,
+) {
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         val density = LocalDensity.current
         val maxW = with(density) { maxWidth.toPx() }
@@ -197,7 +281,7 @@ fun PixelImage(image: ImageBitmap, logicalW: Int, logicalH: Int, modifier: Modif
         val scale = max(1, floor(min(maxW / logicalW, maxH / logicalH)).toInt())
         val w = with(density) { (logicalW * scale).toDp() }
         val h = with(density) { (logicalH * scale).toDp() }
-        Canvas(Modifier.size(w, h)) {
+        Canvas(Modifier.size(w, h).then(canvasModifier)) {
             invalidate()
             drawImage(image, srcOffset = IntOffset.Zero, srcSize = IntSize(logicalW, logicalH), dstSize = IntSize(logicalW * scale, logicalH * scale), filterQuality = FilterQuality.None)
         }

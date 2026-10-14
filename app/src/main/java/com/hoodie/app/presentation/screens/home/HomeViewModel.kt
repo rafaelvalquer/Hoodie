@@ -65,6 +65,8 @@ import kotlinx.coroutines.withTimeout
 import java.time.DayOfWeek
 import javax.inject.Inject
 import kotlin.random.Random
+import com.hoodie.app.engine.interaction.*
+import com.hoodie.app.pixel.animation.RenderFrame
 
 data class HomeUiState(
     val loading: Boolean = true,
@@ -84,6 +86,7 @@ data class HomeUiState(
     val question: ContextQuestion? = null,
     val newPlaceSaveOptions: com.hoodie.app.engine.context.NewPlaceSaveOptions? = null,
     val vehicleMoving: Boolean = false,
+    val interactionSafePassengerStop: Boolean = false,
     val suggestSavePlace: PlaceType? = null,
     val canSaveHere: Boolean = false,
 )
@@ -125,7 +128,55 @@ class HomeViewModel @Inject constructor(
     dayStates: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>? = null,
     private val effectiveRoutine: com.hoodie.app.data.repository.EffectiveRoutineRepository? = null,
     personalityRuntime: com.hoodie.app.engine.personality.PersonalityRuntime? = null,
+    private val interactions: dagger.Lazy<HoodieInteractionResolver>? = null,
+    private val interactionFeature: HoodieInteractionFeature = HoodieInteractionFeature(com.hoodie.app.core.config.HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1),
 ) : ViewModel() {
+    private val interactionSession = HoodieInteractionSession()
+    private val interactionSafety = HoodieInteractionPolicy()
+    val touchInteractionsEnabled: Boolean get() = interactionFeature.enabled
+
+    fun onHoodieGesture(gesture: InteractionGesture, frame: RenderFrame) {
+        if (!touchInteractionsEnabled) return
+        val context = interactionContext(frame) ?: return
+        val now = android.os.SystemClock.uptimeMillis()
+        val decision = interactions?.get()?.resolve(context, gesture, interactionSession.history, now) ?: return
+        if (decision is InteractionDecision.Accepted) {
+            val request = interactionSession.reserve(decision.response, frame.scene.id, now, context) ?: return
+            if (!_events.trySend(HomeUiEvent.InteractionResponse(request)).isSuccess) interactionSession.finish(request)
+        }
+    }
+
+    fun isInteractionCurrent(request: InteractionRequest) = interactionSession.current(request)
+    fun interactionAllowed(request: InteractionRequest, frame: RenderFrame): Boolean {
+        val context = interactionContext(frame)?.copy(sequenceBusy = false) ?: return false
+        request.context?.let { original ->
+            if (original.activity != context.activity || original.userContext != context.userContext || original.animation != context.animation) return false
+        }
+        return isInteractionCurrent(request) && request.scene == frame.scene.id &&
+            interactions?.get()?.stillEligible(request.response, context) == true &&
+            interactionSafety.evaluate(context, request.response.gesture, HoodieInteractionHistory(), android.os.SystemClock.uptimeMillis()) == null
+    }
+    fun onInteractionStarted(request: InteractionRequest) = interactionSession.started(request, android.os.SystemClock.uptimeMillis())
+    fun onInteractionFinished(request: InteractionRequest) = interactionSession.finish(request)
+    fun onInteractionCancelled() = interactionSession.cancelPending()
+
+    private fun interactionContext(frame: RenderFrame): InteractionContext? {
+        val current = state.value
+        if (current.loading || current.error != null) return null
+        val snapshot = current.snapshot ?: return null
+        if (current.visual?.scene != frame.scene.id) return null
+        if (frame.interactionVisual != null && current.visual != frame.interactionVisual) return null
+        return InteractionContext(
+            scene = frame.scene.id, userContext = snapshot.state.userContext, activity = snapshot.state.activity,
+            animation = frame.occupancy.animation ?: frame.animation, energy = snapshot.liveNeeds.energy.toFloat(), mood = snapshot.liveNeeds.mood.toFloat(),
+            vehicleMoving = current.vehicleMoving, safePassengerStop = current.interactionSafePassengerStop,
+            asleep = snapshot.state.activity == com.hoodie.app.core.model.HoodieActivity.SLEEPING,
+            canInterrupt = frame.interactionCanInterrupt, transitioning = frame.interactionTransitioning,
+            screenActive = interactionSession.active, sequenceBusy = frame.interactionBusy,
+            seated = frame.occupancy.seated, walking = frame.occupancy.walking || frame.occupancy.animation?.group == com.hoodie.app.pixel.animation.AnimGroup.LOCOMOTION,
+            presentElements = frame.interactionElements,
+        )
+    }
     private val personality = personalityRuntime?.takeIf { com.hoodie.app.core.config.HoodieConfig.HOODIE_PERSONALITY_V2 }
         ?.let(::PersonalityDialogueScheduler)
     private val ambientDialogue = AmbientDialogueScheduler(dialogues)
@@ -143,6 +194,7 @@ class HomeViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     override fun onCleared() {
+        interactionSession.stop()
         mobility.onAppClosed()
         super.onCleared()
     }
@@ -201,6 +253,7 @@ class HomeViewModel @Inject constructor(
 
     /** Hide the previous snapshot until canonical sources have been reconciled on every resume. */
     fun onHomeStarted() {
+        interactionSession.start()
         visualDiagnostics.visibility(true)
         personality?.onForeground(clock.nowMillis())
         homeResumeJob?.cancel()
@@ -230,6 +283,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onHomeStopped() {
+        interactionSession.stop()
         visualDiagnostics.visibility(false)
         personality?.onBackground(clock.nowMillis())
         mobility.onAppClosed()
@@ -366,6 +420,12 @@ class HomeViewModel @Inject constructor(
             vehicleMoving = mobility.mode?.isVehicle == true &&
                 mobility.phase != com.hoodie.app.core.mobility.MobilityPhase.IDLE &&
                 mobility.observedMovement != com.hoodie.app.core.mobility.DetectedMovement.STILL,
+            interactionSafePassengerStop = mobility.mode in setOf(com.hoodie.app.core.mobility.MovementMode.BUS,
+                com.hoodie.app.core.mobility.MovementMode.TRAIN, com.hoodie.app.core.mobility.MovementMode.METRO,
+                com.hoodie.app.core.mobility.MovementMode.PUBLIC_TRANSPORT) &&
+                mobility.certainty in setOf(com.hoodie.app.core.mobility.ModeCertainty.CONFIRMED, com.hoodie.app.core.mobility.ModeCertainty.USER_SELECTED) &&
+                mobility.observedMovement == com.hoodie.app.core.mobility.DetectedMovement.STILL &&
+                mobility.observedAt?.let { now - it in 0..30_000 } == true,
         )
     }
 

@@ -78,6 +78,8 @@ import com.hoodie.app.presentation.components.SpeechBubble
 import com.hoodie.app.presentation.navigation.Routes
 import com.hoodie.app.presentation.theme.HoodieColors
 import java.time.ZoneId
+import com.hoodie.app.engine.interaction.*
+import com.hoodie.app.pixel.animation.RenderFrame
 
 /**
  * A tela que importa: CENÁRIO + GATO + AÇÃO. Todo o resto é secundário.
@@ -93,19 +95,26 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val zone = vm.zone
     val snackbar = remember { SnackbarHostState() }
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
+    val interactionRequests = remember { MutableSharedFlow<InteractionRequest>(extraBufferCapacity = 1) }
+    val interactiveSpeech = rememberInteractiveSpeech()
+    LaunchedEffect(state.visual, state.vehicleMoving, state.loading, state.error) {
+        interactiveSpeech.clear()
+        vm.onInteractionCancelled()
+    }
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(vm, lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> vm.onHomeStarted()
-                Lifecycle.Event.ON_STOP -> vm.onHomeStopped()
+                Lifecycle.Event.ON_STOP -> { interactiveSpeech.clear(); vm.onHomeStopped() }
                 else -> Unit
             }
         }
         lifecycle.addObserver(observer)
         onDispose {
             lifecycle.removeObserver(observer)
+            interactiveSpeech.clear()
             vm.onHomeStopped()
         }
     }
@@ -113,6 +122,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             vm.events.collect { event ->
                 when (event) {
+                    is HomeUiEvent.InteractionResponse -> if (vm.isInteractionCurrent(event.request)) interactionRequests.emit(event.request)
                     is HomeUiEvent.React -> reactions.emit(event.animation)
                     is HomeUiEvent.ShowError -> launch { snackbar.showSnackbar(context.appErrorText(event.error)) }
                     is HomeUiEvent.ShowMessage -> launch { snackbar.showSnackbar(event.message) }
@@ -129,7 +139,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     }
 
     HomeContent(
-        state = state,
+        state = state.copy(dialogue = interactiveSpeech.resolve(state.dialogue)),
         busy = busy,
         zone = zone,
         onOpen = onOpen,
@@ -155,6 +165,14 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         dayState = dayState,
         homeNow = homeNow,
         onScenePresented = vm::onScenePresented,
+        interactionsEnabled = vm.touchInteractionsEnabled,
+        interactionRequests = interactionRequests,
+        onHoodieGesture = vm::onHoodieGesture,
+        interactionAllowed = vm::interactionAllowed,
+        onInteractionStarted = { request ->
+            if (vm.onInteractionStarted(request)) interactiveSpeech.present(request)
+        },
+        onInteractionFinished = vm::onInteractionFinished,
     )
 }
 
@@ -190,6 +208,12 @@ internal fun HomeContent(
     onScenePresented: (com.hoodie.app.pixel.scene.SceneId) -> Unit = {},
     savedPlaces: List<com.hoodie.app.core.model.Place> = emptyList(),
     setupCard: @Composable () -> Unit = {},
+    interactionsEnabled: Boolean = com.hoodie.app.core.config.HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1,
+    interactionRequests: kotlinx.coroutines.flow.Flow<InteractionRequest>? = null,
+    onHoodieGesture: (InteractionGesture, RenderFrame) -> Unit = { _, _ -> },
+    interactionAllowed: (InteractionRequest, RenderFrame) -> Boolean = { _, _ -> true },
+    onInteractionStarted: (InteractionRequest) -> Unit = {},
+    onInteractionFinished: (InteractionRequest) -> Unit = {},
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
@@ -262,11 +286,17 @@ internal fun HomeContent(
         if (ux2) HomeHeroContent(
             state, homeNow, zone, busy, reactions, onScenePresented,
             onConfirm = actions.confirmContext, onCorrect = openCorrection,
+            interactionsEnabled = interactionsEnabled, interactionRequests = interactionRequests,
+            onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
+            onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished,
         ) else {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
             state.dialogue?.let { SpeechBubble(it, Modifier.padding(top = 10.dp, bottom = 6.dp)) }
-            HoodieSceneView(state.visual, Modifier.fillMaxWidth().testTag("home_live_scene"), reactions = reactions, onScenePresented = onScenePresented)
+            HoodieSceneView(state.visual, Modifier.fillMaxWidth().testTag("home_live_scene"), reactions = reactions, onScenePresented = onScenePresented,
+                interactionsEnabled = interactionsEnabled, interactionRequests = interactionRequests,
+                onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
+                onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished)
         }
 
         if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {

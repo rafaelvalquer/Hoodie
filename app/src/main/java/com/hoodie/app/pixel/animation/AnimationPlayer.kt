@@ -25,4 +25,7 @@ internal class AnimationPlayer {
 
     fun frameIndex(now: Long, durations: LongArray): Int =
         ClipTiming.indexAt(durations, now - startedAt, animation.loop)
+
+    /** Pause an interaction overlay without replaying animation events on resume. */
+    fun pause(deltaMs: Long) { startedAt += deltaMs.coerceAtLeast(0) }
 }

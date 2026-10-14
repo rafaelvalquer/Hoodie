@@ -32,9 +32,12 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToString
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.TextLayoutResult
@@ -108,6 +111,16 @@ class PlacePickerScreenTest {
     }
 
     private fun bounds(tag: String): Rect = rule.onNodeWithTag(tag).getBoundsInRoot().let { Rect(it.left.value, it.top.value, it.right.value, it.bottom.value) }
+
+    private fun captureLayoutFailure(name: String, detail: String) {
+        val folder = java.io.File(rule.activity.getExternalFilesDir(null), "interaction-regression-diagnostics").apply { mkdirs() }
+        java.io.File(folder, "$name.txt").writeText(detail + "\n" + rule.onRoot(useUnmergedTree = true).printToString())
+        val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+        if (screenshot != null) {
+            java.io.File(folder, "$name.png").outputStream().use { screenshot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+            screenshot.recycle()
+        }
+    }
 
     /** Busca acima do mapa, mapa com altura própria, detalhes entre mapa e Salvar, Salvar dentro da tela. */
     private fun assertLayout(h: Dp, font: Float) {
@@ -226,6 +239,7 @@ class PlacePickerScreenTest {
             }
         }
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.NAME))
+        rule.onNodeWithTag(PlacePickerTags.NAME).performScrollTo()
         val name = bounds(PlacePickerTags.NAME)
         val map = bounds(PlacePickerTags.MAP)
         assertTrue("altura mínima de 48 dp", name.height >= 48f)
@@ -234,6 +248,7 @@ class PlacePickerScreenTest {
         // Fundo opaco: o miolo do campo (longe do texto e da borda) tem exatamente a cor do painel.
         val image = rule.onNodeWithTag(PlacePickerTags.NAME).captureToImage().toPixelMap()
         val sample = image[(image.width * 0.85f).toInt(), image.height / 2]
+        if (sample.alpha < .99f) captureLayoutFailure("name-field", "name=$name map=$map sample=$sample capture=${image.width}x${image.height}")
         assertEquals("alpha", 1f, sample.alpha, 0.01f)
         assertTrue("fundo sólido do campo (era $sample)", sample.close(HoodieColors.PanelLight))
 
@@ -312,8 +327,12 @@ class PlacePickerScreenTest {
         rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.TYPE_GRID))
         val cells = PlaceType.physicalPlaceOptions.map { t ->
             rule.onNodeWithTag(PlacePickerTags.DETAILS).performScrollToNode(hasTestTag(PlacePickerTags.typeCell(t)))
+            // Lazy search finds the containing grid item before every nested cell is fully
+            // visible. Measure the complete control, not the strip clipped by the viewport.
+            rule.onNodeWithTag(PlacePickerTags.typeCell(t)).performScrollTo()
             rule.onNodeWithTag(PlacePickerTags.typeCell(t)).assertIsDisplayed()
             val r = bounds(PlacePickerTags.typeCell(t))
+            if (r.height < 47f) captureLayoutFailure("type-${t.name}", "bounds=$r mapBottom=$mapBottom")
             assertTrue("$t com altura de toque", r.height >= 47f)
             assertTrue("$t nunca aparece sobre o mapa", r.top >= mapBottom - 0.5f)
             val scrollPixels = rule.onNodeWithTag(PlacePickerTags.DETAILS).fetchSemanticsNode()

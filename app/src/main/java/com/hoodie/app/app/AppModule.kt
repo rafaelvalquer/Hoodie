@@ -106,4 +106,17 @@ object DatabaseModule {
     @Provides @Singleton
     fun dialogues(@ApplicationContext context: Context): DialogueEngine =
         DialogueEngine(DialogueEngine.parse(context.assets.open("metadata/dialogues.json").bufferedReader().use { it.readText() }))
+
+    @Provides @Singleton
+    fun interactions(@ApplicationContext context: Context): com.hoodie.app.engine.interaction.HoodieInteractionResolver =
+        com.hoodie.app.engine.interaction.HoodieInteractionResolver(
+            com.hoodie.app.engine.interaction.HoodieInteractionCatalog.parse(
+                context.assets.open(com.hoodie.app.engine.interaction.HoodieInteractionCatalog.ASSET).bufferedReader().use { it.readText() },
+            ),
+        )
+
+    @Provides
+    fun interactionFeature() = com.hoodie.app.engine.interaction.HoodieInteractionFeature(
+        com.hoodie.app.core.config.HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1,
+    )
 }

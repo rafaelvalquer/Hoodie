@@ -26,6 +26,8 @@ import com.hoodie.app.presentation.components.HoodieSceneView
 import com.hoodie.app.presentation.components.SpeechBubble
 import kotlinx.coroutines.flow.Flow
 import java.time.ZoneId
+import com.hoodie.app.engine.interaction.*
+import com.hoodie.app.pixel.animation.RenderFrame
 
 /**
  * A cena do Hoodie como protagonista: fala (em área reservada), cena animada, atividade, contexto e ações rápidas.
@@ -38,6 +40,12 @@ internal fun HomeHeroContent(
     reactions: Flow<AnimationId>?, onScenePresented: (SceneId) -> Unit,
     onConfirm: (Long) -> Unit, onCorrect: () -> Unit,
     modifier: Modifier = Modifier,
+    interactionsEnabled: Boolean = com.hoodie.app.core.config.HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1,
+    interactionRequests: Flow<InteractionRequest>? = null,
+    onHoodieGesture: (InteractionGesture, RenderFrame) -> Unit = { _, _ -> },
+    interactionAllowed: (InteractionRequest, RenderFrame) -> Boolean = { _, _ -> true },
+    onInteractionStarted: (InteractionRequest) -> Unit = {},
+    onInteractionFinished: (InteractionRequest) -> Unit = {},
 ) {
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
@@ -58,9 +66,13 @@ internal fun HomeHeroContent(
             HoodieSceneView(
                 state.visual, Modifier.fillMaxWidth().heightIn(max = sceneMax).testTag("home_live_scene"),
                 reactions = reactions, onScenePresented = onScenePresented,
+                interactionsEnabled = interactionsEnabled, interactionRequests = interactionRequests,
+                onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
+                onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished,
             )
             // Mantém o último texto durante o fade-out, para não piscar vazio.
-            lastDialogue?.let { SpeechBubble(it, Modifier.padding(top = 3.dp, start = 24.dp, end = 24.dp).alpha(bubbleAlpha).testTag("home_dialogue")) }
+            if (bubbleAlpha > 0f) lastDialogue?.let { SpeechBubble(it, Modifier.padding(top = 3.dp, start = 24.dp, end = 24.dp).alpha(bubbleAlpha).testTag("home_dialogue"),
+                maxLines = if (interactionsEnabled) 4 else Int.MAX_VALUE) }
         }
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             HoodieActivityStrip(hero.hoodieActivity, hero.activityStartedAt, state.now, zone, state.catName)

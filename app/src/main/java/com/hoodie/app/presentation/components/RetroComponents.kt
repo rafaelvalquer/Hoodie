@@ -159,14 +159,15 @@ fun TimeField(label: String, minute: Int, onChange: (Int) -> Unit, modifier: Mod
 
 /** Balão de fala do Hoodie. */
 @Composable
-fun SpeechBubble(text: String, modifier: Modifier = Modifier) {
+fun SpeechBubble(text: String, modifier: Modifier = Modifier, maxLines: Int = Int.MAX_VALUE) {
     Box(
         modifier
             .background(Color(0xFFF6F3EA))
             .border(2.dp, HoodieColors.Outline)
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
-        Text("“$text”", color = HoodieColors.Outline, style = MaterialTheme.typography.bodyMedium)
+        Text("“$text”", color = HoodieColors.Outline, style = MaterialTheme.typography.bodyMedium,
+            maxLines = maxLines, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 

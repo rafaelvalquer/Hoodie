@@ -52,6 +52,24 @@ internal fun transitionAnimations(): Map<AnimationId, AnimationClip> = ClipDefin
         }
         clip(AnimationId.NOD, loop = false) { f(150, I.copy(headDy = 1, eyes = Eyes.HAPPY)); f(150, I); f(150, I.copy(headDy = 1, eyes = Eyes.HAPPY)); f(200, I) }
 
+        // No prop events or explicit legs: all three postures inherit their current support.
+        clip(AnimationId.PET_HEAD, loop = false, policy = FINISH_CYCLE) {
+            f(150, I.copy(headDy = 1, ears = Ears.RELAXED))
+            f(300, I.copy(headDy = 2, eyes = Eyes.CLOSED, ears = Ears.RELAXED, blush = true))
+            f(150, I.copy(headDy = 1, eyes = Eyes.HAPPY, ears = Ears.RELAXED))
+        }
+        clip(AnimationId.PURR, loop = false, policy = FINISH_CYCLE) {
+            repeat(3) {
+                f(200, I.copy(eyes = Eyes.CLOSED, ears = Ears.RELAXED, blush = true, bob = 1))
+                f(200, I.copy(eyes = Eyes.HAPPY, ears = Ears.RELAXED, blush = true))
+            }
+        }
+        clip(AnimationId.NUZZLE, loop = false, policy = FINISH_CYCLE) {
+            f(200, I.copy(headDy = 1, ears = Ears.RELAXED, eyes = Eyes.HAPPY))
+            f(300, I.copy(headDy = 2, ears = Ears.RELAXED, eyes = Eyes.CLOSED, blush = true))
+            f(200, I.copy(eyes = Eyes.HAPPY, ears = Ears.RELAXED))
+        }
+
 }.clips.toMap()
 
 

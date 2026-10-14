@@ -75,6 +75,17 @@ class PlaceTypeSelectorIntegrationTest {
                 ),
             ) }
             var homeNow by remember { mutableStateOf(HomeNowAssembler.assemble(null, state.context, null, null, null, state.now)) }
+            fun applyCorrection(place: PlaceType, historical: Boolean): Boolean {
+                assertEquals(false, historical)
+                selected = place
+                val context = place.toContext()
+                selectedContext = context
+                val visual = VisualDirector.resolve(HoodieActivity.EATING, context, manualTransition = true)
+                selectedScene = visual.scene
+                state = state.copy(context = state.context!!.copy(type = context), visual = visual)
+                homeNow = HomeNowAssembler.assemble(null, state.context, null, null, null, state.now)
+                return true
+            }
             HoodieTheme {
                 HomeContent(
                     state = state,
@@ -82,20 +93,14 @@ class PlaceTypeSelectorIntegrationTest {
                     zone = java.time.ZoneId.of("America/Sao_Paulo"),
                     onOpen = {},
                     homeNow = homeNow,
-                    actions = HomeActions(correctContext = { place, historical, _ ->
-                        assertEquals(false, historical)
-                        selected = place
-                        val context = place.toContext()
-                        selectedContext = context
-                        val visual = VisualDirector.resolve(HoodieActivity.EATING, context)
-                        selectedScene = visual.scene
-                        state = state.copy(
-                            context = state.context!!.copy(type = context),
-                            visual = visual,
-                        )
-                        homeNow = HomeNowAssembler.assemble(null, state.context, null, null, null, state.now)
-                        true
-                    }),
+                    actions = HomeActions(
+                        correctContext = { place, historical, _ -> applyCorrection(place, historical) },
+                        quickCorrect = { correction ->
+                            assertEquals(state.context!!.id, correction.expectedEventId)
+                            assertEquals(null, correction.placeId)
+                            applyCorrection(correction.placeType, correction.scope == com.hoodie.app.domain.correction.CorrectionScope.SINCE_CURRENT_ARRIVAL)
+                        },
+                    ),
                 )
             }
         }

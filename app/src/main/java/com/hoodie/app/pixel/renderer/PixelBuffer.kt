@@ -6,6 +6,9 @@ package com.hoodie.app.pixel.renderer
  */
 class PixelBuffer(val width: Int, val height: Int) {
     val pixels = IntArray(width * height)
+    /** Optional renderer-only ownership mask. Null preserves the ordinary drawing path. */
+    internal var drawOwnership: ByteArray? = null
+    internal var drawOwner: Byte = 0
 
     operator fun get(x: Int, y: Int): Int =
         if (x < 0 || y < 0 || x >= width || y >= height) 0 else pixels[y * width + x]
@@ -16,11 +19,12 @@ class PixelBuffer(val width: Int, val height: Int) {
         if (a == 0) return
         val i = y * width + x
         pixels[i] = if (a == 255) color else blend(pixels[i], color, a)
+        drawOwnership?.set(i, drawOwner)
     }
 
-    fun fill(color: Int) = pixels.fill(color)
+    fun fill(color: Int) { pixels.fill(color); drawOwnership?.fill(drawOwner) }
 
-    fun clear() = pixels.fill(0)
+    fun clear() { pixels.fill(0); drawOwnership?.fill(0) }
 
     /** Retângulo recortado nas quatro bordas: o que cai fora do buffer é simplesmente ignorado. */
     fun rect(x: Int, y: Int, w: Int, h: Int, color: Int) {
@@ -28,7 +32,10 @@ class PixelBuffer(val width: Int, val height: Int) {
         val x1 = (x.toLong() + w).coerceIn(0L, width.toLong()).toInt(); val y1 = (y.toLong() + h).coerceIn(0L, height.toLong()).toInt()
         if (x0 >= x1 || y0 >= y1) return
         if ((color ushr 24) == 255) {
-            for (yy in y0 until y1) pixels.fill(color, yy * width + x0, yy * width + x1)
+            for (yy in y0 until y1) {
+                pixels.fill(color, yy * width + x0, yy * width + x1)
+                drawOwnership?.fill(drawOwner, yy * width + x0, yy * width + x1)
+            }
         } else {
             for (yy in y0 until y1) for (xx in x0 until x1) set(xx, yy, color)
         }
@@ -91,6 +98,7 @@ class PixelBuffer(val width: Int, val height: Int) {
                     val destinationIndex = targetIndex + sx - sourceX0
                     target[destinationIndex] = blend(target[destinationIndex], color, alpha)
                 }
+                if (alpha != 0) drawOwnership?.set(targetIndex + sx - sourceX0, drawOwner)
                 sourceIndex += step
             }
         }
@@ -116,6 +124,7 @@ class PixelBuffer(val width: Int, val height: Int) {
                 val destinationIndex = targetIndex + sx - sourceX0
                 if (alpha == 255) target[destinationIndex] = color
                 else if (alpha != 0) target[destinationIndex] = blend(target[destinationIndex], color, alpha)
+                if (alpha != 0) drawOwnership?.set(destinationIndex, drawOwner)
             }
         }
     }
@@ -149,6 +158,7 @@ class PixelBuffer(val width: Int, val height: Int) {
     fun copyFrom(src: PixelBuffer) {
         require(src.width == width && src.height == height)
         System.arraycopy(src.pixels, 0, pixels, 0, pixels.size)
+        drawOwnership?.fill(drawOwner)
     }
 
     /** Desenha um glifo de string: '#' = cor, qualquer outro caractere = transparente. */

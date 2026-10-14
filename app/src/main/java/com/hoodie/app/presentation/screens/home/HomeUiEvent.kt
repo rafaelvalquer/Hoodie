@@ -4,6 +4,7 @@ import com.hoodie.app.core.error.AppError
 import com.hoodie.app.pixel.animation.AnimationId
 
 sealed interface HomeUiEvent {
+    data class InteractionResponse(val request: com.hoodie.app.engine.interaction.InteractionRequest) : HomeUiEvent
     data class React(val animation: AnimationId) : HomeUiEvent
     data class ShowError(val error: AppError) : HomeUiEvent
     data class ShowMessage(val message: String) : HomeUiEvent

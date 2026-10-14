@@ -41,6 +41,14 @@ data class RenderFrame(
     val frameIndex: Int,
     /** Onde o Hoodie está e para onde vai: o ambiente divide o espaço com ele (banco do Passeio). */
     val occupancy: HoodieOccupancy = HoodieOccupancy.ABSENT,
+    val interactionTransitioning: Boolean = false,
+    val interactionBusy: Boolean = false,
+    val interactionCanInterrupt: Boolean = false,
+    val interactionStarted: com.hoodie.app.engine.interaction.InteractionResponse? = null,
+    val interactionElements: Set<com.hoodie.app.engine.interaction.InteractionElement> = emptySet(),
+    /** Last presented composition: 1 means a visible Hoodie pixel, 0 means backdrop/prop/NPC. */
+    val interactionHitMask: ByteArray? = null,
+    val interactionVisual: VisualState? = null,
 )
 
 /**
@@ -78,6 +86,9 @@ class AnimationStateMachine(
     private var pending: VisualState? = null
     private var pendingAt = 0L
     private val reactions = ReactionResolver()
+    private var interactivePlayback: InteractivePlayback? = null
+    private var lastPresentedFrame: RenderFrame? = null
+    private var lastSpriteRequest: SpriteRequest? = null
     private val transitionPlanner = TransitionPlanner()
     private val loopSelector = LoopSelector(random)
 
@@ -145,6 +156,7 @@ class AnimationStateMachine(
             return
         }
         if (v == (pending ?: visual)) return
+        cancelInteractiveReactions()
         pending = v
         pendingAt = if (v.manualTransition) now else interruptBoundary(now)
     }
@@ -154,11 +166,31 @@ class AnimationStateMachine(
     /** Reações entram por cima do loop atual, respeitando a política de interrupção. */
     fun react(anims: List<AnimationId>, now: Long) {
         if (anims.isEmpty()) return
+        if (reactions.hasInteractivePending || interactivePlayback != null) return
         reactions.request(anims, interruptBoundary(now))
     }
 
+    /** A single, expiring request; gestures never replace or queue behind another reaction. */
+    fun interact(response: com.hoodie.app.engine.interaction.InteractionResponse, expectedScene: SceneId, now: Long): Boolean {
+        val current = visual ?: return false
+        if (current.scene != expectedScene || pending != null || step != Step.Loop || reactions.hasPending ||
+            reactions.hasInteractivePending || interactivePlayback != null || lastPresentedFrame == null) return false
+        if (animation in setOf(AnimationId.SLEEP, AnimationId.SLEEP_TURN, AnimationId.NAP_SIT)) return false
+        if (response.animations.isEmpty() || response.animations.any { it !in com.hoodie.app.engine.interaction.HoodieInteractionCatalog.allowedAnimations }) return false
+        val boundary = if (animation in setOf(AnimationId.EAT, AnimationId.DRINK, AnimationId.LIFT, AnimationId.WATER))
+            animStart + ClipTiming.cycleEnd(sprites().durations(animation, direction), now - animStart, animation.loop)
+        else interruptBoundary(now)
+        return reactions.requestInteractive(response, current, animation, boundary,
+            now + com.hoodie.app.engine.interaction.HoodieInteractionConfig().maxPendingMs)
+    }
+
+    fun cancelInteractiveReactions() { reactions.cancelInteractive(); interactivePlayback = null }
+
     /** Coloca o gato direto no loop do estado (sem transições). */
     fun place(v: VisualState, now: Long) {
+        cancelInteractiveReactions()
+        lastPresentedFrame = null
+        lastSpriteRequest = null
         scene = SceneRegistry[v.scene]
         visual = v; pending = null
         val spot = scene!!.spot(v.spot)
@@ -182,8 +214,23 @@ class AnimationStateMachine(
 
     fun frame(now: Long, clockMinute: Int, period: DayPeriod): RenderFrame? {
         if (scene == null || visual == null) return null
-        val dt = if (lastTick == 0L) 0f else ((now - lastTick).coerceIn(0, 100)) / 1000f
+        val elapsedTick = if (lastTick == 0L) 0L else (now - lastTick).coerceAtLeast(0)
+        val dt = elapsedTick.coerceAtMost(100) / 1000f
         lastTick = now
+
+        interactivePlayback?.let { playback ->
+            player.pause(elapsedTick)
+            actionEnd += elapsedTick
+            if (playback.finished(now)) interactivePlayback = null
+        }
+        reactions.takeInteractiveReady(now, visual, animation, pending == null && step == Step.Loop)?.let { request ->
+            val base = lastPresentedFrame
+            val spriteRequest = lastSpriteRequest
+            if (base != null && spriteRequest != null) {
+                val pose = com.hoodie.app.pixel.sprite.ProceduralSpriteProvider.poseFor(spriteRequest)
+                interactivePlayback = InteractivePlayback(request.response, now, base.sprite, pose, spriteRequest, sprites())
+            }
+        }
 
         pending?.let { target ->
             if (now >= pendingAt && (step == Step.Loop || step is Step.Walk)) {
@@ -192,7 +239,7 @@ class AnimationStateMachine(
             }
         }
         val before = step
-        runStep(now, dt)
+        if (interactivePlayback == null) runStep(now, dt)
         // Entrou no loop neste tick: já mostra a microação (sem um frame "velho").
         if (step == Step.Loop && before != Step.Loop) runLoop(now)
         updateDoor(now)
@@ -205,11 +252,13 @@ class AnimationStateMachine(
         val walking = step is Step.Walk || animation.group == AnimGroup.LOCOMOTION
         var overlay = idle.overlay(now, allowLook = step == Step.Loop && !walking).copy(expression = v.expression)
         if (walking) overlay = overlay.copy(gaze = if (direction.facing == Facing.SIDE) Eyes.LOOK_LEFT else null)
-        val sprite = provider.frame(SpriteRequest(animation, direction, idx, posture, overlay))
+        val spriteRequest = SpriteRequest(animation, direction, idx, posture, overlay)
+        val interactiveSprite = interactivePlayback?.sprite(now)
+        val sprite = interactiveSprite?.second ?: provider.frame(spriteRequest)
 
         val left = x.toInt() - sprite.anchors.feet.x
         val top = y.toInt() - sprite.anchors.feet.y
-        if (idx != lastFrameIdx) {
+        if (interactivePlayback == null && idx != lastFrameIdx) {
             lastFrameIdx = idx
             sprite.events.forEach { onEvent(it, left, top, sprite, now) }
         }
@@ -232,7 +281,17 @@ class AnimationStateMachine(
             com.hoodie.app.pixel.npc.venue.VenueNpcDirector.supports(sc.id)
         val daySeed = if (separatedSeed) v.daySeed ?: v.variant else v.variant
         val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = daySeed, shoppingVenue = v.shoppingVenue, placeId = v.placeId)
-        return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects, animation, direction, idx, occupancy(sc, v))
+        val playback = interactivePlayback
+        val started = playback?.takeUnless { it.announced }?.response
+        playback?.announced = true
+        return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects,
+            interactiveSprite?.first ?: animation, direction, idx, occupancy(sc, v),
+            interactionTransitioning = pending != null || step != Step.Loop || fade < 1f,
+            interactionBusy = playback != null || reactions.hasInteractivePending || reactions.hasPending,
+            interactionCanInterrupt = step == Step.Loop && interruptBoundary(now) <= now,
+            interactionStarted = started,
+            interactionVisual = v,
+        ).also { if (playback == null) { lastPresentedFrame = it; lastSpriteRequest = spriteRequest } }
     }
 
     /**
@@ -357,6 +416,7 @@ class AnimationStateMachine(
     // ───────────────────────── Roteiro entre estados ─────────────────────────
 
     private fun buildPlan(target: VisualState, now: Long) {
+        cancelInteractiveReactions()
         val sc = scene ?: return
         val current = visual ?: return
         val sequence = transitionPlanner.plan(sc, current, target, x, y, posture, action?.exit.orEmpty(), step == Step.Loop)
@@ -370,6 +430,7 @@ class AnimationStateMachine(
     /** Antecipação (vira para a direção) + caminhada + parada com follow-through. */
 
     private fun switchScene(target: VisualState, now: Long) {
+        cancelInteractiveReactions()
         val sc = SceneRegistry[target.scene]
         scene = sc; visual = target; action = null
         flags.clear()

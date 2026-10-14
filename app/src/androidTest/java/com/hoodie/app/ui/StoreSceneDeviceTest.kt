@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -71,6 +72,10 @@ class StoreSceneDeviceTest {
         compose.onNodeWithContentDescription("Mais ações").performClick()
         waitForControl(hasText("Ajustar atividade"))
         compose.onNodeWithText("Ajustar atividade").performClick()
+        if (com.hoodie.app.core.config.HoodieConfig.QUICK_CORRECTION_V2 && type !in com.hoodie.app.presentation.screens.home.COMMON_CORRECTION_TYPES) {
+            waitForControl(hasTestTag("home_correct_see_all"))
+            compose.scrollWithPausedClock(compose.onNodeWithTag("home_correct_see_all")).performClick()
+        }
         waitForControl(hasText(type.label))
         compose.scrollWithPausedClock(compose.onNodeWithText(type.label)).performClick()
         waitForControl(hasText("Salvar correção", ignoreCase = true))

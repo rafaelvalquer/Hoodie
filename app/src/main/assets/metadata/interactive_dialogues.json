@@ -1,0 +1,1544 @@
+[
+  {
+    "id": "home_waking_tap_01",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WAKING",
+    "text": "Bom dia! Já levantou também?",
+    "animations": [
+      "NOTICE",
+      "STRETCH"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_waking_tap_02",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WAKING",
+    "text": "Só mais cinco minutinhos...",
+    "animations": [
+      "NOTICE",
+      "STRETCH"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_resting_tap_01",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Senta aqui comigo!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "home_resting_tap_02",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Estava aproveitando o sossego.",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "home_tv_tap_01",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TV",
+    "text": "Você chegou bem na melhor parte!",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_tv_tap_02",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TV",
+    "text": "Quer assistir comigo?",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_gaming_tap_01",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "GAMING",
+    "text": "Estou quase passando de fase!",
+    "animations": [
+      "GLANCE",
+      "SURPRISED"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_gaming_tap_02",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "GAMING",
+    "text": "Você viu essa jogada?",
+    "animations": [
+      "GLANCE",
+      "SURPRISED"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_reading_tap_01",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "READING",
+    "text": "Esse livro está ficando interessante.",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_reading_tap_02",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "READING",
+    "text": "Espera, só terminar esse capítulo!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_cooking_tap_01",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "COOKING",
+    "text": "Chef Hoodie em ação!",
+    "animations": [
+      "NOTICE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_cooking_tap_02",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "COOKING",
+    "text": "A receita dizia uma pitada... acho.",
+    "animations": [
+      "NOTICE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_cleaning_tap_01",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CLEANING",
+    "text": "Alguém precisa cuidar dessa bagunça!",
+    "animations": [
+      "GLANCE",
+      "SHRUG"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_cleaning_tap_02",
+    "scene": "HOME",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CLEANING",
+    "text": "Você me ajuda?",
+    "animations": [
+      "GLANCE",
+      "SHRUG"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "home_free_long_press_01",
+    "scene": "HOME",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "FREE",
+    "text": "Hmmm... mais um pouquinho.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "home_free_long_press_02",
+    "scene": "HOME",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "FREE",
+    "text": "Achei meu lugar favorito.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "home_occupied_long_press_01",
+    "scene": "HOME",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "OCCUPIED",
+    "text": "Carinho assim é bom demais.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "home_occupied_long_press_02",
+    "scene": "HOME",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "OCCUPIED",
+    "text": "Gostei da sua visita!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "office_typing_tap_01",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TYPING",
+    "text": "Só mais esse e-mail!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "office_typing_tap_02",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TYPING",
+    "text": "Estou trabalhando... eu juro!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "office_focused_tap_01",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "FOCUSED",
+    "text": "Espera... perdi a linha!",
+    "animations": [
+      "NOTICE",
+      "THINK"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "office_focused_tap_02",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "FOCUSED",
+    "text": "Onde eu estava mesmo?",
+    "animations": [
+      "NOTICE",
+      "THINK"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "office_coffee_tap_01",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "COFFEE",
+    "text": "Esse é o combustível do escritório.",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "office_coffee_tap_02",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "COFFEE",
+    "text": "Café resolve quase tudo!",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "office_tired_tap_01",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TIRED",
+    "text": "Minha cabeça já está pensando no sofá.",
+    "animations": [
+      "YAWN",
+      "STRETCH_SIT"
+    ],
+    "priority": 90,
+    "weight": 1
+  },
+  {
+    "id": "office_tired_tap_02",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TIRED",
+    "text": "Precisamos de um intervalo.",
+    "animations": [
+      "YAWN",
+      "STRETCH_SIT"
+    ],
+    "priority": 90,
+    "weight": 1
+  },
+  {
+    "id": "office_bulldog_tap_01",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BULLDOG",
+    "text": "O chefe está olhando! Disfarça!",
+    "animations": [
+      "SURPRISED",
+      "GLANCE"
+    ],
+    "priority": 70,
+    "weight": 1
+  },
+  {
+    "id": "office_bulldog_tap_02",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BULLDOG",
+    "text": "Depois a gente conversa!",
+    "animations": [
+      "SURPRISED",
+      "GLANCE"
+    ],
+    "priority": 70,
+    "weight": 1
+  },
+  {
+    "id": "office_rabbit_tap_01",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "RABBIT",
+    "text": "O coelho já contou três histórias hoje!",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 70,
+    "weight": 1
+  },
+  {
+    "id": "office_rabbit_tap_02",
+    "scene": "OFFICE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "RABBIT",
+    "text": "Ele fala mais que o telefone.",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 70,
+    "weight": 1
+  },
+  {
+    "id": "office_working_long_press_01",
+    "scene": "OFFICE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "WORKING",
+    "text": "Uma pausa para carinho não faz mal.",
+    "animations": [
+      "PET_HEAD",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "office_working_long_press_02",
+    "scene": "OFFICE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "WORKING",
+    "text": "Obrigado! Agora volto ao trabalho.",
+    "animations": [
+      "PET_HEAD",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "office_break_long_press_01",
+    "scene": "OFFICE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "BREAK",
+    "text": "Um carinho antes do próximo café!",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 50,
+    "weight": 1
+  },
+  {
+    "id": "office_break_long_press_02",
+    "scene": "OFFICE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "BREAK",
+    "text": "Isso melhorou meu intervalo.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 50,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_menu_tap_01",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "MENU",
+    "text": "Difícil escolher!",
+    "animations": [
+      "GLANCE",
+      "THINK"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_menu_tap_02",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "MENU",
+    "text": "Tudo parece gostoso.",
+    "animations": [
+      "GLANCE",
+      "THINK"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_waiting_tap_01",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WAITING",
+    "text": "Será que esqueceram da gente?",
+    "animations": [
+      "LOOK_AROUND",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_waiting_tap_02",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WAITING",
+    "text": "Estou sentindo um cheiro ótimo!",
+    "animations": [
+      "LOOK_AROUND",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_eating_tap_01",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "EATING",
+    "text": "Hmmm! Quer experimentar?",
+    "animations": [
+      "GLANCE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_eating_tap_02",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "EATING",
+    "text": "Não mexe no meu prato!",
+    "animations": [
+      "GLANCE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_finishing_tap_01",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "FINISHING",
+    "text": "Agora aceito sobremesa.",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_finishing_tap_02",
+    "scene": "RESTAURANT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "FINISHING",
+    "text": "Isso estava muito bom!",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_table_long_press_01",
+    "scene": "RESTAURANT",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "TABLE",
+    "text": "Carinho depois do almoço é bom demais.",
+    "animations": [
+      "PET_HEAD",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_table_long_press_02",
+    "scene": "RESTAURANT",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "TABLE",
+    "text": "Hmmm... gostei!",
+    "animations": [
+      "PET_HEAD",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_resting_long_press_01",
+    "scene": "RESTAURANT",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Uma pausa para carinho!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 50,
+    "weight": 1
+  },
+  {
+    "id": "restaurant_resting_long_press_02",
+    "scene": "RESTAURANT",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Que carinho gostoso.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 50,
+    "weight": 1
+  },
+  {
+    "id": "gym_warmup_tap_01",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WARMUP",
+    "text": "Aquecimento conta como treino?",
+    "animations": [
+      "NOTICE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "gym_warmup_tap_02",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WARMUP",
+    "text": "Ainda estamos começando!",
+    "animations": [
+      "NOTICE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "gym_lift_tap_01",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LIFT",
+    "text": "Ufa! Esse está pesado!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "gym_lift_tap_02",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LIFT",
+    "text": "Só falta mais uma!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "gym_resting_tap_01",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Intervalo estratégico!",
+    "animations": [
+      "STRETCH",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "gym_resting_tap_02",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Me dá um minutinho.",
+    "animations": [
+      "STRETCH",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "gym_water_tap_01",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WATER",
+    "text": "Hidratação é importante!",
+    "animations": [
+      "NOD",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "gym_water_tap_02",
+    "scene": "GYM",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WATER",
+    "text": "Pausa merecida.",
+    "animations": [
+      "NOD",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "gym_resting_long_press_01",
+    "scene": "GYM",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Agora sim, descanso completo.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "gym_resting_long_press_02",
+    "scene": "GYM",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Um carinho para recuperar as energias!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "leisure_walking_tap_01",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WALKING",
+    "text": "Olha aquela árvore!",
+    "animations": [
+      "GLANCE",
+      "WAVE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "leisure_walking_tap_02",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "WALKING",
+    "text": "Hoje está bom para passear.",
+    "animations": [
+      "GLANCE",
+      "WAVE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "leisure_landscape_tap_01",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LANDSCAPE",
+    "text": "Olha que vista bonita!",
+    "animations": [
+      "LEISURE_LOOK",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "leisure_landscape_tap_02",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LANDSCAPE",
+    "text": "Dá vontade de ficar aqui.",
+    "animations": [
+      "LEISURE_LOOK",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "leisure_bench_tap_01",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BENCH",
+    "text": "Vem descansar comigo.",
+    "animations": [
+      "STRETCH_SIT",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "leisure_bench_tap_02",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BENCH",
+    "text": "Esse banco está perfeito!",
+    "animations": [
+      "STRETCH_SIT",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "leisure_butterfly_tap_01",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BUTTERFLY",
+    "text": "Você viu aquilo?",
+    "animations": [
+      "SURPRISED",
+      "LOOK_AROUND"
+    ],
+    "priority": 70,
+    "weight": 1
+  },
+  {
+    "id": "leisure_butterfly_tap_02",
+    "scene": "LEISURE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BUTTERFLY",
+    "text": "Será que ela volta?",
+    "animations": [
+      "SURPRISED",
+      "LOOK_AROUND"
+    ],
+    "priority": 70,
+    "weight": 1
+  },
+  {
+    "id": "leisure_resting_long_press_01",
+    "scene": "LEISURE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Que bom ter companhia.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "leisure_resting_long_press_02",
+    "scene": "LEISURE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Esse carinho combina com o passeio.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "shopping_shelves_tap_01",
+    "scene": "SHOPPING",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SHELVES",
+    "text": "Será que precisamos disso?",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "shopping_shelves_tap_02",
+    "scene": "SHOPPING",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SHELVES",
+    "text": "Vim só dar uma olhadinha.",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "shopping_picking_tap_01",
+    "scene": "SHOPPING",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "PICKING",
+    "text": "Esse parece interessante!",
+    "animations": [
+      "NOTICE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "shopping_picking_tap_02",
+    "scene": "SHOPPING",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "PICKING",
+    "text": "Está na nossa lista?",
+    "animations": [
+      "NOTICE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "shopping_checkout_tap_01",
+    "scene": "SHOPPING",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CHECKOUT",
+    "text": "Espero não ter esquecido nada!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "shopping_checkout_tap_02",
+    "scene": "SHOPPING",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CHECKOUT",
+    "text": "Já podemos ir?",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "shopping_free_long_press_01",
+    "scene": "SHOPPING",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "FREE",
+    "text": "Até nas compras tem carinho!",
+    "animations": [
+      "PET_HEAD",
+      "SMILE",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "shopping_free_long_press_02",
+    "scene": "SHOPPING",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "FREE",
+    "text": "Gostei dessa pausa.",
+    "animations": [
+      "PET_HEAD",
+      "SMILE",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "store_clothes_tap_01",
+    "scene": "STORE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CLOTHES",
+    "text": "Esse combina comigo?",
+    "animations": [
+      "NOTICE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "store_clothes_tap_02",
+    "scene": "STORE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CLOTHES",
+    "text": "Acho que encontrei meu estilo!",
+    "animations": [
+      "NOTICE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "store_garment_tap_01",
+    "scene": "STORE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "GARMENT",
+    "text": "Esse aqui ou aquele?",
+    "animations": [
+      "GLANCE",
+      "SHRUG"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "store_garment_tap_02",
+    "scene": "STORE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "GARMENT",
+    "text": "O que você acha?",
+    "animations": [
+      "GLANCE",
+      "SHRUG"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "store_leaving_tap_01",
+    "scene": "STORE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LEAVING",
+    "text": "Agora estou elegante!",
+    "animations": [
+      "WAVE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "store_leaving_tap_02",
+    "scene": "STORE",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LEAVING",
+    "text": "Comprinhas feitas!",
+    "animations": [
+      "WAVE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "store_free_long_press_01",
+    "scene": "STORE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "FREE",
+    "text": "Carinho combina com qualquer roupa.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "store_free_long_press_02",
+    "scene": "STORE",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "FREE",
+    "text": "Estou muito estiloso hoje!",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "SMILE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "school_study_read_tap_01",
+    "scene": "SCHOOL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "STUDY_READ",
+    "text": "Mais um capítulo!",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "school_study_read_tap_02",
+    "scene": "SCHOOL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "STUDY_READ",
+    "text": "Estou quase terminando.",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "school_study_write_tap_01",
+    "scene": "SCHOOL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "STUDY_WRITE",
+    "text": "Espera, vou anotar isso!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "school_study_write_tap_02",
+    "scene": "SCHOOL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "STUDY_WRITE",
+    "text": "Não posso perder essa ideia.",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "school_study_think_tap_01",
+    "scene": "SCHOOL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "STUDY_THINK",
+    "text": "Você sabe essa resposta?",
+    "animations": [
+      "STUDY_THINK",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "school_study_think_tap_02",
+    "scene": "SCHOOL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "STUDY_THINK",
+    "text": "Vou tentar de novo.",
+    "animations": [
+      "STUDY_THINK",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "school_resting_long_press_01",
+    "scene": "SCHOOL",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Um carinho ajuda a pensar.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "school_resting_long_press_02",
+    "scene": "SCHOOL",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Agora posso voltar a estudar.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "family_talking_tap_01",
+    "scene": "FAMILY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TALKING",
+    "text": "Estávamos falando de você!",
+    "animations": [
+      "WAVE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "family_talking_tap_02",
+    "scene": "FAMILY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "TALKING",
+    "text": "Que bom estar aqui!",
+    "animations": [
+      "WAVE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "family_listening_tap_01",
+    "scene": "FAMILY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LISTENING",
+    "text": "Essa história está ficando boa!",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "family_listening_tap_02",
+    "scene": "FAMILY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LISTENING",
+    "text": "Estou prestando atenção.",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "family_laugh_tap_01",
+    "scene": "FAMILY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LAUGH",
+    "text": "Essa história foi ótima!",
+    "animations": [
+      "VISIT_LAUGH"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "family_laugh_tap_02",
+    "scene": "FAMILY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "LAUGH",
+    "text": "Não consigo parar de rir!",
+    "animations": [
+      "VISIT_LAUGH"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "family_resting_long_press_01",
+    "scene": "FAMILY",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Carinho e boa companhia!",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "family_resting_long_press_02",
+    "scene": "FAMILY",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "RESTING",
+    "text": "Adoro esses momentos.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 40,
+    "weight": 1
+  },
+  {
+    "id": "bus_safe_stop_tap_01",
+    "scene": "BUS",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "Olha a paisagem!",
+    "animations": [
+      "GLANCE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "bus_safe_stop_tap_02",
+    "scene": "BUS",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "Ainda falta um pouquinho.",
+    "animations": [
+      "GLANCE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "train_safe_stop_tap_01",
+    "scene": "TRAIN",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "A viagem está tranquila.",
+    "animations": [
+      "GLANCE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "train_safe_stop_tap_02",
+    "scene": "TRAIN",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "Estou aproveitando a vista.",
+    "animations": [
+      "GLANCE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "metro_safe_stop_tap_01",
+    "scene": "METRO",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "Estamos quase chegando?",
+    "animations": [
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "metro_safe_stop_tap_02",
+    "scene": "METRO",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "Estou só observando.",
+    "animations": [
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "transit_safe_stop_tap_01",
+    "scene": "TRANSIT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "Estou aqui!",
+    "animations": [
+      "GLANCE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "transit_safe_stop_tap_02",
+    "scene": "TRANSIT",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "SAFE_STOP",
+    "text": "Vamos seguindo.",
+    "animations": [
+      "GLANCE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "fallback_tap_0",
+    "scene": null,
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "ANY",
+    "text": "Oi! Estou aqui.",
+    "animations": [
+      "NOTICE",
+      "SMILE"
+    ],
+    "priority": 0,
+    "weight": 1
+  },
+  {
+    "id": "fallback_tap_1",
+    "scene": null,
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "ANY",
+    "text": "Ainda estou descobrindo este lugar.",
+    "animations": [
+      "NOTICE",
+      "SMILE"
+    ],
+    "priority": 0,
+    "weight": 1
+  },
+  {
+    "id": "fallback_long_press_0",
+    "scene": null,
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "ANY",
+    "text": "Oi! Estou aqui.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 0,
+    "weight": 1
+  },
+  {
+    "id": "fallback_long_press_1",
+    "scene": null,
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "ANY",
+    "text": "Ainda estou descobrindo este lugar.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 0,
+    "weight": 1
+  }
+]

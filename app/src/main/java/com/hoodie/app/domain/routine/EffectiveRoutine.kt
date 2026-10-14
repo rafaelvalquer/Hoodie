@@ -52,16 +52,20 @@ object EffectiveRoutineResolver {
             else if (reference != null) values[type] = ResolvedRoutineValue(reference, RoutineValueOrigin.FALLBACK, fallbackReason = "NO_ELIGIBLE_PATTERN")
         }
         fun minute(type: RoutineEventType) = values.getValue(type).minute
+        // A shift cap must not disguise a learned pair whose start is after its end.
+        fun learnedMinute(type: RoutineEventType) = values.getValue(type).learnedMinute ?: minute(type)
         fun resetPair(a: RoutineEventType, b: RoutineEventType, reason: String) {
             for (type in listOf(a, b)) values[type] = ResolvedRoutineValue(references.getValue(type), RoutineValueOrigin.FALLBACK, fallbackReason = reason)
         }
-        if (minute(RoutineEventType.WORK_START) >= minute(RoutineEventType.WORK_END))
+        if (minute(RoutineEventType.WORK_START) >= minute(RoutineEventType.WORK_END) ||
+            learnedMinute(RoutineEventType.WORK_START) >= learnedMinute(RoutineEventType.WORK_END))
             resetPair(RoutineEventType.WORK_START, RoutineEventType.WORK_END, "INVALID_WORK_PAIR")
         val lunchStart = minute(RoutineEventType.LUNCH_START)
         val lunchEnd = minute(RoutineEventType.LUNCH_END)
         val workStart = minute(RoutineEventType.WORK_START)
         val workEnd = minute(RoutineEventType.WORK_END)
         if (lunchStart >= lunchEnd || lunchEnd - lunchStart < MIN_LUNCH_MINUTES ||
+            learnedMinute(RoutineEventType.LUNCH_START) >= learnedMinute(RoutineEventType.LUNCH_END) ||
             manual.hasWork && (lunchStart <= workStart || lunchEnd >= workEnd)) {
             resetPair(RoutineEventType.LUNCH_START, RoutineEventType.LUNCH_END, "INVALID_LUNCH_PAIR")
             if (manual.hasWork && (manual.lunchStartMinute <= minute(RoutineEventType.WORK_START) ||

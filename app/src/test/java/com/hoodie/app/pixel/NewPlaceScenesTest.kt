@@ -112,8 +112,8 @@ class NewPlaceScenesTest {
             newScenes.map { VisualDirector.locomotion(it, false) }
         AnimationId.entries.filter { it.group in newGroups }.forEach { assertTrue("$it órfã", it in reachable) }
         newGroups.forEach { g -> assertEquals("$g", 4, AnimationId.entries.count { it.group == g }) }
-        // 147 + 19 dos estabelecimentos (padaria, shopping, praia, cinema, farmácia, hotel e andar carregando).
-        assertEquals(166, AnimationId.entries.size)
+        // 147 + 19 dos estabelecimentos + 3 reações de carinho, selecionadas pelo motor de interação.
+        assertEquals(169, AnimationId.entries.size)
     }
 
     @Test

@@ -9,6 +9,8 @@ import com.hoodie.app.core.time.MINUTE_MS
  * referenciam estas constantes em vez de repetir valores soltos.
  */
 object HoodieConfig {
+    /** Validated on Pixel 8 and TalkBack; physical-device validation waived by the user. */
+    const val HOODIE_TOUCH_INTERACTIONS_V1 = true
     const val TRANSPORT_SPEED_SAMPLE_MAX_ATTEMPTS = 5
     const val TRANSPORT_SPEED_SAMPLE_INTERVAL_MS = MINUTE_MS
     /** Candidate search only; never an automatic merge or the geofence radius. */

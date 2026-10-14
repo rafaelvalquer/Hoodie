@@ -249,6 +249,10 @@ enum class AnimationId(val label: String, val group: AnimGroup) {
     HOTEL_CHECK_IN("Fazer o check-in", AnimGroup.HOTEL),
     HOTEL_CHECK_WATCH("Olhar o relógio", AnimGroup.HOTEL),
     HOTEL_ELEVATOR("Pegar o elevador", AnimGroup.HOTEL),
+    // Interações V1: manter no fim para preservar os IDs existentes.
+    PET_HEAD("Receber carinho", AnimGroup.REACTION),
+    PURR("Ronronar", AnimGroup.REACTION),
+    NUZZLE("Encostar no carinho", AnimGroup.REACTION),
     ;
 
     val clip: AnimationClip get() = HoodieClips[this]
