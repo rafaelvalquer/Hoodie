@@ -214,6 +214,8 @@ class SceneRenderer {
         rendered
     }
 
+    private val actorMask = ActorMask(PixelScene.SCENE_W, PixelScene.SCENE_H)
+
     @Synchronized
     fun render(frame: RenderFrame, absoluteTimeMs: Long): PixelBuffer {
         val scene = frame.scene
@@ -246,6 +248,8 @@ class SceneRenderer {
         if (measureScene) ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.draw")
         var stageStarted = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
         buffer.copyFrom(background(scene, env))
+        val lightPlan = Lighting.plan(scene, env)
+        actorMask.begin(lightPlan?.emissiveBounds)
         var sceneCopyNanos = 0L
         var sceneObjectsNanos = 0L
         var sceneHoodieNanos = 0L
@@ -282,10 +286,12 @@ class SceneRenderer {
         val sprite = frame.sprite
         val left = frame.x - sprite.anchors.feet.x
         val top = frame.y - sprite.anchors.feet.y
-        scene.drawCharacter(buffer, sprite, left, top, timeMs, env)
-        sprite.itemOverlay?.let { item ->
-            val hand = sprite.anchors.rightHand
-            HoodiePainter.drawItemAt(buffer, item, com.hoodie.app.pixel.sprite.Point(left + hand.x, top + hand.y))
+        actorMask.track(buffer) {
+            scene.drawCharacter(buffer, sprite, left, top, timeMs, env)
+            sprite.itemOverlay?.let { item ->
+                val hand = sprite.anchors.rightHand
+                HoodiePainter.drawItemAt(buffer, item, com.hoodie.app.pixel.sprite.Point(left + hand.x, top + hand.y))
+            }
         }
         if (measureScene) {
             sceneHoodieNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
@@ -310,7 +316,7 @@ class SceneRenderer {
             sceneObjectsNanos = objectNanos + frontObjectsNanos.coerceAtLeast(0L)
             stageStarted = ScenePerformanceMonitor.nowNanos()
         }
-        Lighting.apply(buffer, Lighting.map(scene, env))
+        Lighting.apply(buffer, lightPlan, actorMask)
         if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, env.transportAmbient?.lighting)
         if (measureScene) {
             sceneLightingNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
@@ -345,13 +351,15 @@ class SceneRenderer {
         val slots = if (includeAmbientNpcs) npcSlots(scene, env) else emptyList()
         val drawEnv = envWithAmbientNpcState(env, slots, timeMs)
         buffer.copyFrom(background(scene, drawEnv))
+        val lightPlan = Lighting.plan(scene, drawEnv)
+        actorMask.begin(lightPlan?.emissiveBounds)
         val props = scene.sortedProps.map { it.baseline to { it.draw(buffer, drawEnv, timeMs) } }
         val npcs = slots.map { slot -> npcDepth(slot, timeMs) to {
-            NpcRenderer.draw(buffer, slot, timeMs, movementOverride(slot, timeMs, facingOverride))
+            actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs, movementOverride(slot, timeMs, facingOverride)) }
         } }
         (props + npcs + storyFloorObjects(drawEnv))
             .sortedBy { it.first }.forEach { it.second() }
-        Lighting.apply(buffer, Lighting.map(scene, drawEnv))
+        Lighting.apply(buffer, lightPlan, actorMask)
         if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
         scene.drawPostLighting(buffer, drawEnv, timeMs)
         return buffer
@@ -365,7 +373,7 @@ class SceneRenderer {
 
     private fun drawAmbientNpc(slot: com.hoodie.app.pixel.npc.AmbientNpcSlot, timeMs: Long, measure: Boolean): Long {
         val started = if (measure) ScenePerformanceMonitor.nowNanos() else 0L
-        NpcRenderer.draw(buffer, slot, timeMs)
+        actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs) }
         return if (measure) ScenePerformanceMonitor.nowNanos() - started else 0L
     }
 
@@ -378,7 +386,7 @@ class SceneRenderer {
         val slot = entry.slot ?: return 0L
         val state = entry.frameState
         val started = if (BuildConfig.DEBUG) ScenePerformanceMonitor.nowNanos() else 0L
-        NpcRenderer.draw(buffer, slot, timeMs, state?.movement, state)
+        actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs, state?.movement, state) }
         if (!BuildConfig.DEBUG) return 0L
         val elapsed = ScenePerformanceMonitor.nowNanos() - started
         ScenePerformanceMonitor.recordNpcDrawing(slot.definition.id, elapsed)
@@ -391,9 +399,11 @@ class SceneRenderer {
         val slots = npcSlots(scene, env)
         val drawEnv = envWithAmbientNpcState(env, slots, timeMs)
         buffer.copyFrom(background(scene, drawEnv))
+        val lightPlan = Lighting.plan(scene, drawEnv)
+        actorMask.begin(lightPlan?.emissiveBounds)
         scene.sortedProps.forEach { it.draw(buffer, drawEnv, timeMs) }
-        slots.forEach { NpcRenderer.draw(buffer, it, timeMs, movementOverride(it, timeMs, facingOverride)) }
-        Lighting.apply(buffer, Lighting.map(scene, drawEnv))
+        slots.forEach { slot -> actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs, movementOverride(slot, timeMs, facingOverride)) } }
+        Lighting.apply(buffer, lightPlan, actorMask)
         if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
         scene.drawPostLighting(buffer, drawEnv, timeMs)
         return buffer
