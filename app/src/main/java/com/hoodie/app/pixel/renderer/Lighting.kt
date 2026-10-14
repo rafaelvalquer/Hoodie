@@ -15,7 +15,15 @@ object Lighting {
 
     private data class Key(val scene: SceneId, val period: DayPeriod, val lights: List<Light>)
 
-    private val cache = HashMap<Key, IntArray?>()
+    /**
+     * Mapa de luz da cena. [actorMap] é o mesmo mapa sem o brilho emissivo (vitrines, telas): quem é
+     * desenhado na frente de uma vitrine é iluminado pela luz ambiente, não como se fosse o vidro aceso.
+     * [emissiveBounds] (x0, y0, x1, y1) é o retângulo que contém todas as regiões emissivas; só há
+     * [actorMap] e [emissiveBounds] quando a cena tem alguma.
+     */
+    class LightPlan(val map: IntArray, val actorMap: IntArray?, val emissiveBounds: IntArray?)
+
+    private val cache = HashMap<Key, LightPlan?>()
 
     private fun tint(period: DayPeriod): Triple<Int, Int, Int>? = when (period) {
         DayPeriod.DAY -> null
@@ -24,7 +32,9 @@ object Lighting {
         DayPeriod.NIGHT -> Triple(122, 134, 204)
     }
 
-    fun map(scene: PixelScene, env: SceneEnv): IntArray? {
+    fun map(scene: PixelScene, env: SceneEnv): IntArray? = plan(scene, env)?.map
+
+    fun plan(scene: PixelScene, env: SceneEnv): LightPlan? {
         // Daylight has no tint, so skip both scene light-list creation and cache-key work.
         if (!scene.usesLighting || tint(env.period) == null) return null
         val lights = scene.lights(env)
@@ -34,7 +44,18 @@ object Lighting {
 
     private fun pack(r: Int, g: Int, b: Int) = (r.coerceIn(0, 256) shl 20) or (g.coerceIn(0, 256) shl 10) or b.coerceIn(0, 256)
 
-    private fun build(scene: PixelScene, period: DayPeriod, lights: List<Light>): IntArray? {
+    private fun build(scene: PixelScene, period: DayPeriod, lights: List<Light>): LightPlan? {
+        val map = compose(scene, period, lights, includeEmissive = true) ?: return null
+        val emissive = lights.filterIsInstance<Light.Emissive>()
+        if (emissive.isEmpty()) return LightPlan(map, null, null)
+        val bounds = intArrayOf(
+            emissive.minOf { it.x0 }.coerceAtLeast(0), emissive.minOf { it.y0 }.coerceAtLeast(0),
+            emissive.maxOf { it.x1 }.coerceAtMost(scene.width - 1), emissive.maxOf { it.y1 }.coerceAtMost(scene.height - 1),
+        )
+        return LightPlan(map, compose(scene, period, lights, includeEmissive = false), bounds)
+    }
+
+    private fun compose(scene: PixelScene, period: DayPeriod, lights: List<Light>, includeEmissive: Boolean): IntArray? {
         val (br, bg, bb) = tint(period) ?: return null
         val w = scene.width; val h = scene.height
         val r = IntArray(w * h) { br }; val g = IntArray(w * h) { bg }; val b = IntArray(w * h) { bb }
@@ -64,7 +85,7 @@ object Lighting {
                     }
                 }
             }
-            is Light.Emissive -> for (y in light.y0.coerceAtLeast(0)..light.y1.coerceAtMost(h - 1)) {
+            is Light.Emissive -> if (includeEmissive) for (y in light.y0.coerceAtLeast(0)..light.y1.coerceAtMost(h - 1)) {
                 for (x in light.x0.coerceAtLeast(0)..light.x1.coerceAtMost(w - 1)) {
                     val i = y * w + x; r[i] = 256; g[i] = 256; b[i] = 256
                 }
@@ -75,11 +96,20 @@ object Lighting {
 
     private fun lerp(a: Int, b: Int, t: Float) = (a + (b - a) * t).toInt()
 
-    fun apply(buf: PixelBuffer, map: IntArray?) {
+    fun apply(buf: PixelBuffer, map: IntArray?) = applyMap(buf, map, null, null)
+
+    /** Atores marcados em [actorMask] usam o mapa sem brilho emissivo. */
+    fun apply(buf: PixelBuffer, plan: LightPlan?, actorMask: ActorMask?) {
+        if (plan == null) return
+        val mask = actorMask?.takeIf { it.active }?.mask
+        applyMap(buf, plan.map, if (mask != null) plan.actorMap else null, mask)
+    }
+
+    private fun applyMap(buf: PixelBuffer, map: IntArray?, actorMap: IntArray?, mask: BooleanArray?) {
         if (map == null) return
         val px = buf.pixels
         for (i in px.indices) {
-            val f = map[i]
+            val f = if (mask != null && actorMap != null && mask[i]) actorMap[i] else map[i]
             if (f == FULL) continue
             val c = px[i]
             val r = (((c shr 16) and 0xFF) * (f ushr 20)) shr 8
