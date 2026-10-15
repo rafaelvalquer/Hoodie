@@ -134,6 +134,11 @@ class HomeViewModel @Inject constructor(
     private val interactionSession = HoodieInteractionSession()
     private val interactionSafety = HoodieInteractionPolicy()
     val touchInteractionsEnabled: Boolean get() = interactionFeature.enabled
+    /** Som das interações: liga com as interações e com o interruptor "Sons" dos Ajustes. */
+    val interactionSoundsEnabled: StateFlow<Boolean> = settingsRepo.settings
+        .map { touchInteractionsEnabled && com.hoodie.app.core.config.HoodieConfig.HOODIE_INTERACTION_SOUNDS && it.interactionSoundsEnabled }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     fun onHoodieGesture(gesture: InteractionGesture, frame: RenderFrame) {
         if (!touchInteractionsEnabled) return

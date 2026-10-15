@@ -28,6 +28,8 @@ data class AppSettings(
     val sleep: SleepSchedule = SleepSchedule(),
     val commuteStyle: CommuteStyle = CommuteStyle.RANDOM,
     val notificationsEnabled: Boolean = true,
+    /** Efeitos sonoros ao tocar no Hoodie e fazer carinho (o modo silencioso do celular sempre vale). */
+    val interactionSoundsEnabled: Boolean = true,
     /** Último dia (epochDay) em que avisamos uma atividade autônoma — no máximo 1/dia. */
     val lastAutonomyNotifyDay: Long = -1,
     val lastGeofenceRegisterDay: Long = -1,
@@ -91,6 +93,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val SLEEP = intPreferencesKey("sleep_minute")
         val COMMUTE = stringPreferencesKey("commute_style")
         val NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
+        val INTERACTION_SOUNDS = booleanPreferencesKey("interaction_sounds_enabled")
         val AUTONOMY_DAY = longPreferencesKey("last_autonomy_notify_day")
         val LAST_GEOFENCE_REGISTER_DAY = longPreferencesKey("last_geofence_register_day")
         val DIGITAL_ENABLED = booleanPreferencesKey("digital_analysis_enabled")
@@ -123,6 +126,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             sleep = SleepSchedule(p[Keys.WAKE] ?: SleepSchedule().wakeMinute, p[Keys.SLEEP] ?: SleepSchedule().sleepMinute),
             commuteStyle = p[Keys.COMMUTE]?.let { runCatching { CommuteStyle.valueOf(it) }.getOrNull() } ?: CommuteStyle.RANDOM,
             notificationsEnabled = p[Keys.NOTIFICATIONS] ?: true,
+            interactionSoundsEnabled = p[Keys.INTERACTION_SOUNDS] ?: true,
             lastAutonomyNotifyDay = p[Keys.AUTONOMY_DAY] ?: -1,
             lastGeofenceRegisterDay = p[Keys.LAST_GEOFENCE_REGISTER_DAY] ?: -1,
             digital = DigitalSettings(
@@ -195,6 +199,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun setCommuteStyle(style: CommuteStyle) = store.edit { it[Keys.COMMUTE] = style.name }
 
     suspend fun setNotifications(enabled: Boolean) = store.edit { it[Keys.NOTIFICATIONS] = enabled }
+
+    suspend fun setInteractionSounds(enabled: Boolean) = store.edit { it[Keys.INTERACTION_SOUNDS] = enabled }
 
     suspend fun setAutonomyNotified(epochDay: Long) = store.edit { it[Keys.AUTONOMY_DAY] = epochDay }
     suspend fun setLastGeofenceRegisterDay(epochDay: Long) = store.edit { it[Keys.LAST_GEOFENCE_REGISTER_DAY] = epochDay }

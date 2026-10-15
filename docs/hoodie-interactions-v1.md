@@ -30,6 +30,21 @@ O movimento de respiração/salto do clip acompanha a postura e desloca as ânco
 
 A ViewModel reserva uma solicitação por sessão; a fala e o histórico só são confirmados quando o renderer apresenta o início real da reação. A Home utiliza `InteractiveSpeechState` para priorizar a fala interativa por 3,5 segundos e depois retornar à fala automática vigente, ou ficar sem balão. Respostas silenciosas não apagam a fala nem reiniciam o prazo. Troca de contexto/cena e saída da Home invalidam reservas e cancelam a sequência, impedindo reprodução de falas antigas.
 
+## Sons
+
+Efeitos aprovados da v2 (`assets-source/hoodie/audio/v2`, síntese original) em `res/raw`: três toques, dois inícios de
+carinho, ronronar e finalização. `InteractionSoundPlan` decide o que toca e quando, de forma pura: o toque toca um "pop"
+no início, alternando as três afinações pelo ID da solicitação (nunca a mesma em seguida); o carinho toca cada etapa
+no início da sua animação (PET_HEAD → PURR → NUZZLE), com o mesmo encurtamento da reprodução e só para as etapas
+presentes na resposta.
+
+`HoodieInteractionSounds` (SoundPool, canal de mídia, volume 0,8) toca no mesmo instante em que a fala é confirmada:
+quando o renderer apresenta o início real da reação. Troca de cena/contexto, cancelamento e saída da Home param os sons
+agendados e os que estão tocando. Celular no silencioso ou no vibrar: nenhum som. Ajustes → "Sons" desliga tudo
+(`AppSettings.interactionSoundsEnabled`, padrão ligado); o interruptor só aparece com as interações ativas. Flag
+`HoodieConfig.HOODIE_INTERACTION_SOUNDS`; como os sons dependem das interações, continuam mudos enquanto
+`HOODIE_TOUCH_INTERACTIONS_V1` estiver desligada.
+
 ## Verificação
 
 Consultar `docs/validation/hoodie-interactions-v1.md` para evidências e pendências. A validação contempla testes JVM, lint, build, instrumentação no Pixel 8 emulado, matriz visual e ações com TalkBack ativo, além das falhas instrumentadas anteriores citadas pelo plano. Em 14/10/2026 o usuário dispensou explicitamente os testes em aparelho físico para esta entrega.

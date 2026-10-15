@@ -11,6 +11,8 @@ import com.hoodie.app.core.time.MINUTE_MS
 object HoodieConfig {
     /** Opt in only after validating touch interactions for the intended build. */
     const val HOODIE_TOUCH_INTERACTIONS_V1 = false
+    /** Efeitos sonoros das interações (só tocam com as interações ligadas e o som ativo nos Ajustes). */
+    const val HOODIE_INTERACTION_SOUNDS = true
     const val TRANSPORT_SPEED_SAMPLE_MAX_ATTEMPTS = 5
     const val TRANSPORT_SPEED_SAMPLE_INTERVAL_MS = MINUTE_MS
     /** Candidate search only; never an automatic merge or the geofence radius. */

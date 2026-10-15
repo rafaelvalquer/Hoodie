@@ -143,6 +143,7 @@ class SettingsViewModel @Inject constructor(
     fun setName(n: String) = action { settings.setCatName(n) }
     fun setCommute(s: CommuteStyle) = action { settings.setCommuteStyle(s) }
     fun setNotifications(on: Boolean) = action { settings.setNotifications(on) }
+    fun setInteractionSounds(on: Boolean) = action { settings.setInteractionSounds(on) }
 
     fun setNotificationMode(mode: com.hoodie.app.domain.notification.NotificationMode) = action { settings.setNotificationMode(mode) }
 
@@ -265,6 +266,7 @@ fun SettingsScreen(onOpen: (String) -> Unit, vm: SettingsViewModel = hiltViewMod
             setCommute = { vm.setCommute(it) },
             setNotifications = { vm.setNotifications(it) },
             setNotificationMode = { vm.setNotificationMode(it) },
+            setInteractionSounds = { vm.setInteractionSounds(it) },
             reregister = { vm.reregister() },
             setDigital = { vm.setDigital(it) },
             setMobility = { vm.setMobility(it) },
@@ -289,6 +291,7 @@ internal data class SettingsActions(
     val setCommute: (CommuteStyle) -> Unit = {},
     val setNotifications: (Boolean) -> Unit = {},
     val setNotificationMode: (com.hoodie.app.domain.notification.NotificationMode) -> Unit = {},
+    val setInteractionSounds: (Boolean) -> Unit = {},
     val reregister: () -> Unit = {},
     val setDigital: (DigitalSettings) -> Unit = {},
     val setMobility: (com.hoodie.app.core.datastore.MobilitySettings) -> Unit = {},
@@ -366,6 +369,18 @@ internal fun SettingsContent(
                     if (s.notificationsEnabled) s.notificationMode.description else stringResource(R.string.notif_mode_master_off),
                     color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall,
                 )
+            }
+        }
+
+        if (com.hoodie.app.core.config.HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1 && com.hoodie.app.core.config.HoodieConfig.HOODIE_INTERACTION_SOUNDS) {
+            PixelPanel(Modifier.fillMaxWidth()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        SectionLabel(stringResource(R.string.settings_interaction_sounds))
+                        Text(stringResource(R.string.settings_interaction_sounds_hint), color = HoodieColors.Muted)
+                    }
+                    Switch(s.interactionSoundsEnabled, actions.setInteractionSounds)
+                }
             }
         }
 

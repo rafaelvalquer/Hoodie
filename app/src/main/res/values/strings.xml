@@ -156,6 +156,8 @@
     <string name="ui_settings_screen_4" formatted="false">"Memórias"</string>
     <string name="ui_settings_screen_5" formatted="false">"Notificações"</string>
     <string name="ui_settings_screen_6" formatted="false">"Chegadas e confirmações (no máximo poucas por dia)"</string>
+    <string name="settings_interaction_sounds">Sons</string>
+    <string name="settings_interaction_sounds_hint">Efeitos ao tocar no Hoodie e fazer carinho. No silencioso, nada toca.</string>
     <string name="ui_settings_screen_7" formatted="false">"Localização"</string>
     <string name="ui_settings_screen_8" formatted="false">"Permissões"</string>
     <string name="ui_settings_screen_9" formatted="false">"Re-registrar"</string>

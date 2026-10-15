@@ -97,8 +97,11 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
     val interactionRequests = remember { MutableSharedFlow<InteractionRequest>(extraBufferCapacity = 1) }
     val interactiveSpeech = rememberInteractiveSpeech()
+    val soundsOn by vm.interactionSoundsEnabled.collectAsStateWithLifecycle()
+    val interactionSounds = com.hoodie.app.presentation.components.rememberHoodieInteractionSounds(soundsOn)
     LaunchedEffect(state.visual, state.vehicleMoving, state.loading, state.error) {
         interactiveSpeech.clear()
+        interactionSounds?.stop()
         vm.onInteractionCancelled()
     }
     val context = LocalContext.current
@@ -107,7 +110,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> vm.onHomeStarted()
-                Lifecycle.Event.ON_STOP -> { interactiveSpeech.clear(); vm.onHomeStopped() }
+                Lifecycle.Event.ON_STOP -> { interactiveSpeech.clear(); interactionSounds?.stop(); vm.onHomeStopped() }
                 else -> Unit
             }
         }
@@ -170,7 +173,11 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         onHoodieGesture = vm::onHoodieGesture,
         interactionAllowed = vm::interactionAllowed,
         onInteractionStarted = { request ->
-            if (vm.onInteractionStarted(request)) interactiveSpeech.present(request)
+            // A fala e o som só valem quando a reação começou de fato na tela.
+            if (vm.onInteractionStarted(request)) {
+                interactiveSpeech.present(request)
+                interactionSounds?.play(request)
+            }
         },
         onInteractionFinished = vm::onInteractionFinished,
     )
