@@ -25,13 +25,11 @@ import com.hoodie.app.pixel.effects.TapEffectStyle
 import com.hoodie.app.pixel.effects.TapEffects
 
 /**
- * Escolha do efeito de toque enquanto ele está em teste: o Pixel Lab muda para o app inteiro
- * até o app fechar. Depois de escolhido, vira o padrão em [HoodieConfig.TAP_EFFECT].
+ * Efeito de toque da cena: o padrão é [HoodieConfig.TAP_EFFECT]; o Pixel Lab (aba Toque) pode
+ * trocar para comparar até o app fechar.
  */
 object TapEffectPreview {
     var style by mutableStateOf<TapEffectStyle?>(HoodieConfig.TAP_EFFECT)
-    /** A aba de teste desenha o próprio efeito (com câmera lenta); a camada do app se recolhe. */
-    var labOpen by mutableStateOf(false)
 }
 
 private data class ActiveTap(val position: Offset, val startedAt: Long, val seed: Int)
@@ -39,7 +37,8 @@ private data class ActiveTap(val position: Offset, val startedAt: Long, val seed
 /**
  * Mostra um efeito em pixel art onde a tela foi tocada. Observa os toques sem consumi-los
  * (botões, rolagem e gestos continuam iguais) e não desenha nada quando [style] é null.
- * [speed] < 1 deixa o efeito em câmera lenta (só para teste).
+ * [speed] < 1 deixa o efeito em câmera lenta (só para teste). Com [snapToGrid], o ponto tocado cai
+ * no centro do pixel da cena, para o efeito ficar alinhado à arte.
  */
 @Composable
 fun TapEffectLayer(
@@ -47,6 +46,7 @@ fun TapEffectLayer(
     modifier: Modifier = Modifier,
     pixelSize: Dp = 3.dp,
     speed: Float = 1f,
+    snapToGrid: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val taps = remember { mutableStateListOf<ActiveTap>() }
@@ -70,7 +70,12 @@ fun TapEffectLayer(
                     event.changes.filter { it.changedToDown() }.forEach { change ->
                         if (taps.size >= MAX_TAPS) taps.removeAt(0)
                         counter++
-                        taps += ActiveTap(change.position, change.uptimeMillis, counter.toInt())
+                        val px = pixelSize.toPx()
+                        val at = if (!snapToGrid) change.position else Offset(
+                            (kotlin.math.floor(change.position.x / px) + 0.5f) * px,
+                            (kotlin.math.floor(change.position.y / px) + 0.5f) * px,
+                        )
+                        taps += ActiveTap(at, change.uptimeMillis, counter.toInt())
                         now = change.uptimeMillis
                     }
                 }

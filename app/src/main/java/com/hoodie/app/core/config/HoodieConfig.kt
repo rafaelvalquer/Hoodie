@@ -14,10 +14,10 @@ object HoodieConfig {
     /** Efeitos sonoros das interações (só tocam com as interações ligadas e o som ativo nos Ajustes). */
     const val HOODIE_INTERACTION_SOUNDS = true
     /**
-     * Efeito ao tocar na tela (estrelinha, explosãozinha, onda, coraçõezinhos, patinha). null = nenhum
-     * até a escolha; o Pixel Lab (aba Toque) testa as opções no app inteiro sem mudar este padrão.
+     * Efeito ao tocar na cena da Home (inclusive no Hoodie): Onda, escolhida entre as cinco opções.
+     * null desliga. O Pixel Lab (aba Toque) ainda troca o efeito até o app fechar, para comparar.
      */
-    val TAP_EFFECT: com.hoodie.app.pixel.effects.TapEffectStyle? = null
+    val TAP_EFFECT: com.hoodie.app.pixel.effects.TapEffectStyle? = com.hoodie.app.pixel.effects.TapEffectStyle.RING
     const val TRANSPORT_SPEED_SAMPLE_MAX_ATTEMPTS = 5
     const val TRANSPORT_SPEED_SAMPLE_INTERVAL_MS = MINUTE_MS
     /** Candidate search only; never an automatic merge or the geofence radius. */

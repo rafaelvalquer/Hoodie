@@ -69,6 +69,7 @@ internal fun HomeHeroContent(
                 interactionsEnabled = interactionsEnabled, interactionRequests = interactionRequests,
                 onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
                 onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished,
+                tapEffect = com.hoodie.app.presentation.components.TapEffectPreview.style,
             )
             // Mantém o último texto durante o fade-out, para não piscar vazio.
             if (bubbleAlpha > 0f) lastDialogue?.let { SpeechBubble(it, Modifier.padding(top = 3.dp, start = 24.dp, end = 24.dp).alpha(bubbleAlpha).testTag("home_dialogue"),

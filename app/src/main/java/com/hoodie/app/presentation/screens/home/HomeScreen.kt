@@ -303,7 +303,8 @@ internal fun HomeContent(
             HoodieSceneView(state.visual, Modifier.fillMaxWidth().testTag("home_live_scene"), reactions = reactions, onScenePresented = onScenePresented,
                 interactionsEnabled = interactionsEnabled, interactionRequests = interactionRequests,
                 onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
-                onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished)
+                onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished,
+                tapEffect = com.hoodie.app.presentation.components.TapEffectPreview.style)
         }
 
         if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {

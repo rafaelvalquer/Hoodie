@@ -33,16 +33,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            HoodieTheme {
-                // Efeito ao tocar na tela (nenhum por padrão; o Pixel Lab testa as opções).
-                val tapStyle = com.hoodie.app.presentation.components.TapEffectPreview.style
-                    .takeUnless { com.hoodie.app.presentation.components.TapEffectPreview.labOpen }
-                com.hoodie.app.presentation.components.TapEffectLayer(tapStyle) {
-                    SecureDatabaseHost(gate, reset) { HoodieRoot() }
-                }
-            }
-        }
+        setContent { HoodieTheme { SecureDatabaseHost(gate, reset) { HoodieRoot() } } }
     }
 }
 

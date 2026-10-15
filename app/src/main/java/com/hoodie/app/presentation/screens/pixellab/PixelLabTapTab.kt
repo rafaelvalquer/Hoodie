@@ -29,7 +29,7 @@ import com.hoodie.app.presentation.theme.HoodieColors
 
 /**
  * Pixel Lab · Toque: experimentar os efeitos de clique. Toque na cena para ver; a escolha também
- * vale no app inteiro até fechar o app ("Nenhum" desliga).
+ * vale na cena da Home até fechar o app ("Nenhum" desliga).
  */
 @Composable
 internal fun TapEffectsLab() {
@@ -38,12 +38,6 @@ internal fun TapEffectsLab() {
     var scene by remember { mutableStateOf(0) }
     val scenes = listOf(SceneId.HOME, SceneId.OFFICE, SceneId.LEISURE)
     val selected = TapEffectPreview.style
-    androidx.compose.runtime.DisposableEffect(Unit) {
-        TapEffectPreview.labOpen = true
-        // Abre já com um efeito para o primeiro toque mostrar algo.
-        if (TapEffectPreview.style == null) TapEffectPreview.style = TapEffectStyle.SPARKLE
-        onDispose { TapEffectPreview.labOpen = false }
-    }
     SectionLabel("Efeito")
     ChipRow(styles.map { it.label } + "Nenhum", selected?.let { styles.indexOf(it) } ?: styles.size, { i ->
         TapEffectPreview.style = styles.getOrNull(i)
@@ -51,7 +45,7 @@ internal fun TapEffectsLab() {
     ChipRow(listOf("Casa", "Escritório", "Passeio"), scene, { scene = it })
     ChipRow(listOf(if (slow) "☑ Câmera lenta (4×)" else "☐ Câmera lenta (4×)"), null, { slow = !slow })
     Text(
-        "Toque em qualquer lugar da cena. A escolha vale também no resto do app até fechá-lo, para testar na Home.",
+        "Toque em qualquer lugar da cena. A escolha também vale na cena da Home até fechar o app (padrão: Onda).",
         color = HoodieColors.Muted, style = MaterialTheme.typography.bodySmall,
     )
     TapEffectLayer(selected, Modifier.fillMaxWidth().height(420.dp).testTag("pixel-lab-tap"), speed = if (slow) 0.25f else 1f) {
