@@ -110,7 +110,7 @@ fun PixelLabScreen(onBack: () -> Unit) {
             Text("PIXEL LAB", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             Text("✕", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).clickable(role = Role.Button, onClick = onBack).semantics { contentDescription = closeLabel }.padding(8.dp))
         }
-        ChipRow(listOf("Animação", "NPC", "Cena", "Galeria", "Cenas", "Sprites", "Transportes", "Office Live", "Shopping Live", "Biomas"), tab, { tab = it })
+        ChipRow(listOf("Animação", "NPC", "Cena", "Galeria", "Cenas", "Sprites", "Transportes", "Office Live", "Shopping Live", "Biomas", "Toque"), tab, { tab = it })
         when (tab) {
             0 -> AnimationTool()
             1 -> NpcLab()
@@ -121,7 +121,8 @@ fun PixelLabScreen(onBack: () -> Unit) {
             6 -> TransportLab()
             7 -> OfficeLiveLab()
             8 -> ShoppingLiveLab()
-            else -> BiomesLab()
+            9 -> BiomesLab()
+            else -> TapEffectsLab()
         }
     }
 }
