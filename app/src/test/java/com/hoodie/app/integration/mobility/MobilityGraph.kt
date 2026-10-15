@@ -126,5 +126,18 @@ class MobilityGraph(startDay: Int = SUNDAY - 7, private val intelligenceEnabled:
     fun asked(kind: QuestionKind) = runBlocking { g.db.questionDao().since(0).count { it.kind == kind } }
     fun answer(kind: QuestionKind, yes: Boolean) = runBlocking { router.answerYesNo(pending(kind)!!.id, yes) }
 
+    /** "Confirmar" no bloco Agora da Home (o mesmo que HomeViewModel.confirmContext faz). */
+    fun confirmViaHome() = runBlocking {
+        val event = g.contextDao.current()!!
+        check(g.engine.confirmCurrentContext(event.id, now()))
+        engine.onContextConfirmed(event.placeId, event.startedAt)
+    }
+
+    /** "Corrigir" no bloco Agora: a pessoa diz onde está de verdade. */
+    fun correctViaHome(type: com.hoodie.app.core.model.UserContextType) = runBlocking {
+        g.engine.setManual(type)
+        engine.onManualContext(type, now())
+    }
+
     fun close() = g.close()
 }

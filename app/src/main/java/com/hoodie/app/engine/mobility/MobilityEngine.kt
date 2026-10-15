@@ -40,6 +40,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
 
+/** Contexto e fim do deslocamento a menos que isso: mesma chegada (o geofence e o deslocamento não fecham no mesmo milissegundo). */
+private const val SAME_VISIT_MS = 10 * MINUTE_MS
+
 /**
  * Mobility Engine: "a pessoa está se deslocando? como? de onde? para onde?".
  *
@@ -304,17 +307,46 @@ class MobilityEngine @Inject constructor(
     }
 
     /**
-     * O usuário trocou o contexto à mão logo depois de uma chegada confirmada sozinha
-     * ("não estou no trabalho"): a chegada vira correção e o padrão perde a confiança.
+     * O usuário trocou o contexto à mão logo depois de uma chegada ("não estou no trabalho"): se ela
+     * foi confirmada sozinha ou ainda não tinha resposta, vira correção e o padrão perde a confiança.
      */
     suspend fun onManualContext(type: UserContextType, at: Long): Unit = mutex.withLock {
         val last = repo.lastFinished() ?: return@withLock
         val ended = last.endedAt ?: return@withLock
-        if (!last.arrivalAutoConfirmed || at - ended > HoodieConfig.ARRIVAL_CORRECTION_WINDOW_MS) return@withLock
+        val undecided = last.arrivalConfirmed == null
+        if (!(last.arrivalAutoConfirmed || undecided) || at - ended > HoodieConfig.ARRIVAL_CORRECTION_WINDOW_MS) return@withLock
         val destType = last.destinationPlaceId?.let { places.byId(it) }?.type?.toContext() ?: return@withLock
         if (destType == type) return@withLock
         repo.update(last.copy(arrivalConfirmed = false, arrivalAutoConfirmed = false))
-        log.log(DebugEventLogger.Category.CONTEXT, "Chegada automática corrigida pelo usuário ($destType → $type)")
+        log.log(DebugEventLogger.Category.CONTEXT, "Chegada corrigida pelo usuário ($destType → $type)")
+    }
+
+    /**
+     * "Confirmar" no bloco "Agora" da Home vale como "sim, cheguei" para a última chegada a esse lugar
+     * na mesma visita (o contexto confirmado começou junto com o fim do deslocamento). Alimenta a
+     * confirmação automática depois de [HoodieConfig.ARRIVAL_AUTO_CONFIRM_COUNT] chegadas.
+     */
+    suspend fun onContextConfirmed(placeId: Long?, contextStartedAt: Long): Unit = mutex.withLock {
+        placeId ?: return@withLock
+        val last = repo.lastFinished() ?: return@withLock
+        val ended = last.endedAt ?: return@withLock
+        if (last.destinationPlaceId != placeId || last.arrivalConfirmed != null) return@withLock
+        if (abs(contextStartedAt - ended) > SAME_VISIT_MS) return@withLock
+        repo.update(last.copy(arrivalConfirmed = true))
+        questions.since(0L).filter { it.kind == QuestionKind.CONFIRM_ARRIVAL && it.mobilitySessionId == last.id && it.answeredAt == null }
+            .forEach { markAnswered(it.id, "CONTEXT_CONFIRMED") }
+        log.log(DebugEventLogger.Category.CONTEXT, "Chegada confirmada pelo bloco Agora")
+    }
+
+    /**
+     * Cartões "Parece que você chegou" sem resposta cujo contexto já está no lugar: o bloco "Agora"
+     * cuida da confirmação, então eles saem da Home e a notificação é cancelada.
+     */
+    suspend fun dismissArrivalQuestionsCoveredByContext(): Unit = mutex.withLock {
+        if (!HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) return@withLock
+        val placeId = contextDao.current()?.placeId ?: return@withLock
+        questions.since(0L).filter { it.kind == QuestionKind.CONFIRM_ARRIVAL && it.answeredAt == null && it.placeId == placeId }
+            .forEach { markAnswered(it.id, "PASSIVE_POLICY") }
     }
 
     /** Settings › "Apagar histórico de deslocamentos". */
@@ -581,7 +613,7 @@ class MobilityEngine @Inject constructor(
         bus.emit(MobilityEvent.PlaceArrived(session.id, at, place.id, auto))
         if (!byGeofence) contextEngine.arriveAt(place.id, at)
 
-        if (!auto && !contextAlreadyAsked(place.id, at)) {
+        if (!auto && shouldAskArrival(place.id)) {
             ask(QuestionKind.CONFIRM_ARRIVAL, ended, places.byId(place.id)?.type?.toContext(), place.id, vehicleMoving = false)
         }
         // Veículo nunca classificado: agora parado, pode perguntar ("você estava de carro?").
@@ -625,6 +657,9 @@ class MobilityEngine @Inject constructor(
                 val place = (placeId ?: s.destinationPlaceId)?.let { places.byId(it) } ?: return
                 arrive(s.copy(arrivalConfirmed = true), place, now, byGeofence = false)
                 repo.session(s.id)?.let { repo.update(it.copy(arrivalConfirmed = true)) }
+                // A pessoa já disse que chegou: o contexto fica confirmado (sem "Confirmar" de novo na Home).
+                contextDao.current()?.takeIf { it.placeId == place.id && it.endedAt == null }
+                    ?.let { contextEngine.confirmCurrentContext(it.id, now) }
             } else {
                 repo.update(s.copy(arrivalConfirmed = true))
             }
@@ -755,9 +790,13 @@ class MobilityEngine @Inject constructor(
         return q
     }
 
-    /** O ContextEngine já perguntou "você está no Trabalho?" para esta chegada: não pergunta de novo. */
-    private suspend fun contextAlreadyAsked(placeId: Long, at: Long): Boolean =
-        questions.since(at - 2 * MINUTE_MS).any { it.kind == QuestionKind.CONFIRM_CONTEXT && it.placeId == placeId }
+    /**
+     * Uma só confirmação por chegada. Com a confirmação passiva, o contexto que mudou para o lugar já
+     * aparece no bloco "Agora" da Home com "Confirmar / Corrigir": o cartão "Parece que você chegou" só
+     * é criado quando o contexto não está nesse lugar (então é a única forma de confirmar).
+     */
+    private suspend fun shouldAskArrival(placeId: Long): Boolean =
+        !HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION || contextDao.current()?.placeId != placeId
 
     private suspend fun originContext(s: MobilitySessionEntity): UserContextType? =
         s.originPlaceId?.let { places.byId(it) }?.type?.toContext()

@@ -268,6 +268,8 @@ class HomeViewModel @Inject constructor(
                 withContext(Dispatchers.IO) { mobility.onAppOpened() }
                 if (com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) {
                     runCatching { withContext(Dispatchers.IO) { contextEngine.dismissPendingContextConfirmations() } }
+                    // Cartões "Parece que você chegou" antigos já cobertos pelo bloco Agora saem da Home.
+                    runCatching { withContext(Dispatchers.IO) { mobility.dismissArrivalQuestionsCoveredByContext() } }
                 }
                 val reconciledDayState = withContext(Dispatchers.IO) { dayStateCoordinator?.reconcile() }
                 if (reconciledDayState != null) {
@@ -489,7 +491,10 @@ class HomeViewModel @Inject constructor(
     }
 
     fun confirmContext(expectedEventId: Long) = action {
+        val event = withContext(Dispatchers.IO) { contextDao.current() }?.takeIf { it.id == expectedEventId }
         val confirmed = contextEngine.confirmCurrentContext(expectedEventId, clock.nowMillis())
+        // Única confirmação da chegada: o "Confirmar" do bloco Agora também ensina a mobilidade.
+        if (confirmed && event != null) withContext(Dispatchers.IO) { mobility.onContextConfirmed(event.placeId, event.startedAt) }
         if (confirmed) _events.send(HomeUiEvent.React(AnimationId.HAPPY))
         else _events.send(HomeUiEvent.ShowMessage("O contexto mudou. Confira a informação atualizada."))
     }
