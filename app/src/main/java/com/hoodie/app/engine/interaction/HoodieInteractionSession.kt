@@ -13,12 +13,14 @@ class HoodieInteractionSession(private val config: HoodieInteractionConfig = Hoo
 
     fun start() { id++; active = true; reserved = null; hasStarted = false; history.clear() }
     fun stop() { id++; active = false; reserved = null; hasStarted = false; history.clear() }
-    fun reserve(response: InteractionResponse, scene: com.hoodie.app.pixel.scene.SceneId, acceptedAt: Long, context: InteractionContext? = null): InteractionRequest? {
+    fun reserve(response: InteractionResponse, scene: com.hoodie.app.pixel.scene.SceneId, acceptedAt: Long, context: InteractionContext? = null,
+        presentationVersion: Long? = null,
+    ): InteractionRequest? {
         if (!active || reserved != null) return null
         hasStarted = false
         history.acceptGesture(acceptedAt)
         return InteractionRequest(response, scene, id, context, ++nextRequestId,
-            acceptedAt, acceptedAt + config.maxPendingMs).also { reserved = it }
+            acceptedAt, acceptedAt + config.maxPendingMs, presentationVersion = presentationVersion).also { reserved = it }
     }
     fun current(request: InteractionRequest) = active && request.sessionId == id && reserved === request
     fun eligible(request: InteractionRequest, now: Long) = current(request) && (hasStarted || now < request.expiresAtMs)

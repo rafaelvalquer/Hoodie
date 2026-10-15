@@ -1,0 +1,11 @@
+date=2026-10-15
+device=Pixel 8 virtual device (sdk_gphone16k_x86_64)
+android=17; api=37
+abi=x86_64
+test=ScenePerformanceDeviceTest.elevenScenesPublishFramesAndReportAllStages
+scenes=11; stages per scene=9
+warmFrames=45; steadyFrames=90
+daySeed=20026; randomSeed=26; variant=0; placeId=42
+source=production HoodieSceneView and renderAndPresent path
+result=1 test passed; 0 failures; test case 416.944 seconds
+capture=metrics.csv contains 88 stage summaries from the preserved UTP logcat; the private full report was removed with the app package

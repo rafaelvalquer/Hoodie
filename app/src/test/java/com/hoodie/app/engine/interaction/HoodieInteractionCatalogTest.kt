@@ -9,8 +9,8 @@ import org.junit.Test
 class HoodieInteractionCatalogTest {
     @Test fun `complete catalog has every variant and only registered harmless animations`() {
         val rules = interactionRules()
-        assertEquals(110, rules.size)
-        assertEquals(110, rules.map { it.id }.distinct().size)
+        assertEquals(145, rules.size)
+        assertEquals(145, rules.map { it.id }.distinct().size)
         val interactiveScenes = setOf(SceneId.HOME, SceneId.OFFICE, SceneId.RESTAURANT, SceneId.GYM, SceneId.LEISURE, SceneId.SHOPPING, SceneId.STORE, SceneId.SCHOOL, SceneId.FAMILY)
         interactiveScenes.forEach { scene -> InteractionGesture.entries.forEach { g -> assertTrue(rules.any { it.scene == scene && it.gesture == g }) } }
         rules.forEach { rule -> rule.animations.forEach { assertTrue(it in AnimationRegistry.clips) } }

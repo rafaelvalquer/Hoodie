@@ -21,7 +21,7 @@ class HoodieInteractionPolicy(private val config: HoodieInteractionConfig = Hood
         } else if (context.userContext == UserContextType.COMMUTING || context.activity == HoodieActivity.COMMUTING) {
             return blocked("COMMUTING")
         }
-        if (gesture == InteractionGesture.LONG_PRESS && (context.walkingNow || context.animation in exercise ||
+        if (gesture == InteractionGesture.LONG_PRESS && (context.walkingNow || context.animation in exercise || context.animation in venueUnsafePetting ||
                 context.scene == SceneId.SCHOOL && context.animation in setOf(AnimationId.STUDY_READ, AnimationId.STUDY_WRITE, AnimationId.STUDY_PAGE_TURN))) return blocked("WAIT_FOR_REST")
         history.lastGestureAt?.let {
             val remaining = config.gestureIntervalMs - (now - it)
@@ -35,5 +35,6 @@ class HoodieInteractionPolicy(private val config: HoodieInteractionConfig = Hood
         val transport = passengers + setOf(SceneId.CAR, SceneId.BICYCLE, SceneId.GENERIC_RIDE)
         private val sleeping = setOf(AnimationId.SLEEP, AnimationId.SLEEP_TURN, AnimationId.NAP_SIT)
         private val exercise = setOf(AnimationId.LIFT, AnimationId.LIFT_PICK, AnimationId.LIFT_PUT, AnimationId.WATER, AnimationId.GYM_WARMUP)
+        private val venueUnsafePetting = setOf(AnimationId.BEACH_ICE_CREAM, AnimationId.MALL_ENTER_STORE)
     }
 }

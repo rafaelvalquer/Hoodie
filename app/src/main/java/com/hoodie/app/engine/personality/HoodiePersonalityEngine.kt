@@ -18,7 +18,7 @@ enum class PersonalityTrigger {
  * segurança/transição → animação essencial → evento social → reação de personalidade → fala ambiente.
  */
 enum class ReactionPriority(val rank: Int) {
-    AMBIENT_SPEECH(1), PERSONALITY_REACTION(2), SOCIAL_EVENT(3), ESSENTIAL_ANIMATION(4), SAFETY_TRANSITION(5),
+    AMBIENT_SPEECH(1), PERSONALITY_REACTION(2), SOCIAL_EVENT(3), USER_INTERACTION(4), ESSENTIAL_ANIMATION(5), SAFETY_TRANSITION(6),
 }
 
 data class PersonalityContext(

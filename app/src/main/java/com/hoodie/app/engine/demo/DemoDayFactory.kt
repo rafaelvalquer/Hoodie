@@ -3,6 +3,13 @@ package com.hoodie.app.engine.demo
 import com.hoodie.app.core.database.ContextEventEntity
 import com.hoodie.app.core.database.PlaceEntity
 import com.hoodie.app.core.database.TimelineEventEntity
+import com.hoodie.app.core.database.HoodieActivityEntity
+import com.hoodie.app.core.model.HoodieActivity
+import com.hoodie.app.domain.daycycle.DailyActivityWindow
+import com.hoodie.app.domain.daycycle.InferredSleepSpan
+import com.hoodie.app.domain.daycycle.SleepConfidence
+import com.hoodie.app.domain.daycycle.WakeConfidence
+import com.hoodie.app.domain.daycycle.WakeReason
 import com.hoodie.app.core.model.ContextSource
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.core.model.TimelineActor
@@ -21,6 +28,8 @@ data class DemoDay(
     val date: LocalDate, val zone: ZoneId, val steps: List<DemoStep>,
     val contexts: List<ContextEventEntity>, val places: List<PlaceEntity>, val timeline: List<TimelineEventEntity>,
     val dayStart: Long, val dayEnd: Long, val now: Long,
+    val activities: List<HoodieActivityEntity> = emptyList(),
+    val activityWindow: DailyActivityWindow? = null,
 )
 
 object DemoDayFactory {
@@ -38,13 +47,14 @@ object DemoDayFactory {
         DemoStep(19 * 60, "Casa e descanso", UserContextType.HOME),
     )
 
-    fun create(date: LocalDate, zone: ZoneId): DemoDay {
+    fun create(date: LocalDate, zone: ZoneId, includeReplayActivities: Boolean = true): DemoDay {
         val dayStart = startOfDay(date, zone)
-        fun at(minute: Int) = dayStart + minute * 60_000L
+        val dayEnd = startOfDay(date.plusDays(1), zone)
+        fun at(minute: Int) = date.atTime(minute / 60, minute % 60).atZone(zone).toInstant().toEpochMilli()
         val now = at(20 * 60)
         val placeIds = mapOf(0 to HOME, 2 to WORK, 3 to RESTAURANT, 4 to WORK, 6 to HOME)
         val contexts = steps.mapIndexed { i, step ->
-            val end = steps.getOrNull(i + 1)?.let { at(it.minuteOfDay) }
+            val end = steps.getOrNull(i + 1)?.let { at(it.minuteOfDay) } ?: now.takeIf { includeReplayActivities }
             ContextEventEntity(
                 id = i + 1L, type = step.context, startedAt = at(step.minuteOfDay), endedAt = end, confidence = 1f,
                 placeId = placeIds[i], source = ContextSource.USER_CORRECTION,
@@ -62,7 +72,26 @@ object DemoDayFactory {
                 text = step.title, sourceType = TimelineSourceType.CONTEXT, sourceId = i + 1L,
             )
         }
-        return DemoDay(date, zone, steps, contexts, places, timeline, dayStart, dayStart + 24 * 3_600_000L, now)
+        val script = listOf(
+            Triple(7 * 60, HoodieActivity.WAKING_UP, UserContextType.HOME),
+            Triple(7 * 60 + 15, HoodieActivity.BREAKFAST, UserContextType.HOME),
+            Triple(7 * 60 + 45, HoodieActivity.COMMUTING, UserContextType.COMMUTING),
+            Triple(8 * 60 + 30, HoodieActivity.WORKING, UserContextType.WORK),
+            Triple(10 * 60 + 30, HoodieActivity.COFFEE, UserContextType.WORK),
+            Triple(12 * 60, HoodieActivity.EATING, UserContextType.LUNCH),
+            Triple(13 * 60, HoodieActivity.WORKING, UserContextType.WORK),
+            Triple(16 * 60, HoodieActivity.RESTING, UserContextType.WORK),
+            Triple(18 * 60, HoodieActivity.COMMUTING, UserContextType.COMMUTING),
+            Triple(19 * 60, HoodieActivity.RESTING, UserContextType.HOME),
+            Triple(19 * 60 + 30, HoodieActivity.WATCHING_TV, UserContextType.HOME),
+        )
+        val activities = if (includeReplayActivities) script.mapIndexed { index, (minute, activity, context) ->
+            HoodieActivityEntity(id = index + 1L, activity = activity, startedAt = at(minute),
+                endedAt = script.getOrNull(index + 1)?.let { at(it.first) } ?: now, userContext = context)
+        } else emptyList()
+        val window = if (includeReplayActivities) DailyActivityWindow(dayStart, dayEnd, at(7 * 60), now,
+            InferredSleepSpan(dayStart, at(7 * 60), SleepConfidence.HIGH), WakeReason.HOODIE_WAKE, WakeConfidence.HIGH, provisional = false) else null
+        return DemoDay(date, zone, steps, contexts, places, timeline, dayStart, dayEnd, now, activities, window)
     }
 
     // Coordenadas vazias: o dia fictício nunca vira geofence nem posição real.

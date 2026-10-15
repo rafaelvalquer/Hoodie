@@ -104,10 +104,17 @@ fun HoodieSceneView(
     interactionAllowed: (InteractionRequest, RenderFrame) -> Boolean = { _, _ -> true },
     onInteractionStarted: (InteractionRequest) -> Unit = {},
     onInteractionFinished: (InteractionRequest) -> Unit = {},
+    reactionRequestsEnabled: Boolean = interactionsEnabled,
+    onVisualPresented: ((VisualState) -> Unit)? = null,
+    /** Fixed seed for reproducible diagnostic runs; normal Home keeps its existing randomness. */
+    randomSeed: Long? = null,
+    /** Diagnostic workload clock; publication cadence is still measured in real monotonic time. */
+    animationStepMs: Long? = null,
+    clockMinuteOverride: Int? = null,
 ) {
     val fixedFrame = LocalPixelRenderFrame.current
-    val machine = remember(fixedFrame != null) {
-        AnimationStateMachine(if (fixedFrame != null) Random(0) else Random(System.nanoTime()))
+    val machine = remember(fixedFrame != null, randomSeed) {
+        AnimationStateMachine(if (fixedFrame != null) Random(0) else Random(randomSeed ?: System.nanoTime()))
     }
     val renderer = remember(interactionsEnabled) { SceneRenderer(interactionsEnabled) }
     val interaction = remember { InteractionPresentation() }
@@ -121,6 +128,7 @@ fun HoodieSceneView(
             if (event == Lifecycle.Event.ON_START) interaction.active = true
             if (event == Lifecycle.Event.ON_STOP) {
                 interaction.active = false
+                interaction.frame?.scene?.id?.let(com.hoodie.app.pixel.performance.SceneDiagnostics::stopPresentation)
                 machine.cancelInteractiveReactions()
                 interaction.request?.let { finishedCallback(it) }
                 interaction.request = null
@@ -130,6 +138,7 @@ fun HoodieSceneView(
         lifecycle.addObserver(observer)
         onDispose {
             lifecycle.removeObserver(observer)
+            interaction.frame?.scene?.id?.let(com.hoodie.app.pixel.performance.SceneDiagnostics::stopPresentation)
             machine.cancelInteractiveReactions()
             interaction.request?.let { finishedCallback(it) }
             interaction.request = null
@@ -144,10 +153,16 @@ fun HoodieSceneView(
     val clock = remember { VirtualClock() }
     val currentSpeed by rememberUpdatedState(speed)
     val currentPeriod by rememberUpdatedState(periodOverride)
+    val currentAnimationStep by rememberUpdatedState(animationStepMs)
+    val currentClockMinute by rememberUpdatedState(clockMinuteOverride)
+    fun animationNow() = if (currentAnimationStep != null) clock.current() else clock.now(currentSpeed)
     val currentScenePresented by rememberUpdatedState(onScenePresented)
+    val visualPresentedCallback by rememberUpdatedState(onVisualPresented)
 
     fun presented(frame: RenderFrame) {
-        val actual = frame.copy(interactionElements = renderer.lastInteractionElements, interactionHitMask = renderer.lastInteractionHitMask)
+        interaction.frame?.scene?.id?.takeIf { it != frame.scene.id }?.let(com.hoodie.app.pixel.performance.SceneDiagnostics::stopPresentation)
+        val actual = frame.copy(env = renderer.lastPresentedEnvironment ?: frame.env,
+            interactionElements = renderer.lastInteractionElements, interactionHitMask = renderer.lastInteractionHitMask)
         interaction.frame = actual
         val request = interaction.request
         if (request != null) {
@@ -156,13 +171,19 @@ fun HoodieSceneView(
         }
         frames++
         currentScenePresented?.invoke(frame.scene.id)
+        frame.interactionVisual?.let { visualPresentedCallback?.invoke(it) }
     }
 
-    LaunchedEffect(interactionRequests, interactionsEnabled) {
-        if (interactionsEnabled) interactionRequests?.collect { request ->
+    LaunchedEffect(interactionRequests, reactionRequestsEnabled) {
+        if (reactionRequestsEnabled) interactionRequests?.collect { request ->
             val frame = interaction.frame
+            interaction.request?.takeIf { frame != null && !allowedCallback(it, frame) }?.let {
+                machine.cancelInteractiveReactions()
+                finishedCallback(it)
+                interaction.request = null
+            }
             if (interaction.active && frame != null && allowedCallback(request, frame) &&
-                machine.interact(request.response, request.scene, clock.now(currentSpeed),
+                machine.interact(request.response, request.scene, animationNow(),
                     request.expiresAtMs - SystemClock.uptimeMillis())) interaction.request = request
             else finishedCallback(request)
         }
@@ -171,9 +192,9 @@ fun HoodieSceneView(
 
     LaunchedEffect(visual, fixedFrame) {
         // Ao abrir o app o ReactionDirector decide se ele reage (olha, acena, sorri…).
-        visual?.let { machine.setVisual(it, if (fixedFrame != null) 1L else clock.now(currentSpeed), greet = greet) }
+        visual?.let { machine.setVisual(it, if (fixedFrame != null) 1L else animationNow(), greet = greet) }
     }
-    LaunchedEffect(reactions, fixedFrame) { if (fixedFrame == null) reactions?.collect { machine.react(it, clock.now(currentSpeed)) } }
+    LaunchedEffect(reactions, fixedFrame) { if (fixedFrame == null) reactions?.collect { machine.react(it, animationNow()) } }
     LaunchedEffect(fixedFrame, visual, sceneOverride) {
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
@@ -182,12 +203,11 @@ fun HoodieSceneView(
             }
             return@LaunchedEffect
         }
-        var lastFrameNanos = -1L
+        val pacer = com.hoodie.app.pixel.performance.SceneFramePacer(FRAME_INTERVAL_NANOS)
         while (true) {
             val frameNanos = withFrameNanos { it }
-            val t = clock.now(currentSpeed)
-            if (lastFrameNanos < 0L || frameNanos - lastFrameNanos >= FRAME_INTERVAL_NANOS) {
-                lastFrameNanos = frameNanos
+            if (pacer.shouldRender(frameNanos)) {
+                val t = currentAnimationStep?.let { clock.advance((it * currentSpeed).toLong().coerceAtLeast(1)) } ?: clock.now(currentSpeed)
                 val time = LocalTime.now()
                 val period = currentPeriod ?: DayPeriod.of(time.hour)
                 interaction.request?.let { request ->
@@ -198,7 +218,7 @@ fun HoodieSceneView(
                         interaction.request = null
                     }
                 }
-                machine.frame(t, time.hour * 60 + time.minute, period)?.let { f ->
+                machine.frame(t, currentClockMinute ?: (time.hour * 60 + time.minute), period)?.let { f ->
                     val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
                     renderAndPresent(renderer, rendererMutex, bitmap, rendered, t) { presented(rendered) }
                 }
@@ -213,7 +233,7 @@ fun HoodieSceneView(
 }
 
 /** All scenes share one renderer and pixel buffer, so its lock spans both drawing and bitmap
- * presentation. Office pixel work runs away from the Compose frame callback. No frame queue is
+ * presentation. Complex scene pixel work runs away from the Compose frame callback. No frame queue is
  * built: the loop awaits each frame before asking the renderer for the next one. */
 private suspend fun renderAndPresent(
     renderer: SceneRenderer,
@@ -224,7 +244,7 @@ private suspend fun renderAndPresent(
     onPresented: () -> Unit,
 ) {
     fun present(buffer: PixelBuffer) {
-        val bitmapStart = if (BuildConfig.DEBUG && (frame.scene.id == SceneId.OFFICE || frame.scene.id == SceneId.STORE)) ScenePerformanceMonitor.nowNanos() else 0L
+        val bitmapStart = if (BuildConfig.DEBUG && (frame.scene.id == SceneId.OFFICE || frame.scene.id == SceneId.STORE || com.hoodie.app.pixel.performance.SceneDiagnostics.enabled)) ScenePerformanceMonitor.nowNanos() else 0L
         if (bitmapStart > 0L) {
             val traceScene = if (frame.scene.id == SceneId.STORE) "Store" else "Office"
             ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.bitmapUpdate")
@@ -233,15 +253,18 @@ private suspend fun renderAndPresent(
         if (bitmapStart > 0L) {
             ScenePerformanceMonitor.traceEnd()
             ScenePerformanceMonitor.recordBitmapUpdate(ScenePerformanceMonitor.nowNanos() - bitmapStart)
+            if (com.hoodie.app.pixel.performance.SceneDiagnostics.enabled) com.hoodie.app.pixel.performance.SceneDiagnostics.presented(frame.scene.id, ScenePerformanceMonitor.nowNanos() - bitmapStart)
         }
         onPresented()
     }
 
     rendererMutex.withLock {
-        val buffer = if (frame.scene.id == SceneId.OFFICE) {
-            withContext(Dispatchers.Default) { renderer.render(frame, timeMs) }
-        } else {
-            renderer.render(frame, timeMs)
+        val buffer = when (frame.scene.id) {
+            SceneId.OFFICE, SceneId.SHOPPING, SceneId.STORE, SceneId.LEISURE,
+            SceneId.BAKERY, SceneId.MALL, SceneId.BEACH, SceneId.CINEMA, SceneId.PHARMACY, SceneId.HOTEL ->
+                withContext(Dispatchers.Default) { renderer.render(frame, timeMs) }
+            // Warm device measurements favor Main for the cached, lightweight restaurant draw.
+            else -> renderer.render(frame, timeMs)
         }
         present(buffer)
     }
@@ -251,6 +274,8 @@ private suspend fun renderAndPresent(
 private class VirtualClock {
     private var lastReal = -1L
     private var virtual = 1L
+    fun current() = virtual
+    fun advance(deltaMs: Long): Long { virtual += deltaMs; return virtual }
     fun now(speed: Float): Long {
         val real = SystemClock.uptimeMillis()
         if (lastReal >= 0) virtual += ((real - lastReal) * speed).toLong()

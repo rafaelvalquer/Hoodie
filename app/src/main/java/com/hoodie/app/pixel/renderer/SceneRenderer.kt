@@ -28,6 +28,7 @@ import com.hoodie.app.pixel.npc.venue.VenueNpcSession
 import com.hoodie.app.core.config.HoodieConfig
 import com.hoodie.app.pixel.scene.Prop
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
+import com.hoodie.app.pixel.performance.SceneDiagnostics
 import com.hoodie.app.BuildConfig
 import java.util.LinkedHashMap
 
@@ -39,6 +40,8 @@ private const val FLOOR_ITEM_LIFT = 2
  * (ordenados por Y) → iluminação → efeitos → fade.
  */
 class SceneRenderer(private val collectInteractionElements: Boolean = false) {
+    var lastPresentedEnvironment: SceneEnv? = null
+        private set
     var lastInteractionElements: Set<com.hoodie.app.engine.interaction.InteractionElement> = emptySet()
         private set
     // Double buffering avoids allocating a scene-sized mask every frame or mutating the presented one.
@@ -59,12 +62,18 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         val venue: com.hoodie.app.core.model.PlaceType?)
     private var shoppingKey: ShoppingKey? = null
     private var shoppingSessionStartedAt: Long? = null
-    /** Passeio 2.0: simulação dos visitantes deste renderer (uma por dia/variante/noite). */
+    /** Night selects the initial cast; changing light during a visit preserves its live story. */
     private var leisureSession: LeisureNpcSession? = null
     /** Estabelecimentos (padaria, praia, cinema...): uma sessão por cena/lugar/dia/variante/noite. */
     private var venueSession: VenueNpcSession? = null
     /** Restaurante: agenda dos microeventos (copo derramado) e o garçom que só aparece neles. */
     private var restaurantStory: com.hoodie.app.pixel.npc.restaurant.RestaurantStorySession? = null
+    private data class RestaurantBaseKey(val scene: PixelScene, val day: Int, val variant: Int,
+        val minute: Int, val foodServed: Boolean, val place: Long?)
+    private var restaurantBaseKey: RestaurantBaseKey? = null
+    private var restaurantBase: List<AmbientNpcSlot>? = null
+    private val compositionPlan = SceneCompositionPlan()
+    internal val compositionEntriesCreated: Int get() = compositionPlan.entriesCreated
 
     private class OfficeDrawEntry(
         val prop: Prop? = null,
@@ -116,6 +125,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
                 ?: (if (store) ShoppingNpcDirector.createSession(env, StoreNavigationGraph, StoreSpeechLibrary, StoreNavigationGraph.BASELINE)
                 else ShoppingNpcDirector.createSession(env)).also {
                     shoppingSession = it
+                    SceneDiagnostics.sessionCreated(scene.id)
                     shoppingKey = key
                     shoppingSessionStartedAt = null
                 }
@@ -128,9 +138,9 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
             officeSession?.dispose(); officeSession = null; officeRenderPlan = null
             leisureSession?.dispose(); leisureSession = null
             val key = VenueNpcDirector.sessionKey(scene.id, env)
-            val session = venueSession?.takeIf { it.key == key } ?: run {
+            val session = venueSession?.takeIf { it.key.copy(night = key.night) == key } ?: run {
                 venueSession?.dispose()
-                VenueNpcDirector.createSession(key).also { venueSession = it }
+                VenueNpcDirector.createSession(key).also { venueSession = it; SceneDiagnostics.sessionCreated(scene.id) }
             }
             return session.npcSlots
         }
@@ -141,9 +151,9 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
             officeSession = null
             officeRenderPlan = null
             val key = LeisureNpcDirector.sessionKey(env)
-            val session = leisureSession?.takeIf { it.key == key } ?: run {
+            val session = leisureSession?.takeIf { it.key.copy(night = key.night) == key } ?: run {
                 leisureSession?.dispose()
-                LeisureNpcDirector.createSession(env).also { leisureSession = it }
+                LeisureNpcDirector.createSession(env).also { leisureSession = it; SceneDiagnostics.sessionCreated(scene.id) }
             }
             return session.npcSlots
         }
@@ -154,17 +164,21 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
             officeSession = null
             officeRenderPlan = null
             if (scene.id == SceneId.RESTAURANT && HoodieConfig.SCENE_STORY_EVENTS) {
-                // Restaurante: o cliente é refeito a cada quadro, mas a agenda de microeventos é deste renderer.
-                val base = scene.ambientNpcs(env)
+                // Reuse the same immutable presentation inputs, not a newly allocated guest every frame.
+                val baseKey = RestaurantBaseKey(scene, env.daySeed, env.variant, env.clockMinute,
+                    com.hoodie.app.pixel.scene.SceneFlag.FOOD_SERVED in env.flags, env.placeId)
+                val base = restaurantBase?.takeIf { restaurantBaseKey == baseKey && scene === com.hoodie.app.pixel.scene.SceneRegistry[SceneId.RESTAURANT] }
+                    ?: scene.ambientNpcs(env).also { restaurantBase = it; restaurantBaseKey = baseKey }
                 val guest = base.firstNotNullOfOrNull { it.restaurantBrain } ?: return base
                 val key = com.hoodie.app.pixel.npc.restaurant.RestaurantStorySession.key(env)
                 val story = restaurantStory?.takeIf { it.key == key } ?: run {
                     restaurantStory?.dispose()
-                    com.hoodie.app.pixel.npc.restaurant.RestaurantStorySession(key, guest).also { restaurantStory = it }
+                    com.hoodie.app.pixel.npc.restaurant.RestaurantStorySession(key, guest).also { restaurantStory = it; SceneDiagnostics.sessionCreated(scene.id) }
                 }
                 return story.slots(base)
             }
             restaurantStory?.dispose(); restaurantStory = null
+            restaurantBase = null; restaurantBaseKey = null
             return scene.ambientNpcs(env)
         }
         val key = OfficeSessionKey(env.daySeed, env.variant)
@@ -172,7 +186,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         val session = current?.takeIf { it.key == key } ?: run {
             current?.dispose()
             officeRenderPlan = null
-            OfficeNpcDirector.createSession(env).also { officeSession = it }
+            OfficeNpcDirector.createSession(env).also { officeSession = it; SceneDiagnostics.sessionCreated(scene.id) }
         }
         return session.npcSlots(env.clockMinute)
     }
@@ -215,18 +229,13 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         venueSession = null
         restaurantStory?.dispose()
         restaurantStory = null
+        restaurantBase = null; restaurantBaseKey = null
+        compositionPlan.clear()
     }
-
-    /** Objetos de um microevento largados no chão (a sacola caída), desenhados na profundidade de onde estão. */
-    private fun storyFloorObjects(env: SceneEnv): List<Pair<Int, () -> Unit>> =
-        env.sceneStory?.objects.orEmpty()
-            .filter { it.holder == com.hoodie.app.pixel.npc.events.StoryObjectHolder.ON_FLOOR && it.x != null && it.y != null }
-            .map { o -> o.y!! to { HoodiePainter.drawItemAt(buffer, o.item, com.hoodie.app.pixel.sprite.Point(o.x!!, o.y!! - FLOOR_ITEM_LIFT)) } }
 
     /** Profundidade de desenho: visitantes do Passeio e de estabelecimentos usam o chão onde estão agora. */
     private fun npcDepth(slot: AmbientNpcSlot, timeMs: Long): Int =
-        slot.story?.movementAt(slot.definition.id, timeMs)?.floorY
-            ?: slot.leisureActor?.frameStateAt(timeMs)?.floorY ?: slot.venueActor?.frameStateAt(timeMs)?.floorY ?: slot.baseline
+        sceneNpcDepth(slot, timeMs)
 
     private fun background(scene: PixelScene, env: SceneEnv): PixelBuffer = synchronized(backgrounds) {
         val visualVariant = if (scene.id == SceneId.SHOPPING) {
@@ -253,8 +262,9 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
             buffer.drawOwner = 0
         }
         val scene = frame.scene
-        val measureScene = BuildConfig.DEBUG && (scene.id == SceneId.OFFICE || scene.id == SceneId.STORE)
-        val traceScene = if (scene.id == SceneId.STORE) "Store" else "Office"
+        val collectDiagnostics = SceneDiagnostics.enabled
+        val measureScene = BuildConfig.DEBUG && (scene.id == SceneId.OFFICE || scene.id == SceneId.STORE || collectDiagnostics)
+        val traceScene = scene.id.name
         val renderStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
         if (measureScene) ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.render")
         val planningStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
@@ -277,6 +287,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
                 plan.update(timeMs)
             }
         } else null
+        if (scene.id != SceneId.OFFICE) compositionPlan.update(scene, npcs, env, timeMs)
         val stateNanos = if (measureScene) ScenePerformanceMonitor.nowNanos() - stateStart else 0L
         val drawingStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
         if (measureScene) ScenePerformanceMonitor.beginOfficeFrame()
@@ -302,12 +313,9 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
                 if (entry.baseline <= frame.y) npcDrawingNanos += drawOfficeEntry(entry, env, timeMs)
             }
         } else {
-            val behindProps = scene.sortedProps.filter { it.baseline <= frame.y }
-            val behindNpcs = npcs.filter { npcDepth(it, timeMs) <= frame.y }
-                (behindProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
-                    behindNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } } +
-                    storyFloorObjects(env).filter { it.first <= frame.y })
-                    .sortedBy { it.first }.forEach { it.second() }
+            for (entry in compositionPlan.entries) if (entry.baseline <= frame.y) {
+                npcDrawingNanos += drawCompositionEntry(entry, env, timeMs, measureScene)
+            }
         }
         if (measureScene) {
             npcBeforeCharacterNanos = npcDrawingNanos
@@ -339,12 +347,9 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
                 if (entry.baseline > frame.y) npcDrawingNanos += drawOfficeEntry(entry, env, timeMs)
             }
         } else {
-            val frontProps = scene.sortedProps.filter { it.baseline > frame.y }
-            val frontNpcs = npcs.filter { npcDepth(it, timeMs) > frame.y }
-            (frontProps.map { it.baseline to { it.draw(buffer, env, timeMs) } } +
-                frontNpcs.map { npcDepth(it, timeMs) to { npcDrawingNanos += drawAmbientNpc(it, timeMs, measureScene) } } +
-                storyFloorObjects(env).filter { it.first > frame.y })
-                .sortedBy { it.first }.forEach { it.second() }
+            for (entry in compositionPlan.entries) if (entry.baseline > frame.y) {
+                npcDrawingNanos += drawCompositionEntry(entry, env, timeMs, measureScene)
+            }
         }
 
         if (measureScene) {
@@ -371,9 +376,21 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
                 npcDrawingNanos, finishedAt, sceneCopyNanos, sceneObjectsNanos,
                 sceneHoodieNanos, sceneLightingNanos, scenePostNanos,
             )
+            if (collectDiagnostics) {
+                var visible = 0
+                for (npc in npcs) {
+                    if (npc.story?.hiddenAt(npc.definition.id, timeMs) == true || npc.venueActor?.frameStateAt(timeMs)?.hidden == true) continue
+                    val movement = npc.story?.movementAt(npc.definition.id, timeMs) ?: NpcMotionController.movement(npc, timeMs)
+                    if (NpcMotionController.visible(movement)) visible++
+                }
+                SceneDiagnostics.render(scene.id, finishedAt - renderStart, planningNanos, stateNanos,
+                    npcDrawingNanos, sceneObjectsNanos, sceneCopyNanos + sceneHoodieNanos,
+                    sceneLightingNanos, scenePostNanos, npcs.size, visible)
+            }
             ScenePerformanceMonitor.traceEnd()
         }
         lastInteractionHitMask = buffer.drawOwnership
+        lastPresentedEnvironment = env
         return buffer
     }
 
@@ -391,12 +408,8 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         buffer.copyFrom(background(scene, drawEnv))
         val lightPlan = Lighting.plan(scene, drawEnv)
         actorMask.begin(lightPlan?.emissiveBounds)
-        val props = scene.sortedProps.map { it.baseline to { it.draw(buffer, drawEnv, timeMs) } }
-        val npcs = slots.map { slot -> npcDepth(slot, timeMs) to {
-            actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs, movementOverride(slot, timeMs, facingOverride)) }
-        } }
-        (props + npcs + storyFloorObjects(drawEnv))
-            .sortedBy { it.first }.forEach { it.second() }
+        compositionPlan.update(scene, slots, drawEnv, timeMs)
+        for (entry in compositionPlan.entries) drawCompositionEntry(entry, drawEnv, timeMs, false, facingOverride)
         Lighting.apply(buffer, lightPlan, actorMask)
         if (scene.usesTransportLightingProfile) applyTransportLighting(buffer, drawEnv.transportAmbient?.lighting)
         scene.drawPostLighting(buffer, drawEnv, timeMs)
@@ -413,6 +426,20 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         val started = if (measure) ScenePerformanceMonitor.nowNanos() else 0L
         actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs) }
         return if (measure) ScenePerformanceMonitor.nowNanos() - started else 0L
+    }
+
+    private fun drawCompositionEntry(entry: SceneCompositionPlan.Entry, env: SceneEnv, timeMs: Long,
+        measure: Boolean, facingOverride: Pair<String, Facing>? = null): Long {
+        entry.prop?.let { it.draw(buffer, env, timeMs); return 0 }
+        entry.npc?.let { slot ->
+            if (facingOverride == null) return drawAmbientNpc(slot, timeMs, measure)
+            actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs, movementOverride(slot, timeMs, facingOverride)) }
+            return 0
+        }
+        entry.floorObject?.let { obj ->
+            HoodiePainter.drawItemAt(buffer, obj.item, com.hoodie.app.pixel.sprite.Point(obj.x!!, obj.y!! - FLOOR_ITEM_LIFT))
+        }
+        return 0
     }
 
     private fun drawOfficeEntry(entry: OfficeDrawEntry, env: SceneEnv, timeMs: Long): Long {

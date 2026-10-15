@@ -119,6 +119,7 @@ class OfficeAmbientBrain(
                 )
                 if (coordinated) {
                     OfficePerformanceCounters.timelineRebuilds.incrementAndGet()
+                    com.hoodie.app.pixel.performance.SceneDiagnostics.timelineRebuilt(com.hoodie.app.pixel.scene.SceneId.OFFICE)
                 }
                 val limit = if (coordinated) coordinatedTimelineLimit else rawTimelineLimit
                 val pruneBatch = if (coordinated) coordinatedTimelinePruneBatch else rawTimelinePruneBatch

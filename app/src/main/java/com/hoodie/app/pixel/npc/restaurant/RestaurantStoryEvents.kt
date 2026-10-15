@@ -43,9 +43,14 @@ class RestaurantStorySession(val key: RestaurantStoryKey, private val guest: Res
     }
 
     /** Os NPCs do restaurante com o roteiro do evento ligado e o garçom. */
-    fun slots(base: List<AmbientNpcSlot>): List<AmbientNpcSlot> = base.map { it.copy(story = overlay) } + waiterSlot
+    private var lastBase: List<AmbientNpcSlot>? = null
+    private var lastSlots: List<AmbientNpcSlot>? = null
+    fun slots(base: List<AmbientNpcSlot>): List<AmbientNpcSlot> {
+        if (base === lastBase) lastSlots?.let { return it }
+        return (base.map { it.copy(story = overlay) } + waiterSlot).also { lastBase = base; lastSlots = it }
+    }
 
-    fun dispose() = overlay.dispose()
+    fun dispose() { overlay.dispose(); lastBase = null; lastSlots = null }
 
     private fun plan(window: Long, accepted: List<SceneStoryEvent>): ScriptedStory? {
         val seed = key.daySeed * 31 + key.variant

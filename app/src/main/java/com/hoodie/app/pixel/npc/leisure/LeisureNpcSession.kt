@@ -219,6 +219,7 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
         check(!disposed) { "LeisureNpcSession is disposed" }
         val t = timeMs.coerceAtLeast(0L)
         if (!dirty && t == cachedAt && cachedHoodie == hoodie) cached?.let { return it }
+        com.hoodie.app.pixel.performance.SceneDiagnostics.snapshotBuilt(com.hoodie.app.pixel.scene.SceneId.LEISURE)
         if (dirty || retainedFrom.any { t < it }) resetSimulation()
         ensure(t)
         val states = cursors.map { c -> frameState(c, t) }
@@ -386,6 +387,7 @@ class LeisureNpcSession internal constructor(val key: LeisureSessionKey, specs: 
     // ───────────── Simulação ─────────────
 
     private fun resetSimulation() {
+        com.hoodie.app.pixel.performance.SceneDiagnostics.timelineRebuilt(com.hoodie.app.pixel.scene.SceneId.LEISURE)
         timelines.forEach { it.clear() }
         retainedFrom.fill(0L)
         cursors = newCursors()

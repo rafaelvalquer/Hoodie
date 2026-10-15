@@ -13,6 +13,7 @@ import com.hoodie.app.integration.mobility.MobilityGraph
 import com.hoodie.app.pixel.animation.AnimationStateMachine
 import com.hoodie.app.presentation.screens.home.HomeUiEvent
 import com.hoodie.app.presentation.screens.home.HomeViewModel
+import com.hoodie.app.presentation.screens.home.HomePresentationFeatures
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
@@ -41,8 +42,10 @@ class HoodieInteractionHomeIntegrationTest {
 
     @Test fun enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables() = verify(true)
     @Test fun disabledGateEmitsNoInteractionAndNeverWritesTables() = verify(false)
+    @Test fun coordinatedGestureAndPresentationNeverWriteTables() = verify(true, HomePresentationFeatures(true, true))
+    @Test fun coordinatedHomeWithoutTouchRetainsReadOnlyCompatibility() = verify(false, HomePresentationFeatures(true, true))
 
-    private fun verify(enabled: Boolean) = runBlocking {
+    private fun verify(enabled: Boolean, features: HomePresentationFeatures = HomePresentationFeatures(false, false)) = runBlocking {
         val graph = MobilityGraph()
         val g = graph.g
         var vm: HomeViewModel? = null
@@ -60,6 +63,7 @@ class HoodieInteractionHomeIntegrationTest {
                 clock = g.clock, log = g.log, router = graph.router, mobility = graph.engine, mobilityRepo = graph.repo,
                 visualDiagnostics = HomeVisualDiagnostics(), contextDao = g.contextDao, questionDao = g.db.questionDao(),
                 interactions = dagger.Lazy { resolver }, interactionFeature = HoodieInteractionFeature(enabled),
+                presentationFeatures = features,
             )
             vm = home
             home.onHomeStarted()
@@ -68,6 +72,10 @@ class HoodieInteractionHomeIntegrationTest {
             val machine = AnimationStateMachine(Random(1))
             machine.place(ui.visual!!, 1)
             val frame = machine.frame(2, 600, ui.period)!!
+            if (features.context || features.coordinator) {
+                home.onVisualPresented(ui.visual)
+                withTimeout(10_000) { home.state.first { it.presentedContext?.isReconciled == true } }
+            }
             val database = g.db.openHelper.readableDatabase
             val tables = database.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'room_%' AND name != 'android_metadata'").use { cursor ->
                 buildList { while (cursor.moveToNext()) add(cursor.getString(0)) }

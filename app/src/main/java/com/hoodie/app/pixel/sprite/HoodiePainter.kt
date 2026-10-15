@@ -43,7 +43,9 @@ object HoodiePainter {
     /** Os pés tocam o chão sempre neste ponto (o que evita "pé deslizando"). */
     val FEET = CharacterCanvas.FEET
 
-    private val cache = HashMap<HoodiePose, PaintedSprite>()
+    internal const val CACHE_LIMIT = 256
+    private val cache = java.util.LinkedHashMap<HoodiePose, PaintedSprite>(CACHE_LIMIT + 1, .75f, true)
+    internal fun cachedPoseCount(): Int = synchronized(cache) { cache.size }
 
     /** Partes do corpo, para separar camadas semânticas no .aseprite (arm_left, tail…). */
     enum class Part(val layer: String) {
@@ -76,7 +78,16 @@ object HoodiePainter {
 
     fun sprite(pose: HoodiePose): PixelBuffer = painted(pose).image
 
-    fun painted(pose: HoodiePose): PaintedSprite = synchronized(cache) { cache.getOrPut(pose) { paint(pose) } }
+    fun painted(pose: HoodiePose): PaintedSprite = synchronized(cache) {
+        cache[pose]?.let { return@synchronized it }
+        val sprite = paint(pose)
+        cache[pose] = sprite
+        if (cache.size > CACHE_LIMIT) {
+            val eldest = cache.entries.iterator()
+            eldest.next(); eldest.remove()
+        }
+        sprite
+    }
 
     fun paint(pose: HoodiePose): PaintedSprite = HoodiePoseRenderer.paint(pose)
 

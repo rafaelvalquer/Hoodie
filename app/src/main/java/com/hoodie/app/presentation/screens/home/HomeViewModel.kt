@@ -67,6 +67,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 import com.hoodie.app.engine.interaction.*
 import com.hoodie.app.pixel.animation.RenderFrame
+import com.hoodie.app.engine.reaction.*
 
 data class HomeUiState(
     val loading: Boolean = true,
@@ -89,6 +90,9 @@ data class HomeUiState(
     val interactionSafePassengerStop: Boolean = false,
     val suggestSavePlace: PlaceType? = null,
     val canSaveHere: Boolean = false,
+    val presentedContext: PresentedHoodieContext? = null,
+    val reactionCoordinatorEnabled: Boolean = false,
+    val presentationSafetyBlocked: Boolean = false,
 )
 
 private data class HomeTick(
@@ -130,10 +134,98 @@ class HomeViewModel @Inject constructor(
     personalityRuntime: com.hoodie.app.engine.personality.PersonalityRuntime? = null,
     private val interactions: dagger.Lazy<HoodieInteractionResolver>? = null,
     private val interactionFeature: HoodieInteractionFeature = HoodieInteractionFeature(com.hoodie.app.core.config.HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1),
+    private val presentationFeatures: HomePresentationFeatures = HomePresentationFeatures(),
 ) : ViewModel() {
     private val interactionSession = HoodieInteractionSession()
     private val interactionSafety = HoodieInteractionPolicy()
     val touchInteractionsEnabled: Boolean get() = interactionFeature.enabled
+    val coordinationEnabled: Boolean get() = presentationFeatures.coordinator
+    private val canonicalPresentation get() = presentationFeatures.context || coordinationEnabled
+    private val presentationTracker = PresentedHoodieContextTracker()
+    private val presentedRevision = MutableStateFlow(0L)
+    private var selectedPresentation: PresentedHoodieContext? = null
+    private val coordinator = HoodieReactionCoordinator()
+    private val coordinatedTouches = mutableMapOf<String, InteractionRequest>()
+    private val _reactionPresentation = MutableStateFlow<ReactionPresentation?>(null)
+    val reactionPresentation: StateFlow<ReactionPresentation?> = _reactionPresentation
+    private var reactionTimer: Job? = null
+    private var reactionSerial = 0L
+    private var ambientIntentId: String? = null
+    private var presentationBlocked = false
+    private fun monotonicNow() = android.os.SystemClock.uptimeMillis()
+
+    private fun flushReactions() {
+        if (!coordinationEnabled) return
+        val now = monotonicNow()
+        val next = coordinator.dispatch(now, safe = selectedPresentation?.isReconciled == true && interactionSession.active)
+        coordinatedTouches.keys.toList().filterNot(coordinator::contains).forEach { id ->
+            coordinatedTouches.remove(id)?.let(interactionSession::finish)
+        }
+        personality?.preparedId?.takeIf { !coordinator.contains(it) }?.let { personality?.discardPrepared() }
+        ambientIntentId?.takeIf { !coordinator.contains(it) }?.let { ambientDialogue.discardPrepared(); ambientIntentId = null }
+        _reactionPresentation.value = coordinator.presentation
+        if (next != null) {
+            val original = coordinatedTouches[next.id]
+            val request = original?.copy(reaction = next) ?: InteractionRequest(
+                InteractionResponse(next.id, next.animations, next.dialogue, next.durationMs,
+                    presentationOnly = next.animations.isEmpty(), source = next.source), next.sceneId, interactionSession.id,
+                createdAtMs = next.requestedAt, expiresAtMs = next.expiresAt, reaction = next,
+                presentationVersion = next.contextVersion,
+            )
+            if (!_events.trySend(HomeUiEvent.InteractionResponse(request)).isSuccess) {
+                coordinator.cancel(next.id, now, "HOME_EVENT_UNDELIVERABLE")
+                coordinatedTouches.remove(next.id)?.let(interactionSession::finish)
+            }
+        }
+    }
+
+    private fun submitReaction(intent: ReactionIntent): Boolean {
+        val accepted = coordinator.request(intent, monotonicNow())
+        flushReactions()
+        return accepted
+    }
+
+    /** Adapter for legacy correction/greeting events; all new ownership goes through one arbiter. */
+    fun onAutomaticReaction(animation: AnimationId, source: ReactionSource = ReactionSource.PERSONALITY_REACTION,
+        dialogue: String? = null, id: String = "automatic:${++reactionSerial}",
+    ) {
+        val p = selectedPresentation ?: return
+        val now = monotonicNow()
+        submitReaction(ReactionIntent(id, source, p.sceneId, p.visualRevision, now, now + 2_000,
+            listOf(animation), dialogue))
+    }
+
+    /** Social adapters concern Hoodie participation only; environmental NPC sessions stay autonomous. */
+    fun onHoodieSocialEvent(id: String, animation: AnimationId, dialogue: String?) =
+        onAutomaticReaction(animation, ReactionSource.SOCIAL_EVENT, dialogue, id)
+
+    fun onVisualPresented(visual: VisualState) {
+        if (!canonicalPresentation || !presentationTracker.acknowledge(visual.presentationRevision)) return
+        presentedRevision.value = visual.presentationRevision
+        selectedPresentation = selectedPresentation?.presented(visual.presentationRevision)
+        selectedPresentation?.let { p ->
+            if (coordinationEnabled) coordinator.context(p.sceneId, p.visualRevision,
+                interactionSession.active && p.isReconciled && !presentationBlocked, monotonicNow())
+        }
+        if (coordinationEnabled) selectedPresentation?.takeIf { it.isReconciled && !presentationBlocked }?.let { p ->
+            viewModelScope.launch {
+                val decision = personality?.retryPending(clock.nowMillis(), com.hoodie.app.engine.personality.PersonalityGate(
+                    walking = p.contextType == UserContextType.COMMUTING,
+                    workAction = p.hoodieActivity == com.hoodie.app.core.model.HoodieActivity.WORKING,
+                    busyWith = coordinator.presentation?.priority,
+                ))
+                if (decision != null && selectedPresentation?.visualRevision == p.visualRevision) requestPersonality(decision, p)
+            }
+        }
+        flushReactions()
+    }
+
+    private fun requestPersonality(decision: com.hoodie.app.engine.personality.PersonalityDecision, p: PresentedHoodieContext) {
+        val at = monotonicNow()
+        if (!submitReaction(ReactionIntent(decision.eventId, ReactionSource.PERSONALITY_REACTION,
+                p.sceneId, p.visualRevision, at, at + 2_000, decision.animation?.let(::listOf).orEmpty(),
+                decision.text, durationMs = decision.durationMs))) personality?.discardPrepared()
+    }
     /** Som das interações: liga com as interações e com o interruptor "Sons" dos Ajustes. */
     val interactionSoundsEnabled: StateFlow<Boolean> = settingsRepo.settings
         .map { touchInteractionsEnabled && com.hoodie.app.core.config.HoodieConfig.HOODIE_INTERACTION_SOUNDS && it.interactionSoundsEnabled }
@@ -146,14 +238,34 @@ class HomeViewModel @Inject constructor(
         val now = android.os.SystemClock.uptimeMillis()
         val decision = interactions?.get()?.resolve(context, gesture, interactionSession.history, now) ?: return
         if (decision is InteractionDecision.Accepted) {
-            val request = interactionSession.reserve(decision.response, frame.scene.id, now, context) ?: return
+            val request = interactionSession.reserve(decision.response, frame.scene.id, now, context,
+                if (canonicalPresentation) state.value.presentedContext?.visualRevision else null) ?: return
+            if (coordinationEnabled) {
+                val p = state.value.presentedContext ?: return
+                val id = "touch:${request.sessionId}:${request.requestId}"
+                coordinatedTouches[id] = request
+                if (!submitReaction(ReactionIntent(id, ReactionSource.USER_INTERACTION, frame.scene.id, p.visualRevision,
+                        request.createdAtMs, request.expiresAtMs, decision.response.animations, decision.response.text,
+                        durationMs = decision.response.bubbleDurationMs.coerceAtLeast(decision.response.maxDurationMs)))) {
+                    coordinatedTouches.remove(id); interactionSession.finish(request)
+                }
+                return
+            }
             if (!_events.trySend(HomeUiEvent.InteractionResponse(request)).isSuccess) interactionSession.finish(request)
         }
     }
 
-    fun isInteractionCurrent(request: InteractionRequest) = interactionSession.current(request)
+    fun isInteractionCurrent(request: InteractionRequest) = request.reaction?.let { coordinator.current(it.id, monotonicNow()) }
+        ?: interactionSession.current(request)
     fun interactionAllowed(request: InteractionRequest, frame: RenderFrame): Boolean {
         val context = interactionContext(frame)?.copy(sequenceBusy = false) ?: return false
+        if (request.presentationVersion != null && state.value.presentedContext?.visualRevision != request.presentationVersion) return false
+        request.reaction?.let { reaction ->
+            return coordinator.current(reaction.id, monotonicNow()) && request.scene == frame.scene.id &&
+                (request.context == null || request.context.animation == context.animation) &&
+                interactionSafety.evaluate(context, request.response.gesture, HoodieInteractionHistory(), monotonicNow()) == null &&
+                (reaction.source != ReactionSource.USER_INTERACTION || interactions?.get()?.stillEligible(request.response, context) == true)
+        }
         request.context?.let { original ->
             if (original.activity != context.activity || original.userContext != context.userContext || original.animation != context.animation) return false
         }
@@ -161,25 +273,59 @@ class HomeViewModel @Inject constructor(
             interactions?.get()?.stillEligible(request.response, context) == true &&
             interactionSafety.evaluate(context, request.response.gesture, HoodieInteractionHistory(), android.os.SystemClock.uptimeMillis()) == null
     }
-    fun onInteractionStarted(request: InteractionRequest) = interactionSession.started(request, android.os.SystemClock.uptimeMillis())
-    fun onInteractionFinished(request: InteractionRequest) = interactionSession.finish(request)
-    fun onInteractionCancelled() = interactionSession.cancelPending()
+    fun onInteractionStarted(request: InteractionRequest): Boolean {
+        val reaction = request.reaction ?: return interactionSession.started(request, monotonicNow())
+        if (!coordinator.started(reaction.id, monotonicNow())) return false
+        coordinatedTouches[reaction.id]?.let { interactionSession.started(it, monotonicNow()) }
+        if (reaction.source == ReactionSource.PERSONALITY_REACTION)
+            viewModelScope.launch { personality?.confirmPresentation(reaction.id, clock.nowMillis()) }
+        if (reaction.source == ReactionSource.AMBIENT_SPEECH) reaction.dialogue?.let { ambientDialogue.confirmPresentation(it, clock.nowMillis()) }
+        _reactionPresentation.value = coordinator.presentation
+        reactionTimer?.cancel()
+        reactionTimer = viewModelScope.launch {
+            val deadline = coordinator.presentation?.expiresAt ?: return@launch
+            while (monotonicNow() < deadline) delay((deadline - monotonicNow()).coerceAtLeast(1))
+            coordinator.expire(monotonicNow())
+            flushReactions()
+        }
+        return true
+    }
+    fun onInteractionFinished(request: InteractionRequest) {
+        val reaction = request.reaction ?: return interactionSession.finish(request)
+        coordinatedTouches.remove(reaction.id)?.let(interactionSession::finish)
+        coordinator.animationFinished(reaction.id, monotonicNow())
+        flushReactions()
+    }
+    fun onInteractionCancelled() {
+        interactionSession.cancelPending()
+        if (coordinationEnabled) {
+            coordinatedTouches.keys.toList().forEach { coordinator.cancel(it, monotonicNow(), "INTERACTION_CANCELLED") }
+            coordinatedTouches.clear()
+            flushReactions()
+        }
+    }
 
     private fun interactionContext(frame: RenderFrame): InteractionContext? {
         val current = state.value
         if (current.loading || current.error != null) return null
         val snapshot = current.snapshot ?: return null
+        if (canonicalPresentation && current.presentationSafetyBlocked) return null
+        val canonical = current.presentedContext.takeIf { canonicalPresentation }
+        if (canonicalPresentation && canonical?.accepts(frame.interactionVisual) != true) return null
         if (current.visual?.scene != frame.scene.id) return null
         if (frame.interactionVisual != null && current.visual != frame.interactionVisual) return null
         return InteractionContext(
-            scene = frame.scene.id, userContext = snapshot.state.userContext, activity = snapshot.state.activity,
+            scene = frame.scene.id, userContext = canonical?.contextType ?: snapshot.state.userContext,
+            activity = canonical?.hoodieActivity ?: snapshot.state.activity,
             animation = frame.occupancy.animation ?: frame.animation, energy = snapshot.liveNeeds.energy.toFloat(), mood = snapshot.liveNeeds.mood.toFloat(),
             vehicleMoving = current.vehicleMoving, safePassengerStop = current.interactionSafePassengerStop,
             asleep = snapshot.state.activity == com.hoodie.app.core.model.HoodieActivity.SLEEPING,
             canInterrupt = frame.interactionCanInterrupt, transitioning = frame.interactionTransitioning,
-            screenActive = interactionSession.active, sequenceBusy = frame.interactionBusy,
+            screenActive = interactionSession.active, sequenceBusy = if (coordinationEnabled) frame.interactionBlocksGestures else frame.interactionBusy,
             seated = frame.occupancy.seated, walking = frame.occupancy.walking || frame.occupancy.animation?.group == com.hoodie.app.pixel.animation.AnimGroup.LOCOMOTION,
             presentElements = frame.interactionElements,
+            sceneFlags = frame.env.flags,
+            cinemaPhase = (frame.env.venueAmbient as? com.hoodie.app.pixel.npc.venue.CinemaAmbient)?.phase,
         )
     }
     private val personality = personalityRuntime?.takeIf { com.hoodie.app.core.config.HoodieConfig.HOODIE_PERSONALITY_V2 }
@@ -200,6 +346,7 @@ class HomeViewModel @Inject constructor(
 
     override fun onCleared() {
         interactionSession.stop()
+        stopCoordinatedPresentation()
         mobility.onAppClosed()
         super.onCleared()
     }
@@ -259,6 +406,11 @@ class HomeViewModel @Inject constructor(
     /** Hide the previous snapshot until canonical sources have been reconciled on every resume. */
     fun onHomeStarted() {
         interactionSession.start()
+        if (canonicalPresentation) {
+            presentationTracker.resetPresentation()
+            presentedRevision.value = 0
+            selectedPresentation = selectedPresentation?.copy(isReconciled = false)
+        }
         visualDiagnostics.visibility(true)
         personality?.onForeground(clock.nowMillis())
         homeResumeJob?.cancel()
@@ -289,11 +441,24 @@ class HomeViewModel @Inject constructor(
 
     fun onHomeStopped() {
         interactionSession.stop()
+        stopCoordinatedPresentation()
         visualDiagnostics.visibility(false)
         personality?.onBackground(clock.nowMillis())
         mobility.onAppClosed()
         homeResumeJob?.cancel()
         homeNowReconciled.value = false
+    }
+
+    private fun stopCoordinatedPresentation() {
+        reactionTimer?.cancel()
+        if (coordinationEnabled) {
+            coordinator.context(null, -1, false, monotonicNow())
+            coordinatedTouches.clear()
+            personality?.clearPresentation()
+            ambientDialogue.reset()
+            ambientIntentId = null
+            _reactionPresentation.value = null
+        }
     }
 
     fun retryLoad() { reloadHome.value += 1 }
@@ -303,10 +468,10 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun kotlinx.coroutines.flow.Flow<HomeUiState>.combineWithQuestion() =
-        combine(this, pendingQuestion, manualPlaceOptions) { s, q, manual ->
+        combine(this, pendingQuestion, manualPlaceOptions, presentedRevision) { s, q, manual, revision ->
             val visible = q?.takeUnless { s.vehicleMoving && it.kind in setOf(
                 com.hoodie.app.core.model.QuestionKind.NEW_PLACE, com.hoodie.app.core.model.QuestionKind.SAVE_PLACE) }
-            s.copy(question = visible, newPlaceSaveOptions = visible?.takeIf {
+            s.copy(presentedContext = s.presentedContext?.presented(revision), question = visible, newPlaceSaveOptions = visible?.takeIf {
                 it.kind == com.hoodie.app.core.model.QuestionKind.SAVE_PLACE
             }?.let { manual?.takeIf { options -> options.questionId == it.id } ?: contextEngine.newPlaceSaveOptions(it.id) })
         }
@@ -331,7 +496,7 @@ class HomeViewModel @Inject constructor(
         val status = location.status()
         val probable = ctx == null || ctx.source == ContextSource.ROUTINE
         val variant = (zoned.toLocalDate().toEpochDay() + (ctx?.id ?: 0)).toInt()
-        val visual = VisualDirector.resolve(
+        var visual = VisualDirector.resolve(
             activity = snap.state.activity,
             // A correção manual é persistida em context_events antes do snapshot do simulador.
             // A cena deve refletir imediatamente o evento canônico observado pela Home.
@@ -352,6 +517,24 @@ class HomeViewModel @Inject constructor(
             now = now,
         // A história ambiental do dia vem da jornada (data), separada da aparência (variant).
         ).copy(daySeed = zoned.toLocalDate().toEpochDay().toInt(), placeId = ctx?.placeId)
+        val presented = if (canonicalPresentation) presentationTracker.select(ctx, snap.state.userContext,
+            snap.state.activity, visual) else null
+        val moving = mobility.mode?.isVehicle == true && mobility.phase != com.hoodie.app.core.mobility.MobilityPhase.IDLE &&
+            mobility.observedMovement != com.hoodie.app.core.mobility.DetectedMovement.STILL
+        presentationBlocked = moving || snap.state.activity == com.hoodie.app.core.model.HoodieActivity.SLEEPING ||
+            day?.state == com.hoodie.app.domain.daystate.DayState.SLEEPING
+        if (presented != null) {
+            if (selectedPresentation?.visualRevision != presented.visualRevision && coordinationEnabled) {
+                reactionTimer?.cancel()
+                _reactionPresentation.value = null
+                ambientDialogue.reset()
+                personality?.clearPresentation()
+            }
+            selectedPresentation = presented
+            visual = visual.copy(presentationRevision = presented.visualRevision)
+            if (coordinationEnabled) coordinator.context(presented.sceneId, presented.visualRevision,
+                interactionSession.active && presented.isReconciled && !presentationBlocked, monotonicNow())
+        }
         visualDiagnostics.selected(visual, now)
         val userType = ctx?.type ?: UserContextType.HOME
         val tomorrowDate = zoned.toLocalDate().plusDays(1)
@@ -369,7 +552,7 @@ class HomeViewModel @Inject constructor(
         val daySeed = zoned.toLocalDate().toEpochDay().toInt()
         val sceneChanged = lastScene != null && lastScene != visual.scene
         lastScene = visual.scene
-        personality?.update(
+        val personalDecision = personality?.update(
             com.hoodie.app.engine.personality.PersonalityObservation(
                 now = now, daySeed = daySeed, hour = zoned.hour, contextId = ctx?.id, contextType = ctx?.type,
                 contextStartedAt = ctx?.startedAt, placeId = ctx?.placeId, activity = snap.state.activity,
@@ -379,30 +562,48 @@ class HomeViewModel @Inject constructor(
                 walking = snap.state.activity == com.hoodie.app.core.model.HoodieActivity.WALKING ||
                     (ctx?.type ?: snap.state.userContext) == UserContextType.COMMUTING,
                 workAction = snap.state.activity == com.hoodie.app.core.model.HoodieActivity.WORKING,
-                sceneTransition = sceneChanged,
+                sceneTransition = sceneChanged || canonicalPresentation && presented?.isReconciled != true,
+                busyWith = if (coordinationEnabled) coordinator.presentation?.priority else null,
             ),
+            deferPresentation = coordinationEnabled,
         ) { detected ->
             com.hoodie.app.engine.personality.PersonalityContext(
                 trigger = detected.trigger, scene = visual.scene, activity = snap.state.activity, needs = snap.liveNeeds,
                 placeId = ctx?.placeId, occurredAt = now, daySeed = daySeed, visitSeed = detected.visitSeed,
                 userContext = ctx?.type ?: snap.state.userContext, hour = zoned.hour,
             )
-        }?.animation?.let { _events.send(HomeUiEvent.React(it)) }
+        }
+        if (personalDecision != null) {
+            if (coordinationEnabled && presented != null) {
+                requestPersonality(personalDecision, presented)
+            } else personalDecision.animation?.let { _events.send(HomeUiEvent.React(it)) }
+        }
         val personalLine = personality?.current(now)
-        if (personalLine != null) ambientDialogue.holdUntil(personality!!.speakingUntil)
+        if (personalLine != null && !coordinationEnabled) ambientDialogue.holdUntil(personality!!.speakingUntil)
         // Fala ocasional, sem IA: regras do dialogues.json. Fica alguns segundos e some.
-        val ambientLine = ambientDialogue.next(now) {
+        val dialogueInput = {
             val ctxMinutes = ctx?.let { (now - it.startedAt) / MINUTE_MS } ?: 0
             val arrivedEarly = ctx?.type == UserContextType.WORK &&
                 ctx.startedAt.let { java.time.Instant.ofEpochMilli(it).atZone(clock.zone()).minuteOfDay() } < i.routine.startMinute - 10
             DialogueInput(
-                context = snap.state.userContext, activity = snap.state.activity, contextMinutes = ctxMinutes,
+                context = presented?.contextType ?: snap.state.userContext, activity = snap.state.activity, contextMinutes = ctxMinutes,
                 hour = zoned.hour, weekend = zoned.dayOfWeek == DayOfWeek.SATURDAY || zoned.dayOfWeek == DayOfWeek.SUNDAY,
                 overtime = ctx?.type == UserContextType.WORK && workDay && RoutineEngine.isOvertime(zoned, i.routine),
                 energy = snap.liveNeeds.energy, arrivedEarly = arrivedEarly,
             )
         }
-        val dialogueText = DialogueArbiter.choose(personalLine, ambientLine)?.text
+        val ambientLine = if (coordinationEnabled) ambientDialogue.prepare(now, dialogueInput) else ambientDialogue.next(now, dialogueInput)
+        if (coordinationEnabled && presented != null && ambientLine != null && ambientIntentId == null) {
+            val at = monotonicNow()
+            val id = "ambient:${++reactionSerial}"
+            ambientIntentId = id
+            if (!submitReaction(ReactionIntent(id, ReactionSource.AMBIENT_SPEECH, visual.scene, presented.visualRevision,
+                    at, at + 2_000, dialogue = ambientLine.text, durationMs = 9_000))) {
+                ambientDialogue.discardPrepared(); ambientIntentId = null
+            }
+        }
+        val dialogueText = if (coordinationEnabled) null else DialogueArbiter.choose(personalLine, ambientLine)?.text
+        flushReactions()
 
         val hasHome = i.places.any { it.type == PlaceType.HOME }
         val hasWork = i.places.any { it.type == PlaceType.WORK }
@@ -420,6 +621,8 @@ class HomeViewModel @Inject constructor(
             loading = false, catName = i.settings.catName, now = now, period = DayPeriod.of(zoned.hour),
             context = ctx, contextPlaceName = ctx?.placeId?.let { id -> i.places.firstOrNull { it.id == id }?.name },
             snapshot = snap, visual = visual, next = next, routineOrigin = originText, dialogue = dialogueText,
+            presentedContext = presented, reactionCoordinatorEnabled = coordinationEnabled,
+            presentationSafetyBlocked = presentationBlocked,
             probableMode = probable, locationStatus = status,
             suggestSavePlace = suggest, canSaveHere = canSaveHere,
             vehicleMoving = mobility.mode?.isVehicle == true &&

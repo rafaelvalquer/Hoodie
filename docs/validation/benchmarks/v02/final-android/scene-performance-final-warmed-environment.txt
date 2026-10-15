@@ -1,0 +1,12 @@
+date=2026-10-15
+device=Pixel 8 virtual device (sdk_gphone16k_x86_64)
+android=17; api=37
+abi=x86_64
+test=ScenePerformanceDeviceTest.elevenScenesPublishFramesAndReportAllStages
+scenes=11; measured stages per scene=9; logged rows per scene=8
+warmFrames=180; steadyFrames=180
+seed=20026; random=26; variant=0; place=42
+source=production HoodieSceneView and renderAndPresent path
+result=1 test passed; 0 failures; Gradle connectedDebugAndroidTest completed in 10m59s
+measurement=rolling windows of at most 180 frames; stages sampled: cold, warmup, steady, story, night, return, safe-pause, touch; exit also measured without logged row
+capture=scene-performance-final-warmed.csv was captured from streaming System.out rows before logcat buffer rotation

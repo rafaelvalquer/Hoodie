@@ -39,7 +39,7 @@ internal fun Modifier.hoodieInteractionTarget(
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = true)
             val initial = frame() ?: return@awaitEachGesture
-            if (initial.interactionTransitioning || initial.interactionBusy ||
+            if (initial.interactionTransitioning || initial.interactionBlocksGestures ||
                 initial.animation in setOf(AnimationId.SLEEP, AnimationId.SLEEP_TURN, AnimationId.NAP_SIT)) return@awaitEachGesture
             if (!HoodieInteractionHitTest.hit(initial, down.position.x, down.position.y, size.width, size.height)) return@awaitEachGesture
             var lastPosition = down.position
@@ -64,7 +64,7 @@ internal fun Modifier.hoodieInteractionTarget(
             val current = frame() ?: return@awaitEachGesture
             // A hold begun while exercising/walking cannot turn into petting after a pause starts.
             // A new gesture is required for the new action, even if no pointer event occurred meanwhile.
-            if (current.scene.id != initial.scene.id || current.interactionTransitioning || current.interactionBusy ||
+            if (current.scene.id != initial.scene.id || current.interactionTransitioning || current.interactionBlocksGestures ||
                 initial.interactionVisual != null && current.interactionVisual != initial.interactionVisual ||
                 (current.occupancy.animation ?: current.animation) != (initial.occupancy.animation ?: initial.animation) ||
                 !HoodieInteractionHitTest.nearHit(current, lastPosition.x, lastPosition.y, size.width, size.height, tolerance)) return@awaitEachGesture

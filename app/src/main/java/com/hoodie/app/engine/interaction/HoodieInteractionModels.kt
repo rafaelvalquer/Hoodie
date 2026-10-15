@@ -17,6 +17,12 @@ enum class InteractionCondition {
     WALKING, LANDSCAPE, BENCH, BUTTERFLY, SHELVES, PICKING, CHECKOUT,
     CLOTHES, GARMENT, LEAVING, STUDY_READ, STUDY_WRITE, STUDY_THINK,
     TALKING, LISTENING, LAUGH, SAFE_STOP,
+    BAKERY_CHOOSE, BAKERY_WAIT, BAKERY_COFFEE, BAKERY_REST,
+    MALL_WINDOW, VENUE_STATIONARY, MALL_REST,
+    BEACH_SEA, BEACH_LOUNGE, BEACH_ICE_CREAM, BEACH_SAND,
+    CINEMA_WAIT, CINEMA_WATCH, CINEMA_REACT, CINEMA_POPCORN, CINEMA_AFTER,
+    PHARMACY_SHELVES, PHARMACY_PRODUCT, VENUE_WAIT,
+    HOTEL_CHECK_IN, HOTEL_LOBBY, HOTEL_WAIT, HOTEL_WATCH, HOTEL_REST,
 }
 
 /** Values describe the last presented frame, not a predicted animation or NPC. */
@@ -37,6 +43,8 @@ data class InteractionContext(
     val seated: Boolean = false,
     val walking: Boolean = false,
     val presentElements: Set<InteractionElement> = emptySet(),
+    val sceneFlags: Set<com.hoodie.app.pixel.scene.SceneFlag> = emptySet(),
+    val cinemaPhase: com.hoodie.app.pixel.npc.venue.CinemaPhase? = null,
 ) {
     val walkingNow: Boolean get() = walking || animation.frames.any { it.pose.legs in setOf(Legs.WALK, Legs.RUN_A, Legs.RUN_B) }
 }
@@ -60,6 +68,8 @@ data class InteractionResponse(
     val bubbleDurationMs: Long,
     val maxDurationMs: Long = 2_500,
     val gesture: InteractionGesture = InteractionGesture.TAP,
+    val presentationOnly: Boolean = false,
+    val source: com.hoodie.app.engine.reaction.ReactionSource = com.hoodie.app.engine.reaction.ReactionSource.USER_INTERACTION,
 )
 
 data class InteractionRequest(val response: InteractionResponse, val scene: SceneId, val sessionId: Long,
@@ -68,6 +78,8 @@ data class InteractionRequest(val response: InteractionResponse, val scene: Scen
     /** Monotonic timestamps; the deadline applies only until playback starts. */
     val createdAtMs: Long = 0,
     val expiresAtMs: Long = Long.MAX_VALUE,
+    val reaction: com.hoodie.app.engine.reaction.ReactionIntent? = null,
+    val presentationVersion: Long? = null,
 )
 
 sealed interface InteractionDecision {

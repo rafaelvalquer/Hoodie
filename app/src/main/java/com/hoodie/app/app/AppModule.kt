@@ -119,4 +119,7 @@ object DatabaseModule {
     fun interactionFeature() = com.hoodie.app.engine.interaction.HoodieInteractionFeature(
         com.hoodie.app.core.config.HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1,
     )
+
+    @Provides
+    fun homePresentationFeatures() = com.hoodie.app.presentation.screens.home.HomePresentationFeatures()
 }

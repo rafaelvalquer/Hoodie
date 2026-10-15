@@ -1540,5 +1540,495 @@
     ],
     "priority": 0,
     "weight": 1
+  },
+  {
+    "id": "bakery_v02_01",
+    "scene": "BAKERY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BAKERY_CHOOSE",
+    "text": "Esse cheirinho de pão é irresistível!",
+    "animations": [
+      "NOTICE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "bakery_v02_02",
+    "scene": "BAKERY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BAKERY_CHOOSE",
+    "text": "Qual desses você escolheria?",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "bakery_v02_03",
+    "scene": "BAKERY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BAKERY_WAIT",
+    "text": "Será que meu cafezinho já está pronto?",
+    "animations": [
+      "LOOK_AROUND",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "bakery_v02_04",
+    "scene": "BAKERY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BAKERY_COFFEE",
+    "text": "Ahhh... agora sim!",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "bakery_v02_05",
+    "scene": "BAKERY",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "BAKERY_COFFEE",
+    "text": "Café e carinho... combinação perfeita!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "bakery_v02_06",
+    "scene": "BAKERY",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "BAKERY_REST",
+    "text": "Agora só falta uma boa soneca.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "mall_v02_01",
+    "scene": "MALL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "MALL_WINDOW",
+    "text": "Será que encontro algo do meu tamanho?",
+    "animations": [
+      "NOTICE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "mall_v02_02",
+    "scene": "MALL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "MALL_WINDOW",
+    "text": "Essa loja parece interessante!",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "mall_v02_03",
+    "scene": "MALL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "VENUE_STATIONARY",
+    "text": "Tem tanta coisa para conhecer!",
+    "animations": [
+      "LOOK_AROUND",
+      "SMILE"
+    ],
+    "priority": 60,
+    "weight": 1
+  },
+  {
+    "id": "mall_v02_04",
+    "scene": "MALL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "MALL_REST",
+    "text": "Minhas patinhas precisam de uma pausa.",
+    "animations": [
+      "STRETCH",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "mall_v02_05",
+    "scene": "MALL",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "VENUE_STATIONARY",
+    "text": "Até no shopping você lembra de mim!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 60,
+    "weight": 1
+  },
+  {
+    "id": "mall_v02_06",
+    "scene": "MALL",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "MALL_REST",
+    "text": "Agora estou pronto para mais vitrines.",
+    "animations": [
+      "PET_HEAD",
+      "NUZZLE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "beach_v02_01",
+    "scene": "BEACH",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BEACH_SEA",
+    "text": "Olha o tamanho dessas ondas!",
+    "animations": [
+      "NOTICE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "beach_v02_02",
+    "scene": "BEACH",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BEACH_LOUNGE",
+    "text": "Eu poderia ficar aqui o dia inteiro!",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "beach_v02_03",
+    "scene": "BEACH",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BEACH_ICE_CREAM",
+    "text": "Espero não derrubar meu sorvete!",
+    "animations": [
+      "SURPRISED",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "beach_v02_04",
+    "scene": "BEACH",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "BEACH_SAND",
+    "text": "A areia é quentinha nas patinhas!",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "beach_v02_05",
+    "scene": "BEACH",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "BEACH_LOUNGE",
+    "text": "Um carinho com essa brisa é perfeito!",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "beach_v02_06",
+    "scene": "BEACH",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "BEACH_LOUNGE",
+    "text": "Hmmm... que tranquilidade!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "cinema_v02_01",
+    "scene": "CINEMA",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CINEMA_WAIT",
+    "text": "Será que vai ter aventura?",
+    "animations": [
+      "NOTICE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "cinema_v02_02",
+    "scene": "CINEMA",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CINEMA_WATCH",
+    "text": "Shhh... o filme já vai começar!",
+    "animations": [
+      "GLANCE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "cinema_v02_03",
+    "scene": "CINEMA",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CINEMA_REACT",
+    "text": "Você viu isso?!",
+    "animations": [
+      "SURPRISED"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "cinema_v02_04",
+    "scene": "CINEMA",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "CINEMA_POPCORN",
+    "text": "Essa pipoca está ótima!",
+    "animations": [
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "cinema_v02_05",
+    "scene": "CINEMA",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "CINEMA_WATCH",
+    "text": "Um carinho durante o filme é bom demais.",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "cinema_v02_06",
+    "scene": "CINEMA",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "CINEMA_AFTER",
+    "text": "Gostei da nossa sessão!",
+    "animations": [
+      "PET_HEAD",
+      "NUZZLE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "pharmacy_v02_01",
+    "scene": "PHARMACY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "PHARMACY_SHELVES",
+    "text": "Tem bastante coisa por aqui!",
+    "animations": [
+      "LOOK_AROUND",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "pharmacy_v02_02",
+    "scene": "PHARMACY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "PHARMACY_PRODUCT",
+    "text": "Será que é isso que procuramos?",
+    "animations": [
+      "GLANCE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "pharmacy_v02_03",
+    "scene": "PHARMACY",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "VENUE_WAIT",
+    "text": "Já podemos ir?",
+    "animations": [
+      "NOTICE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "pharmacy_v02_04",
+    "scene": "PHARMACY",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "VENUE_STATIONARY",
+    "text": "Até aqui você me faz carinho!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 60,
+    "weight": 1
+  },
+  {
+    "id": "pharmacy_v02_05",
+    "scene": "PHARMACY",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "VENUE_STATIONARY",
+    "text": "Gostei dessa pausa!",
+    "animations": [
+      "PET_HEAD",
+      "SMILE"
+    ],
+    "priority": 60,
+    "weight": 1
+  },
+  {
+    "id": "hotel_v02_01",
+    "scene": "HOTEL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "HOTEL_CHECK_IN",
+    "text": "Será que nosso quarto já está pronto?",
+    "animations": [
+      "GLANCE",
+      "SMILE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "hotel_v02_02",
+    "scene": "HOTEL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "HOTEL_LOBBY",
+    "text": "Esse hotel parece confortável!",
+    "animations": [
+      "NOTICE",
+      "HAPPY"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "hotel_v02_03",
+    "scene": "HOTEL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "HOTEL_WAIT",
+    "text": "Espero que tenha um café da manhã caprichado!",
+    "animations": [
+      "SMILE",
+      "NOD"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "hotel_v02_04",
+    "scene": "HOTEL",
+    "gesture": "TAP",
+    "activity": null,
+    "condition": "HOTEL_WATCH",
+    "text": "Será que vai demorar muito?",
+    "animations": [
+      "GLANCE",
+      "SHRUG"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "hotel_v02_05",
+    "scene": "HOTEL",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "HOTEL_REST",
+    "text": "Viagem boa também merece carinho.",
+    "animations": [
+      "PET_HEAD",
+      "PURR",
+      "NUZZLE"
+    ],
+    "priority": 80,
+    "weight": 1
+  },
+  {
+    "id": "hotel_v02_06",
+    "scene": "HOTEL",
+    "gesture": "LONG_PRESS",
+    "activity": null,
+    "condition": "HOTEL_REST",
+    "text": "Agora sim, podemos relaxar!",
+    "animations": [
+      "PET_HEAD",
+      "PURR"
+    ],
+    "priority": 80,
+    "weight": 1
   }
 ]

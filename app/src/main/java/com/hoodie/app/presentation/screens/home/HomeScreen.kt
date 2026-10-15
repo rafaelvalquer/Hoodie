@@ -97,6 +97,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val reactions = remember { MutableSharedFlow<AnimationId>(extraBufferCapacity = 4) }
     val interactionRequests = remember { MutableSharedFlow<InteractionRequest>(extraBufferCapacity = 1) }
     val interactiveSpeech = rememberInteractiveSpeech()
+    val reactionPresentation by vm.reactionPresentation.collectAsStateWithLifecycle()
     val soundsOn by vm.interactionSoundsEnabled.collectAsStateWithLifecycle()
     val interactionSounds = com.hoodie.app.presentation.components.rememberHoodieInteractionSounds(soundsOn)
     LaunchedEffect(state.visual, state.vehicleMoving, state.loading, state.error) {
@@ -126,7 +127,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
             vm.events.collect { event ->
                 when (event) {
                     is HomeUiEvent.InteractionResponse -> if (vm.isInteractionCurrent(event.request)) interactionRequests.emit(event.request)
-                    is HomeUiEvent.React -> reactions.emit(event.animation)
+                    is HomeUiEvent.React -> if (vm.coordinationEnabled) vm.onAutomaticReaction(event.animation) else reactions.emit(event.animation)
                     is HomeUiEvent.ShowError -> launch { snackbar.showSnackbar(context.appErrorText(event.error)) }
                     is HomeUiEvent.ShowMessage -> launch { snackbar.showSnackbar(event.message) }
                     is HomeUiEvent.OfferUndo -> launch {
@@ -142,7 +143,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     }
 
     HomeContent(
-        state = state.copy(dialogue = interactiveSpeech.resolve(state.dialogue)),
+        state = state.copy(dialogue = if (vm.coordinationEnabled) reactionPresentation?.text else interactiveSpeech.resolve(state.dialogue)),
         busy = busy,
         zone = zone,
         onOpen = onOpen,
@@ -168,6 +169,7 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         dayState = dayState,
         homeNow = homeNow,
         onScenePresented = vm::onScenePresented,
+        onVisualPresented = vm::onVisualPresented,
         interactionsEnabled = vm.touchInteractionsEnabled,
         interactionRequests = interactionRequests,
         onHoodieGesture = vm::onHoodieGesture,
@@ -175,8 +177,9 @@ fun HomeScreen(onOpen: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
         onInteractionStarted = { request ->
             // A fala e o som só valem quando a reação começou de fato na tela.
             if (vm.onInteractionStarted(request)) {
-                interactiveSpeech.present(request)
-                interactionSounds?.play(request)
+                if (request.reaction == null) interactiveSpeech.present(request)
+                if (request.reaction == null || request.reaction.source == com.hoodie.app.engine.reaction.ReactionSource.USER_INTERACTION)
+                    interactionSounds?.play(request)
             }
         },
         onInteractionFinished = vm::onInteractionFinished,
@@ -221,6 +224,7 @@ internal fun HomeContent(
     interactionAllowed: (InteractionRequest, RenderFrame) -> Boolean = { _, _ -> true },
     onInteractionStarted: (InteractionRequest) -> Unit = {},
     onInteractionFinished: (InteractionRequest) -> Unit = {},
+    onVisualPresented: (com.hoodie.app.pixel.scene.VisualState) -> Unit = {},
 ) {
     val uiTextContext = LocalContext.current
     var manualOpen by remember { mutableStateOf(false) }
@@ -296,6 +300,7 @@ internal fun HomeContent(
             interactionsEnabled = interactionsEnabled, interactionRequests = interactionRequests,
             onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
             onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished,
+            onVisualPresented = onVisualPresented,
         ) else {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             // O balão fica acima do cenário (em fluxo): sobreposto, cobria o topo da cena.
@@ -303,7 +308,9 @@ internal fun HomeContent(
             HoodieSceneView(state.visual, Modifier.fillMaxWidth().testTag("home_live_scene"), reactions = reactions, onScenePresented = onScenePresented,
                 interactionsEnabled = interactionsEnabled, interactionRequests = interactionRequests,
                 onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
-                onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished)
+                onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished,
+                reactionRequestsEnabled = interactionsEnabled || state.reactionCoordinatorEnabled,
+                onVisualPresented = onVisualPresented, greet = !state.reactionCoordinatorEnabled)
         }
 
         if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {

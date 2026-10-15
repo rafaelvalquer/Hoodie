@@ -40,7 +40,7 @@ object ScenePerformanceMonitor {
     private var lastRenderThreadName = ""
 
     fun nowNanos(): Long = try {
-        SystemClock.elapsedRealtimeNanos()
+        SystemClock.elapsedRealtimeNanos().takeIf { it > 0 } ?: System.nanoTime()
     } catch (_: Throwable) {
         // Local JVM renderer tests use the monotonic JVM clock; Android uses elapsedRealtimeNanos.
         System.nanoTime()

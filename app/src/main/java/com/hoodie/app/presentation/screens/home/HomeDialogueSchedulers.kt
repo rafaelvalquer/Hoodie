@@ -29,6 +29,21 @@ class AmbientDialogueScheduler(private val dialogues: DialogueEngine, private va
     private var text: String? = null
     private var until = 0L
     private var heldUntil = 0L
+    private var prepared: DialogueCandidate? = null
+
+    fun reset() { text = null; until = 0; heldUntil = 0; prepared = null }
+    fun prepare(now: Long, input: () -> DialogueInput): DialogueCandidate? {
+        prepared?.let { return it }
+        if (now < until || now < heldUntil) return null
+        val line = if (random.nextInt(100) < 40) dialogues.pick(input(), random) else null
+        if (line == null) { until = now + 20_000; return null }
+        return DialogueCandidate(line, ReactionPriority.AMBIENT_SPEECH).also { prepared = it }
+    }
+    fun confirmPresentation(line: String, now: Long) {
+        if (prepared?.text != line) return
+        text = line; until = now + 9_000; prepared = null
+    }
+    fun discardPrepared() { prepared = null }
 
     fun holdUntil(at: Long) { heldUntil = maxOf(heldUntil, at); text = null; until = maxOf(until, at) }
 
@@ -54,6 +69,36 @@ class PersonalityDialogueScheduler(
     private val pending = mutableListOf<Pair<DetectedTrigger, Long>>()
     private var active: PersonalityDecision? = null
     private var activeUntil = 0L
+    private var prepared: Pair<PersonalityDecision, PersonalityContext>? = null
+    private var deferredObservation: PersonalityObservation? = null
+    private var deferredContext: ((DetectedTrigger) -> PersonalityContext)? = null
+    val preparedId: String? get() = prepared?.first?.eventId
+
+    fun discardPrepared() { prepared = null }
+    fun clearPresentation() {
+        pending.clear()
+        prepared = null
+        active = null
+        activeUntil = 0
+        deferredObservation = null
+        deferredContext = null
+    }
+    suspend fun retryPending(now: Long, gate: PersonalityGate): PersonalityDecision? {
+        val observation = deferredObservation ?: return null
+        val context = deferredContext ?: return null
+        return update(observation.copy(now = now), gate, deferPresentation = true, context = context)
+    }
+    suspend fun confirmPresentation(id: String, now: Long): Boolean {
+        val (decision, context) = prepared?.takeIf { it.first.eventId == id } ?: return false
+        prepared = null
+        val memory = ledger ?: runtime.store.load()
+        val updated = memory.record(decision, context.copy(occurredAt = now))
+        ledger = updated
+        runtime.store.save(updated)
+        active = decision
+        activeUntil = now + decision.durationMs
+        return true
+    }
 
     fun onForeground(now: Long) = runtime.detector.onForeground(now)
     fun onBackground(now: Long) = runtime.detector.onBackground(now)
@@ -71,13 +116,15 @@ class PersonalityDialogueScheduler(
     suspend fun update(
         observation: PersonalityObservation,
         gate: PersonalityGate,
+        deferPresentation: Boolean = false,
         context: (DetectedTrigger) -> PersonalityContext,
     ): PersonalityDecision? {
         val now = observation.now
+        if (deferPresentation) { deferredObservation = observation; deferredContext = context }
         runtime.detector.detect(observation).forEach { pending += it to now }
         pending.removeAll { (_, at) -> now - at > pendingTtlMs }
         // Tela ocupada (caminhando, trocando de cena, NPC falando): o momento espera um pouco.
-        if (pending.isEmpty() || gate.blocks(ReactionPriority.PERSONALITY_REACTION)) return null
+        if (prepared != null || pending.isEmpty() || gate.blocks(ReactionPriority.PERSONALITY_REACTION)) return null
         val memory = ledger ?: runtime.store.load().also { ledger = it }
         for ((detected, _) in pending.toList()) {
             val ctx = context(detected)
@@ -89,6 +136,10 @@ class PersonalityDialogueScheduler(
             }
             // Um momento por vez: os outros que chegaram juntos não viram uma enxurrada de reações.
             pending.clear()
+            if (deferPresentation) {
+                prepared = decision to ctx
+                return decision
+            }
             val updated = memory.record(decision, ctx)
             ledger = updated
             runtime.store.save(updated)

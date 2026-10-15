@@ -93,6 +93,8 @@ data class VisualState(
     val daySeed: Int? = null,
     /** Lugar salvo da visita: estabelecimentos usam na chave da sessão dos NPCs. */
     val placeId: Long? = null,
+    /** Home presentation identity. Excluded from environmental NPC session keys. */
+    val presentationRevision: Long = 0,
 )
 
 /** HoodieActivity + contexto do usuário → cena, âncora, sequências e microações. */

@@ -1,0 +1,8 @@
+model=sdk_gphone16k_x86_64
+sdk=37
+abis=x86_64, arm64-v8a
+label=cached-restaurant-warm
+scenes=RESTAURANT
+warmFrames=180; steadyFrames=180
+seed=20026; random=26; variant=0; place=42
+Paced Canvas, production renderAndPresent path. Rolling windows retain at most 180 frames.

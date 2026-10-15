@@ -43,6 +43,7 @@ data class RenderFrame(
     val occupancy: HoodieOccupancy = HoodieOccupancy.ABSENT,
     val interactionTransitioning: Boolean = false,
     val interactionBusy: Boolean = false,
+    val interactionBlocksGestures: Boolean = interactionBusy,
     val interactionCanInterrupt: Boolean = false,
     val interactionStarted: com.hoodie.app.engine.interaction.InteractionResponse? = null,
     val interactionElements: Set<com.hoodie.app.engine.interaction.InteractionElement> = emptySet(),
@@ -156,6 +157,13 @@ class AnimationStateMachine(
             return
         }
         if (v == (pending ?: visual)) return
+        val previousTarget = pending ?: visual!!
+        if (v.copy(presentationRevision = previousTarget.presentationRevision) == previousTarget) {
+            // Confirming a new presentation identity must not replay enter/exit or prop events.
+            cancelInteractiveReactions()
+            if (pending != null) pending = v else visual = v
+            return
+        }
         cancelInteractiveReactions()
         pending = v
         pendingAt = if (v.manualTransition) now else interruptBoundary(now)
@@ -179,7 +187,7 @@ class AnimationStateMachine(
         if (current.scene != expectedScene || pending != null || step != Step.Loop || reactions.hasPending ||
             reactions.hasInteractivePending || interactivePlayback != null || lastPresentedFrame == null) return false
         if (animation in setOf(AnimationId.SLEEP, AnimationId.SLEEP_TURN, AnimationId.NAP_SIT)) return false
-        if (response.animations.isEmpty() || response.animations.any { it !in com.hoodie.app.engine.interaction.HoodieInteractionCatalog.allowedAnimations }) return false
+        if (response.animations.isEmpty() && !response.presentationOnly || response.animations.any { it !in com.hoodie.app.engine.interaction.HoodieInteractionCatalog.allowedAnimations }) return false
         val boundary = if (animation in setOf(AnimationId.EAT, AnimationId.DRINK, AnimationId.LIFT, AnimationId.WATER))
             animStart + ClipTiming.cycleEnd(sprites().durations(animation, direction), now - animStart, animation.loop)
         else interruptBoundary(now)
@@ -226,7 +234,12 @@ class AnimationStateMachine(
             actionEnd += elapsedTick
             if (playback.finished(now)) interactivePlayback = null
         }
+        var speechStarted: com.hoodie.app.engine.interaction.InteractionResponse? = null
         reactions.takeInteractiveReady(now, visual, animation, pending == null && step == Step.Loop)?.let { request ->
+            if (request.response.presentationOnly) {
+                speechStarted = request.response
+                return@let
+            }
             val base = lastPresentedFrame
             val spriteRequest = lastSpriteRequest
             if (base != null && spriteRequest != null) {
@@ -285,12 +298,14 @@ class AnimationStateMachine(
         val daySeed = if (separatedSeed) v.daySeed ?: v.variant else v.variant
         val env = SceneEnv(period, clockMinute, v.variant, v.tvOn, v.screenOn, doorFrame(now), flags.toSet(), v.transportAmbient, daySeed = daySeed, shoppingVenue = v.shoppingVenue, placeId = v.placeId)
         val playback = interactivePlayback
-        val started = playback?.takeUnless { it.announced }?.response
+        val started = speechStarted ?: playback?.takeUnless { it.announced }?.response
         playback?.announced = true
         return RenderFrame(sc, env, sprite, x.toInt(), y.toInt(), fade.coerceIn(0f, 1f), effects,
             interactiveSprite?.first ?: animation, direction, idx, occupancy(sc, v),
             interactionTransitioning = pending != null || step != Step.Loop || fade < 1f,
             interactionBusy = playback != null || reactions.hasInteractivePending || reactions.hasPending,
+            interactionBlocksGestures = reactions.hasPending ||
+                (playback?.response?.source ?: reactions.interactiveSource) == com.hoodie.app.engine.reaction.ReactionSource.USER_INTERACTION,
             interactionCanInterrupt = step == Step.Loop && interruptBoundary(now) <= now,
             interactionStarted = started,
             interactionVisual = v,

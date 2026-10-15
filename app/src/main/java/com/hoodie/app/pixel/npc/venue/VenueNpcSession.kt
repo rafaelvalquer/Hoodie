@@ -203,6 +203,7 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
         check(!disposed) { "VenueNpcSession is disposed" }
         val t = timeMs.coerceAtLeast(0L)
         if (t == cachedAt) cached?.let { return it }
+        com.hoodie.app.pixel.performance.SceneDiagnostics.snapshotBuilt(key.scene)
         if (retainedFrom.any { t < it }) resetSimulation()
         ensure(t)
         val snapshot = VenueFrameSnapshot(t, cursors.map { frameState(it, t) }, blueprint.ambient(this, t))
@@ -298,6 +299,7 @@ class VenueNpcSession internal constructor(val key: VenueSessionKey, internal va
     // ───────────── Simulação ─────────────
 
     private fun resetSimulation() {
+        com.hoodie.app.pixel.performance.SceneDiagnostics.timelineRebuilt(key.scene)
         timelines.forEach { it.clear() }
         retainedFrom.fill(0L)
         cursors = newCursors()

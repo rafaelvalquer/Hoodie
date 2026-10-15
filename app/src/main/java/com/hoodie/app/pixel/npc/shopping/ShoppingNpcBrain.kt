@@ -43,6 +43,8 @@ class ShoppingNpcBrain(
     @Synchronized private fun trip(index: Long): Trip {
         trips[index]?.let { return it }
         val compiled = compileTrip(index)
+        com.hoodie.app.pixel.performance.SceneDiagnostics.timelineRebuilt(
+            if (floor == StoreNavigationGraph) com.hoodie.app.pixel.scene.SceneId.STORE else com.hoodie.app.pixel.scene.SceneId.SHOPPING)
         trips[index] = compiled
         if (trips.size > MAX_CACHED_TRIPS) {
             val eldest = trips.entries.iterator()

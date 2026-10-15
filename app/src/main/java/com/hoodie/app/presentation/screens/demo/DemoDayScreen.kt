@@ -44,8 +44,17 @@ import java.time.ZoneId
  */
 @Composable
 fun DemoDayScreen(onExit: () -> Unit, modifier: Modifier = Modifier) {
+    if (com.hoodie.app.core.config.HoodieConfig.HOODIE_DEMO_REPLAY_V1) {
+        DemoReplayEntry(onExit, modifier)
+        return
+    }
+    LegacyDemoDayScreen(onExit, modifier)
+}
+
+@Composable
+private fun LegacyDemoDayScreen(onExit: () -> Unit, modifier: Modifier = Modifier) {
     val zone = remember { ZoneId.systemDefault() }
-    val view = remember { DemoDiaryAssembler.assemble(DemoDayFactory.create(LocalDate.now(zone), zone)) }
+    val view = remember { DemoDiaryAssembler.assemble(DemoDayFactory.create(LocalDate.now(zone), zone, includeReplayActivities = false)) }
     val model = remember(view) { JourneyOverworldModel.build(view.journey, zone) }
     var manualChapter by remember { mutableStateOf<DayChapter?>(null) }
     Column(modifier.fillMaxSize().safeDrawingPadding().testTag("demo_day")) {

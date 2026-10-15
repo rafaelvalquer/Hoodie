@@ -1,0 +1,12 @@
+label=baseline-verified
+pixelSourceSha256=34bfe9471aefb414ab4e6407f5d250a474d368aca5e5950389a5bff776deec84
+benchmarkSourceSha256=b1c7440341d8fd2caf220fa047204a553779d37ece2ba28972cad11580319b3d
+java=21.0.12.1
+vm=OpenJDK 64-Bit Server VM
+os=Windows 11 amd64
+processors=12
+seed=20026; random=26; variant=0; place=42; simulationTickMs=33
+Unpaced JVM renderer workload. No Android bitmap, main-thread scheduling or device FPS claim.
+Allocated bytes include frame/model/checksum overhead, not only renderer allocations.
+Later story anchors are intentional timeline seeks; compare each stage separately.
+Cold stage has a cold renderer cache; process-wide sprite caches may be warm from previous scenes.

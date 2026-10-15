@@ -11,13 +11,16 @@ class HoodieInteractionResolver(
     private val rules: List<InteractionRule>,
     private val random: Random = Random.Default,
     private val config: HoodieInteractionConfig = HoodieInteractionConfig(),
+    private val venuesEnabled: Boolean = com.hoodie.app.core.config.HoodieConfig.HOODIE_VENUE_INTERACTIONS_V1,
 ) {
     private val policy = HoodieInteractionPolicy(config)
 
     fun stillEligible(response: InteractionResponse, context: InteractionContext): Boolean {
         if (response.ruleId == "repeat") return true
         val rule = rules.firstOrNull { it.id == response.ruleId } ?: return false
-        return (rule.activity == null || rule.activity == context.activity) && matches(rule.condition, context)
+        return (venuesEnabled || rule.scene !in venueScenes) &&
+            (rule.scene == null || rule.scene == context.scene || context.scene == SceneId.HOME && context.userContext == UserContextType.WORK && rule.scene == SceneId.OFFICE) &&
+            (rule.activity == null || rule.activity == context.activity) && matches(rule.condition, context)
     }
 
     fun resolve(context: InteractionContext, gesture: InteractionGesture, history: HoodieInteractionHistory, now: Long): InteractionDecision {
@@ -32,7 +35,7 @@ class HoodieInteractionResolver(
         }
         val eligible = rules.filter { rule ->
             val workAtHome = context.scene == SceneId.HOME && context.userContext == UserContextType.WORK
-            rule.gesture == gesture && (rule.scene == null || rule.scene == context.scene && !(workAtHome && rule.scene == SceneId.HOME) ||
+            (venuesEnabled || rule.scene !in venueScenes) && rule.gesture == gesture && (rule.scene == null || rule.scene == context.scene && !(workAtHome && rule.scene == SceneId.HOME) ||
                 workAtHome && rule.scene == SceneId.OFFICE) &&
                 (rule.activity == null || rule.activity == context.activity) && matches(rule.condition, context)
         }
@@ -96,6 +99,36 @@ class HoodieInteractionResolver(
             InteractionCondition.LISTENING -> anim(AnimationId.VISIT_LISTEN)
             InteractionCondition.LAUGH -> anim(AnimationId.VISIT_LAUGH)
             InteractionCondition.SAFE_STOP -> c.safePassengerStop && c.vehicleMoving == false
+            InteractionCondition.BAKERY_CHOOSE -> anim(AnimationId.BAKERY_CHOOSE)
+            InteractionCondition.BAKERY_WAIT -> anim(AnimationId.BAKERY_WAIT_ORDER) && has(c, com.hoodie.app.pixel.scene.SceneFlag.ORDER_PENDING)
+            InteractionCondition.BAKERY_COFFEE -> a.group == com.hoodie.app.pixel.animation.AnimGroup.COFFEE && has(c, com.hoodie.app.pixel.scene.SceneFlag.MUG_IN_HAND)
+            InteractionCondition.BAKERY_REST -> anim(AnimationId.BAKERY_PEOPLE_WATCH, AnimationId.IDLE_SIT) && !has(c, com.hoodie.app.pixel.scene.SceneFlag.PASTRY_IN_HAND)
+            InteractionCondition.MALL_WINDOW -> anim(AnimationId.MALL_WINDOW_SHOP)
+            InteractionCondition.VENUE_STATIONARY -> !c.walkingNow && !c.transitioning && anim(AnimationId.IDLE, AnimationId.IDLE_LOOK, AnimationId.LOOK_AROUND, AnimationId.MALL_WINDOW_SHOP, AnimationId.LEISURE_BENCH, AnimationId.IDLE_SIT, AnimationId.SHOP_LOOK)
+            InteractionCondition.MALL_REST -> anim(AnimationId.LEISURE_BENCH, AnimationId.IDLE_SIT)
+            InteractionCondition.BEACH_SEA -> anim(AnimationId.BEACH_LOOK_SEA)
+            InteractionCondition.BEACH_LOUNGE -> anim(AnimationId.BEACH_LOUNGE)
+            InteractionCondition.BEACH_ICE_CREAM -> anim(AnimationId.BEACH_ICE_CREAM) && has(c, com.hoodie.app.pixel.scene.SceneFlag.ICE_CREAM_IN_HAND)
+            InteractionCondition.BEACH_SAND -> !c.walkingNow && anim(AnimationId.IDLE, AnimationId.LOOK_AROUND)
+            InteractionCondition.CINEMA_WAIT -> c.cinemaPhase in setOf(com.hoodie.app.pixel.npc.venue.CinemaPhase.LOBBY, com.hoodie.app.pixel.npc.venue.CinemaPhase.DIMMING) && anim(AnimationId.CINEMA_WATCH, AnimationId.IDLE, AnimationId.CINEMA_BUY_POPCORN)
+            InteractionCondition.CINEMA_WATCH -> anim(AnimationId.CINEMA_WATCH) && c.cinemaPhase in setOf(com.hoodie.app.pixel.npc.venue.CinemaPhase.DIMMING, com.hoodie.app.pixel.npc.venue.CinemaPhase.SCREENING)
+            InteractionCondition.CINEMA_REACT -> anim(AnimationId.CINEMA_REACT) && c.cinemaPhase == com.hoodie.app.pixel.npc.venue.CinemaPhase.SCREENING
+            InteractionCondition.CINEMA_POPCORN -> anim(AnimationId.CINEMA_EAT_POPCORN) && has(c, com.hoodie.app.pixel.scene.SceneFlag.POPCORN_HELD)
+            InteractionCondition.CINEMA_AFTER -> c.seated && anim(AnimationId.CINEMA_WATCH, AnimationId.CINEMA_REACT, AnimationId.CINEMA_EAT_POPCORN) && c.cinemaPhase == com.hoodie.app.pixel.npc.venue.CinemaPhase.EXIT_LIGHTS
+            InteractionCondition.PHARMACY_SHELVES -> anim(AnimationId.SHOP_LOOK)
+            InteractionCondition.PHARMACY_PRODUCT -> anim(AnimationId.PHARMACY_EXAMINE) && has(c, com.hoodie.app.pixel.scene.SceneFlag.ITEM_HELD)
+            InteractionCondition.VENUE_WAIT -> anim(AnimationId.IDLE, AnimationId.IDLE_LOOK)
+            InteractionCondition.HOTEL_CHECK_IN -> anim(AnimationId.HOTEL_CHECK_IN)
+            InteractionCondition.HOTEL_LOBBY -> anim(AnimationId.LOOK_AROUND)
+            InteractionCondition.HOTEL_WAIT -> anim(AnimationId.HOTEL_CHECK_WATCH, AnimationId.IDLE_SIT)
+            InteractionCondition.HOTEL_WATCH -> anim(AnimationId.HOTEL_CHECK_WATCH)
+            InteractionCondition.HOTEL_REST -> c.seated && anim(AnimationId.IDLE_SIT)
         }
+    }
+
+    private fun has(c: InteractionContext, flag: com.hoodie.app.pixel.scene.SceneFlag) = flag in c.sceneFlags
+
+    companion object {
+        val venueScenes = setOf(SceneId.BAKERY, SceneId.MALL, SceneId.BEACH, SceneId.CINEMA, SceneId.PHARMACY, SceneId.HOTEL)
     }
 }

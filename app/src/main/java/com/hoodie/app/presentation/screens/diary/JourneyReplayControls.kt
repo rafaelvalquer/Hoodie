@@ -64,6 +64,9 @@ fun JourneyReplayControls(
     onReset: () -> Unit,
     onSpeed: (ReplaySpeed) -> Unit,
     modifier: Modifier = Modifier,
+    onPrevious: (() -> Unit)? = null,
+    onNext: (() -> Unit)? = null,
+    showSpeedSelector: Boolean = true,
 ) {
     val stateLabel = stringResource(
         when (replay.state) {
@@ -76,7 +79,7 @@ fun JourneyReplayControls(
     val enabled = !data.isEmpty && data.endAt > data.startAt
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconBox("⏮", stringResource(R.string.journey_replay_previous), enabled) { onSeek(JourneyReplayAssembler.previous(data, replay.currentTimestamp)) }
+            IconBox("⏮", stringResource(R.string.journey_replay_previous), enabled) { onPrevious?.invoke() ?: onSeek(JourneyReplayAssembler.previous(data, replay.currentTimestamp)) }
             PixelButton(
                 stringResource(
                     when (replay.state) {
@@ -90,7 +93,7 @@ fun JourneyReplayControls(
                 color = HoodieColors.Mint,
                 enabled = enabled,
             )
-            IconBox("⏭", stringResource(R.string.journey_replay_next), enabled) { onSeek(JourneyReplayAssembler.next(data, replay.currentTimestamp)) }
+            IconBox("⏭", stringResource(R.string.journey_replay_next), enabled) { onNext?.invoke() ?: onSeek(JourneyReplayAssembler.next(data, replay.currentTimestamp)) }
             IconBox("↺", stringResource(R.string.journey_replay_reset), enabled, onReset)
         }
         if (enabled) {
@@ -121,7 +124,7 @@ fun JourneyReplayControls(
                 Text(formatClock(data.endAt, zone), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
             }
         }
-        ReplaySpeedSelector(replay.speed, onSpeed = onSpeed)
+        if (showSpeedSelector) ReplaySpeedSelector(replay.speed, onSpeed = onSpeed)
     }
 }
 

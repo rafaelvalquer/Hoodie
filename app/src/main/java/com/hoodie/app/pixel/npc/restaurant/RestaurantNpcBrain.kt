@@ -21,7 +21,21 @@ data class RestaurantNpcBrain(
     val clockMinute: Int,
     val hoodieFoodServed: Boolean = false,
 ) {
+    private var cachedAt = Long.MIN_VALUE
+    private var cachedState: RestaurantNpcState? = null
+
+    /** Every consumer of a frame shares the immutable meal state; seeks still recompute purely. */
+    @Synchronized
     fun stateAt(timeMs: Long): RestaurantNpcState {
+        val at = timeMs.coerceAtLeast(0)
+        if (at == cachedAt) cachedState?.let { return it }
+        val state = computeStateAt(at)
+        cachedAt = at; cachedState = state
+        com.hoodie.app.pixel.performance.SceneDiagnostics.snapshotBuilt(com.hoodie.app.pixel.scene.SceneId.RESTAURANT)
+        return state
+    }
+
+    private fun computeStateAt(timeMs: Long): RestaurantNpcState {
         val time = timeMs.coerceAtLeast(0)
         val seed = daySeed * 31 + variant
         val startSpot = RestaurantNpcSpot.DOOR

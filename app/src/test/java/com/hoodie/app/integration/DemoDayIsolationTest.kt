@@ -1,5 +1,6 @@
 package com.hoodie.app.integration
 
+import android.app.Application
 import com.hoodie.app.core.model.UserContextType
 import com.hoodie.app.engine.demo.DemoDayFactory
 import com.hoodie.app.engine.demo.DemoDiaryAssembler
@@ -17,7 +18,7 @@ import java.time.ZoneId
 
 /** ONB-06: a jornada completa é reproduzida em memória, sem tocar no Room real. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], application = Application::class)
 class DemoDayIsolationTest {
     private lateinit var g: TestGraph
     private val zone = ZoneId.of("America/Sao_Paulo")
@@ -30,6 +31,7 @@ class DemoDayIsolationTest {
         g.db.confirmationDao().idsAfter(0).size, g.db.questionDao().since(0).size,
         g.db.intelligenceDao().routineSlots().size, g.db.intelligenceDao().correctionsSince(0).size,
     )
+
 
     @Test fun `o dia de demonstracao nao grava nada no banco real`() = runBlocking {
         val before = counts()
@@ -55,4 +57,5 @@ class DemoDayIsolationTest {
         assertTrue(names.toString(), "Casa" in names && "Trabalho" in names && "Restaurante" in names)
         assertTrue(view.journey.nodes.isNotEmpty())
     }
+
 }

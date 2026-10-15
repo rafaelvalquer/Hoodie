@@ -10,7 +10,7 @@ data class DemoDiaryView(val diary: DailyDiary, val journey: JourneyMapData)
 /** Reaproveita os montadores reais do Diário com dados em memória; somente leitura. */
 object DemoDiaryAssembler {
     fun assemble(day: DemoDay): DemoDiaryView {
-        val diary = DiaryAssembler.build(day.date, day.contexts, day.timeline, emptyList(), day.places, day.dayStart, day.dayEnd, day.now)
+        val diary = DiaryAssembler.build(day.date, day.contexts, day.timeline, day.activities, day.places, day.dayStart, day.dayEnd, day.now, day.activityWindow)
         return DemoDiaryView(diary, JourneyMapAssembler.build(diary, day.now))
     }
 }

@@ -11,6 +11,11 @@ import com.hoodie.app.core.time.MINUTE_MS
 object HoodieConfig {
     /** Opt in only after validating touch interactions for the intended build. */
     const val HOODIE_TOUCH_INTERACTIONS_V1 = false
+    const val HOODIE_REACTION_COORDINATOR_V1 = false
+    const val HOODIE_VENUE_INTERACTIONS_V1 = false
+    const val HOODIE_CONTEXT_PRESENTATION_V1 = false
+    const val HOODIE_SCENE_PERF_DIAGNOSTICS = false
+    const val HOODIE_DEMO_REPLAY_V1 = false
     /** Efeitos sonoros das interações (só tocam com as interações ligadas e o som ativo nos Ajustes). */
     const val HOODIE_INTERACTION_SOUNDS = true
     const val TRANSPORT_SPEED_SAMPLE_MAX_ATTEMPTS = 5

@@ -14,6 +14,7 @@ internal class ReactionResolver {
     private var interactive: PendingInteractiveReaction? = null
     val hasPending: Boolean get() = pending.isNotEmpty()
     val hasInteractivePending: Boolean get() = interactive != null
+    val interactiveSource get() = interactive?.response?.source
 
     /** Does not modify the established automatic reaction path when the feature is off. */
     fun cancelInteractive() { interactive = null }

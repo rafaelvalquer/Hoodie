@@ -154,7 +154,7 @@ class DeveloperLabViewModel @Inject constructor(
     }
 }
 
-private val tabs = listOf("PIXEL", "CONTEXT", "GEOFENCE", "TRANSPORT", "SIMULATOR", "DATABASE", "DIARY", "LOG")
+private val tabs = listOf("PIXEL", "CONTEXT", "GEOFENCE", "TRANSPORT", "SIMULATOR", "DATABASE", "DIARY", "LOG", "PERFORMANCE")
 
 @Composable
 fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: DeveloperLabViewModel = hiltViewModel()) {
@@ -185,6 +185,7 @@ fun DeveloperLabScreen(onBack: () -> Unit, onOpen: (String) -> Unit, vm: Develop
             "SIMULATOR" -> SimulatorTab(snap, zone, vm::advance, vm::resetClock)
             "DATABASE" -> DatabaseTab(snap)
             "DIARY" -> DiaryLabScreen(Modifier.fillMaxWidth())
+            "PERFORMANCE" -> ScenePerformanceTab()
             "LOG" -> LogTab(log, zone)
         }
     }
