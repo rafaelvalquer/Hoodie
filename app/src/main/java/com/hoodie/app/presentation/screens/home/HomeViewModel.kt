@@ -152,7 +152,7 @@ class HomeViewModel @Inject constructor(
         request.context?.let { original ->
             if (original.activity != context.activity || original.userContext != context.userContext || original.animation != context.animation) return false
         }
-        return isInteractionCurrent(request) && request.scene == frame.scene.id &&
+        return interactionSession.eligible(request, android.os.SystemClock.uptimeMillis()) && request.scene == frame.scene.id &&
             interactions?.get()?.stillEligible(request.response, context) == true &&
             interactionSafety.evaluate(context, request.response.gesture, HoodieInteractionHistory(), android.os.SystemClock.uptimeMillis()) == null
     }

@@ -43,6 +43,27 @@ class HoodieInteractionResumeTest {
         assertFalse(m.interact(response, SceneId.OFFICE, 3))
     }
 
+    @Test fun `delivery preserves remaining deadline instead of granting another waiting window`() {
+        val m = machine(SceneId.OFFICE, AnimationId.WORK_TYPING)
+        assertFalse(m.interact(response, SceneId.OFFICE, 3, maxPendingMs = 0))
+        assertTrue(m.interact(response, SceneId.OFFICE, 3, maxPendingMs = 25))
+        val expired = m.frame(28, 600, DayPeriod.DAY)!!
+        assertNull(expired.interactionStarted)
+        assertFalse(expired.interactionBusy)
+        assertEquals(AnimationId.WORK_TYPING, expired.animation)
+    }
+
+    @Test fun `coffee with a safe boundary beyond two seconds expires without interrupting the mug`() {
+        val m = machine(SceneId.OFFICE, AnimationId.COFFEE_SIT)
+        val before = m.frame(2, 600, DayPeriod.DAY)!!
+        assertTrue(m.interact(response, SceneId.OFFICE, 3))
+        val frames = (4L..4_000L step 20).map { m.frame(it, 600, DayPeriod.DAY)!! }
+        assertTrue(frames.none { it.interactionStarted != null || it.animation in response.animations })
+        assertTrue(frames.all { it.x == before.x && it.y == before.y && it.env.flags == before.env.flags })
+        assertEquals(AnimationId.COFFEE_SIT, frames.last().animation)
+        assertFalse(frames.last().interactionBusy)
+    }
+
     @Test fun `interaction never replays page or food completion events`() {
         for ((scene, animation, flag) in listOf(
             Triple(SceneId.SCHOOL, AnimationId.STUDY_PAGE_TURN, SceneFlag.PAGE_TURNED),

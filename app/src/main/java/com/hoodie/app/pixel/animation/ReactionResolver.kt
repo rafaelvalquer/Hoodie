@@ -28,7 +28,7 @@ internal class ReactionResolver {
 
     fun takeInteractiveReady(now: Long, visual: VisualState?, animation: AnimationId, canStart: Boolean): PendingInteractiveReaction? {
         val request = interactive ?: return null
-        if (now > request.expiresAt || visual != request.visual || animation != request.animation || !canStart) {
+        if (now >= request.expiresAt || visual != request.visual || animation != request.animation || !canStart) {
             cancelInteractive()
             return null
         }

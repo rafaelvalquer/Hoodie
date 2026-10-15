@@ -171,7 +171,10 @@ class AnimationStateMachine(
     }
 
     /** A single, expiring request; gestures never replace or queue behind another reaction. */
-    fun interact(response: com.hoodie.app.engine.interaction.InteractionResponse, expectedScene: SceneId, now: Long): Boolean {
+    fun interact(response: com.hoodie.app.engine.interaction.InteractionResponse, expectedScene: SceneId, now: Long,
+        maxPendingMs: Long = com.hoodie.app.engine.interaction.HoodieInteractionConfig().maxPendingMs,
+    ): Boolean {
+        if (maxPendingMs <= 0) return false
         val current = visual ?: return false
         if (current.scene != expectedScene || pending != null || step != Step.Loop || reactions.hasPending ||
             reactions.hasInteractivePending || interactivePlayback != null || lastPresentedFrame == null) return false
@@ -181,7 +184,7 @@ class AnimationStateMachine(
             animStart + ClipTiming.cycleEnd(sprites().durations(animation, direction), now - animStart, animation.loop)
         else interruptBoundary(now)
         return reactions.requestInteractive(response, current, animation, boundary,
-            now + com.hoodie.app.engine.interaction.HoodieInteractionConfig().maxPendingMs)
+            now + maxPendingMs.coerceAtMost(com.hoodie.app.engine.interaction.HoodieInteractionConfig().maxPendingMs))
     }
 
     fun cancelInteractiveReactions() { reactions.cancelInteractive(); interactivePlayback = null }

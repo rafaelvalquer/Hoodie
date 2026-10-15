@@ -22,10 +22,12 @@ class HoodiePettingIntegrationTest {
         for ((scene, animation, flags) in cases) {
             val machine = AnimationStateMachine(Random(2))
             machine.place(VisualState(scene, SpotId.CENTER, listOf(MicroAction(animation, 1, 60_000, 60_000)), steadyFlags = flags), 1)
-            val before = machine.frame(2, 600, DayPeriod.DAY)!!
+            // Coffee and garment cycles exceed 2s; request partway through so their
+            // safe boundaries fit within the plan's 2s pending window.
+            val before = machine.frame(702, 600, DayPeriod.DAY)!!
             val posture = machine.posture
-            assertTrue(machine.interact(pet, scene, 3))
-            val reacted = (4L..8_000L step 20).map { machine.frame(it, 600, DayPeriod.DAY)!! }
+            assertTrue(machine.interact(pet, scene, 703))
+            val reacted = (704L..8_000L step 20).map { machine.frame(it, 600, DayPeriod.DAY)!! }
             assertTrue(reacted.any { it.interactionStarted == pet })
             assertEquals(1, reacted.count { it.interactionStarted == pet })
             assertTrue(reacted.all { it.x == before.x && it.y == before.y })

@@ -24,6 +24,14 @@ class HoodieInteractionHitTestTest {
             return HoodieInteractionHitTest.hit(f, x, y, 500, 680)
         }
         assertTrue(hit(opaque))
+        val visibleX = 10 + 2 * (f.x - f.sprite.anchors.feet.x + opaque % image.width) + 1f
+        val visibleY = 20 + 2 * (f.y - f.sprite.anchors.feet.y + opaque / image.width) + 1f
+        for (unavailable in listOf(
+            f.copy(interactionTransitioning = true),
+            f.copy(occupancy = f.occupancy.copy(present = false)),
+            f.copy(occupancy = f.occupancy.copy(transition = com.hoodie.app.pixel.animation.HoodieOccupancy.Transition.LEAVING)),
+        )) assertFalse(HoodieInteractionHitTest.hit(unavailable, visibleX, visibleY, 500, 680))
+        assertFalse(HoodieInteractionHitTest.hit(f, Float.NaN, visibleY, 500, 680))
         assertFalse(hit(transparent))
         assertFalse(HoodieInteractionHitTest.hit(f, 1f, 1f, 500, 680))
         assertFalse(HoodieInteractionHitTest.hit(f.copy(fade = 0f), 250f, 340f, 500, 680))

@@ -7,7 +7,7 @@ data class HoodieInteractionConfig(
     val historySize: Int = 3,
     val bubbleDurationMs: Long = 3_500,
     val maxPettingMs: Long = 3_000,
-    val maxPendingMs: Long = 3_000,
+    val maxPendingMs: Long = 2_000,
     val gestureExitToleranceLogicalPx: Int = DEFAULT_EXIT_TOLERANCE_LOGICAL_PX,
 ) {
     init {

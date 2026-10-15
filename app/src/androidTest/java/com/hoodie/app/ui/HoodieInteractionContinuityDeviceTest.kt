@@ -49,8 +49,12 @@ class HoodieInteractionContinuityDeviceTest(
                     onHoodieGesture = { gesture, frame ->
                         if (baseline == null) {
                             assertEquals(InteractionGesture.LONG_PRESS, gesture)
-                            baseline = frame
-                            assertTrue(requests.tryEmit(InteractionRequest(response, scene, 1)))
+                            // Exercise successful continuity near a safe pause. A request at
+                            // the beginning of the 2.6s garment cycle must expire under V1.
+                            if (frame.frameIndex >= animation.frames.size / 2) {
+                                baseline = frame
+                                assertTrue(requests.tryEmit(InteractionRequest(response, scene, 1)))
+                            }
                         } else resumed = frame
                     },
                     interactionAllowed = { _, frame -> frames.add(frame); true },
@@ -63,8 +67,15 @@ class HoodieInteractionContinuityDeviceTest(
         rule.waitForIdle()
         rule.mainClock.advanceTimeBy(40)
         rule.waitUntil(5_000) { presented > 0 }
-        rule.onNodeWithTag("hoodie_interaction_target")
-            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnLongClick) { it() }
+        val gestureDeadline = android.os.SystemClock.uptimeMillis() + 5_000
+        while (baseline == null && android.os.SystemClock.uptimeMillis() < gestureDeadline) {
+            rule.onNodeWithTag("hoodie_interaction_target")
+                .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnLongClick) { it() }
+            rule.mainClock.advanceTimeBy(40)
+            Thread.sleep(40)
+            rule.waitForIdle()
+        }
+        assertNotNull("No safe cycle window presented", baseline)
         val deadline = android.os.SystemClock.uptimeMillis() + 15_000
         while (finished == 0 && android.os.SystemClock.uptimeMillis() < deadline) {
             rule.mainClock.advanceTimeBy(40)

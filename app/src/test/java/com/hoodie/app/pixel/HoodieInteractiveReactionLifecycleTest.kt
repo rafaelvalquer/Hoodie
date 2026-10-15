@@ -34,4 +34,11 @@ class HoodieInteractiveReactionLifecycleTest {
             assertFalse(resolver.hasInteractivePending)
         }
     }
+
+    @Test fun `deadline is exclusive even when safe boundary arrives at expiry`() {
+        val resolver = ReactionResolver()
+        assertTrue(resolver.requestInteractive(response, visual, AnimationId.IDLE, 200, 200))
+        assertNull(resolver.takeInteractiveReady(200, visual, AnimationId.IDLE, true))
+        assertFalse(resolver.hasInteractivePending)
+    }
 }

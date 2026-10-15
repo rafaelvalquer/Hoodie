@@ -39,4 +39,22 @@ class HoodieInteractionSessionTest {
         assertNull(session.history.lastSpeechAt)
         assertTrue(HoodieInteractionPolicy().evaluate(InteractionContext(SceneId.HOME), InteractionGesture.TAP, session.history, 1_100) is InteractionDecision.Cooldown)
     }
+
+    @Test fun `deadline starts at acceptance and expired delivery cannot start speech`() {
+        val session = HoodieInteractionSession()
+        session.start()
+        val request = session.reserve(response, SceneId.HOME, 1_000)!!
+        assertEquals(1_000L, request.createdAtMs)
+        assertEquals(3_000L, request.expiresAtMs)
+        assertTrue(session.eligible(request, 2_999))
+        assertFalse(session.eligible(request, 3_000))
+        assertFalse(session.started(request, 3_000))
+        assertNull(session.history.lastSpeechAt)
+        session.finish(request)
+        val fresh = session.reserve(response, SceneId.HOME, 4_000)!!
+        assertTrue(fresh.requestId > request.requestId)
+        assertTrue(session.started(fresh, 4_001))
+        // Expiry limits the wait; it must not truncate an already playing sequence.
+        assertTrue(session.eligible(fresh, 8_000))
+    }
 }

@@ -38,9 +38,9 @@ class HoodieInteractionSpriteSourceTest {
         val m = AnimationStateMachine(sprites = { sheet })
         m.place(VisualState(SceneId.OFFICE, SpotId.DESK, listOf(MicroAction(AnimationId.COFFEE_SIT, 1, 60_000, 60_000)),
             steadyFlags = setOf(SceneFlag.MUG_IN_HAND)), 1)
-        m.frame(2, 600, DayPeriod.DAY)
-        assertTrue(m.interact(InteractionResponse("mug", listOf(AnimationId.PET_HEAD), null, 0), SceneId.OFFICE, 3))
-        val frames = (4L..8_000L step 20).map { m.frame(it, 600, DayPeriod.DAY)!! }
+        m.frame(202, 600, DayPeriod.DAY)
+        assertTrue(m.interact(InteractionResponse("mug", listOf(AnimationId.PET_HEAD), null, 0), SceneId.OFFICE, 203))
+        val frames = (204L..8_000L step 20).map { m.frame(it, 600, DayPeriod.DAY)!! }
         assertTrue(frames.any { it.animation == AnimationId.PET_HEAD })
         assertTrue(frames.none { it.sprite.source == "test-sheet+interaction" })
         assertTrue(frames.all { SceneFlag.MUG_IN_HAND in it.env.flags })

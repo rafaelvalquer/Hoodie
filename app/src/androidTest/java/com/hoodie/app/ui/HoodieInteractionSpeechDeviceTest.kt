@@ -55,7 +55,9 @@ class HoodieInteractionSpeechDeviceTest(private val fontScale: Float, private va
                         busy = false, zone = ZoneId.of("UTC"), onOpen = {}, homeNow = homeNow,
                         interactionsEnabled = true, interactionRequests = requests,
                         onHoodieGesture = { _, frame ->
-                            if (!sent && !frame.interactionBusy && !frame.interactionTransitioning) sent = requests.tryEmit(request)
+                            // Keep this success-path request within 2s of the coffee pause.
+                            if (!sent && !frame.interactionBusy && !frame.interactionTransitioning &&
+                                frame.frameIndex >= AnimationId.COFFEE_SIT.frames.size / 2) sent = requests.tryEmit(request)
                         },
                         interactionAllowed = { _, frame ->
                             if (frame.animation in response.animations) reactionShown = true

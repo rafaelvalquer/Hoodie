@@ -63,7 +63,12 @@ data class InteractionResponse(
 )
 
 data class InteractionRequest(val response: InteractionResponse, val scene: SceneId, val sessionId: Long,
-    val context: InteractionContext? = null)
+    val context: InteractionContext? = null,
+    val requestId: Long = 0,
+    /** Monotonic timestamps; the deadline applies only until playback starts. */
+    val createdAtMs: Long = 0,
+    val expiresAtMs: Long = Long.MAX_VALUE,
+)
 
 sealed interface InteractionDecision {
     data class Accepted(val response: InteractionResponse) : InteractionDecision

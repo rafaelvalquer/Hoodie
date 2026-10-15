@@ -30,9 +30,9 @@ class HoodieInteractionVisualReviewTest {
                 else -> SpotId.CENTER
             }
             machine.place(VisualState(scene, spot, listOf(MicroAction(animation, 1, 60_000, 60_000)), steadyFlags = flags), 1)
-            val before = machine.frame(2, 600, DayPeriod.DAY)!!
-            assertTrue(machine.interact(InteractionResponse("review", listOf(AnimationId.PET_HEAD, AnimationId.PURR, AnimationId.NUZZLE), null, 0, 3_000), scene, 3))
-            val sequence = (4L..8_000L step 40).map { machine.frame(it, 600, DayPeriod.DAY)!! }
+            val before = machine.frame(702, 600, DayPeriod.DAY)!!
+            assertTrue(machine.interact(InteractionResponse("review", listOf(AnimationId.PET_HEAD, AnimationId.PURR, AnimationId.NUZZLE), null, 0, 3_000), scene, 703))
+            val sequence = (704L..8_000L step 40).map { machine.frame(it, 600, DayPeriod.DAY)!! }
             val frames = listOf(before) + listOf(AnimationId.PET_HEAD, AnimationId.PURR, AnimationId.NUZZLE).map { id -> sequence.first { it.animation == id } } + sequence.last()
             assertEquals(animation, frames.last().animation)
             val renderer = SceneRenderer(true)

@@ -1,5 +1,7 @@
 # Homologação — Interações com o Hoodie V1
 
+> Registro histórico da validação de 14/10/2026. A revisão de 15/10/2026 restabelece a flag inicialmente desativada e o prazo pendente de 2 segundos conforme o plano recebido. Os resultados dessa revisão estão em [hoodie-interactions-plan-2026-10-15.md](hoodie-interactions-plan-2026-10-15.md).
+
 Status: **concluído; flag ativada e APK instalado no Pixel 8 emulado**. Gates de testes, interface, acessibilidade, build e lint aprovados; testes físicos dispensados pelo usuário.
 
 Em 14/10/2026, o usuário informou que dispõe apenas do emulador e autorizou continuar sem testes em aparelho físico. A homologação física foi dispensada para esta entrega; nenhuma evidência deste relatório deve ser apresentada como teste físico.

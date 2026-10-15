@@ -162,7 +162,8 @@ fun HoodieSceneView(
         if (interactionsEnabled) interactionRequests?.collect { request ->
             val frame = interaction.frame
             if (interaction.active && frame != null && allowedCallback(request, frame) &&
-                machine.interact(request.response, request.scene, clock.now(currentSpeed))) interaction.request = request
+                machine.interact(request.response, request.scene, clock.now(currentSpeed),
+                    request.expiresAtMs - SystemClock.uptimeMillis())) interaction.request = request
             else finishedCallback(request)
         }
         else machine.cancelInteractiveReactions()

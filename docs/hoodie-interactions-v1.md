@@ -4,7 +4,7 @@ Implementação do plano aprovado: toque no personagem para uma reação context
 
 ## Ativação
 
-`HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1` está `true` após aprovação dos testes e da interface no Pixel 8 emulado e das ações com TalkBack ativo. O usuário dispensou os testes físicos. Para desativar, alterar a constante para `false`. `HoodieSceneView` acrescenta somente parâmetros opcionais; as telas existentes continuam usando o mesmo contrato. Com a flag desligada não instala gestos nem ações de acessibilidade e o catálogo é uma dependência lazy da ViewModel.
+`HoodieConfig.HOODIE_TOUCH_INTERACTIONS_V1` está `false`, conforme o valor inicial do plano técnico. Para validar em builds internos, alterar a constante para `true`; a ativação destinada aos usuários depende de homologação. O relatório de 14/10/2026 registra a validação da implementação anterior, que estava ativada. `HoodieSceneView` acrescenta somente parâmetros opcionais; as telas existentes continuam usando o mesmo contrato. Com a flag desligada não instala gestos nem ações de acessibilidade e o catálogo é uma dependência lazy da ViewModel.
 
 ## Motor e catálogo
 
@@ -16,7 +16,7 @@ O contexto utiliza a animação e os elementos do último frame apresentado. O r
 
 Sono, transição, Home inativa e reação pendente/ativa bloqueiam novos gestos. Carro, bicicleta e modalidade desconhecida permanecem bloqueados. Transporte de passageiro exige parada observada recentemente, modalidade confirmada ou escolhida pela pessoa e ausência de movimento; toque longo permanece desabilitado. Na dúvida a interação é bloqueada.
 
-O histórico existe apenas na sessão da Home. Intervalo de gestos: 900 ms; fala: 10 s; histórico: três frases; balão: 3,5 s; carinho: até 3 s. Quando não há variante fora do histórico, a resposta é silenciosa. Nenhuma fila adicional de reações é criada.
+O histórico existe apenas na sessão da Home. Intervalo de gestos: 900 ms; fala: 10 s; histórico: três frases; balão: 3,5 s; carinho: até 3 s; validade pendente: 2 s desde a aceitação do gesto, incluindo a entrega ao motor. Cada solicitação recebe um ID próprio, instante de criação e prazo monotônico. O início confirma a fala apenas dentro desse prazo; uma sequência já iniciada pode terminar normalmente. Quando não há variante fora do histórico, a resposta é silenciosa. Nenhuma fila adicional de reações é criada.
 
 ## Captura e continuidade
 
