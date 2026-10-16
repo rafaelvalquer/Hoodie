@@ -1,0 +1,7 @@
+Execução: 2026-10-16, Pixel_8 AVD (Android 17 / API 37, 1080x2400, 60 Hz), janela gráfica visível, GPU host Intel Iris Xe / skiagl.
+Carga core: 11 cenas, 15 quadros frios e 600 quadros por estágio de aquecimento e steady; 33 amostras Canvas e 33 Window FrameMetrics.
+FPS steady: 29.94–30.03, mediana 29.99.
+Canvas P95 warmup: 34.95–36.98 ms (11/11 <=40 ms).
+Canvas P95 steady: 35.26–38.59 ms (11/11 <=40 ms).
+Window UI draw P95 steady: máximo 0.83 ms; GPU P95: 16.40–16.84 ms.
+Diagnóstico detalhado do renderer desligado. Dados sincronizados com o desenho Compose concluído; FrameMetrics coletado pelo listener da janela.

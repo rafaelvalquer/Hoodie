@@ -101,7 +101,8 @@ class ScenePerformanceDeviceTest {
         val coreOnly = InstrumentationRegistry.getArguments().getString("coreOnly")?.toBooleanStrictOrNull() ?: false
         val warmFrames = InstrumentationRegistry.getArguments().getString("warmFrames")?.toIntOrNull() ?: 45
         val steadyFrames = InstrumentationRegistry.getArguments().getString("steadyFrames")?.toIntOrNull() ?: 90
-        require(warmFrames in 15..600 && steadyFrames in 15..600)
+        val scenarioFrames = InstrumentationRegistry.getArguments().getString("scenarioFrames")?.toIntOrNull() ?: 90
+        require(warmFrames in 15..600 && steadyFrames in 15..600 && scenarioFrames in 15..600)
         require(label.matches(Regex("[a-z0-9-]+")))
         val report = File(instrumentation.targetContext.filesDir, "scene-performance-$label.csv")
         // Keep a copy in UTP's additional output directory so it survives app cleanup after tests.
@@ -244,19 +245,20 @@ class ScenePerformanceDeviceTest {
                     sample("warmup", warmFrames)
                     sample("steady", steadyFrames)
                     if (coreOnly) continue
-                    activity.onActivity { speed = 30f }; sample("story", 90)
-                    activity.onActivity { speed = 1f; period = DayPeriod.NIGHT }; sample("night", 90)
+                    activity.onActivity { speed = 30f }; sample("story", scenarioFrames)
+                    activity.onActivity { speed = 1f; period = DayPeriod.NIGHT }; sample("night", scenarioFrames)
                     activity.onActivity { visual = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME, now = 0, personality = null) }
                     awaitFrames(90)
                     if (diagnosticsEnabled) rows += SceneDiagnosticReport.row("exit", SceneDiagnostics.snapshot(com.hoodie.app.pixel.scene.SceneId.HOME))
                     activity.onActivity { visual = case.visual(); period = DayPeriod.DAY }
-                    sample("return", 90)
+                    sample("return", scenarioFrames)
                     activity.onActivity {
                         touch = true
                         visual = case.visual().copy(actions = listOf(MicroAction(AnimationId.IDLE, 1, 60_000, 60_000)),
                             approach = emptyList(), enter = emptyList(), exit = emptyList(), steadyFlags = emptySet())
                     }
-                    sample("safe-pause", 90)
+                    sample("safe-pause", scenarioFrames)
+                    val sessionsBeforeTouch = if (diagnosticsEnabled) SceneDiagnostics.snapshot(case.scene).sessionsCreated else 0L
                     val before = starts.get()
                     val deadline = SystemClock.elapsedRealtime() + 15_000
                     while (starts.get() == before && SystemClock.elapsedRealtime() < deadline) {
@@ -266,14 +268,18 @@ class ScenePerformanceDeviceTest {
                         SystemClock.sleep(1_000)
                     }
                     assertTrue("${case.scene} must really present touch", starts.get() > before)
-                    sample("touch", 90)
+                    sample("touch", scenarioFrames)
+                    if (diagnosticsEnabled) {
+                        val sessionsAfterTouch = SceneDiagnostics.snapshot(case.scene).sessionsCreated
+                        assertEquals("${case.scene}: petting must not recreate the NPC session", sessionsBeforeTouch, sessionsAfterTouch)
+                    }
                 }
             }
         }
         }
         if (diagnosticsEnabled) {
             assertEquals(1 + cases.size * if (coreOnly) 3 else 9, rows.size)
-            val environment = "model=${android.os.Build.MODEL}\nsdk=${android.os.Build.VERSION.SDK_INT}\nabis=${android.os.Build.SUPPORTED_ABIS.joinToString()}\nlabel=$label\nscenes=${cases.joinToString { it.scene.name }}\nwarmFrames=$warmFrames; steadyFrames=$steadyFrames\nseed=20026; random=26; variant=0; place=42\n" +
+            val environment = "model=${android.os.Build.MODEL}\nsdk=${android.os.Build.VERSION.SDK_INT}\nabis=${android.os.Build.SUPPORTED_ABIS.joinToString()}\nlabel=$label\nscenes=${cases.joinToString { it.scene.name }}\nwarmFrames=$warmFrames; steadyFrames=$steadyFrames; scenarioFrames=$scenarioFrames\nseed=20026; random=26; variant=0; place=42\n" +
                 "Paced Canvas, production renderAndPresent path. Rolling windows retain at most 180 frames.\n"
             File(report.parentFile, "scene-performance-$label-environment.txt").writeText(environment)
             runnerOutput?.let { File(it, "scene-performance-$label-environment.txt").writeText(environment) }

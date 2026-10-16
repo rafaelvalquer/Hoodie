@@ -1,0 +1,13 @@
+Execução: 2026-10-16, ScenePerformanceDeviceTest#elevenScenesPublishFramesAndReportAllStages aprovado em 7m17s.
+Dispositivo de referência: Pixel_8 AVD, Android 17 / API 37, 1080x2400, 60 Hz.
+Emulador Android 37.1.11.0, janela gráfica visível, boot sem carregar/salvar snapshot.
+GPU host: Intel Iris Xe via Android Emulator OpenGL ES Translator; backend skiagl.
+Carga: 11 cenas x oito estágios publicados (cold, warmup, steady, story, night, return, safe-pause, touch), 88 amostras Canvas e 88 amostras Window FrameMetrics.
+Diagnóstico detalhado desativado durante a matriz principal; a coleta FrameMetrics ocorreu no worker de teste.
+Steady: FPS 29.93–30.09, mediana 29.97; Canvas P95 34.79–49.14 ms (10/11 cenas <=40 ms).
+Story: Canvas P95 34.79–38.28 ms (11/11 <=40 ms).
+Touch: FPS 29.83–30.43; Canvas P95 34.53–49.78 ms (9/11 <=40 ms).
+No steady, UI draw P95 0.29–0.68 ms; GPU P95 16.54–17.32 ms.
+No touch, UI draw P95 0.26–0.66 ms; GPU P95 16.31–19.42 ms.
+Comparação com a rodada headless: o AVD gráfico reduziu o P95 do caminho estático (baseline headless 63.31 ms) e do Canvas das cenas (headless 47.81–61.53 ms), indicando que modo de apresentação do emulador afeta fortemente a medida.
+A rodada visível atinge o FPS alvo; o gate de Canvas P95 <=40 ms ainda falha em uma cena steady e duas cenas no toque. Investigar variabilidade por cena e repetir antes de fechar H-07.
