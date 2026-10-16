@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
@@ -20,14 +21,13 @@ import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.presentation.components.HoodieSceneView
 import kotlinx.coroutines.flow.MutableSharedFlow
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicLongArray
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Real production frame callback, bitmap, and renderer scheduling. No synthetic FPS estimate. */
+/** Production Canvas draws, bitmap updates, and renderer scheduling. FPS is measured on draw callbacks. */
 class ScenePerformanceDeviceTest {
     @Test fun elevenScenesPublishFramesAndReportAllStages() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -46,52 +46,47 @@ class ScenePerformanceDeviceTest {
         // Keep a copy in UTP's additional output directory so it survives app cleanup after tests.
         val runnerOutput = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")?.let(::File)
         val rows = mutableListOf(SceneDiagnosticReport.HEADER)
-        val published = AtomicInteger()
-        val presentationIntervals = AtomicLongArray(20_000)
-        val lastPresentationNanos = AtomicLong(0L)
+        val canvasDraws = AtomicInteger()
+        val canvasDrawTimestamps = AtomicLongArray(20_000)
         val starts = AtomicInteger()
         val requests = MutableSharedFlow<InteractionRequest>(extraBufferCapacity = 1)
         var visual by mutableStateOf(SceneBenchmarkScenes.cases.first().visual())
         var period by mutableStateOf(DayPeriod.DAY)
-        var speed by mutableFloatStateOf(1f)
+        var speed by mutableStateOf(1f)
         var touch by mutableStateOf(false)
         val diagnosticsLease = if (diagnosticsEnabled) SceneDiagnostics.acquire() else AutoCloseable { }
         diagnosticsLease.use {
             ActivityScenario.launch(ComponentActivity::class.java).use { activity ->
                 activity.onActivity { a -> a.setContentView(ComposeView(a).apply {
                     setContent {
-                        HoodieSceneView(visual, Modifier.size(240.dp, 320.dp), greet = false, randomSeed = 26,
+                        HoodieSceneView(visual, Modifier.size(240.dp, 320.dp).drawWithContent {
+                            drawContent()
+                            val now = SystemClock.elapsedRealtimeNanos()
+                            val index = canvasDraws.getAndIncrement()
+                            if (index in 0 until canvasDrawTimestamps.length()) canvasDrawTimestamps.set(index, now)
+                        }, greet = false, randomSeed = 26,
                             animationStepMs = 33, clockMinuteOverride = if (period == DayPeriod.NIGHT) 22 * 60 else 10 * 60,
                             periodOverride = period, speed = speed, interactionsEnabled = touch,
                             interactionRequests = requests, onInteractionStarted = { starts.incrementAndGet() },
-                            onScenePresented = {
-                                if (it == visual.scene) {
-                                    val now = SystemClock.elapsedRealtimeNanos()
-                                    val previous = lastPresentationNanos.getAndSet(now)
-                                    val index = published.getAndIncrement()
-                                    if (index > 0 && index < presentationIntervals.length()) {
-                                        presentationIntervals.set(index, (now - previous).coerceAtLeast(0L))
-                                    }
-                                }
-                            })
+                        )
                     }
                 }) }
                 fun awaitFrames(count: Int) {
-                    val first = published.get()
+                    val first = canvasDraws.get()
                     val deadline = SystemClock.elapsedRealtime() + 60_000
-                    while (published.get() - first < count && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(20)
-                    assertTrue("frame publication stalled", published.get() - first >= count)
+                    while (canvasDraws.get() - first < count && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(20)
+                    assertTrue("Canvas draw stalled", canvasDraws.get() - first >= count)
                 }
                 for (case in cases) {
                     activity.onActivity { visual = case.visual(); period = DayPeriod.DAY; speed = 1f; touch = false }
                     SceneDiagnostics.stopPresentation(case.scene)
                     fun sample(stage: String, count: Int) {
                         SceneDiagnostics.snapshot(case.scene)
-                        val publicationsBefore = published.get()
+                        val drawsBefore = canvasDraws.get()
                         val startedAt = SystemClock.elapsedRealtimeNanos()
                         awaitFrames(count)
                         val elapsedNanos = (SystemClock.elapsedRealtimeNanos() - startedAt).coerceAtLeast(1L)
-                        val observedPublications = (published.get() - publicationsBefore).coerceAtLeast(0)
+                        val observedDraws = (canvasDraws.get() - drawsBefore).coerceAtLeast(0)
                         val presentedFps = count * 1_000_000_000.0 / elapsedNanos
                         if (diagnosticsEnabled) {
                             val s = SceneDiagnostics.snapshot(case.scene)
@@ -108,16 +103,18 @@ class ScenePerformanceDeviceTest {
                             }
                             println("SCENE_DEVICE ${case.scene} $stage fps=${s.fps} renderP95=${s.renderP95Ms} bitmap=${s.bitmapP95Ms}")
                         } else {
-                            assertTrue("$stage must publish each requested frame", observedPublications >= count)
+                            assertTrue("$stage must draw each requested frame", observedDraws >= count)
                             val intervals = LongArray((count - 1).coerceAtLeast(0)) { offset ->
-                                presentationIntervals.get(publicationsBefore + offset + 1)
+                                val current = canvasDrawTimestamps.get(drawsBefore + offset + 1)
+                                val previous = canvasDrawTimestamps.get(drawsBefore + offset)
+                                current - previous
                             }.filter { it > 0L }.toLongArray().also { it.sort() }
                             fun intervalPercentile(q: Double): Double = if (intervals.isEmpty()) 0.0 else
                                 intervals[(kotlin.math.ceil(intervals.size * q).toInt() - 1).coerceIn(0, intervals.lastIndex)] / 1_000_000.0
                             val intervalP50 = intervalPercentile(.50)
                             val intervalP95 = intervalPercentile(.95)
                             val intervalP99 = intervalPercentile(.99)
-                            println("SCENE_DIRECT_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps intervalP50Ms=$intervalP50 intervalP95Ms=$intervalP95 intervalP99Ms=$intervalP99")
+                            println("SCENE_CANVAS_DRAW_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps intervalP50Ms=$intervalP50 intervalP95Ms=$intervalP95 intervalP99Ms=$intervalP99")
                             if (case.scene == SceneId.OFFICE) {
                                 val d = ScenePerformanceMonitor.snapshot()
                                 println("SCENE_ENGINE_DETAIL scene=${case.scene} stage=$stage renderP95=${d.frameP95Ms} planningP95=${d.planningP95Ms} stateP95=${d.stateP95Ms} npcP95=${d.npcDrawingP95Ms} sceneP95=${d.sceneDrawingP95Ms} rabbitP95=${d.rabbitDrawingP95Ms} catP95=${d.catDrawingP95Ms} bulldogP95=${d.bulldogDrawingP95Ms} poseP95=${d.npcPoseP95Ms} paintP95=${d.npcPaintP95Ms} turnP95=${d.npcTurnP95Ms} scaleP95=${d.npcScaleP95Ms} compositeP95=${d.npcCompositeP95Ms} speechP95=${d.npcSpeechP95Ms} copyP95=${d.sceneCopyP95Ms} objectsP95=${d.sceneObjectsP95Ms} hoodieP95=${d.sceneHoodieP95Ms} lightP95=${d.sceneLightingP95Ms} postP95=${d.scenePostP95Ms} bitmapP95=${d.bitmapP95Ms} thread=${d.renderThreadName}")
