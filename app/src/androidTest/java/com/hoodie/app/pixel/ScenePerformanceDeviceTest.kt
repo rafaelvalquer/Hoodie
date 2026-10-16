@@ -19,6 +19,8 @@ import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.presentation.components.HoodieSceneView
 import kotlinx.coroutines.flow.MutableSharedFlow
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicLongArray
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
@@ -32,6 +34,8 @@ class ScenePerformanceDeviceTest {
         val selectedScene = InstrumentationRegistry.getArguments().getString("benchmarkScene")
         val cases = SceneBenchmarkScenes.cases.filter { selectedScene == null || it.scene.name == selectedScene }
         require(cases.isNotEmpty())
+        val diagnosticsEnabled = InstrumentationRegistry.getArguments().getString("diagnosticsEnabled")
+            ?.toBooleanStrictOrNull() ?: true
         val warmFrames = InstrumentationRegistry.getArguments().getString("warmFrames")?.toIntOrNull() ?: 45
         val steadyFrames = InstrumentationRegistry.getArguments().getString("steadyFrames")?.toIntOrNull() ?: 90
         require(warmFrames in 15..600 && steadyFrames in 15..600)
@@ -41,13 +45,16 @@ class ScenePerformanceDeviceTest {
         val runnerOutput = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")?.let(::File)
         val rows = mutableListOf(SceneDiagnosticReport.HEADER)
         val published = AtomicInteger()
+        val presentationIntervals = AtomicLongArray(20_000)
+        val lastPresentationNanos = AtomicLong(0L)
         val starts = AtomicInteger()
         val requests = MutableSharedFlow<InteractionRequest>(extraBufferCapacity = 1)
         var visual by mutableStateOf(SceneBenchmarkScenes.cases.first().visual())
         var period by mutableStateOf(DayPeriod.DAY)
         var speed by mutableFloatStateOf(1f)
         var touch by mutableStateOf(false)
-        SceneDiagnostics.acquire().use {
+        val diagnosticsLease = if (diagnosticsEnabled) SceneDiagnostics.acquire() else AutoCloseable { }
+        diagnosticsLease.use {
             ActivityScenario.launch(ComponentActivity::class.java).use { activity ->
                 activity.onActivity { a -> a.setContentView(ComposeView(a).apply {
                     setContent {
@@ -55,7 +62,16 @@ class ScenePerformanceDeviceTest {
                             animationStepMs = 33, clockMinuteOverride = if (period == DayPeriod.NIGHT) 22 * 60 else 10 * 60,
                             periodOverride = period, speed = speed, interactionsEnabled = touch,
                             interactionRequests = requests, onInteractionStarted = { starts.incrementAndGet() },
-                            onScenePresented = { if (it == visual.scene) published.incrementAndGet() })
+                            onScenePresented = {
+                                if (it == visual.scene) {
+                                    val now = SystemClock.elapsedRealtimeNanos()
+                                    val previous = lastPresentationNanos.getAndSet(now)
+                                    val index = published.getAndIncrement()
+                                    if (index > 0 && index < presentationIntervals.length()) {
+                                        presentationIntervals.set(index, (now - previous).coerceAtLeast(0L))
+                                    }
+                                }
+                            })
                     }
                 }) }
                 fun awaitFrames(count: Int) {
@@ -69,20 +85,35 @@ class ScenePerformanceDeviceTest {
                     SceneDiagnostics.stopPresentation(case.scene)
                     fun sample(stage: String, count: Int) {
                         SceneDiagnostics.snapshot(case.scene)
+                        val publicationsBefore = published.get()
+                        val startedAt = SystemClock.elapsedRealtimeNanos()
                         awaitFrames(count)
-                        val s = SceneDiagnostics.snapshot(case.scene)
-                        assertTrue("${case.scene} $stage never rendered", s.frames > 0)
-                        assertTrue(s.activeNpcs >= s.visibleNpcs)
-                        val row = SceneDiagnosticReport.row(stage, s)
-                        rows += row
-                        println("SCENE_DEVICE_CSV $row")
-                        val csv = rows.joinToString("\n", postfix = "\n")
-                        report.writeText(csv)
-                        runnerOutput?.let { directory ->
-                            check(directory.isDirectory || directory.mkdirs()) { "Cannot create UTP output directory: $directory" }
-                            File(directory, report.name).writeText(csv)
+                        val elapsedNanos = (SystemClock.elapsedRealtimeNanos() - startedAt).coerceAtLeast(1L)
+                        val observedPublications = (published.get() - publicationsBefore).coerceAtLeast(0)
+                        val presentedFps = count * 1_000_000_000.0 / elapsedNanos
+                        if (diagnosticsEnabled) {
+                            val s = SceneDiagnostics.snapshot(case.scene)
+                            assertTrue("${case.scene} $stage never rendered", s.frames > 0)
+                            assertTrue(s.activeNpcs >= s.visibleNpcs)
+                            val row = SceneDiagnosticReport.row(stage, s)
+                            rows += row
+                            println("SCENE_DEVICE_CSV $row")
+                            val csv = rows.joinToString("\n", postfix = "\n")
+                            report.writeText(csv)
+                            runnerOutput?.let { directory ->
+                                check(directory.isDirectory || directory.mkdirs()) { "Cannot create UTP output directory: $directory" }
+                                File(directory, report.name).writeText(csv)
+                            }
+                            println("SCENE_DEVICE ${case.scene} $stage fps=${s.fps} renderP95=${s.renderP95Ms} bitmap=${s.bitmapP95Ms}")
+                        } else {
+                            assertTrue("$stage must publish each requested frame", observedPublications >= count)
+                            val intervals = LongArray((count - 1).coerceAtLeast(0)) { offset ->
+                                presentationIntervals.get(publicationsBefore + offset + 1)
+                            }.filter { it > 0L }.toLongArray().also { it.sort() }
+                            val intervalP95 = if (intervals.isEmpty()) 0.0 else
+                                intervals[(kotlin.math.ceil(intervals.size * .95).toInt() - 1).coerceIn(0, intervals.lastIndex)] / 1_000_000.0
+                            println("SCENE_DIRECT_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps intervalP95Ms=$intervalP95")
                         }
-                        println("SCENE_DEVICE ${case.scene} $stage fps=${s.fps} renderP95=${s.renderP95Ms} bitmap=${s.bitmapP95Ms}")
                     }
                     sample("cold", 15)
                     sample("warmup", warmFrames)
@@ -91,7 +122,7 @@ class ScenePerformanceDeviceTest {
                     activity.onActivity { speed = 1f; period = DayPeriod.NIGHT }; sample("night", 90)
                     activity.onActivity { visual = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME, now = 0, personality = null) }
                     awaitFrames(90)
-                    rows += SceneDiagnosticReport.row("exit", SceneDiagnostics.snapshot(com.hoodie.app.pixel.scene.SceneId.HOME))
+                    if (diagnosticsEnabled) rows += SceneDiagnosticReport.row("exit", SceneDiagnostics.snapshot(com.hoodie.app.pixel.scene.SceneId.HOME))
                     activity.onActivity { visual = case.visual(); period = DayPeriod.DAY }
                     sample("return", 90)
                     activity.onActivity {
@@ -113,11 +144,13 @@ class ScenePerformanceDeviceTest {
                 }
             }
         }
-        assertEquals(1 + cases.size * 9, rows.size)
-        val environment = "model=${android.os.Build.MODEL}\nsdk=${android.os.Build.VERSION.SDK_INT}\nabis=${android.os.Build.SUPPORTED_ABIS.joinToString()}\nlabel=$label\nscenes=${cases.joinToString { it.scene.name }}\nwarmFrames=$warmFrames; steadyFrames=$steadyFrames\nseed=20026; random=26; variant=0; place=42\n" +
-            "Paced Canvas, production renderAndPresent path. Rolling windows retain at most 180 frames.\n"
-        File(report.parentFile, "scene-performance-$label-environment.txt").writeText(environment)
-        runnerOutput?.let { File(it, "scene-performance-$label-environment.txt").writeText(environment) }
-        println("SCENE_DEVICE_REPORT ${report.absolutePath}")
+        if (diagnosticsEnabled) {
+            assertEquals(1 + cases.size * 9, rows.size)
+            val environment = "model=${android.os.Build.MODEL}\nsdk=${android.os.Build.VERSION.SDK_INT}\nabis=${android.os.Build.SUPPORTED_ABIS.joinToString()}\nlabel=$label\nscenes=${cases.joinToString { it.scene.name }}\nwarmFrames=$warmFrames; steadyFrames=$steadyFrames\nseed=20026; random=26; variant=0; place=42\n" +
+                "Paced Canvas, production renderAndPresent path. Rolling windows retain at most 180 frames.\n"
+            File(report.parentFile, "scene-performance-$label-environment.txt").writeText(environment)
+            runnerOutput?.let { File(it, "scene-performance-$label-environment.txt").writeText(environment) }
+            println("SCENE_DEVICE_REPORT ${report.absolutePath}")
+        }
     }
 }
