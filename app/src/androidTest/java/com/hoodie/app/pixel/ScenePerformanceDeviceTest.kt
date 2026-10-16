@@ -22,6 +22,7 @@ import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.presentation.components.HoodieSceneView
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.concurrent.atomic.AtomicLongArray
+import java.util.concurrent.atomic.AtomicReference
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
@@ -48,6 +49,10 @@ class ScenePerformanceDeviceTest {
         val rows = mutableListOf(SceneDiagnosticReport.HEADER)
         val canvasDraws = AtomicInteger()
         val canvasDrawTimestamps = AtomicLongArray(20_000)
+        val bitmapPublications = AtomicInteger()
+        val bitmapPublicationTimestamps = AtomicLongArray(20_000)
+        val lastPublishedScene = AtomicReference<SceneId?>(null)
+        val canvasDrawsAtSceneStart = AtomicInteger()
         val starts = AtomicInteger()
         val requests = MutableSharedFlow<InteractionRequest>(extraBufferCapacity = 1)
         var visual by mutableStateOf(SceneBenchmarkScenes.cases.first().visual())
@@ -68,6 +73,16 @@ class ScenePerformanceDeviceTest {
                             animationStepMs = 33, clockMinuteOverride = if (period == DayPeriod.NIGHT) 22 * 60 else 10 * 60,
                             periodOverride = period, speed = speed, interactionsEnabled = touch,
                             interactionRequests = requests, onInteractionStarted = { starts.incrementAndGet() },
+                            onScenePresented = {
+                                val publicationIndex = bitmapPublications.getAndIncrement()
+                                if (publicationIndex in 0 until bitmapPublicationTimestamps.length()) {
+                                    bitmapPublicationTimestamps.set(publicationIndex, SystemClock.elapsedRealtimeNanos())
+                                }
+                                if (lastPublishedScene.get() != it) {
+                                    canvasDrawsAtSceneStart.set(canvasDraws.get())
+                                    lastPublishedScene.set(it)
+                                }
+                            },
                         )
                     }
                 }) }
@@ -77,12 +92,22 @@ class ScenePerformanceDeviceTest {
                     while (canvasDraws.get() - first < count && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(20)
                     assertTrue("Canvas draw stalled", canvasDraws.get() - first >= count)
                 }
+                fun awaitSelectedScene(scene: SceneId) {
+                    val deadline = SystemClock.elapsedRealtime() + 15_000
+                    while ((lastPublishedScene.get() != scene || canvasDraws.get() <= canvasDrawsAtSceneStart.get()) &&
+                        SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(20)
+                    assertEquals("selected scene was published", scene, lastPublishedScene.get())
+                    assertTrue("selected scene reached Compose Canvas", canvasDraws.get() > canvasDrawsAtSceneStart.get())
+                }
                 for (case in cases) {
                     activity.onActivity { visual = case.visual(); period = DayPeriod.DAY; speed = 1f; touch = false }
+                    awaitSelectedScene(case.scene)
+                    if (diagnosticsEnabled) SceneDiagnostics.reset()
                     SceneDiagnostics.stopPresentation(case.scene)
                     fun sample(stage: String, count: Int) {
                         SceneDiagnostics.snapshot(case.scene)
                         val drawsBefore = canvasDraws.get()
+                        val publicationsBefore = bitmapPublications.get()
                         val startedAt = SystemClock.elapsedRealtimeNanos()
                         awaitFrames(count)
                         val elapsedNanos = (SystemClock.elapsedRealtimeNanos() - startedAt).coerceAtLeast(1L)
@@ -114,7 +139,33 @@ class ScenePerformanceDeviceTest {
                             val intervalP50 = intervalPercentile(.50)
                             val intervalP95 = intervalPercentile(.95)
                             val intervalP99 = intervalPercentile(.99)
-                            println("SCENE_CANVAS_DRAW_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps intervalP50Ms=$intervalP50 intervalP95Ms=$intervalP95 intervalP99Ms=$intervalP99")
+                            val publicationCount = (bitmapPublications.get() - publicationsBefore).coerceAtMost(count)
+                            val publicationEnd = (publicationsBefore + publicationCount).coerceAtMost(bitmapPublicationTimestamps.length())
+                            var publicationIndex = (publicationsBefore - 1).coerceAtLeast(0)
+                            var latestPublication = 0L
+                            val presentationLags = ArrayList<Long>(count)
+                            for (drawOffset in 0 until count) {
+                                val draw = canvasDrawTimestamps.get(drawsBefore + drawOffset)
+                                while (publicationIndex < publicationEnd) {
+                                    val publication = bitmapPublicationTimestamps.get(publicationIndex)
+                                    if (publication <= 0L || publication > draw) break
+                                    latestPublication = publication
+                                    publicationIndex++
+                                }
+                                if (latestPublication > 0L && draw >= latestPublication) {
+                                    presentationLags += draw - latestPublication
+                                }
+                            }
+                            val sortedPresentationLags = presentationLags.toLongArray().also { it.sort() }
+                            val publicationIntervals = LongArray((publicationCount - 1).coerceAtLeast(0)) { offset ->
+                                bitmapPublicationTimestamps.get(publicationsBefore + offset + 1) -
+                                    bitmapPublicationTimestamps.get(publicationsBefore + offset)
+                            }.filter { it > 0L }.toLongArray().also { it.sort() }
+                            fun lagPercentile(q: Double): Double = if (sortedPresentationLags.isEmpty()) 0.0 else
+                                sortedPresentationLags[(kotlin.math.ceil(sortedPresentationLags.size * q).toInt() - 1).coerceIn(0, sortedPresentationLags.lastIndex)] / 1_000_000.0
+                            fun publicationIntervalPercentile(q: Double): Double = if (publicationIntervals.isEmpty()) 0.0 else
+                                publicationIntervals[(kotlin.math.ceil(publicationIntervals.size * q).toInt() - 1).coerceIn(0, publicationIntervals.lastIndex)] / 1_000_000.0
+                            println("SCENE_CANVAS_DRAW_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps drawIntervalP50Ms=$intervalP50 drawIntervalP95Ms=$intervalP95 drawIntervalP99Ms=$intervalP99 bitmapPublications=$publicationCount bitmapIntervalP50Ms=${publicationIntervalPercentile(.50)} bitmapIntervalP95Ms=${publicationIntervalPercentile(.95)} bitmapToCanvasP50Ms=${lagPercentile(.50)} bitmapToCanvasP95Ms=${lagPercentile(.95)} bitmapToCanvasP99Ms=${lagPercentile(.99)}")
                             if (case.scene == SceneId.OFFICE) {
                                 val d = ScenePerformanceMonitor.snapshot()
                                 println("SCENE_ENGINE_DETAIL scene=${case.scene} stage=$stage renderP95=${d.frameP95Ms} planningP95=${d.planningP95Ms} stateP95=${d.stateP95Ms} npcP95=${d.npcDrawingP95Ms} sceneP95=${d.sceneDrawingP95Ms} rabbitP95=${d.rabbitDrawingP95Ms} catP95=${d.catDrawingP95Ms} bulldogP95=${d.bulldogDrawingP95Ms} poseP95=${d.npcPoseP95Ms} paintP95=${d.npcPaintP95Ms} turnP95=${d.npcTurnP95Ms} scaleP95=${d.npcScaleP95Ms} compositeP95=${d.npcCompositeP95Ms} speechP95=${d.npcSpeechP95Ms} copyP95=${d.sceneCopyP95Ms} objectsP95=${d.sceneObjectsP95Ms} hoodieP95=${d.sceneHoodieP95Ms} lightP95=${d.sceneLightingP95Ms} postP95=${d.scenePostP95Ms} bitmapP95=${d.bitmapP95Ms} thread=${d.renderThreadName}")

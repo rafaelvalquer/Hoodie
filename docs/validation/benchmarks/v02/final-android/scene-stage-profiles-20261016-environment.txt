@@ -1,0 +1,11 @@
+date=2026-10-16
+device=Pixel_8 (AVD), sdk_gphone16k_x86_64
+android=17 / API 37; x86_64; 1080x2400; 60 Hz
+variant=debug
+benchmark=ScenePerformanceDeviceTest.elevenScenesPublishFramesAndReportAllStages
+label=all-stage-profiles-verified
+diagnosticsEnabled=true; coreOnly=true; warmFrames=180; steadyFrames=180
+scenes=OFFICE,RESTAURANT,SHOPPING,STORE,LEISURE,BAKERY,MALL,BEACH,CINEMA,PHARMACY,HOTEL
+stages=cold,warmup,steady; 33 stage rows
+result=passed; elapsed=3m47s
+limitation=Detailed diagnostics add instrumentation overhead; use for relative stage attribution, not final user cadence.

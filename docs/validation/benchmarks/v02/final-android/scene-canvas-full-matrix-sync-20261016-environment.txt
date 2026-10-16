@@ -1,0 +1,12 @@
+date=2026-10-16
+device=Pixel_8 (AVD), sdk_gphone16k_x86_64
+android=17 / API 37; x86_64; 1080x2400; 60 Hz
+variant=debug
+benchmark=ScenePerformanceDeviceTest.elevenScenesPublishFramesAndReportAllStages
+label=canvas-full-matrix-after-sync
+diagnosticsEnabled=false; coreOnly=false; warmFrames=180; steadyFrames=180
+scenes=OFFICE,RESTAURANT,SHOPPING,STORE,LEISURE,BAKERY,MALL,BEACH,CINEMA,PHARMACY,HOTEL
+stages=cold,warmup,steady,story,night,return,safe-pause,touch; exit exercised between night and return
+measurements=Canvas draw interval after drawContent; bitmap publication interval after setPixels; monotonic clock
+result=passed; elapsed=7m49s; 88 stage rows (11 scenes x 8 stages)
+benchmark note=The test now waits for the selected scene to publish and draw before sampling. Values remain emulator-only and varied from previous runs.
