@@ -28,3 +28,5 @@ O `WindowFrameMetricsProbe` de teste separou desenho do app, GPU e callbacks da 
 
 
 
+
+A matriz GPU host foi ampliada para os oito estágios de H-07, incluindo história e toque, nas 11 cenas. O teste passou em 7m30s (88 linhas Canvas e 88 linhas Window FrameMetrics). Em steady, FPS foi 29,36–30,12 e Canvas P95 48,88–61,03 ms; nenhuma cena cumpriu ≤40 ms. Story ficou em 47,21–62,16 ms e touch em 46,99–61,74 ms, também sem cenas dentro da meta. O desenho UI P95 permaneceu abaixo de 1,22 ms nos três estágios; GPU P95 ficou em 28,90–36,48 ms. O controle estático anterior já excedia a meta, reforçando que o caminho headless/virtual limita a medição. CSVs: [Canvas](scene-canvas-host-gpu-full-matrix-20261016.csv), [FrameMetrics](scene-window-frame-metrics-host-gpu-full-matrix-20261016.csv), [ambiente](scene-window-frame-metrics-host-gpu-full-matrix-20261016-environment.txt). Ainda é necessária validação em dispositivo físico.

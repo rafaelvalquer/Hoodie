@@ -1,0 +1,11 @@
+Execução: 2026-10-16, teste ScenePerformanceDeviceTest#elevenScenesPublishFramesAndReportAllStages aprovado em 7m30s.
+Dispositivo: Pixel_8 AVD, Android 17 / API 37, 1080x2400, 60 Hz, headless (-no-window).
+Renderização: GPU host, Intel Iris Xe via OpenGL ES Translator; backend skiagl confirmado pelo SurfaceFlinger.
+Carga: 11 cenas x 8 estágios (cold, warmup, steady, story, night, return, safe-pause, touch), 88 amostras Canvas e 88 amostras Window FrameMetrics.
+Coleta de métricas detalhadas desligada durante a matriz principal. O probe de Window FrameMetrics é instrumentação exclusiva do teste.
+Estágio steady: FPS 29.36–30.12; Canvas draw interval P95 48.88–61.03 ms (0/11 <= 40 ms).
+Estágio story: FPS 29.37–30.02; Canvas draw interval P95 47.21–62.16 ms (0/11 <= 40 ms).
+Estágio touch: FPS 29.68–30.05; Canvas draw interval P95 46.99–61.74 ms (0/11 <= 40 ms).
+No steady, Window FrameMetrics: UI draw P95 0.32–0.92 ms; GPU P95 29.44–32.45 ms; callback interval P95 61.46–66.87 ms.
+No touch, UI draw P95 0.28–0.70 ms; GPU P95 28.98–38.00 ms; callback interval P95 58.01–65.56 ms.
+Resultados não homologam H-07: o limite P95 de 40 ms não foi atingido, e falta validar em dispositivo Android físico.
