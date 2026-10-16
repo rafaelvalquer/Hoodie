@@ -1,0 +1,13 @@
+date=2026-10-16
+device=Pixel_8(AVD) / sdk_gphone16k_x86_64
+android=17 (API 37)
+abi=x86_64
+display=1080x2400; 60.000004 Hz
+test=ScenePerformanceDeviceTest.elevenScenesPublishFramesAndReportAllStages
+arguments=warmFrames:180; steadyFrames:180; coreOnly:true; diagnosticsEnabled:false
+scenes=OFFICE,RESTAURANT,SHOPPING,STORE,LEISURE,BAKERY,MALL,BEACH,CINEMA,PHARMACY,HOTEL
+measurement=monotonic intervals between actual bitmap publication callbacks; FPS from elapsed monotonic time
+result=passed; elapsed=3m47s
+profileTests=LEISURE and RESTAURANT; warmFrames:180; steadyFrames:180; diagnosticsEnabled:true; passed
+limitation=virtual emulator; no physical-device homologation
+
