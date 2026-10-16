@@ -1,0 +1,5 @@
+scene=PIXEL_BASELINE; stage=steady; AVD Pixel_8 (API 37); GPU host Intel Iris Xe; static 120x160 bitmap drawn at 240x320 dp, paced at about 30 Hz
+canvasDraws=180; drawIntervalP50Ms=47.244139; drawIntervalP95Ms=63.313112
+windowFrames=179; windowCallbackIntervalP50Ms=46.722675; windowCallbackIntervalP95Ms=77.933509
+totalP50Ms=23.763196; totalP95Ms=46.617585; appDrawP50Ms=0.448417; appDrawP95Ms=1.564168
+swapP50Ms=1.308853; swapP95Ms=4.458438; gpuP50Ms=13.757154; gpuP95Ms=28.838319

@@ -1,11 +1,17 @@
 package com.hoodie.app.pixel
 
 import android.os.SystemClock
+import android.os.Handler
+import android.os.HandlerThread
+import android.view.FrameMetrics
+import android.graphics.Bitmap
+import androidx.compose.runtime.withFrameNanos
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
@@ -20,6 +26,7 @@ import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.VisualDirector
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.presentation.components.HoodieSceneView
+import com.hoodie.app.presentation.components.PixelImage
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.concurrent.atomic.AtomicLongArray
 import java.util.concurrent.atomic.AtomicReference
@@ -30,6 +37,59 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /** Production Canvas draws, bitmap updates, and renderer scheduling. FPS is measured on draw callbacks. */
 class ScenePerformanceDeviceTest {
+    @Test fun pixelImageCanvasBaselineReportsWindowFrameStages() {
+        val probe = WindowFrameMetricsProbe()
+        val draws = AtomicInteger()
+        val drawTimestamps = AtomicLongArray(1_000)
+        var renderTick by mutableIntStateOf(0)
+        val bitmap = Bitmap.createBitmap(120, 160, Bitmap.Config.ARGB_8888).apply {
+            val pixels = IntArray(width * height) { index -> if ((index / width + index % width) % 2 == 0) 0xff31475a.toInt() else 0xff7797a1.toInt() }
+            setPixels(pixels, 0, width, 0, 0, width, height)
+        }.asImageBitmap()
+
+        probe.use {
+            ActivityScenario.launch(ComponentActivity::class.java).use { activity ->
+                activity.onActivity { a ->
+                    probe.install(a.window)
+                    a.setContentView(ComposeView(a).apply {
+                        setContent {
+                            LaunchedEffect(Unit) {
+                                var lastFrame = 0L
+                                while (true) {
+                                    val now = withFrameNanos { it }
+                                    if (lastFrame == 0L || now - lastFrame >= 33_333_333L) {
+                                        lastFrame = now
+                                        renderTick++
+                                    }
+                                }
+                            }
+                            PixelImage(bitmap, 120, 160,
+                                Modifier.size(240.dp, 320.dp).drawWithContent {
+                                    drawContent()
+                                    val index = draws.getAndIncrement()
+                                    if (index in 0 until drawTimestamps.length()) {
+                                        drawTimestamps.set(index, SystemClock.elapsedRealtimeNanos())
+                                    }
+                                },
+                                invalidate = { renderTick },
+                            )
+                        }
+                    })
+                }
+                val start = probe.frameCount()
+                val deadline = SystemClock.elapsedRealtime() + 20_000
+                while (draws.get() < 180 && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(20)
+                assertTrue("static pixel canvas produced paced draws", draws.get() >= 180)
+                probe.awaitAdditionalFrames(start, 180)
+                val intervals = LongArray(179) { drawTimestamps.get(it + 1) - drawTimestamps.get(it) }
+                    .filter { it > 0L }.toLongArray().also { it.sort() }
+                fun percentile(q: Double): Double = intervals[(kotlin.math.ceil(intervals.size * q).toInt() - 1)
+                    .coerceIn(0, intervals.lastIndex)] / 1_000_000.0
+                println("SCENE_WINDOW_FRAME_METRICS scene=PIXEL_BASELINE stage=steady canvasDraws=${draws.get()} drawIntervalP50Ms=${percentile(.50)} drawIntervalP95Ms=${percentile(.95)} ${probe.report(start, probe.frameCount())}")
+            }
+        }
+    }
+
     @Test fun elevenScenesPublishFramesAndReportAllStages() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val label = InstrumentationRegistry.getArguments().getString("benchmarkLabel") ?: "latest"
@@ -59,10 +119,14 @@ class ScenePerformanceDeviceTest {
         var period by mutableStateOf(DayPeriod.DAY)
         var speed by mutableStateOf(1f)
         var touch by mutableStateOf(false)
+        val frameMetricsProbe = WindowFrameMetricsProbe()
         val diagnosticsLease = if (diagnosticsEnabled) SceneDiagnostics.acquire() else AutoCloseable { }
+        frameMetricsProbe.use {
         diagnosticsLease.use {
             ActivityScenario.launch(ComponentActivity::class.java).use { activity ->
-                activity.onActivity { a -> a.setContentView(ComposeView(a).apply {
+                activity.onActivity { a ->
+                    frameMetricsProbe.install(a.window)
+                    a.setContentView(ComposeView(a).apply {
                     setContent {
                         HoodieSceneView(visual, Modifier.size(240.dp, 320.dp).drawWithContent {
                             drawContent()
@@ -108,10 +172,14 @@ class ScenePerformanceDeviceTest {
                         SceneDiagnostics.snapshot(case.scene)
                         val drawsBefore = canvasDraws.get()
                         val publicationsBefore = bitmapPublications.get()
+                        val windowFramesBefore = frameMetricsProbe.frameCount()
                         val startedAt = SystemClock.elapsedRealtimeNanos()
                         awaitFrames(count)
+                        frameMetricsProbe.awaitAdditionalFrames(windowFramesBefore, count)
                         val elapsedNanos = (SystemClock.elapsedRealtimeNanos() - startedAt).coerceAtLeast(1L)
                         val observedDraws = (canvasDraws.get() - drawsBefore).coerceAtLeast(0)
+                        val windowMetrics = frameMetricsProbe.report(windowFramesBefore, frameMetricsProbe.frameCount())
+                        println("SCENE_WINDOW_FRAME_METRICS scene=${case.scene} stage=$stage canvasDraws=$observedDraws $windowMetrics")
                         val presentedFps = count * 1_000_000_000.0 / elapsedNanos
                         if (diagnosticsEnabled) {
                             val s = SceneDiagnostics.snapshot(case.scene)
@@ -202,6 +270,7 @@ class ScenePerformanceDeviceTest {
                 }
             }
         }
+        }
         if (diagnosticsEnabled) {
             assertEquals(1 + cases.size * if (coreOnly) 3 else 9, rows.size)
             val environment = "model=${android.os.Build.MODEL}\nsdk=${android.os.Build.VERSION.SDK_INT}\nabis=${android.os.Build.SUPPORTED_ABIS.joinToString()}\nlabel=$label\nscenes=${cases.joinToString { it.scene.name }}\nwarmFrames=$warmFrames; steadyFrames=$steadyFrames\nseed=20026; random=26; variant=0; place=42\n" +
@@ -210,5 +279,66 @@ class ScenePerformanceDeviceTest {
             runnerOutput?.let { File(it, "scene-performance-$label-environment.txt").writeText(environment) }
             println("SCENE_DEVICE_REPORT ${report.absolutePath}")
         }
+    }
+}
+
+/** Collects Android window-frame stages on a test-only worker so timing extraction stays off the UI thread. */
+private class WindowFrameMetricsProbe : AutoCloseable {
+    private data class Metric(val name: String, val id: Int)
+    private val metrics = listOf(
+        Metric("total", FrameMetrics.TOTAL_DURATION),
+        Metric("unknownDelay", FrameMetrics.UNKNOWN_DELAY_DURATION),
+        Metric("input", FrameMetrics.INPUT_HANDLING_DURATION),
+        Metric("animation", FrameMetrics.ANIMATION_DURATION),
+        Metric("layout", FrameMetrics.LAYOUT_MEASURE_DURATION),
+        Metric("draw", FrameMetrics.DRAW_DURATION),
+        Metric("sync", FrameMetrics.SYNC_DURATION),
+        Metric("command", FrameMetrics.COMMAND_ISSUE_DURATION),
+        Metric("swap", FrameMetrics.SWAP_BUFFERS_DURATION),
+        Metric("gpu", FrameMetrics.GPU_DURATION),
+    )
+    private val thread = HandlerThread("hoodie-frame-metrics").apply { start() }
+    private val handler = Handler(thread.looper)
+    private val frames = AtomicInteger()
+    private val values = Array(metrics.size) { AtomicLongArray(20_000) }
+    private val callbackTimestamps = AtomicLongArray(20_000)
+    private val listener = android.view.Window.OnFrameMetricsAvailableListener { _, frame, _ ->
+        val index = frames.get()
+        if (index < values.first().length()) {
+            metrics.forEachIndexed { metricIndex, metric -> values[metricIndex].set(index, frame.getMetric(metric.id)) }
+            callbackTimestamps.set(index, SystemClock.elapsedRealtimeNanos())
+            frames.incrementAndGet()
+        }
+    }
+
+    fun install(window: android.view.Window) = window.addOnFrameMetricsAvailableListener(listener, handler)
+    fun frameCount(): Int = frames.get()
+
+    fun awaitAdditionalFrames(start: Int, requested: Int) {
+        val minimum = (requested * .75).toInt().coerceAtLeast(1)
+        val deadline = SystemClock.elapsedRealtime() + 3_000
+        while (frames.get() - start < minimum && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(10)
+    }
+
+    fun report(start: Int, end: Int): String {
+        val from = start.coerceIn(0, frames.get())
+        val until = end.coerceIn(from, frames.get())
+        val callbackIntervals = LongArray((until - from - 1).coerceAtLeast(0)) { offset ->
+            callbackTimestamps.get(from + offset + 1) - callbackTimestamps.get(from + offset)
+        }.filter { it > 0L }.toLongArray().also { it.sort() }
+        fun callbackPercentile(q: Double): Double = if (callbackIntervals.isEmpty()) 0.0 else
+            callbackIntervals[(kotlin.math.ceil(callbackIntervals.size * q).toInt() - 1).coerceIn(0, callbackIntervals.lastIndex)] / 1_000_000.0
+        return "windowFrames=${until - from} windowCallbackIntervalP50Ms=${callbackPercentile(.50)} windowCallbackIntervalP95Ms=${callbackPercentile(.95)}" + metrics.mapIndexed { metricIndex, metric ->
+            val sample = LongArray(until - from) { offset -> values[metricIndex].get(from + offset) }
+                .filter { it > 0L }.toLongArray().also { it.sort() }
+            fun percentile(q: Double): Double = if (sample.isEmpty()) 0.0 else
+                sample[(kotlin.math.ceil(sample.size * q).toInt() - 1).coerceIn(0, sample.lastIndex)] / 1_000_000.0
+            " ${metric.name}P50Ms=${percentile(.50)} ${metric.name}P95Ms=${percentile(.95)}"
+        }.joinToString("")
+    }
+
+    override fun close() {
+        thread.quitSafely()
+        thread.join(1_000)
     }
 }

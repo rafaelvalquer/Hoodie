@@ -1,0 +1,10 @@
+date=2026-10-16
+device=Pixel_8 AVD (sdk_gphone16k_x86_64), Android 17 / API 37, 1080x2400 at 60 Hz
+host=Intel Iris Xe Graphics, driver 32.0.101.7077
+emulator launched with -gpu host -no-window; SurfaceFlinger GLES=Google (Intel), Android Emulator OpenGL ES Translator
+benchmark=ScenePerformanceDeviceTest.elevenScenesPublishFramesAndReportAllStages
+variant=debug; stages=cold,warmup,steady; warmFrames=180; steadyFrames=180; diagnosticsEnabled=false
+scenes=OFFICE,RESTAURANT,SHOPPING,STORE,LEISURE,BAKERY,MALL,BEACH,CINEMA,PHARMACY,HOTEL
+result=passed; 33 rows; elapsed=3m32s
+The WindowFrameMetricsProbe runs on a test-only HandlerThread and records window callback intervals and P50/P95 for total, unknown delay, input, animation, layout, app draw, sync, command issue, swap buffers and GPU.
+limitation=Virtual display and emulator. Host GPU is enabled; physical-device homologation remains outstanding.
