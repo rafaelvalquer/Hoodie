@@ -91,7 +91,8 @@ class MobilityEngineIntegrationTest {
         assertEquals(UserContextType.WORK, m.context()!!.type)
         assertEquals(SceneId.OFFICE, VisualDirector.resolve(HoodieActivity.WORKING, UserContextType.WORK).scene)
         assertNull("deslocamento encerrado", m.open())
-        m.answer(QuestionKind.CONFIRM_ARRIVAL, yes = true)
+        assertNull("uma só confirmação: sem cartão de chegada", m.pending(QuestionKind.CONFIRM_ARRIVAL))
+        m.confirmViaHome()
 
         val sessions = m.sessions()
         assertEquals(1, sessions.size)
@@ -172,7 +173,8 @@ class MobilityEngineIntegrationTest {
         assertEquals(walkingAt + 45_000, m.segmentsOf(id).last().confirmedAt)
 
         m.at(MONDAY, 8, 31); m.geofence(m.work, GeofenceTransition.ENTER)
-        m.answer(QuestionKind.CONFIRM_ARRIVAL, true)
+        assertNull("uma só confirmação: sem cartão de chegada", m.pending(QuestionKind.CONFIRM_ARRIVAL))
+        m.confirmViaHome()
         assertNull(m.open())
         assertEquals(UserContextType.WORK, m.context()!!.type)
         assertEquals(SceneId.OFFICE, VisualDirector.resolve(HoodieActivity.WORKING, m.context()!!.type).scene)

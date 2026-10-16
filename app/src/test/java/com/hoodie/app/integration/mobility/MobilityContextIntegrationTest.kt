@@ -109,15 +109,33 @@ class MobilityContextIntegrationTest {
     }
 
     @Test
-    fun `nao estou no trabalho - volta para deslocamento e a viagem continua`() {
+    fun `nao estou no trabalho - Corrigir no bloco Agora vira aprendizado`() {
         m.at(MONDAY, 7, 47); m.move(DetectedMovement.WALKING)
         m.geofence(m.home, GeofenceTransition.EXIT)
         m.at(MONDAY, 8, 30); m.geofence(m.work, GeofenceTransition.ENTER)
         assertEquals(UserContextType.WORK, m.context()!!.type)
-        m.answer(QuestionKind.CONFIRM_ARRIVAL, yes = false)
-        assertEquals(UserContextType.COMMUTING, m.context()!!.type)
-        // A correção fica no histórico (aprendizado) e um deslocamento novo segue aberto.
+        // Uma só confirmação: nada de cartão; o bloco Agora mostra Confirmar/Corrigir.
+        assertEquals(0, m.asked(QuestionKind.CONFIRM_ARRIVAL))
+        m.at(MONDAY, 8, 33); m.correctViaHome(UserContextType.LEISURE)
+        assertEquals(UserContextType.LEISURE, m.context()!!.type)
+        // A correção fica no histórico (aprendizado): a próxima chegada aqui não será automática.
         assertEquals(false, m.sessions().single().arrivalConfirmed)
-        assertTrue(m.open() != null && m.open()!!.confirmed)
+    }
+
+    @Test
+    fun `cartao de chegada antigo ja coberto pelo bloco Agora sai da Home`() {
+        m.at(MONDAY, 8, 30); m.geofence(m.work, GeofenceTransition.ENTER)
+        assertEquals(UserContextType.WORK, m.context()!!.type)
+        // Cartão criado por uma versão anterior, ainda sem resposta, para o lugar onde o contexto já está.
+        val id = runBlocking {
+            m.g.db.questionDao().insert(com.hoodie.app.core.database.ContextQuestionEntity(
+                kind = QuestionKind.CONFIRM_ARRIVAL, candidate = UserContextType.WORK, placeId = m.work.id,
+                encryptedCoordinates = null, contextEventId = m.context()!!.id, askedAt = m.now(), mobilitySessionId = null,
+            ))
+        }
+        runBlocking { m.engine.dismissArrivalQuestionsCoveredByContext() }
+        val q = runBlocking { m.g.db.questionDao().getById(id) }!!
+        assertEquals("PASSIVE_POLICY", q.answer)
+        assertNull(m.pending(QuestionKind.CONFIRM_ARRIVAL))
     }
 }

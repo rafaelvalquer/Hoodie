@@ -48,7 +48,11 @@ class MobilityLearningIntegrationTest {
         m.pending(QuestionKind.SELECT_TRANSPORT_MODE)?.let { runBlocking { m.router.answerTransportMode(it.id, transport) } }
         m.at(day, 8, 21); m.move(DetectedMovement.WALKING)
         m.at(day, 8, 30); m.geofence(m.work, GeofenceTransition.ENTER)
-        m.pending(QuestionKind.CONFIRM_ARRIVAL)?.let { m.answer(QuestionKind.CONFIRM_ARRIVAL, yes = arrivalYes) }
+        // Única confirmação da chegada: os botões do bloco Agora (o cartão de chegada não aparece mais).
+        check(m.pending(QuestionKind.CONFIRM_ARRIVAL) == null) { "cartão de chegada duplicado" }
+        if (!m.sessions().first().arrivalAutoConfirmed) {
+            if (arrivalYes) m.confirmViaHome() else m.correctViaHome(UserContextType.LEISURE)
+        }
         m.pending(QuestionKind.CONFIRM_TRIP_PATTERN)?.let { m.answer(QuestionKind.CONFIRM_TRIP_PATTERN, yes = true) }
         return questionsSince(start).map { it.kind }
     }
@@ -56,8 +60,8 @@ class MobilityLearningIntegrationTest {
     @Test
     fun `perguntas diminuem ate o trajeto ficar automatico`() {
         val asked = workdays.take(6).map { commute(it) }
-        // Dia 1: tudo é novo — movimento, transporte e chegada.
-        assertEquals(setOf(QuestionKind.SELECT_TRANSPORT_MODE, QuestionKind.CONFIRM_ARRIVAL), asked[0].toSet())
+        // Dia 1: o transporte é perguntado; a chegada é confirmada no bloco Agora, não num cartão.
+        assertEquals(setOf(QuestionKind.SELECT_TRANSPORT_MODE), asked[0].toSet())
         // O total de perguntas nunca cresce de um dia para o outro…
         val counts = asked.map { it.size }
         assertTrue("perguntas por dia: $asked", counts.zipWithNext().all { (a, b) -> b <= a })
@@ -75,9 +79,10 @@ class MobilityLearningIntegrationTest {
     }
 
     @Test
-    fun `3 chegadas confirmadas viram automaticas e uma correcao volta a perguntar`() {
+    fun `3 chegadas confirmadas no bloco Agora viram automaticas e uma correcao volta a pedir confirmacao`() {
         workdays.take(3).forEach { commute(it) }
-        assertFalse(QuestionKind.CONFIRM_ARRIVAL in commute(workdays[3]))
+        assertTrue(m.sessions().take(3).all { it.arrivalConfirmed == true })
+        commute(workdays[3])
         assertTrue(m.sessions().first().arrivalAutoConfirmed)
         // "Não estou no trabalho": o usuário troca o contexto à mão logo depois.
         m.at(workdays[3], 8, 35)
@@ -86,7 +91,8 @@ class MobilityLearningIntegrationTest {
             m.engine.onManualContext(UserContextType.LEISURE, m.now())
         }
         assertEquals(false, m.sessions().first().arrivalConfirmed)
-        assertTrue("depois da correção a chegada volta a ser perguntada", QuestionKind.CONFIRM_ARRIVAL in commute(workdays[4]))
+        commute(workdays[4], arrivalYes = false)
+        assertFalse("depois da correção a chegada volta a pedir confirmação", m.sessions().first().arrivalAutoConfirmed)
     }
 
     @Test
@@ -94,7 +100,7 @@ class MobilityLearningIntegrationTest {
         runBlocking { m.g.settings.setMobility(MobilitySettings(learnTrips = false)) }
         workdays.take(3).forEach { commute(it) }
         val day4 = commute(workdays[3])
-        assertTrue(QuestionKind.CONFIRM_ARRIVAL in day4)
+        assertFalse("sem aprendizado a chegada nunca é automática", m.sessions().first().arrivalAutoConfirmed)
         assertTrue(QuestionKind.SELECT_TRANSPORT_MODE in day4)
         assertFalse(QuestionKind.CONFIRM_TRIP_PATTERN in day4)
     }
