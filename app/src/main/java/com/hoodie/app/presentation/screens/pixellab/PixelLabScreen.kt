@@ -72,6 +72,7 @@ import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.pixel.scene.SceneEnv
 import com.hoodie.app.pixel.npc.office.OfficeNpcDirector
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
+import com.hoodie.app.pixel.performance.SceneDiagnostics
 import com.hoodie.app.pixel.sprite.AndroidSpriteSheets
 import com.hoodie.app.pixel.sprite.CompositeSpriteProvider
 import com.hoodie.app.pixel.sprite.Direction
@@ -165,6 +166,8 @@ private fun ShoppingLiveLab() {
 
 @Composable
 private fun OfficeLiveLab() {
+    val performanceLease = remember { SceneDiagnostics.acquire() }
+    DisposableEffect(performanceLease) { onDispose { performanceLease.close() } }
     var speed by remember { mutableFloatStateOf(1f) }
     var seed by remember { mutableIntStateOf(42) }
     var playing by remember { mutableStateOf(true) }

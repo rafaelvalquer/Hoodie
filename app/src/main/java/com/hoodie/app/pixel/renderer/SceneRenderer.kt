@@ -263,7 +263,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         }
         val scene = frame.scene
         val collectDiagnostics = SceneDiagnostics.enabled
-        val measureScene = BuildConfig.DEBUG && (scene.id == SceneId.OFFICE || scene.id == SceneId.STORE || collectDiagnostics)
+        val measureScene = BuildConfig.DEBUG && collectDiagnostics
         val traceScene = scene.id.name
         val renderStart = if (measureScene) ScenePerformanceMonitor.nowNanos() else 0L
         if (measureScene) ScenePerformanceMonitor.traceBegin("Hoodie.$traceScene.render")

@@ -205,7 +205,7 @@ fun HoodieSceneView(
             }
             return@LaunchedEffect
         }
-        val pacer = com.hoodie.app.pixel.performance.SceneFramePacer(FRAME_INTERVAL_NANOS)
+        val pacer = com.hoodie.app.pixel.performance.SceneFramePacer()
         while (true) {
             val frameNanos = withFrameNanos { it }
             if (pacer.shouldRender(frameNanos)) {
@@ -287,8 +287,6 @@ private class VirtualClock {
         return virtual
     }
 }
-
-private const val FRAME_INTERVAL_NANOS = 33_000_000L
 
 /**
  * Desenha um bitmap lógico escalado por fator INTEIRO e sem filtro: nunca

@@ -17,6 +17,7 @@ import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.performance.*
 import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.VisualDirector
+import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.presentation.components.HoodieSceneView
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.concurrent.atomic.AtomicLong
@@ -36,6 +37,7 @@ class ScenePerformanceDeviceTest {
         require(cases.isNotEmpty())
         val diagnosticsEnabled = InstrumentationRegistry.getArguments().getString("diagnosticsEnabled")
             ?.toBooleanStrictOrNull() ?: true
+        val coreOnly = InstrumentationRegistry.getArguments().getString("coreOnly")?.toBooleanStrictOrNull() ?: false
         val warmFrames = InstrumentationRegistry.getArguments().getString("warmFrames")?.toIntOrNull() ?: 45
         val steadyFrames = InstrumentationRegistry.getArguments().getString("steadyFrames")?.toIntOrNull() ?: 90
         require(warmFrames in 15..600 && steadyFrames in 15..600)
@@ -113,11 +115,16 @@ class ScenePerformanceDeviceTest {
                             val intervalP95 = if (intervals.isEmpty()) 0.0 else
                                 intervals[(kotlin.math.ceil(intervals.size * .95).toInt() - 1).coerceIn(0, intervals.lastIndex)] / 1_000_000.0
                             println("SCENE_DIRECT_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps intervalP95Ms=$intervalP95")
+                            if (case.scene == SceneId.OFFICE) {
+                                val d = ScenePerformanceMonitor.snapshot()
+                                println("SCENE_ENGINE_DETAIL scene=${case.scene} stage=$stage renderP95=${d.frameP95Ms} planningP95=${d.planningP95Ms} stateP95=${d.stateP95Ms} npcP95=${d.npcDrawingP95Ms} sceneP95=${d.sceneDrawingP95Ms} rabbitP95=${d.rabbitDrawingP95Ms} catP95=${d.catDrawingP95Ms} bulldogP95=${d.bulldogDrawingP95Ms} poseP95=${d.npcPoseP95Ms} paintP95=${d.npcPaintP95Ms} turnP95=${d.npcTurnP95Ms} scaleP95=${d.npcScaleP95Ms} compositeP95=${d.npcCompositeP95Ms} speechP95=${d.npcSpeechP95Ms} copyP95=${d.sceneCopyP95Ms} objectsP95=${d.sceneObjectsP95Ms} hoodieP95=${d.sceneHoodieP95Ms} lightP95=${d.sceneLightingP95Ms} postP95=${d.scenePostP95Ms} bitmapP95=${d.bitmapP95Ms} thread=${d.renderThreadName}")
+                            }
                         }
                     }
                     sample("cold", 15)
                     sample("warmup", warmFrames)
                     sample("steady", steadyFrames)
+                    if (coreOnly) continue
                     activity.onActivity { speed = 30f }; sample("story", 90)
                     activity.onActivity { speed = 1f; period = DayPeriod.NIGHT }; sample("night", 90)
                     activity.onActivity { visual = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME, now = 0, personality = null) }
@@ -145,7 +152,7 @@ class ScenePerformanceDeviceTest {
             }
         }
         if (diagnosticsEnabled) {
-            assertEquals(1 + cases.size * 9, rows.size)
+            assertEquals(1 + cases.size * if (coreOnly) 3 else 9, rows.size)
             val environment = "model=${android.os.Build.MODEL}\nsdk=${android.os.Build.VERSION.SDK_INT}\nabis=${android.os.Build.SUPPORTED_ABIS.joinToString()}\nlabel=$label\nscenes=${cases.joinToString { it.scene.name }}\nwarmFrames=$warmFrames; steadyFrames=$steadyFrames\nseed=20026; random=26; variant=0; place=42\n" +
                 "Paced Canvas, production renderAndPresent path. Rolling windows retain at most 180 frames.\n"
             File(report.parentFile, "scene-performance-$label-environment.txt").writeText(environment)
