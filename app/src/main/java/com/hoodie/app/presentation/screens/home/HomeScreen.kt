@@ -310,7 +310,8 @@ internal fun HomeContent(
                 onHoodieGesture = onHoodieGesture, interactionAllowed = interactionAllowed,
                 onInteractionStarted = onInteractionStarted, onInteractionFinished = onInteractionFinished,
                 reactionRequestsEnabled = interactionsEnabled || state.reactionCoordinatorEnabled,
-                onVisualPresented = onVisualPresented, greet = !state.reactionCoordinatorEnabled)
+                onVisualPresented = onVisualPresented, greet = !state.reactionCoordinatorEnabled,
+                tapEffect = com.hoodie.app.presentation.components.TapEffectPreview.style)
         }
 
         if (com.hoodie.app.core.config.HoodieConfig.HOME_NOW_V2) {

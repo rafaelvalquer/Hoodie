@@ -111,6 +111,8 @@ fun HoodieSceneView(
     /** Diagnostic workload clock; publication cadence is still measured in real monotonic time. */
     animationStepMs: Long? = null,
     clockMinuteOverride: Int? = null,
+    /** Efeito desenhado onde a cena é tocada (inclusive no Hoodie); null = nenhum. */
+    tapEffect: com.hoodie.app.pixel.effects.TapEffectStyle? = null,
 ) {
     val fixedFrame = LocalPixelRenderFrame.current
     val machine = remember(fixedFrame != null, randomSeed) {
@@ -229,7 +231,9 @@ fun HoodieSceneView(
         Modifier.hoodieInteractionTarget(interactionsEnabled, { interaction.frame }) { gesture, frame ->
             if (interaction.active) gestureCallback(gesture, frame)
         },
-    ) { frames }
+        invalidate = { frames },
+        tapEffect = tapEffect,
+    )
 }
 
 /** All scenes share one renderer and pixel buffer, so its lock spans both drawing and bitmap
@@ -299,6 +303,7 @@ fun PixelImage(image: ImageBitmap, logicalW: Int, logicalH: Int, modifier: Modif
 @Composable
 private fun PixelImageContent(image: ImageBitmap, logicalW: Int, logicalH: Int, modifier: Modifier,
     canvasModifier: Modifier, invalidate: () -> Int,
+    tapEffect: com.hoodie.app.pixel.effects.TapEffectStyle? = null,
 ) {
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         val density = LocalDensity.current
@@ -307,9 +312,12 @@ private fun PixelImageContent(image: ImageBitmap, logicalW: Int, logicalH: Int, 
         val scale = max(1, floor(min(maxW / logicalW, maxH / logicalH)).toInt())
         val w = with(density) { (logicalW * scale).toDp() }
         val h = with(density) { (logicalH * scale).toDp() }
-        Canvas(Modifier.size(w, h).then(canvasModifier)) {
-            invalidate()
-            drawImage(image, srcOffset = IntOffset.Zero, srcSize = IntSize(logicalW, logicalH), dstSize = IntSize(logicalW * scale, logicalH * scale), filterQuality = FilterQuality.None)
+        // Efeito de toque só dentro da imagem, com o mesmo tamanho de pixel da cena.
+        TapEffectLayer(tapEffect, Modifier.size(w, h), pixelSize = with(density) { scale.toDp() }, snapToGrid = true) {
+            Canvas(Modifier.size(w, h).then(canvasModifier)) {
+                invalidate()
+                drawImage(image, srcOffset = IntOffset.Zero, srcSize = IntSize(logicalW, logicalH), dstSize = IntSize(logicalW * scale, logicalH * scale), filterQuality = FilterQuality.None)
+            }
         }
     }
 }
