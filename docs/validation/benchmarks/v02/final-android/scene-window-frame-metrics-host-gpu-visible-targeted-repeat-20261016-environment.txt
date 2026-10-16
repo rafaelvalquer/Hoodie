@@ -1,0 +1,5 @@
+Execução: 2026-10-16, Pixel_8 AVD visível com GPU host Intel Iris Xe, Android 17 / API 37.
+Cinco cenas previamente fora da meta, oito estágios por cena (40 linhas Canvas e 40 Window FrameMetrics); 90 quadros nos estágios de cenário e 180 de warmup/steady.
+As combinações repetidas MALL/warmup, BAKERY/steady e safe-pause, PHARMACY/night, OFFICE/safe-pause e touch ficaram <=40 ms no P95 Canvas.
+LEISURE foi excluída desta rodada curta e validada separadamente com 600 quadros em warmup/steady e 180 nos demais estágios.
+Consulte os CSVs de canvas e Window FrameMetrics correspondentes; dados representam a janela gráfica do emulador.
