@@ -116,5 +116,8 @@ Após esses ajustes, `ScenePerformanceDeviceTest` foi repetido nas 11 cenas, com
 
 Perfis detalhados dos dois piores trechos contínuos encontraram render P95 de 16,08 ms em LEISURE e 14,92 ms em RESTAURANT, mas intervalos P95 de 53,53 e 53,18 ms, respectivamente. A cópia do bitmap ficou em 1,45 e 1,83 ms. Isso desloca a investigação restante para a cadência de publicação/agenda da UI e para a variabilidade do emulador, sem evidência para uma otimização específica do desenho dos NPCs. Os perfis estão em [scene-publication-cadence-profiles.csv](benchmarks/v02/final-android/scene-publication-cadence-profiles.csv). Os testes instrumentados direcionados de Office e Store também passaram após o gate explícito.
 
+O A/B isolado de RESTAURANT comparou Main (29,52 FPS, P95 53,99 ms) com `Dispatchers.Default` (29,36/49,23 e 28,16/53,38 ms em duas amostras). A variação não demonstrou ganho líquido consistente; o despacho original foi mantido. O benchmark de Release não iniciou: o app Release foi minificado, mas o APK instrumentado falhou em R8 por dependências ausentes `SuspendToFutureAdapter` e `javax.lang.model.element.Modifier`. O registro A/B está em [scene-render-dispatch-ab-20261016.csv](benchmarks/v02/final-android/scene-render-dispatch-ab-20261016.csv).
+
 O gate JVM e `:app:lintDebug` passaram nesta sessão. O benchmark direto e os dois perfis isolados terminaram aprovados no emulador. **H-07 permanece aberto**: o P95 excede a meta, e ainda falta uma execução em hardware físico que confirme a meta de aproximadamente 30 FPS. As flags destinadas aos usuários seguem desligadas.
+
 

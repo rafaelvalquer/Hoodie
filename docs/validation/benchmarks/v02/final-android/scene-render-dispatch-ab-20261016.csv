@@ -1,0 +1,6 @@
+scene,condition,stage,frames,elapsedMs,fps,intervalP50Ms,intervalP95Ms,intervalP99Ms
+RESTAURANT,main-isolated-baseline,steady,180,6096.8387,29.52349715271293,33.6254,53.9852,68.6038
+RESTAURANT,default-isolated-run-1,steady,180,6131.5398,29.356410603418084,33.2319,49.2335,64.6031
+RESTAURANT,default-isolated-run-2,steady,180,6393.0509,28.15557123125674,34.1217,53.3779,71.9055
+RESTAURANT,main-full-matrix-baseline,steady,180,6465.1943,27.84139062920352,34.0734,65.2627,72.5405
+
