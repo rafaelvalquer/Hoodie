@@ -14,6 +14,7 @@ import com.hoodie.app.pixel.animation.AnimationId
 import com.hoodie.app.pixel.animation.AnimationStateMachine
 import com.hoodie.app.pixel.character.CharacterPainter
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
+import com.hoodie.app.pixel.performance.SceneDiagnostics
 import com.hoodie.app.pixel.renderer.SceneRenderer
 import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.SceneId
@@ -22,6 +23,8 @@ import com.hoodie.app.pixel.scene.VisualState
 import com.hoodie.app.presentation.components.HoodieSceneView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.random.Random
@@ -29,6 +32,17 @@ import kotlin.random.Random
 /** Records measured values; emulator timing is evidence, not physical acceptance. */
 @RunWith(AndroidJUnit4::class)
 class StorePerformanceDeviceTest {
+    private var diagnosticsLease: AutoCloseable? = null
+
+    @Before fun enableDiagnosticsForPerformanceTests() {
+        diagnosticsLease = SceneDiagnostics.acquire()
+    }
+
+    @After fun releaseDiagnosticsForPerformanceTests() {
+        diagnosticsLease?.close()
+        diagnosticsLease = null
+    }
+
     private fun visual() = VisualState(scene = SceneId.STORE, spot = SpotId.RACK_A, variant = 422,
         actions = listOf(MicroAction(AnimationId.SHOP_LOOK, weight = 1, minMs = 120_000, maxMs = 120_000)))
 

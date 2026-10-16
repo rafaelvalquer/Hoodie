@@ -18,6 +18,7 @@ import com.hoodie.app.pixel.npc.office.OfficePerformanceCounters
 import com.hoodie.app.pixel.npc.NpcMotionController
 import com.hoodie.app.pixel.npc.office.OfficeNpcDirector
 import com.hoodie.app.pixel.performance.ScenePerformanceMonitor
+import com.hoodie.app.pixel.performance.SceneDiagnostics
 import com.hoodie.app.pixel.scene.MicroAction
 import com.hoodie.app.pixel.scene.SceneId
 import com.hoodie.app.pixel.scene.SceneRegistry
@@ -28,6 +29,8 @@ import com.hoodie.app.pixel.renderer.SceneRenderer
 import com.hoodie.app.presentation.components.HoodieSceneView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.random.Random
@@ -35,6 +38,17 @@ import kotlin.random.Random
 /** Device-side benchmark evidence without a brittle machine-dependent time threshold. */
 @RunWith(AndroidJUnit4::class)
 class OfficePerformanceDeviceTest {
+    private var diagnosticsLease: AutoCloseable? = null
+
+    @Before fun enableDiagnosticsForPerformanceTests() {
+        diagnosticsLease = SceneDiagnostics.acquire()
+    }
+
+    @After fun releaseDiagnosticsForPerformanceTests() {
+        diagnosticsLease?.close()
+        diagnosticsLease = null
+    }
+
     private fun runtimeStat(name: String): Long =
         runCatching { Debug.getRuntimeStat(name)?.toLongOrNull() ?: 0L }.getOrDefault(0L)
 

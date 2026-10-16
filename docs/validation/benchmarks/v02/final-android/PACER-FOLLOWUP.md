@@ -1,0 +1,9 @@
+# Seguimento do pacing e custo de diagnóstico
+
+Executado em 15/10/2026 no emulador `sdk_gphone16k_x86_64` (Android 17 / API 37), usando `ScenePerformanceDeviceTest` e a renderização/publicação do Canvas de produção. A rodada final foi executada sem lease de diagnóstico, com 15 quadros frios e 180 de aquecimento e contínuos para cada uma das 11 cenas. A cadência foi medida por relógio monotônico nas publicações reais do bitmap; o FPS deriva do tempo observado, não da taxa pedida pelo pacer.
+
+O ajuste para um período exato de 30 FPS e o gate das medições debug melhoraram a cadência observada em relação à rodada sem diagnóstico que ainda coletava tempos por NPC no Escritório e tempos de bitmap no Escritório/Loja. Na rodada final, as 11 cenas passaram 28 FPS efetivos e a mediana foi 29,77 FPS. O intervalo P50 variou de 32,92 a 33,37 ms; P95 de 40,68 a 54,22 ms; P99 de 45,64 a 71,38 ms. Ainda assim, nenhuma cena ficou dentro da meta inicial de intervalo P95 ≤ 40 ms. O critério de desempenho da sprint continua aberto.
+
+Os perfis detalhados com lease de diagnóstico encontraram render P95/P99 de 13,90/32,70 ms no Escritório e 12,70/22,01 ms no Cinema. Os intervalos P95 correspondentes foram 48,93 e 44,70 ms. A cópia do bitmap permaneceu abaixo de 1 ms nesses perfis. Esses dados indicam que o custo médio do desenho não explica sozinho os intervalos altos; ainda é necessário validar a agenda de frames em um aparelho físico antes de homologar a meta.
+
+As métricas completas de frio, aquecimento e contínuo das 11 cenas estão em [scene-publication-cadence.csv](scene-publication-cadence.csv). O P50 coincide com a cadência esperada de 30 FPS; os P95/P99 confirmam que a falha restante está na cauda de atrasos. A amostra vem de um único emulador e não substitui validação em hardware físico. Os testes do pipeline de Office e Store passaram com a coleta ativada por lease explícito.

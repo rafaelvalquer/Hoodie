@@ -310,7 +310,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         var npcBeforeCharacterNanos = 0L
         if (scene.id == SceneId.OFFICE) {
             officePlan?.entries?.forEach { entry ->
-                if (entry.baseline <= frame.y) npcDrawingNanos += drawOfficeEntry(entry, env, timeMs)
+                if (entry.baseline <= frame.y) npcDrawingNanos += drawOfficeEntry(entry, env, timeMs, measureScene)
             }
         } else {
             for (entry in compositionPlan.entries) if (entry.baseline <= frame.y) {
@@ -344,7 +344,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         }
         if (scene.id == SceneId.OFFICE) {
             officeRenderPlan?.entries?.forEach { entry ->
-                if (entry.baseline > frame.y) npcDrawingNanos += drawOfficeEntry(entry, env, timeMs)
+                if (entry.baseline > frame.y) npcDrawingNanos += drawOfficeEntry(entry, env, timeMs, measureScene)
             }
         } else {
             for (entry in compositionPlan.entries) if (entry.baseline > frame.y) {
@@ -442,7 +442,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         return 0
     }
 
-    private fun drawOfficeEntry(entry: OfficeDrawEntry, env: SceneEnv, timeMs: Long): Long {
+    private fun drawOfficeEntry(entry: OfficeDrawEntry, env: SceneEnv, timeMs: Long, measure: Boolean): Long {
         val prop = entry.prop
         if (prop != null) {
             prop.draw(buffer, env, timeMs)
@@ -450,9 +450,9 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
         }
         val slot = entry.slot ?: return 0L
         val state = entry.frameState
-        val started = if (BuildConfig.DEBUG) ScenePerformanceMonitor.nowNanos() else 0L
+        val started = if (measure) ScenePerformanceMonitor.nowNanos() else 0L
         actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs, state?.movement, state) }
-        if (!BuildConfig.DEBUG) return 0L
+        if (!measure) return 0L
         val elapsed = ScenePerformanceMonitor.nowNanos() - started
         ScenePerformanceMonitor.recordNpcDrawing(slot.definition.id, elapsed)
         return elapsed

@@ -112,9 +112,12 @@ class ScenePerformanceDeviceTest {
                             val intervals = LongArray((count - 1).coerceAtLeast(0)) { offset ->
                                 presentationIntervals.get(publicationsBefore + offset + 1)
                             }.filter { it > 0L }.toLongArray().also { it.sort() }
-                            val intervalP95 = if (intervals.isEmpty()) 0.0 else
-                                intervals[(kotlin.math.ceil(intervals.size * .95).toInt() - 1).coerceIn(0, intervals.lastIndex)] / 1_000_000.0
-                            println("SCENE_DIRECT_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps intervalP95Ms=$intervalP95")
+                            fun intervalPercentile(q: Double): Double = if (intervals.isEmpty()) 0.0 else
+                                intervals[(kotlin.math.ceil(intervals.size * q).toInt() - 1).coerceIn(0, intervals.lastIndex)] / 1_000_000.0
+                            val intervalP50 = intervalPercentile(.50)
+                            val intervalP95 = intervalPercentile(.95)
+                            val intervalP99 = intervalPercentile(.99)
+                            println("SCENE_DIRECT_TIMING scene=${case.scene} stage=$stage frames=$count elapsedMs=${elapsedNanos / 1_000_000.0} fps=$presentedFps intervalP50Ms=$intervalP50 intervalP95Ms=$intervalP95 intervalP99Ms=$intervalP99")
                             if (case.scene == SceneId.OFFICE) {
                                 val d = ScenePerformanceMonitor.snapshot()
                                 println("SCENE_ENGINE_DETAIL scene=${case.scene} stage=$stage renderP95=${d.frameP95Ms} planningP95=${d.planningP95Ms} stateP95=${d.stateP95Ms} npcP95=${d.npcDrawingP95Ms} sceneP95=${d.sceneDrawingP95Ms} rabbitP95=${d.rabbitDrawingP95Ms} catP95=${d.catDrawingP95Ms} bulldogP95=${d.bulldogDrawingP95Ms} poseP95=${d.npcPoseP95Ms} paintP95=${d.npcPaintP95Ms} turnP95=${d.npcTurnP95Ms} scaleP95=${d.npcScaleP95Ms} compositeP95=${d.npcCompositeP95Ms} speechP95=${d.npcSpeechP95Ms} copyP95=${d.sceneCopyP95Ms} objectsP95=${d.sceneObjectsP95Ms} hoodieP95=${d.sceneHoodieP95Ms} lightP95=${d.sceneLightingP95Ms} postP95=${d.scenePostP95Ms} bitmapP95=${d.bitmapP95Ms} thread=${d.renderThreadName}")
