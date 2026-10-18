@@ -21,8 +21,14 @@ import javax.inject.Singleton
 class DatabaseGate(bootstrapFactory: ((DatabaseSecurityState) -> Unit) -> SecureDatabaseBootstrap) {
 
     @Inject constructor(@ApplicationContext context: Context, keys: DatabaseKeyStore) : this({ publish ->
-        DefaultSecureDatabaseBootstrap(context.getDatabasePath(HoodieDatabase.NAME), keys, DatabaseEncryption, publish)
-    })
+        DefaultSecureDatabaseBootstrap(context.getDatabasePath(com.hoodie.app.core.backup.StorageGeneration.current(context).databaseName), keys, DatabaseEncryption, publish)
+    }) {
+        restoreBlocked = { com.hoodie.app.core.backup.BackupRestoreStartup.isBlocked(context.noBackupFilesDir) }
+        retryRestore = { com.hoodie.app.core.backup.BackupRestoreStartup.prepare(context.noBackupFilesDir) }
+    }
+
+    private var restoreBlocked: () -> Boolean = { false }
+    private var retryRestore: () -> Unit = {}
 
     private val _state = MutableStateFlow<DatabaseSecurityState?>(null)
 
@@ -32,10 +38,14 @@ class DatabaseGate(bootstrapFactory: ((DatabaseSecurityState) -> Unit) -> Secure
     private val bootstrap = bootstrapFactory { _state.value = it }
 
     @Volatile private var ready: ByteArray? = null
+    @Volatile private var suspendedForRestore = false
+    fun suspendForRestore() { suspendedForRestore = true }
 
     /** Prepara o banco; depois do primeiro sucesso só devolve a senha. Chamar fora da main thread. */
     @Synchronized
     fun ensure(): DatabaseBootstrapResult {
+        if (restoreBlocked()) return DatabaseBootstrapResult.Failed(DatabaseSecurityState.RestoreRecoveryFailed)
+        if (suspendedForRestore) return DatabaseBootstrapResult.Failed(DatabaseSecurityState.KeyUnrecoverable)
         ready?.let { return DatabaseBootstrapResult.Ready(it.copyOf()) }
         val r = bootstrap.prepare()
         when (r) {
@@ -46,7 +56,7 @@ class DatabaseGate(bootstrapFactory: ((DatabaseSecurityState) -> Unit) -> Secure
     }
 
     /** "Tentar novamente" da tela de recuperação. */
-    fun retry(): DatabaseBootstrapResult = ensure()
+    fun retry(): DatabaseBootstrapResult { retryRestore(); return ensure() }
 
     fun isReady(): Boolean = ensure() is DatabaseBootstrapResult.Ready
 

@@ -13,6 +13,10 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 class HoodieApp : Application(), Configuration.Provider {
+    override fun attachBaseContext(base: android.content.Context) {
+        super.attachBaseContext(base)
+        com.hoodie.app.core.backup.BackupRestoreStartup.prepare(base.noBackupFilesDir)
+    }
     companion object {
         init {
             // Robolectric executa no host JVM e não consegue carregar a .so Android;
@@ -33,6 +37,8 @@ class HoodieApp : Application(), Configuration.Provider {
     @Inject lateinit var dayStateCoordinator: dagger.Lazy<com.hoodie.app.engine.daystate.DayStateCoordinator>
     @Inject lateinit var effectiveRoutine: dagger.Lazy<com.hoodie.app.data.repository.EffectiveRoutineRepository>
     @Inject lateinit var contextEngine: dagger.Lazy<com.hoodie.app.engine.context.ContextEngine>
+    @Inject lateinit var restoredGeofences: dagger.Lazy<com.hoodie.app.core.geofence.GeofenceManager>
+    @Inject lateinit var backupOperations: com.hoodie.app.core.backup.BackupOperationGate
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -42,10 +48,23 @@ class HoodieApp : Application(), Configuration.Provider {
         debugLog.log(DebugEventLogger.Category.DATABASE, "SQLCIPHER_NATIVE_LIBRARY_READY")
         notifier.createChannels()
         scheduler.schedulePeriodic()
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+            runCatching {
+                backupOperations.run {
+                    if (com.hoodie.app.core.backup.BackupRestoreStartup.generation(noBackupFilesDir)?.id != com.hoodie.app.core.backup.StorageGeneration.UNAVAILABLE) {
+                        com.hoodie.app.core.backup.BackupStorageCleanup.removeAbandoned(this@HoodieApp)
+                    }
+                    com.hoodie.app.core.backup.BackupExportRecovery(this@HoodieApp).recover()
+                }
+            }
+        }
         // Activity Recognition: registro idempotente (some em reboot/atualização/limpeza do Play Services).
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
-            runCatching { mobilityRegistration.sync() }
             if (databaseGate.isReady()) {
+                runCatching { mobilityRegistration.sync() }
+                if (com.hoodie.app.core.backup.StorageGeneration.current(this@HoodieApp).id != com.hoodie.app.core.backup.StorageGeneration.LEGACY) {
+                    runCatching { restoredGeofences.get().registerAll() }
+                }
                 effectiveRoutine.get().currentSnapshot()
                 if (com.hoodie.app.core.config.HoodieConfig.PASSIVE_CONTEXT_CONFIRMATION) {
                     runCatching { contextEngine.get().dismissPendingContextConfirmations() }

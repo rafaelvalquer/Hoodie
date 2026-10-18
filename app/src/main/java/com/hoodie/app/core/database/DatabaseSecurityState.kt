@@ -13,6 +13,7 @@ sealed interface DatabaseSecurityState {
 
     /** A senha do banco não pode ser recuperada (Keystore/arquivo de chave). */
     data object KeyUnrecoverable : DatabaseSecurityState
+    data object RestoreRecoveryFailed : DatabaseSecurityState
 }
 
 sealed interface DatabaseBootstrapResult {

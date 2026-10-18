@@ -39,9 +39,13 @@ fun DatabaseRecoveryScreen(
     busy: Boolean,
     onRetry: () -> Unit,
     onReset: () -> Unit,
+    onRestore: (() -> Unit)? = null,
 ) {
     var confirm by remember { mutableStateOf(false) }
     val (title, body) = when (state) {
+        DatabaseSecurityState.RestoreRecoveryFailed ->
+            "Não foi possível concluir a recuperação" to
+                "Os dados foram preservados. Confira o espaço livre no aparelho e tente novamente, ou restaure um backup do Hoodie."
         DatabaseSecurityState.KeyUnrecoverable ->
             "Não foi possível abrir os dados locais" to
                 "A chave de segurança deste aparelho não está mais disponível."
@@ -65,6 +69,7 @@ fun DatabaseRecoveryScreen(
         }
         if (busy) CircularProgressIndicator()
         PixelButton("Tentar novamente", onRetry, Modifier.fillMaxWidth(), enabled = !busy)
+        if (onRestore != null) PixelButton("Restaurar um backup do Hoodie", onRestore, Modifier.fillMaxWidth(), enabled = !busy)
         PixelButton(
             "Apagar dados locais e começar novamente", { confirm = true }, Modifier.fillMaxWidth(),
             color = HoodieColors.Coral, enabled = !busy,

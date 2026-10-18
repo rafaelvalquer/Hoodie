@@ -346,6 +346,9 @@ internal fun SettingsContent(
         PixelButton(stringResource(R.string.ui_settings_screen_3), { onOpen(Routes.ROUTINE) }, Modifier.fillMaxWidth())
         PixelButton(stringResource(R.string.settings_cat_profile, s.catName), { onOpen(Routes.PROFILE) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
         PixelButton(stringResource(R.string.ui_settings_screen_4), { onOpen(Routes.MEMORIES) }, Modifier.fillMaxWidth(), color = HoodieColors.Hood)
+        if (com.hoodie.app.core.config.HoodieConfig.HOODIE_LOCAL_ENCRYPTED_BACKUP_V1) {
+            PixelButton("Dados e segurança", { onOpen(Routes.BACKUP) }, Modifier.fillMaxWidth())
+        }
 
         PixelPanel(Modifier.fillMaxWidth()) {
             SectionLabel(stringResource(R.string.settings_cat_commute, s.catName))

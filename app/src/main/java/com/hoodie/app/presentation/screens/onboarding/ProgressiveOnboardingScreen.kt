@@ -13,6 +13,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -34,6 +35,11 @@ import com.hoodie.app.presentation.theme.HoodieColors
 /** Entrada em 3 passos: conhecer o Hoodie, escolher o nome e decidir o acompanhamento. Permissões ficam para depois. */
 @Composable
 fun ProgressiveOnboardingScreen(vm: ProgressiveOnboardingViewModel = hiltViewModel()) {
+    var restore by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    if (restore) {
+        com.hoodie.app.presentation.screens.backup.BackupScreen(onBack = { restore = false })
+        return
+    }
     val state by vm.state.collectAsStateWithLifecycle()
     if (state.showDemo) {
         DemoDayScreen(onExit = { vm.showDemo(false) })
@@ -51,6 +57,9 @@ fun ProgressiveOnboardingScreen(vm: ProgressiveOnboardingViewModel = hiltViewMod
                 SpeechBubble(stringResource(R.string.onboarding_intro, state.catName))
                 Text(stringResource(R.string.prog_welcome_body), color = HoodieColors.Muted, textAlign = TextAlign.Center)
                 PixelButton(stringResource(R.string.ui_onboarding_screen_3), { vm.go(ProgressiveStep.NAME) }, Modifier.fillMaxWidth().testTag("prog_start"))
+                if (com.hoodie.app.core.config.HoodieConfig.HOODIE_LOCAL_ENCRYPTED_BACKUP_V1) {
+                    PixelButton("Restaurar meus dados", { restore = true }, Modifier.fillMaxWidth())
+                }
                 PixelButton(stringResource(R.string.setup_demo), { vm.showDemo(true) }, Modifier.fillMaxWidth().testTag("prog_demo"), color = HoodieColors.Panel, textColor = HoodieColors.Ink)
             }
             ProgressiveStep.NAME -> {

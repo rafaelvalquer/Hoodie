@@ -129,6 +129,7 @@ object Routes {
     const val PLACES = "places"
     const val DIARY = "diary"
     const val SETTINGS = "settings"
+    const val BACKUP = "backup"
     const val ROUTINE = "routine"
     const val MEMORIES = "memories"
     const val PROFILE = "profile"
@@ -190,6 +191,9 @@ fun MainScaffold() {
             composable(Routes.PLACES) { PlacesScreen(onOpen = { nav.navigate(it) }) }
             composable(Routes.DIARY) { DiaryScreen() }
             composable(Routes.SETTINGS) { SettingsScreen(onOpen = { nav.navigate(it) }) }
+            if (com.hoodie.app.core.config.HoodieConfig.HOODIE_LOCAL_ENCRYPTED_BACKUP_V1) {
+                composable(Routes.BACKUP) { com.hoodie.app.presentation.screens.backup.BackupScreen(onBack = { nav.popBackStack() }) }
+            }
             composable(Routes.ROUTINE) { RoutineScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.MEMORIES) { MemoriesScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.PROFILE) { ProfileScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(it) }) }

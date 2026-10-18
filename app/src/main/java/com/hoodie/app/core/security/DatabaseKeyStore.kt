@@ -67,7 +67,8 @@ class DatabaseKeyStore(
 ) : DatabaseKeySource {
 
     @Inject constructor(@ApplicationContext context: Context) :
-        this(context.noBackupFilesDir, DEFAULT_FILE, AndroidKeystoreWrapper(DEFAULT_ALIAS))
+        this(context.noBackupFilesDir, com.hoodie.app.core.backup.StorageGeneration.current(context).keyFile,
+            AndroidKeystoreWrapper(com.hoodie.app.core.backup.StorageGeneration.current(context).keyAlias))
 
     /** Instâncias isoladas para testes instrumentados (alias/arquivo próprios). */
     constructor(context: Context, alias: String, fileName: String) :

@@ -82,7 +82,7 @@ object DatabaseModule {
             is DatabaseBootstrapResult.Ready -> r.passphrase
             is DatabaseBootstrapResult.Failed -> throw DatabaseUnavailableException(r.state)
         }
-        return Room.databaseBuilder(context, HoodieDatabase::class.java, HoodieDatabase.NAME)
+        return Room.databaseBuilder(context, HoodieDatabase::class.java, com.hoodie.app.core.backup.StorageGeneration.current(context).databaseName)
             .openHelperFactory(SupportOpenHelperFactory(passphrase))
             .addMigrations(*ALL_MIGRATIONS)
             .build()

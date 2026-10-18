@@ -46,7 +46,13 @@ private fun SecureDatabaseHost(gate: DatabaseGate, reset: LocalDataReset, conten
     var result by remember { mutableStateOf<DatabaseBootstrapResult?>(null) }
     var busy by remember { mutableStateOf(false) }
     var attempt by remember { mutableIntStateOf(0) }
+    var restore by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    if (restore) {
+        com.hoodie.app.presentation.screens.backup.BackupScreen(onBack = { restore = false }, recovery = true)
+        return
+    }
 
     LaunchedEffect(attempt) {
         busy = true
@@ -60,7 +66,11 @@ private fun SecureDatabaseHost(gate: DatabaseGate, reset: LocalDataReset, conten
         is DatabaseBootstrapResult.Failed -> DatabaseRecoveryScreen(
             state = r.state,
             busy = busy,
-            onRetry = { attempt++ },
+            onRetry = {
+                if (r.state == com.hoodie.app.core.database.DatabaseSecurityState.RestoreRecoveryFailed) reset.restart()
+                else attempt++
+            },
+            onRestore = if (com.hoodie.app.core.config.HoodieConfig.HOODIE_LOCAL_ENCRYPTED_BACKUP_V1) ({ restore = true }) else null,
             onReset = {
                 scope.launch {
                     busy = true

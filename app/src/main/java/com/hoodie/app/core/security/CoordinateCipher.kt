@@ -22,16 +22,18 @@ interface CoordinateCipher {
  * Formato persistido: base64(iv[12] + ciphertext+tag).
  */
 @Singleton
-class KeystoreCoordinateCipher @Inject constructor() : CoordinateCipher {
+class KeystoreCoordinateCipher(private val alias: String = ALIAS) : CoordinateCipher {
+    @Inject constructor(@dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context) :
+        this(com.hoodie.app.core.backup.StorageGeneration.current(context).coordinateAlias)
 
     private val key: SecretKey by lazy { loadOrCreateKey() }
 
     private fun loadOrCreateKey(): SecretKey {
         val ks = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        (ks.getEntry(ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
+        (ks.getEntry(alias, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
         val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
         generator.init(
-            KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)

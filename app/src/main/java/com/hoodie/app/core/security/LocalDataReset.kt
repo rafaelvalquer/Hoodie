@@ -34,18 +34,24 @@ class LocalDataReset @Inject constructor(
 ) {
     /** [closeDb] fecha o banco quando ele estiver aberto (Ajustes); na recuperação é null. */
     suspend fun wipe(closeDb: (() -> Unit)? = null) {
+        gate.suspendForRestore()
         scheduler.cancelAll()
         notifier.cancelAll()
         GeofenceManager.removeAll(context)
         settings.clear()
         withContext(Dispatchers.IO) {
             closeDb?.invoke()
-            context.deleteDatabase(HoodieDatabase.NAME)
-            deleteDatabaseFiles(context.getDatabasePath(HoodieDatabase.NAME))
             keys.delete()
-            runCatching { KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(KeystoreCoordinateCipher.ALIAS) }
+            val generations = com.hoodie.app.core.backup.BackupStorageCleanup.generations(context) +
+                com.hoodie.app.core.backup.StorageGeneration.current(context) + com.hoodie.app.core.backup.StorageGeneration("legacy")
+            generations.forEach { com.hoodie.app.core.backup.BackupStorageCleanup.deleteGeneration(context, it) }
+            listOf("storage-generation", "backup-restore.journal", "backup-export.journal", "backup-incomplete-warning").forEach { name ->
+                android.util.AtomicFile(File(context.noBackupFilesDir, name)).delete()
+                File(context.noBackupFilesDir, "$name.tmp").delete()
+            }
         }
         gate.reset()
+        com.hoodie.app.core.backup.BackupRestoreStartup.clear(context.noBackupFilesDir)
     }
 
     /** Recomeça o processo para tudo nascer limpo (singletons, banco, Hilt). */

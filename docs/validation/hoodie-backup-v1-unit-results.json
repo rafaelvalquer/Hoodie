@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-18",
+  "host": "Windows / JDK 21",
+  "command": "gradlew :app:testDebugUnitTest",
+  "suites": 298,
+  "tests": 1302,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 6,
+  "backupSuites": [
+    {
+      "name": "com.hoodie.app.engine.backup.BackupCryptoTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.hoodie.app.engine.backup.BackupFormatCompatibilityTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.hoodie.app.engine.backup.BackupImportErrorTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.hoodie.app.engine.backup.BackupKeyDerivationTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.hoodie.app.engine.backup.BackupManifestTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.hoodie.app.engine.backup.BackupRestoreCrashRecoveryTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.hoodie.app.engine.backup.BackupSettingsMapperTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.hoodie.app.engine.backup.BackupValidationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ]
+}

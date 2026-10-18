@@ -9,7 +9,6 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.hoodie.app.core.model.CommuteStyle
 import com.hoodie.app.core.model.SleepSchedule
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,7 +18,13 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "hoodie_settings")
+private val settingsStores = java.util.concurrent.ConcurrentHashMap<String, DataStore<Preferences>>()
+fun generationSettingsStore(context: Context, generation: com.hoodie.app.core.backup.StorageGeneration): DataStore<Preferences> =
+    settingsStores.computeIfAbsent(java.io.File(context.filesDir, "datastore/${generation.settingsName}.preferences_pb").absolutePath) {
+        androidx.datastore.preferences.core.PreferenceDataStoreFactory.create {
+            java.io.File(context.filesDir, "datastore/${generation.settingsName}.preferences_pb")
+        }
+    }
 
 data class AppSettings(
     val onboardingDone: Boolean = false,
@@ -83,7 +88,18 @@ data class DigitalSettings(
 
 @Singleton
 class SettingsRepository(private val store: DataStore<Preferences>) {
-    @Inject constructor(@ApplicationContext context: Context) : this(context.dataStore)
+    @Inject constructor(@ApplicationContext context: Context) : this(generationSettingsStore(context, com.hoodie.app.core.backup.StorageGeneration.current(context)))
+
+    suspend fun backupPreferences(): Preferences = store.data.first()
+    suspend fun replaceBackupPreferences(values: Preferences) = store.edit { target ->
+        target.clear()
+        values.asMap().forEach { (key, value) ->
+            @Suppress("UNCHECKED_CAST")
+            target[key as Preferences.Key<Any>] = value
+        }
+    }
+    suspend fun setLastBackup(at: Long) = store.edit { it[longPreferencesKey("last_backup_at")] = at }
+    val lastBackupAt: Flow<Long?> = store.data.map { it[longPreferencesKey("last_backup_at")] }
 
     private object Keys {
         val ONBOARDING = booleanPreferencesKey("onboarding_done")
