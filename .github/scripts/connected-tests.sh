@@ -22,21 +22,27 @@ capture() {
 }
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
-if adb shell dumpsys window | grep -q 'mCurrentFocus=.*Application Not Responding'; then
+# Do not pipe adb to grep -q under pipefail: a matching early line can close
+# the pipe, make adb fail with SIGPIPE, and incorrectly skip this guard.
+if ! adb shell dumpsys window displays > "$evidence/preflight-window.txt"; then
   capture environment-not-ready
-  echo '::error::Android system ANR dialog owns window focus before instrumentation. See environment evidence.'
+  echo '::error::Could not read Android window focus before instrumentation.'
+  exit 1
+fi
+if ! python3 .github/scripts/verify-emulator-window.py "$evidence/preflight-window.txt"; then
+  capture environment-not-ready
   exit 1
 fi
 adb logcat -c
 suspects='com.hoodie.app.pixel.ScenePerformanceDeviceTest,com.hoodie.app.ui.HoodieTouchInteractionTest,com.hoodie.app.ui.PlacePickerScreenTest,com.hoodie.app.ui.SetupAndDemoUiTest,com.hoodie.app.ui.DemoReplayUiTest,com.hoodie.app.ui.StoreSceneDeviceTest'
 test_status=0
-./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="$suspects" || test_status=$?
+./gradlew :app:connectedDebugAndroidTest --no-parallel --max-workers=2 '-Dorg.gradle.jvmargs=-Xmx1g -Dfile.encoding=UTF-8' -Pandroid.testInstrumentationRunnerArguments.class="$suspects" || test_status=$?
 capture targeted
 # No automatic retry: a failed targeted run blocks the full suite and the job.
 if [ "$test_status" -ne 0 ]; then exit "$test_status"; fi
 python3 .github/scripts/verify-junit.py "$evidence/targeted/results" || exit $?
 adb logcat -c
-./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.verifyGoldens=true || test_status=$?
+./gradlew :app:connectedDebugAndroidTest --no-parallel --max-workers=2 '-Dorg.gradle.jvmargs=-Xmx1g -Dfile.encoding=UTF-8' -Pandroid.testInstrumentationRunnerArguments.verifyGoldens=true || test_status=$?
 capture full
 if [ "$test_status" -eq 0 ]; then
   python3 .github/scripts/verify-junit.py "$evidence/full/results" || test_status=$?

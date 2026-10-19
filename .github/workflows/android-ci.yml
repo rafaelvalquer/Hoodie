@@ -55,6 +55,9 @@ jobs:
       - name: Integridade das evidências JUnit
         run: python3 .github/scripts/test_verify_junit.py
 
+      - name: Diagnóstico de foco e ANR do emulador
+        run: python3 .github/scripts/test_verify_emulator_window.py
+
       # Revisão visual de cenas alteradas: mantém o candidato mesmo se o golden falhar.
       - name: Upload candidate scene goldens
         if: always()
@@ -175,9 +178,9 @@ jobs:
           arch: x86_64
           profile: pixel_8
           cores: 2
-          ram-size: 2048M
+          ram-size: 3072M
           heap-size: 256
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          emulator-options: -no-window -gpu swiftshader_indirect -memory 3072 -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
             adb shell wm size 1080x2400

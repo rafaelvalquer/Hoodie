@@ -1,0 +1,149 @@
+{
+  "sourceSha256": "83b813f58ad1493a46cc0fdddb82129b16951c5fb6ba7d87418a58f1ca0be05a",
+  "reexportSha256": "49dc83ddce1fbf644c202cb17fb8e3d7def5d72eab9984218a4c899459f289ff",
+  "sourceBytes": 88573,
+  "reexportBytes": 90800,
+  "pageSize": 16384,
+  "variant": "homologacao R8; development signature; universal APK derived from AAB",
+  "syntheticOnly": true,
+  "physicalHomologation": false,
+  "strictAllRowsEqual": false,
+  "unchangedSourceDatasets": 22,
+  "datasets": {
+    "places": {
+      "sourceRows": 4,
+      "targetRows": 4,
+      "missingOrChangedRows": 0
+    },
+    "routines": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "day_exceptions": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "location_events": {
+      "sourceRows": 120,
+      "targetRows": 44,
+      "missingOrChangedRows": 76,
+      "missingTimestampRangeUtc": [
+        "2026-09-01T10:00:00+00:00",
+        "2026-09-19T13:00:00+00:00"
+      ],
+      "retainedTimestampRangeUtc": [
+        "2026-09-20T10:00:00+00:00",
+        "2026-09-30T13:00:00+00:00"
+      ]
+    },
+    "context_events": {
+      "sourceRows": 120,
+      "targetRows": 124,
+      "missingOrChangedRows": 0
+    },
+    "context_confirmations": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "hoodie_activities": {
+      "sourceRows": 1,
+      "targetRows": 21,
+      "missingOrChangedRows": 0
+    },
+    "timeline_events": {
+      "sourceRows": 120,
+      "targetRows": 147,
+      "missingOrChangedRows": 0
+    },
+    "memories": {
+      "sourceRows": 1,
+      "targetRows": 3,
+      "missingOrChangedRows": 0
+    },
+    "daily_device_usage": {
+      "sourceRows": 30,
+      "targetRows": 30,
+      "missingOrChangedRows": 0
+    },
+    "daily_app_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "daily_context_app_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "app_category_overrides": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "phone_app_sessions": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "daily_screen_hourly": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "daily_context_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "daily_phone_timeline": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "mobility_sessions": {
+      "sourceRows": 2,
+      "targetRows": 2,
+      "missingOrChangedRows": 0
+    },
+    "mobility_segments": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "diary_corrections": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "learned_routine_slots": {
+      "sourceRows": 1,
+      "targetRows": 0,
+      "missingOrChangedRows": 1
+    },
+    "transport_patterns": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "transport_evidence": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedRows": 0
+    },
+    "effective_routine_versions": {
+      "sourceRows": 1,
+      "targetRows": 3,
+      "missingOrChangedRows": 0
+    }
+  },
+  "limitations": [
+    "Worker removed old raw location events under the existing 30-day retention policy.",
+    "RoutineLearningCoordinator recomputes the last 28 days; the fixture seeds WORK_START but has only HOME contexts. The seeded learned slot was replaced with no slot.",
+    "New current-day rows are allowed by this subset comparison; this is not an exact comparison of all current settings or proof of no semantic duplicates.",
+    "The task emulator encountered a SystemUI ANR on cold boot and was recovered; this is not a clean-boot approval.",
+    "Physical A/B, external document providers, interruptions and production signing remain separate gates."
+  ]
+}
