@@ -1,0 +1,14 @@
+{
+  "suites": 1,
+  "tests": 12,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "reportedTotals": {
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "skippedTests": []
+}

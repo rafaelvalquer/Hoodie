@@ -12,6 +12,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.printToString
+import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -61,13 +64,43 @@ class StoreSceneDeviceTest {
     }
 
     private fun waitForControl(matcher: SemanticsMatcher) {
-        compose.waitUntil(20_000) {
-            compose.mainClock.advanceTimeBy(100)
-            compose.onAllNodes(matcher).fetchSemanticsNodes().size == 1
+        try {
+            compose.waitUntil(20_000) {
+                compose.mainClock.advanceTimeBy(100)
+                compose.onAllNodes(matcher).fetchSemanticsNodes().size == 1
+            }
+        } catch (failure: ComposeTimeoutException) {
+            runCatching {
+                val instrumentation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                val runnerOutput = androidx.test.platform.app.InstrumentationRegistry.getArguments()
+                    .getString("additionalTestOutputDir")?.let { java.io.File(it) }
+                val output = java.io.File(runnerOutput ?: app.getExternalFilesDir(null), "store-scene-diagnostics").apply { mkdirs() }
+                val roots = compose.onAllNodes(isRoot(), useUnmergedTree = true)
+                java.io.File(output, "controls.txt").writeText(
+                    "matcher=${matcher.description}\nvisual=${graph.homeVisuals().snapshot.value}\n" +
+                        roots.fetchSemanticsNodes().indices.joinToString("\n") { roots[it].printToString() },
+                )
+                instrumentation.uiAutomation.executeShellCommand("dumpsys window").use { descriptor ->
+                    android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { input ->
+                        java.io.File(output, "windows.txt").outputStream().use { input.copyTo(it) }
+                    }
+                }
+                instrumentation.uiAutomation.takeScreenshot()?.let { bitmap ->
+                    java.io.File(output, "screen.png").outputStream().use {
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                    bitmap.recycle()
+                }
+            }.exceptionOrNull()?.let(failure::addSuppressed)
+            throw failure
         }
     }
 
     private fun correctThroughHome(type: PlaceType, expected: SceneId) {
+        // The scene singleton survives recreation, but Home still refreshes through
+        // a loading state. The canonical context card appears only after that
+        // reconciliation; tapping its old menu earlier can have it disposed mid-click.
+        waitForControl(hasTestTag("home_context_status"))
         waitForControl(hasContentDescription("Mais ações"))
         compose.onNodeWithContentDescription("Mais ações").performClick()
         waitForControl(hasText("Ajustar atividade"))
