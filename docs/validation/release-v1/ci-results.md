@@ -1,6 +1,6 @@
 # RELEASE-01 — qualidade
 
-Validação local mais recente: **1306 unitários aprovados e lintDebug sem erros**, após a correção de upserts redundantes. [Evidência](unit-results-after-noop.json). A CI verde do SHA corrigido, os instrumentados completos e os novos artefatos R8 continuam pendentes.
+Validação local mais recente: **1306 unitários aprovados e lintDebug sem erros**, após a correção de upserts redundantes. [Evidência](unit-results-after-noop.json). Os 1306 unitários também passaram na CI do SHA corrigido; a CI completa verde, os instrumentados completos e os novos artefatos R8 continuam pendentes.
 
 ## Linha de base remota
 
@@ -77,3 +77,9 @@ A investigação identificou uma escrita desnecessária verificável: `HoodieEng
 Três regressões verificam ausência de escrita/novos registros para estado idêntico, persistência após avanço real do estado e atualização das necessidades visuais sem regravar uma atividade inalterada. Antes do terceiro caso, regras do engine, persistência do simulador, Home e regressão somaram **19 testes aprovados**, sem ignorados. A rodada posterior com os três casos de persistência e os quatro originais da Home passou **7 testes**, sem falhas/erros/ignorados. Uma nova suíte integral e CI do commit corrigido continuam necessárias.
 
 Validação integral local posterior: **1306 testes em 299 suítes, zero falhas, erros ou ignorados**, incluindo os seis exportadores visuais obrigatórios. `lintDebug` também passou; build completo desses dois gates em **13m28s**. [Contagens conferidas por casos reais, hashes dos blobs testados e resumo do lint](unit-results-after-noop.json). Os quatro testes originais da Home não foram alterados. Relatórios XML completos preservados localmente, com hash do ZIP no resumo. Essa aprovação local não substitui os instrumentados nem a CI verde do novo SHA; os artefatos R8 anteriores precisam ser reconstruídos após a mudança de produção.
+
+## CI da correção de gravações redundantes
+
+Commit `f69f6e6b4616d718ecfe297d2719e6786b6293b6`: [execução 39296006327](https://github.com/rafaelvalquer/Hoodie/actions/runs/39296006327). Unitários **1306/1306, zero falhas/erros/ignorados**, lint e assemble aprovados. O job de instrumentação falhou no preflight, antes de executar qualquer teste: o snapshot inicial tinha `mCurrentFocus=null`; o snapshot completo capturado em seguida já tinha o Launcher focado. A captura de energia registra `Awake`; não há ANR indicado no Logcat preservado. Isso identifica uma transição de janela após o boot, sem aprovar a instrumentação ou afirmar estabilidade prolongada do Launcher. [Resumo e hashes](ci-f69-focus-transition.json).
+
+O preflight agora observa a atribuição de foco por no máximo 45 segundos e preserva cada snapshot completo. Um diálogo atual de ANR ou erro de ADB continua reprovando imediatamente; prazo excedido também reprova. Não inicia, repete nem ignora testes nessa espera. Treze testes do gate passaram, incluindo timeout, leitura lenta, falha de ADB e ANR em múltiplos displays. A reprodução dos snapshots reais rejeitou o primeiro e aceitou o segundo. A execução remota do gate alterado e a suíte instrumentada completa ainda precisam passar.

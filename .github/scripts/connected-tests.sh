@@ -22,14 +22,9 @@ capture() {
 }
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
-# Do not pipe adb to grep -q under pipefail: a matching early line can close
-# the pipe, make adb fail with SIGPIPE, and incorrectly skip this guard.
-if ! adb shell dumpsys window displays > "$evidence/preflight-window.txt"; then
-  capture environment-not-ready
-  echo '::error::Could not read Android window focus before instrumentation.'
-  exit 1
-fi
-if ! python3 .github/scripts/verify-emulator-window.py "$evidence/preflight-window.txt"; then
+# boot_completed can precede the launcher's focused window. Wait for that state,
+# preserving every complete snapshot; a focused ANR still fails immediately.
+if ! python3 .github/scripts/verify-emulator-window.py --wait-for-focus "$evidence"; then
   capture environment-not-ready
   exit 1
 fi

@@ -1,0 +1,37 @@
+{
+  "commit": "f69f6e6b4616d718ecfe297d2719e6786b6293b6",
+  "run": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39296006327",
+  "jobs": {
+    "unitTests": "success",
+    "lint": "success",
+    "assemble": "success",
+    "instrumentation": "failure"
+  },
+  "unitTests": {
+    "suites": 299,
+    "tests": 1306,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "instrumentedTestsExecuted": 0,
+  "artifactId": 12209627769,
+  "artifactSha256": "47afff95a24265c96de772bb937aa11bc7924144b7f4922e555dcf1585710e41",
+  "initialFocus": [
+    "null"
+  ],
+  "laterFocus": [
+    "Window{d403810 u0 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity}"
+  ],
+  "snapshots": {
+    "extracted\\instrumentation-evidence\\preflight-window.txt": "f1d9c96b7431408363c421410b1a05c8a3dd43d648df59ea916700eb0d9b4f13",
+    "extracted\\instrumentation-evidence\\environment-not-ready\\window.txt": "db14fc05fdc93a5fe1810f20aaeaa9b77e52b6651cefa478bf7f17140e47e1e9"
+  },
+  "correction": "Wait up to 45 seconds for focus assignment, preserving each complete snapshot. A focused ANR or adb error still fails immediately. No test retry.",
+  "localValidation": {
+    "windowGateTests": 13,
+    "capturedTransitionReplaySnapshots": 2,
+    "bashSyntax": true
+  },
+  "release01Approved": false
+}
