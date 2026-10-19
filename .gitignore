@@ -10,6 +10,9 @@ local.properties
 *.keystore
 *.jks
 release.properties
+tools/runtime/
+*.apks
+__pycache__/
 
 # IDEs
 .idea/

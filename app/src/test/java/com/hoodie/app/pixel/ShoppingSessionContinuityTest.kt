@@ -49,6 +49,36 @@ class ShoppingSessionContinuityTest {
         assertNull(startedAt(renderer))
     }
 
+    @Test fun interactionCollectionPreservesShopperButChangingPlaceDisposesIt() {
+        com.hoodie.app.pixel.performance.SceneDiagnostics.acquire().use {
+            com.hoodie.app.pixel.performance.SceneDiagnostics.reset()
+            val renderer = SceneRenderer()
+            val base = frame().let { it.copy(env = it.env.copy(placeId = 42)) }
+            renderer.render(base, 0)
+            val original = session(renderer)!!
+            val before = com.hoodie.app.pixel.performance.SceneDiagnostics.snapshot(SceneId.STORE)
+            for (enabled in listOf(true, false, true)) {
+                renderer.setInteractionsEnabled(enabled)
+                renderer.render(base, 1_000)
+                assertSame(original, session(renderer))
+                assertEquals(0L, startedAt(renderer))
+            }
+            val after = com.hoodie.app.pixel.performance.SceneDiagnostics.snapshot(SceneId.STORE)
+            assertEquals(before.sessionsCreated, after.sessionsCreated)
+            assertEquals(before.timelineRebuilds, after.timelineRebuilds)
+            assertEquals(before.sessionsDisposed, after.sessionsDisposed)
+            renderer.render(base.copy(env = base.env.copy(placeId = 43)), 2_000)
+            assertNotSame(original, session(renderer))
+            val changed = com.hoodie.app.pixel.performance.SceneDiagnostics.snapshot(SceneId.STORE)
+            assertEquals(after.sessionsCreated + 1, changed.sessionsCreated)
+            assertEquals(after.sessionsDisposed + 1, changed.sessionsDisposed)
+            renderer.dispose()
+            assertNull(session(renderer))
+            assertEquals(changed.sessionsDisposed + 1,
+                com.hoodie.app.pixel.performance.SceneDiagnostics.snapshot(SceneId.STORE).sessionsDisposed)
+        }
+    }
+
     @Test fun changingDayVariantVenueFloorOrContextStartsAnIndependentSession() {
         val renderer = SceneRenderer()
         val base = frame()

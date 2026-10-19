@@ -30,6 +30,7 @@ object SceneDiagnostics {
         var active = 0
         var visible = 0
         var sessions = 0L
+        var disposals = 0L
         var rebuilds = 0L
         var snapshots = 0L
         var thread = ""
@@ -44,6 +45,7 @@ object SceneDiagnostics {
     @Synchronized fun reset() { scenes.fill(null) }
 
     fun sessionCreated(scene: SceneId) { if (enabled) synchronized(this) { samples(scene).sessions++ } }
+    fun sessionDisposed(scene: SceneId) { if (enabled) synchronized(this) { samples(scene).disposals++ } }
     fun timelineRebuilt(scene: SceneId) { if (enabled) synchronized(this) { samples(scene).rebuilds++ } }
     fun snapshotBuilt(scene: SceneId) { if (enabled) synchronized(this) { samples(scene).snapshots++ } }
 
@@ -100,7 +102,7 @@ object SceneDiagnostics {
             s.stages.map { percentile(it, s.count, .95) }, percentile(s.bitmap, intervalCount, .95),
             s.active, s.visible, s.sessions, s.rebuilds, s.snapshots, heap, heap - s.heapBaseline,
             delta(allocated, s.allocatedBaseline), delta(gc, s.gcBaseline), delta(gcTime, s.gcTimeBaseline), s.thread,
-            if (interval > 0) 1000.0 / interval else null)
+            if (interval > 0) 1000.0 / interval else null, s.disposals)
     }
 
     @Synchronized fun snapshots(): List<SceneDiagnosticSnapshot> = SceneId.entries.filter { scenes[it.ordinal] != null }.map(::snapshot)
@@ -118,4 +120,5 @@ data class SceneDiagnosticSnapshot(
     /** Android ART process counters since first diagnostic snapshot; null means unavailable. */
     val processAllocatedBytes: Long?, val processGcCount: Long?, val processGcTimeMs: Long?, val renderThread: String,
     val medianFps: Double? = null,
+    val sessionsDisposed: Long = 0,
 )

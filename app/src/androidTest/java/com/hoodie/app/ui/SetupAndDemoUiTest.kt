@@ -12,7 +12,9 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.hoodie.app.domain.setup.SetupItem
 import com.hoodie.app.domain.setup.SetupProgress
-import com.hoodie.app.presentation.screens.demo.DemoDayScreen
+import com.hoodie.app.presentation.screens.demo.DemoReplayScreen
+import com.hoodie.app.presentation.screens.demo.DemoReplayViewModel
+import androidx.lifecycle.SavedStateHandle
 import com.hoodie.app.presentation.screens.onboarding.SetupProgressCard
 import com.hoodie.app.presentation.theme.HoodieTheme
 import org.junit.Assert.assertEquals
@@ -65,11 +67,11 @@ class SetupAndDemoUiTest {
 
     @Test fun diaDeDemonstracaoMostraAvisoFixoEPermiteSair() {
         var exited = false
-        rule.setContent { HoodieTheme { DemoDayScreen(onExit = { exited = true }) } }
+        val viewModel = DemoReplayViewModel(SavedStateHandle())
+        rule.setContent { HoodieTheme { DemoReplayScreen(viewModel, onExit = { exited = true }) } }
         rule.onNodeWithTag("demo_banner").assertIsDisplayed()
         rule.onNodeWithText("Dados fictícios · Dia de Demonstração").assertIsDisplayed()
-        rule.onNodeWithTag("demo_steps").assertIsDisplayed()
-        rule.onNodeWithText("07:00 — Hoodie acorda em Casa").assertIsDisplayed()
+        rule.onNodeWithTag("demo_replay_story").assertIsDisplayed()
         rule.onNodeWithTag("demo_exit").performClick()
         assertTrue(exited)
     }

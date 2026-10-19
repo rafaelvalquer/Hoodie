@@ -26,7 +26,7 @@ O argumento opcional `goldenCasesRegex` seleciona nomes com uma expressão regul
 
 Os PNGs são gravados em `/sdcard/Android/data/com.hoodie.app/files/goldens/screens`. Copiar primeiro para `app/build`, inspecionar o layout e somente então colocar as referências nos assets. Repetir sem `recordGoldens=true` confirma a comparação. Não aceitar uma atualização de referências apenas porque a gravação terminou.
 
-Ambiente de referência atual: Hoodie_API34, Google APIs Android 14/API 34 r14 x86_64, resolução física 1080×2400, densidade física 420, GPU SwiftShader e renderer HWUI skiagl. O CI usa a mesma API, resolução, densidade e renderer. O enquadramento e a escala de fonte são definidos pelo teste. Barras do sistema ficam ocultas.
+Ambiente de referência atual: Hoodie_API34_Release, Google APIs Android 14/API 34 r14 x86_64, resolução física 1080×2400, densidade física 420, GPU SwiftShader e renderer HWUI skiagl. O CI usa a mesma API, resolução, densidade e renderer. O enquadramento e a escala de fonte são definidos pelo teste. Barras do sistema ficam ocultas.
 
 ## Relógio do Dia 2.0
 
@@ -38,7 +38,7 @@ regravar com `DAY_CLOCK_GOLDEN_RECORD=1` só depois de inspecionar. O mesmo test
 sem estourar o centro; O mostrador tem 312×312 px lógicos (PNGs exportados em escala 2). `exportReviewScreenshots` grava manhã, tarde, noite e fonte 1,3× em
 `files/day-clock-review/` do aparelho para revisão. Rodar com `am instrument` (não `connectedDebugAndroidTest`).
 
-## Estado atual
+## Histórico de validação
 
 As 222 referências revisadas continuam em `app/src/androidTest/assets/goldens/screens`. O manifesto `docs/golden-reference-manifest.json` registra dimensões, SHA-256 e ambiente. As capturas foram revistas e aceitas quando gravadas; isso não garante que correspondam à UI atual.
 
@@ -53,3 +53,13 @@ Branch `feature/ui-polish`: entrelinha centralizada em todos os estilos, espaço
 Comparação antes (main `a926566c`) × depois no mesmo aparelho (Pixel_8, API 37.1), matriz completa em modo captura: 180 casos executados nas duas versões e 180 imagens diferentes (esperado: o estilo de texto mudou em todas as telas). Inspeção visual: sem rótulos sobrepostos em Ajustes, Digital e Diário; crédito do OpenStreetMap livre; erro e carregamento sem tela vazia.
 
 As 222 referências NÃO foram regravadas. Elas só valem no ambiente de referência (Hoodie_API34), que não estava disponível nesta máquina: regravar lá com `recordGoldens=true`, inspecionar e só então atualizar os assets e o manifesto. Os fixtures de screenshot desligam o pulso do esqueleto (`LocalSkeletonPulse = false`) para a captura ser determinística.
+
+## Revisão RELEASE-01 (19/10/2026)
+
+As 222 referências foram atualizadas após inspeção das 19 pranchas de revisão das seis famílias, nas três dimensões e duas escalas de fonte. A revisão inclui estados, final da rolagem e mapa do Diário. A captura Digital 360×640 também foi inspecionada em resolução original para conferir a quebra do diálogo. Controles, textos, atribuição do mapa e estados de erro permanecem legíveis; conteúdo fora da viewport pertence à rolagem. As diferenças refletem o polimento de 07/10, os NPCs atuais, os modelos preparados do Diário e o botão de privacidade.
+
+O fixture da Home agora aguarda a apresentação real do bitmap antes de capturar, sem modificar o renderer de produção para os goldens. O fixture do Diário fornece os modelos preparados de Jornada e resumo, em vez de perpetuar carregamento num caso completo. A gravação final dos 60 casos Home/Diário passou; as outras quatro famílias vieram da gravação anterior concluída. O manifesto registra dimensões e hashes dos 222 arquivos revisados e o fingerprint do ambiente. Isso comprova revisão visual; a comparação estrita e a suíte completa após a atualização ainda precisam ser aprovadas.
+
+Pranchas e candidatos locais: `app/build/release-golden-review/` e `app/build/release-golden-candidates/`. `tools/review_release_goldens.py` apenas prepara pranchas, sem aprovar ou substituir referências. A CI não grava nem aceita referências automaticamente.
+
+A primeira comparação após a revisão passou **180/180 casos**, em 299,961 s, sem ignorados. Uma conferência dos estados do fixture identificou que os seis casos de carregamento do Diário forneciam `SectionState.Empty` apesar de `isLoading=true`; eles foram corrigidos para `SectionState.Loading`, regravados e inspecionados individualmente em resolução original. As seis imagens agora cobrem o esqueleto de produção. O manifesto foi atualizado; a suíte completa posterior é o gate para essa versão final do fixture.

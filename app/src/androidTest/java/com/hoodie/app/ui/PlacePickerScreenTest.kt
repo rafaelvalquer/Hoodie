@@ -79,6 +79,7 @@ import kotlin.math.abs
 class PlacePickerScreenTest {
 
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+    @org.junit.Before fun readyWindow() = configureTestWindow(rule)
 
     private val longAddress = "1600 Amphitheatre Parkway, Mountain View, California, United States of America, Planet Earth, Milky Way"
     private val paulista = AddressResult("Av. Paulista, 1000, Bela Vista, São Paulo - SP", -23.5614, -46.6559)
@@ -409,7 +410,7 @@ class PlacePickerScreenTest {
         }
         val view = rule.activity.window.decorView
         try {
-            rule.waitUntil(timeoutMillis = 10_000) { view.hasWindowFocus() }
+            awaitTestWindow(rule)
         } catch (timeout: ComposeTimeoutException) {
             val instrumentation = InstrumentationRegistry.getInstrumentation()
             val screenshot = instrumentation.uiAutomation.takeScreenshot()

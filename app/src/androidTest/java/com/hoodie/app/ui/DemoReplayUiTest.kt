@@ -7,7 +7,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.hoodie.app.R
 import com.hoodie.app.engine.demo.DemoReplayMode
@@ -24,7 +24,10 @@ class DemoReplayUiTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     @Test fun banner_modes_navigation_playback_and_optional_preview_are_wired() {
-        val vm = ViewModelProvider(rule.activity)[DemoReplayViewModel::class.java]
+        val vm = DemoReplayViewModel(SavedStateHandle())
+        // Exercise the real play/pause actions without racing a wall-clock-driven replay.
+        // Progression is covered by controller/ViewModel clock tests; this test checks UI wiring.
+        vm.monotonicMillis = { 1_000L }
         rule.setContent { HoodieTheme { DemoReplayScreen(vm, onExit = {}) } }
         rule.onNodeWithTag("demo_banner").assertIsDisplayed()
         rule.onNodeWithTag("demo_replay_story").assertIsDisplayed()
@@ -32,6 +35,16 @@ class DemoReplayUiTest {
         rule.runOnIdle { assertEquals(DemoReplayMode.QUICK_TOUR, vm.state.value.presentation.source.mode) }
         rule.onNodeWithTag("demo_mode_full_day").performClick()
         rule.runOnIdle { assertEquals(DemoReplayMode.FULL_DAY, vm.state.value.presentation.source.mode) }
+        rule.onNodeWithTag("journey_play").performScrollTo().performClick()
+        rule.runOnIdle {
+            assertEquals(com.hoodie.app.presentation.screens.diary.ReplayState.PLAYING,
+                vm.state.value.presentation.source.state)
+        }
+        rule.onNodeWithTag("journey_play").performClick()
+        rule.runOnIdle {
+            assertEquals(com.hoodie.app.presentation.screens.diary.ReplayState.PAUSED,
+                vm.state.value.presentation.source.state)
+        }
 
         rule.onNodeWithTag("demo_preview_switch").performClick()
         rule.runOnIdle { assertEquals(true, vm.state.value.previewEnabled) }

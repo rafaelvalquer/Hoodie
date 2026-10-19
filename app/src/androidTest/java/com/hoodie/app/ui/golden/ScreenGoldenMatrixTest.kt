@@ -87,6 +87,7 @@ class ScreenGoldenMatrixTest(private val case: ScreenGoldenCase) {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     @Test(timeout = 60_000) fun screenMatchesReviewedBaseline() {
+        val scenePublications = java.util.concurrent.atomic.AtomicInteger()
         rule.runOnUiThread {
             WindowCompat.setDecorFitsSystemWindows(rule.activity.window, false)
             WindowCompat.getInsetsController(rule.activity.window, rule.activity.window.decorView)
@@ -101,18 +102,24 @@ class ScreenGoldenMatrixTest(private val case: ScreenGoldenCase) {
             ) {
                 HoodieTheme {
                     Box(Modifier.requiredSize(case.width.dp, case.height.dp).background(HoodieColors.Night).testTag("golden_viewport")) {
-                        GoldenScreen(case)
+                        GoldenScreen(case, onScenePresented = { scenePublications.incrementAndGet() })
                     }
                 }
             }
         }
         rule.mainClock.advanceTimeBy(1_000)
         rule.waitForIdle()
+        if (case.screen == "home" && case.state in setOf("normal", "full")) {
+            // Office renders off Main. Compose idle alone does not mean its first bitmap arrived.
+            rule.waitUntil(10_000) { scenePublications.get() > 0 }
+            rule.mainClock.advanceTimeByFrame()
+            rule.waitForIdle()
+        }
         ScreenGoldenCapture.verify(case.name, rule.onNodeWithTag("golden_viewport"))
         if (case.screen == "diary" && case.state == "full") {
             // performScrollTo may perform animated scroll; let it consume frames.
             rule.mainClock.autoAdvance = true
-            rule.onNodeWithTag("diary_map").performScrollTo()
+            rule.onNodeWithTag("journey_map").performScrollTo()
             rule.mainClock.autoAdvance = false
             rule.mainClock.advanceTimeBy(1_000)
             rule.waitForIdle()
@@ -142,7 +149,7 @@ private val zone = ZoneId.of("America/Sao_Paulo")
 private fun at(hour: Int, minute: Int = 0) = date.atTime(hour, minute).atZone(zone).toInstant().toEpochMilli()
 
 @Composable
-private fun GoldenScreen(case: ScreenGoldenCase) {
+private fun GoldenScreen(case: ScreenGoldenCase, onScenePresented: () -> Unit) {
     val full = case.state == "full"
     val loading = case.state == "loading"
     val error = case.state == "error"
@@ -156,22 +163,41 @@ private fun GoldenScreen(case: ScreenGoldenCase) {
             HomeContent(
                 HomeUiState(
                     snapshot = if (empty || loading) null else homeSnapshot(),
-                    context = if (empty || loading) null else ContextEvent(type = UserContextType.WORK, startedAt = at(9), endedAt = null, confidence = 0.95f, placeId = 2L, source = ContextSource.GEOFENCE),
+                    context = if (empty || loading) null else ContextEvent(id = 2L, type = UserContextType.WORK, startedAt = at(9), endedAt = null, confidence = 0.95f, placeId = 2L, source = ContextSource.GEOFENCE),
                     next = if (full) com.hoodie.app.engine.routine.UpcomingEvent("🍽", "Almoço", 12 * 60, false) else null,
                     question = if (full) ContextQuestion(1L, QuestionKind.CONFIRM_CONTEXT, UserContextType.LUNCH, 2L, PlaceType.WORK, 1L, at(10), null, null) else null,
                     loading = loading, error = if (error) DatabaseError.ReadFailed else null, now = at(10), catName = if (full) "Hoodie Companheiro" else "Hoodie",
-                    visual = if (empty || loading) null else VisualDirector.resolve(HoodieActivity.WORKING, UserContextType.WORK),
+                    visual = if (empty || loading) null else VisualDirector.resolve(HoodieActivity.WORKING, UserContextType.WORK, now = at(10)),
                     dialogue = if (full) "Bom dia! Vamos acompanhar sua rotina juntos." else null,
                     suggestSavePlace = if (full) PlaceType.WORK else null, canSaveHere = full,
                 ), busy = false, zone = zone, onOpen = {}, snackbar = snackbar,
+                onScenePresented = { onScenePresented() },
+                homeNow = if (empty || loading || error) null else com.hoodie.app.domain.home.HomeNowSnapshot(
+                    dayState = null, context = UserContextType.WORK, contextEventId = 2L,
+                    contextStartedAt = at(9), placeId = 2L, placeName = "Trabalho",
+                    contextConfidence = com.hoodie.app.domain.detection.ConfidenceScore(.95f),
+                    contextSource = ContextSource.GEOFENCE, wakeAt = at(7),
+                    wakeConfidence = com.hoodie.app.domain.daycycle.WakeConfidence.HIGH,
+                    status = com.hoodie.app.domain.home.HomeNowStatus.IDENTIFIED, updatedAt = at(10),
+                ),
                 actions = com.hoodie.app.presentation.screens.home.HomeActions(setManual = {}),
             )
             }
         }
-        "diary" -> DiaryContent(
-            DiaryUiState(date, diary = if (empty || loading || error) null else diary(full), isLoading = loading,
-                error = if (error) DatabaseError.ReadFailed else null), zone, at(22),
-        )
+        "diary" -> {
+            val content = remember(case.state) { if (empty || loading || error) null else diary(full) }
+            val prepared = remember(content) { content?.let { com.hoodie.app.engine.diary.PreparedJourneyBuilder.build(it, at(22), zone) } }
+            val report = remember(content) { content?.let { com.hoodie.app.domain.dayreport.GetDayReportUseCase()(it, emptyList(), date, at(22), zone) } }
+            DiaryContent(
+                DiaryUiState(date, diary = content, isLoading = loading,
+                    error = if (error) DatabaseError.ReadFailed else null,
+                    summaryState = if (loading) SectionState.Loading else content?.let { SectionState.Ready(it) } ?: SectionState.Empty,
+                    journeyState = if (loading) SectionState.Loading else prepared?.let { SectionState.Ready(it) } ?: SectionState.Empty,
+                    dayReport = report,
+                    reportState = if (loading) SectionState.Loading else report?.let { SectionState.Ready(it) } ?: SectionState.Empty),
+                zone, at(22),
+            )
+        }
         "digital" -> PhoneInsightsContent(
             PhoneInsightsUiState(date, permission = UsagePermissionState.GRANTED, settings = DigitalSettings(analysisEnabled = true),
                 insights = if (empty || loading || error) null else phone(full), isLoading = loading,

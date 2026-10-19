@@ -349,6 +349,15 @@ internal fun SettingsContent(
         if (com.hoodie.app.core.config.HoodieConfig.HOODIE_LOCAL_ENCRYPTED_BACKUP_V1) {
             PixelButton("Dados e segurança", { onOpen(Routes.BACKUP) }, Modifier.fillMaxWidth())
         }
+        PixelButton("Privacidade", {
+            runSystemAction({
+                android.widget.Toast.makeText(context, "Não foi possível abrir a política de privacidade.", android.widget.Toast.LENGTH_LONG).show()
+            }) {
+                context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(
+                    "https://github.com/rafaelvalquer/Hoodie/blob/main/docs/privacy-policy.md",
+                )))
+            }
+        }, Modifier.fillMaxWidth().testTag("settings_privacy"))
 
         PixelPanel(Modifier.fillMaxWidth()) {
             SectionLabel(stringResource(R.string.settings_cat_commute, s.catName))

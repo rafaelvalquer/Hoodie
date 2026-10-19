@@ -36,13 +36,13 @@ class ShoppingVisualReviewTest {
         )
         val seed = (1..4096).first { candidate ->
             val env = SceneEnv(DayPeriod.DAY, 9 * 60, variant = candidate, daySeed = candidate)
-            val brain = ShoppingNpcDirector.plan(env).single().shoppingBrain!!
+            val brain = ShoppingNpcDirector.plan(env).single { it.shoppingBrain != null }.shoppingBrain!!
             captures.all { (_, intent) -> (0L..280_000L step 1_000).any { brain.stateAt(it).currentIntent == intent } }
         }
         val renderer = SceneRenderer()
         val scene = ShoppingScene()
         val dayEnv = SceneEnv(DayPeriod.DAY, 9 * 60, variant = seed, daySeed = seed)
-        val dayBrain = ShoppingNpcDirector.plan(dayEnv).single().shoppingBrain!!
+        val dayBrain = ShoppingNpcDirector.plan(dayEnv).single { it.shoppingBrain != null }.shoppingBrain!!
         val momentRows = mutableListOf("name,time_ms,intent")
         captures.forEach { (name, intent) ->
             val time = (0L..280_000L step 250).first { dayBrain.stateAt(it).currentIntent == intent }
@@ -50,7 +50,7 @@ class ShoppingVisualReviewTest {
             momentRows += "$name,$time,$intent"
         }
         val nightEnv = SceneEnv(DayPeriod.NIGHT, 21 * 60, variant = seed, daySeed = seed)
-        val nightBrain = ShoppingNpcDirector.plan(nightEnv).single().shoppingBrain!!
+        val nightBrain = ShoppingNpcDirector.plan(nightEnv).single { it.shoppingBrain != null }.shoppingBrain!!
         val nightTime = (0L..280_000L step 250).first { nightBrain.stateAt(it).currentIntent == ShoppingNpcIntent.READ_LABEL }
         PreviewExport.write(root.resolve("night.png"), render(renderer, scene, nightEnv, nightTime), 2, 0xFF2B2E4A.toInt())
         momentRows += "night.png,$nightTime,READ_LABEL"

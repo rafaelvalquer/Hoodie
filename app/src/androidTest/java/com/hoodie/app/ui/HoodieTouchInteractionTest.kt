@@ -35,15 +35,20 @@ class HoodieTouchInteractionTest {
     private val gestures = mutableListOf<InteractionGesture>()
 
     private fun show(enabled: Boolean = true) {
+        configureTestWindow(rule)
+        var presented = false
         rule.setContent {
             HoodieTheme {
                 CompositionLocalProvider(LocalPixelRenderFrame provides PixelRenderFrame(1_000)) {
                     HoodieSceneView(visual, Modifier.fillMaxWidth(), greet = false, interactionsEnabled = enabled,
+                        onScenePresented = { presented = true },
                         onHoodieGesture = { gesture, _ -> gestures.add(gesture) })
                 }
             }
         }
         rule.waitForIdle()
+        awaitTestWindow(rule)
+        rule.waitUntil(5_000) { presented }
     }
 
     private fun point(presented: RenderFrame? = null): Offset {
@@ -98,9 +103,12 @@ class HoodieTouchInteractionTest {
     }
 
     @Test fun androidAccessibilityFrameworkOffersNamedPettingAction() {
-        show()
         val instrumentation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.getUiAutomation(android.app.UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
+        automation.serviceInfo = automation.serviceInfo.apply {
+            flags = flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+        }
+        show()
         if (androidx.test.platform.app.InstrumentationRegistry.getArguments().getString("requireTalkBack") == "true") {
             val manager = rule.activity.getSystemService(android.view.accessibility.AccessibilityManager::class.java)
             rule.waitUntil(10_000) {
@@ -115,7 +123,10 @@ class HoodieTouchInteractionTest {
             return null
         }
         var hoodie: android.view.accessibility.AccessibilityNodeInfo? = null
-        rule.waitUntil(5_000) { target(automation.rootInActiveWindow).also { hoodie = it } != null }
+        rule.waitUntil(5_000) {
+            hoodie = automation.windows.firstNotNullOfOrNull { target(it.root) }
+            hoodie != null
+        }
         val tap = hoodie!!.actionList.first { it.id == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK }
         assertEquals("Tocar no Hoodie", tap.label.toString())
         org.junit.Assert.assertTrue(hoodie!!.performAction(tap.id))

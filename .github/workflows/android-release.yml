@@ -1,0 +1,148 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Identificação (por exemplo 1.0.0-rc1)'
+        type: string
+        required: true
+      version_code:
+        description: 'Novo código, nunca usado na Play (validar na Console)'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Origem autorizada e CI do mesmo commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == refs/heads/main || "$GITHUB_REF" == refs/heads/release/1.0.0 || "$GITHUB_REF" == refs/tags/v1.* ]]
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            git show-ref --verify refs/remotes/origin/release/1.0.0
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/release/1.0.0
+            git merge-base --is-ancestor origin/main origin/release/1.0.0
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/android-ci.yml/runs?head_sha=$GITHUB_SHA&status=success" \
+            --jq '.workflow_runs[] | select(.conclusion == "success" and .event != "pull_request") | .head_sha' | grep -Fx "$GITHUB_SHA"
+
+  signed-bundle:
+    needs: provenance
+    runs-on: ubuntu-latest
+    environment: android-signing
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v3
+      - name: Ferramentas fixadas
+        run: |
+          set -euo pipefail
+          sdkmanager 'ndk;28.2.13676358' 'build-tools;36.0.0'
+          curl --fail --location --retry 3 https://github.com/google/bundletool/releases/download/1.18.2/bundletool-all-1.18.2.jar -o "$RUNNER_TEMP/bundletool.jar"
+          printf '%s  %s\n' '378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584' "$RUNNER_TEMP/bundletool.jar" | sha256sum --check -
+      - name: Gerar, assinar e verificar AAB e APK derivado
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          HOODIE_UPLOAD_STORE_FILE: ${{ runner.temp }}/upload.jks
+          HOODIE_UPLOAD_STORE_PASSWORD: ${{ secrets.UPLOAD_STORE_PASSWORD }}
+          HOODIE_UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          HOODIE_UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+          HOODIE_UPLOAD_CERT_SHA256: ${{ vars.UPLOAD_CERT_SHA256 }}
+          BUNDLETOOL_JAR: ${{ runner.temp }}/bundletool.jar
+          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_NAME: ${{ inputs.version_name }}
+          PLAY_LAST_VERSION_CODE: ${{ vars.PLAY_LAST_VERSION_CODE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          trap 'rm -f "$HOODIE_UPLOAD_STORE_FILE"' EXIT
+          printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$HOODIE_UPLOAD_STORE_FILE"
+          unset UPLOAD_KEYSTORE_BASE64
+          bash .github/scripts/release-build.sh
+      - name: Artefatos e evidências do commit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            app/build/outputs/bundle/release/*.aab
+            app/build/outputs/mapping/release/mapping.txt
+            app/build/reports/release/
+            app/build/reports/native-16kb/
+            app/build/reports/lint-results-release.*
+
+  native-runtime:
+    needs: signed-bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Atualizar catálogo do emulador
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;23.0'
+          test ! -e "$ANDROID_HOME/cmdline-tools/preinstalled"
+          mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
+          ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-${{ github.sha }}
+          path: release-artifacts
+      - name: Compilar testes nativos antes de iniciar o emulador
+        run: |
+          ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+          ./gradlew --stop
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: APK derivado e SQLCipher em runtime 16 KB
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_ps16k
+          arch: x86_64
+          profile: pixel_8
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash .github/scripts/native-runtime-ci.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-runtime-${{ github.sha }}
+          path: |
+            app/build/reports/release-runtime/
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            app/build/outputs/connected_android_test_additional_output/
+            app/build/reports/native-runtime/
+
+  # Upload à Play exige gates físicos/beta e aprovação humana. Este workflow
+  # prepara artefatos; não publica nem considera aprovação de assinatura como lançamento.

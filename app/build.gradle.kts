@@ -9,6 +9,22 @@ plugins {
 android {
     namespace = "com.hoodie.app"
     compileSdk = 36
+    testBuildType = providers.gradleProperty("hoodieTestBuildType").getOrElse("debug")
+
+    val uploadStore = providers.environmentVariable("HOODIE_UPLOAD_STORE_FILE").orNull
+    val uploadStorePassword = providers.environmentVariable("HOODIE_UPLOAD_STORE_PASSWORD").orNull
+    val uploadAlias = providers.environmentVariable("HOODIE_UPLOAD_KEY_ALIAS").orNull
+    val uploadKeyPassword = providers.environmentVariable("HOODIE_UPLOAD_KEY_PASSWORD").orNull
+    val signingValues = listOf(uploadStore, uploadStorePassword, uploadAlias, uploadKeyPassword)
+    require(signingValues.all { it.isNullOrBlank() } || signingValues.all { !it.isNullOrBlank() }) {
+        "Configure all four HOODIE_UPLOAD_* signing variables together."
+    }
+    if (!uploadStore.isNullOrBlank()) signingConfigs.create("upload") {
+        storeFile = file(uploadStore)
+        storePassword = uploadStorePassword
+        keyAlias = uploadAlias
+        keyPassword = uploadKeyPassword
+    }
 
     defaultConfig {
         applicationId = "com.hoodie.app"
@@ -26,10 +42,23 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            buildConfigField("boolean", "LOCAL_ENCRYPTED_BACKUP_V1", "false")
+        }
         getByName("release") {
+            buildConfigField("boolean", "LOCAL_ENCRYPTED_BACKUP_V1", "false")
+            signingConfig = signingConfigs.findByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        create("homologacao") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".homologacao"
+            versionNameSuffix = "-homologacao"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+            buildConfigField("boolean", "LOCAL_ENCRYPTED_BACKUP_V1", "true")
         }
     }
     buildFeatures { compose = true; buildConfig = true }
@@ -127,4 +156,5 @@ dependencies {
     // Espresso novo: o da BOM do Compose não roda em Android 15+ (InputManager.getInstance).
     androidTestImplementation(libs.espresso.core)
     debugImplementation(libs.compose.ui.test.manifest)
+    add("homologacaoImplementation", libs.compose.ui.test.manifest)
 }

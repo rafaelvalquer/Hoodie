@@ -6,7 +6,7 @@ name: Android CI
 
 on:
   push:
-    branches: [main, 'v0.2-*']
+    branches: [main, 'v0.2-*', 'release/**']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -28,6 +28,17 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Preservar o fixture original do backup V1
+        run: python3 .github/scripts/verify-backup-contract.py
+
+      - name: Revisão explícita de compatibilidade em PRs
+        if: github.event_name == 'pull_request'
+        env:
+          BACKUP_REVIEW_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BACKUP_REVIEW_BASE"
+          python3 .github/scripts/verify-backup-contract.py --base "$BACKUP_REVIEW_BASE"
+
       - name: Código principal sem TODO / FIXME / NotImplementedError
         run: |
           if git grep -nE "TODO|FIXME|NotImplementedError" -- app/src/main; then
@@ -36,7 +47,13 @@ jobs:
           fi
 
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest
+        run: bash .github/scripts/unit-tests.sh
+
+      - name: Validador de bibliotecas nativas (casos positivos e negativos)
+        run: python3 .github/scripts/test_verify_native_16kb.py
+
+      - name: Integridade das evidências JUnit
+        run: python3 .github/scripts/test_verify_junit.py
 
       # Revisão visual de cenas alteradas: mantém o candidato mesmo se o golden falhar.
       - name: Upload candidate scene goldens
@@ -45,8 +62,7 @@ jobs:
         with:
           name: scene-golden-candidates
           path: |
-            app/build/pixel-preview/npc-art-review/scene-goldens-v1-candidate.sha256
-            app/build/pixel-preview/new_place_scenes.png
+            app/build/pixel-preview/
           if-no-files-found: ignore
 
       # Preserve the full suite before the isolated sprite run replaces Gradle's report.
@@ -55,7 +71,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-reports
-          path: app/build/reports/tests/
+          path: |
+            app/build/reports/tests/
+            app/build/test-results/
           if-no-files-found: ignore
 
       # Roda de novo isolado para o resultado aparecer explícito no log do PR.
@@ -128,6 +146,10 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Compilar os APKs antes de iniciar o emulador
+        run: |
+          ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+          ./gradlew --stop
       - name: Update AVD command-line tools
         run: |
           # Pin the catalog and make the emulator action use the installed version.
@@ -171,5 +193,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: instrumentation-reports
-          path: app/build/reports/androidTests/
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            app/build/outputs/connected_android_test_additional_output/
+            app/build/instrumentation-evidence/
           if-no-files-found: ignore

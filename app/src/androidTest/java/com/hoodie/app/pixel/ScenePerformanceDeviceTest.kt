@@ -113,6 +113,7 @@ class ScenePerformanceDeviceTest {
         val bitmapPublications = AtomicInteger()
         val bitmapPublicationTimestamps = AtomicLongArray(20_000)
         val lastPublishedScene = AtomicReference<SceneId?>(null)
+        val lastPublishedVisual = AtomicReference<com.hoodie.app.pixel.scene.VisualState?>(null)
         val canvasDrawsAtSceneStart = AtomicInteger()
         val starts = AtomicInteger()
         val requests = MutableSharedFlow<InteractionRequest>(extraBufferCapacity = 1)
@@ -138,6 +139,7 @@ class ScenePerformanceDeviceTest {
                             animationStepMs = 33, clockMinuteOverride = if (period == DayPeriod.NIGHT) 22 * 60 else 10 * 60,
                             periodOverride = period, speed = speed, interactionsEnabled = touch,
                             interactionRequests = requests, onInteractionStarted = { starts.incrementAndGet() },
+                            onVisualPresented = { lastPublishedVisual.set(it) },
                             onScenePresented = {
                                 val publicationIndex = bitmapPublications.getAndIncrement()
                                 if (publicationIndex in 0 until bitmapPublicationTimestamps.length()) {
@@ -248,15 +250,21 @@ class ScenePerformanceDeviceTest {
                     activity.onActivity { speed = 30f }; sample("story", scenarioFrames)
                     activity.onActivity { speed = 1f; period = DayPeriod.NIGHT }; sample("night", scenarioFrames)
                     activity.onActivity { visual = VisualDirector.resolve(HoodieActivity.IDLE, UserContextType.HOME, now = 0, personality = null) }
+                    awaitSelectedScene(SceneId.HOME)
                     awaitFrames(90)
                     if (diagnosticsEnabled) rows += SceneDiagnosticReport.row("exit", SceneDiagnostics.snapshot(com.hoodie.app.pixel.scene.SceneId.HOME))
                     activity.onActivity { visual = case.visual(); period = DayPeriod.DAY }
+                    awaitSelectedScene(case.scene)
                     sample("return", scenarioFrames)
+                    val safeVisual = case.visual().copy(actions = listOf(MicroAction(AnimationId.IDLE, 1, 60_000, 60_000)),
+                        approach = emptyList(), enter = emptyList(), exit = emptyList(), steadyFlags = emptySet())
                     activity.onActivity {
                         touch = true
-                        visual = case.visual().copy(actions = listOf(MicroAction(AnimationId.IDLE, 1, 60_000, 60_000)),
-                            approach = emptyList(), enter = emptyList(), exit = emptyList(), steadyFlags = emptySet())
+                        visual = safeVisual
                     }
+                    val presentationDeadline = SystemClock.elapsedRealtime() + 15_000
+                    while (lastPublishedVisual.get() != safeVisual && SystemClock.elapsedRealtime() < presentationDeadline) SystemClock.sleep(20)
+                    assertEquals("safe visual must be presented before measuring petting continuity", safeVisual, lastPublishedVisual.get())
                     sample("safe-pause", scenarioFrames)
                     val sessionsBeforeTouch = if (diagnosticsEnabled) SceneDiagnostics.snapshot(case.scene).sessionsCreated else 0L
                     val before = starts.get()

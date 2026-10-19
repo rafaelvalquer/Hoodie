@@ -118,7 +118,8 @@ fun HoodieSceneView(
     val machine = remember(fixedFrame != null, randomSeed) {
         AnimationStateMachine(if (fixedFrame != null) Random(0) else Random(randomSeed ?: System.nanoTime()))
     }
-    val renderer = remember(interactionsEnabled) { SceneRenderer(interactionsEnabled) }
+    val renderer = remember { SceneRenderer() }
+    val currentInteractionsEnabled by rememberUpdatedState(interactionsEnabled)
     val interaction = remember { InteractionPresentation() }
     val gestureCallback by rememberUpdatedState(onHoodieGesture)
     val allowedCallback by rememberUpdatedState(interactionAllowed)
@@ -201,7 +202,7 @@ fun HoodieSceneView(
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
                 val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis) { presented(rendered) }
+                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis, currentInteractionsEnabled) { presented(rendered) }
             }
             return@LaunchedEffect
         }
@@ -222,7 +223,7 @@ fun HoodieSceneView(
                 }
                 machine.frame(t, currentClockMinute ?: (time.hour * 60 + time.minute), period)?.let { f ->
                     val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t) { presented(rendered) }
+                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t, currentInteractionsEnabled) { presented(rendered) }
                 }
             }
         }
@@ -245,6 +246,7 @@ private suspend fun renderAndPresent(
     bitmap: Bitmap,
     frame: RenderFrame,
     timeMs: Long,
+    interactionsEnabled: Boolean,
     onPresented: () -> Unit,
 ) {
     fun present(buffer: PixelBuffer) {
@@ -262,6 +264,7 @@ private suspend fun renderAndPresent(
     }
 
     rendererMutex.withLock {
+        renderer.setInteractionsEnabled(interactionsEnabled)
         val buffer = when (frame.scene.id) {
             SceneId.OFFICE, SceneId.SHOPPING, SceneId.STORE, SceneId.LEISURE,
             SceneId.BAKERY, SceneId.MALL, SceneId.BEACH, SceneId.CINEMA, SceneId.PHARMACY, SceneId.HOTEL ->

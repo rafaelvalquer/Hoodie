@@ -65,6 +65,14 @@ class BackupRoundTripIntegrationTest {
                     BackupValidator.validateDatabase(sql)
                     // Verify Room can map restored values, not merely that SQLite accepted the rows.
                     assertEquals(WorkMode.OFFICE, preview.stage.database.routineDao().get()!!.workMode)
+                    // Explicit, synthetic acceptance artifact for black-box testing of the R8 APK.
+                    // Source keys are discarded below; no active installation data is read.
+                    if (androidx.test.platform.app.InstrumentationRegistry.getArguments()
+                            .getString("exportReleaseFixture") == "true") {
+                        val suffix = if (digital) "digital" else "without-digital"
+                        java.io.File(context.getExternalFilesDir(null), "release-synthetic-$suffix.hoodiebackup")
+                            .outputStream().use { it.write(archive.toByteArray()) }
+                    }
                 } finally { staging.discard(preview.stage) }
             }
         } finally { staging.discard(source) }

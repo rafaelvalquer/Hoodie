@@ -1,0 +1,21 @@
+# RELEASE-04 — 16 KB
+
+Estado: **validação parcial; gate de distribuição ainda aberto**.
+
+Emulador usado na rodada inicial: Pixel_8, Android API 37, x86_64. `adb -s emulator-5554 shell getconf PAGE_SIZE` retornou `16384` naquela execução (página de memória do SO; não confundir com página SQLite). A validação posterior do APK de homologação usa o AVD isolado descrito abaixo.
+
+Rodada instrumentada `com.hoodie.app.database,com.hoodie.app.backup`: **29 testes aprovados**, 254,504 s. Exercita biblioteca SQLCipher real, criação, inserts/consultas, reabertura cifrada, migrações históricas, backup com/sem digital, restauração em novas chaves, destruição das chaves antigas, falhas/cancelamento e recuperação por journal. Executada no APK debug; não substitui regressão do APK release derivado do AAB.
+
+APK debug: todos os segmentos ELF LOAD de todas as bibliotecas `.so` e ABIs passaram no validador estático, assim como o alinhamento ZIP das bibliotecas não comprimidas. Relatório bruto local: `app/build/reports/native-16kb/debug-static.json`. Esta primeira análise usa o APK da rodada inicial; repetir sobre os artefatos finais.
+
+Automação: `verify-native-16kb.sh` exige AAB e APKs efetivamente derivados, verifica `PAGE_ALIGNMENT_16K` em bundletool, usa llvm-readelf, zipalign `-c -P 16 -v 4` em cada APK e inventário Python de **todas** as bibliotecas nativas, incluindo transitivas. O JSON mantém `runtime_verified=false`; estática não vira prova de execução.
+
+Job `native-runtime` usa imagem 16 KB API 35, confirma PAGE_SIZE, instala o APK assinado derivado do AAB e verifica duas aberturas frias com R8 e ausência de erro nativo. A suíte de banco/backup debug no mesmo runtime complementa essa evidência, mas não é apresentada como a regressão completa do release.
+
+Pendente: ELF/ZIP/config do AAB/APK finais com assinatura de upload, fluxo completo do release (Home/Diário/Configurações, banco, migração, backup/restauração e reabertura) e validação por faixa interna. Guardar SHA/hash/ABI/certificado, comandos e logs. Conta Play e chave de upload ainda não disponíveis; aparelhos físicos disponíveis, mas sem homologação executada.
+
+AAB de homologação com R8: `app-homologacao.aab`, 12.158.280 bytes, assinatura de desenvolvimento verificada por jarsigner (`jar verified`, status 0). APK universal derivado com bundletool 1.18.2: assinatura APK v2/v3 verificada, zipalign 16 KB aprovado. Configuração do AAB contém `PAGE_ALIGNMENT_16K`. As **12 bibliotecas** (SQLCipher e transitivas, quatro ABIs) passaram no verificador estático e tiveram os segmentos inspecionados por llvm-readelf oficial do NDK r28c. [Hashes e inventário](homologacao-native-static.json). São artefatos de homologação com certificado Android Debug, sem aprovação de upload/Play. O jarsigner avisa sobre a ordem do manifesto para leitura via JarInputStream; a verificação criptográfica via JarFile passou. Aceitação pela Play continua pendente.
+
+O APK derivado de homologação foi instalado no AVD isolado `Hoodie_16KB_Release` (API 37.1, x86_64, `PAGE_SIZE=16384`). Duas aberturas frias concluíram com Activity retomada, janela focada e sem erro nativo nos logs coletados. Pela UI real e pelo seletor SAF foi restaurado o arquivo sintético de 30 dias, gerado por outra instalação com chaves independentes: a prévia autenticada apresentou 4 lugares, 120 contextos, 1 memória e rotina/digital incluídos. Após confirmação, o processo reiniciou, Home abriu e Ajustes exibiu o nome restaurado Nuvem; a lista de lugares foi consultada. As permissões continuaram negadas no destino limpo, com aviso visível de monitoramento indisponível. Evidências locais: `app/build/reports/homologacao-runtime/` (logs das duas aberturas, propriedades, prévia XML e captura/XML após restauração). Isso amplia a validação real de R8/SQLCipher/backup em 16 KB, mas não comprova o roteiro completo nem substitui dois aparelhos físicos ou o pacote final de distribuição.
+
+Referências: [páginas de 16 KB](https://developer.android.com/guide/practices/page-sizes), [testar bundles](https://developer.android.com/guide/app-bundle/test).

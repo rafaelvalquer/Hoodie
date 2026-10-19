@@ -369,6 +369,8 @@ instrumentados num emulador. Geofence real, reboot e homologação por aparelho 
 
 ## Estabilidade e validação da versão 0.2
 
+A preparação da V1 segue o [plano de produção](docs/plans/hoodie-release-v1.md) e os [gates e evidências](docs/validation/release-v1/README.md). A variante `homologacao` habilita o backup com ID separado e R8. A [pipeline de distribuição](docs/validation/release-v1/distribution.md) verifica AAB assinado, APK derivado e alinhamento nativo; assinatura de upload, homologação física, beta e aprovação Play ainda são necessários para a publicação.
+
 O backup manual criptografado V1 está implementado sob a flag `HOODIE_LOCAL_ENCRYPTED_BACKUP_V1`, inicialmente desligada. A [execução por etapas](docs/validation/hoodie-backup-v1.md) registra o inventário das 29 entidades, formato portátil, restauração por gerações e validação. Consulte o [guia de backup](docs/backup/USUARIO.md) e a [política de privacidade do mecanismo](docs/privacy-policy.md).
 
 O plano técnico é acompanhado em [stability-architecture-progress.md](docs/stability-architecture-progress.md). A versão permanece dev enquanto os gates de teste, UI e revisão artística estão em andamento.

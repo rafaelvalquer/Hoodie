@@ -39,13 +39,23 @@ private const val FLOOR_ITEM_LIFT = 2
  * Compõe um frame: fundo (cacheado) → objetos atrás → Hoodie → objetos na frente
  * (ordenados por Y) → iluminação → efeitos → fade.
  */
-class SceneRenderer(private val collectInteractionElements: Boolean = false) {
+class SceneRenderer(private var collectInteractionElements: Boolean = false) {
     var lastPresentedEnvironment: SceneEnv? = null
         private set
     var lastInteractionElements: Set<com.hoodie.app.engine.interaction.InteractionElement> = emptySet()
         private set
     // Double buffering avoids allocating a scene-sized mask every frame or mutating the presented one.
-    private val interactionMasks = if (collectInteractionElements) arrayOf(ByteArray(PixelScene.SCENE_W * PixelScene.SCENE_H), ByteArray(PixelScene.SCENE_W * PixelScene.SCENE_H)) else null
+    private val interactionMasks by lazy { arrayOf(ByteArray(PixelScene.SCENE_W * PixelScene.SCENE_H), ByteArray(PixelScene.SCENE_W * PixelScene.SCENE_H)) }
+    /** Interaction input is transient; switching it must preserve the venue's live session. */
+    @Synchronized
+    fun setInteractionsEnabled(enabled: Boolean) {
+        collectInteractionElements = enabled
+        if (!enabled) {
+            buffer.drawOwnership = null
+            lastInteractionElements = emptySet()
+            lastInteractionHitMask = null
+        }
+    }
     private var interactionMaskIndex = 0
     var lastInteractionHitMask: ByteArray? = null
         private set
@@ -59,7 +69,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
     private var officeRenderPlan: OfficeRenderPlan? = null
     private var shoppingSession: ShoppingNpcSession? = null
     private data class ShoppingKey(val scene: SceneId, val day: Int, val variant: Int,
-        val venue: com.hoodie.app.core.model.PlaceType?)
+        val venue: com.hoodie.app.core.model.PlaceType?, val place: Long?)
     private var shoppingKey: ShoppingKey? = null
     private var shoppingSessionStartedAt: Long? = null
     /** Night selects the initial cast; changing light during a visit preserves its live story. */
@@ -118,12 +128,13 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
             // Mercado e loja de roupas: o mesmo comprador, cada um com a sua planta e as suas falas.
             val store = scene.id == SceneId.STORE
             val floor = if (store) StoreNavigationGraph else ShoppingNavigationGraph
-            val key = ShoppingKey(scene.id, env.daySeed, env.variant, env.shoppingVenue)
+            val key = ShoppingKey(scene.id, env.daySeed, env.variant, env.shoppingVenue, env.placeId)
             val current = shoppingSession
             // Lighting changes immediately; the shopper finishes the current story without restarting.
             val session = current?.takeIf { shoppingKey == key && it.floor == floor }
                 ?: (if (store) ShoppingNpcDirector.createSession(env, StoreNavigationGraph, StoreSpeechLibrary, StoreNavigationGraph.BASELINE)
                 else ShoppingNpcDirector.createSession(env)).also {
+                    shoppingKey?.let { old -> SceneDiagnostics.sessionDisposed(old.scene) }
                     shoppingSession = it
                     SceneDiagnostics.sessionCreated(scene.id)
                     shoppingKey = key
@@ -131,9 +142,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
                 }
             return session.npcSlots
         }
-        shoppingSession = null
-        shoppingKey = null
-        shoppingSessionStartedAt = null
+        clearShoppingSession()
         if (VenueNpcDirector.supports(scene.id)) {
             officeSession?.dispose(); officeSession = null; officeRenderPlan = null
             leisureSession?.dispose(); leisureSession = null
@@ -214,15 +223,20 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
     }
 
     /** Releases scene-local mutable brains and their planned timeline on renderer disposal. */
+    private fun clearShoppingSession() {
+        shoppingKey?.let { SceneDiagnostics.sessionDisposed(it.scene) }
+        shoppingSession = null
+        shoppingKey = null
+        shoppingSessionStartedAt = null
+    }
+
     @Synchronized
     fun dispose() {
         officeSession?.dispose()
         officeSession = null
         officeRenderPlan = null
         backgrounds.clear()
-        shoppingSession = null
-        shoppingKey = null
-        shoppingSessionStartedAt = null
+        clearShoppingSession()
         leisureSession?.dispose()
         leisureSession = null
         venueSession?.dispose()
@@ -256,7 +270,7 @@ class SceneRenderer(private val collectInteractionElements: Boolean = false) {
 
     @Synchronized
     fun render(frame: RenderFrame, absoluteTimeMs: Long): PixelBuffer {
-        interactionMasks?.let { masks ->
+        if (collectInteractionElements) interactionMasks.let { masks ->
             interactionMaskIndex = 1 - interactionMaskIndex
             buffer.drawOwnership = masks[interactionMaskIndex]
             buffer.drawOwner = 0

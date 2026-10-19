@@ -1,0 +1,72 @@
+{
+  "generator": "assets-source/hoodie/audio/v2/generate_interaction_sfx_v2.py",
+  "generatorSha256": "2c1c3aaa62b6d7fb6f4dcc31d5f31555c359d1aebad7fbae2bacfe01eadb1636",
+  "regeneratedMatchesDelivered": true,
+  "externalSamplesUsed": false,
+  "scope": "Technical provenance only; not a general legal approval of all app assets",
+  "files": [
+    {
+      "file": "app/src/main/res/raw/hoodie_nuzzle.wav",
+      "source": "assets-source/hoodie/audio/v2/hoodie_nuzzle.wav",
+      "sha256": "8a1b9c1c2a9699eef7503fd84a4309f4cf0540da1cedaeb242e3932472385739",
+      "channels": 1,
+      "sampleRate": 44100,
+      "sampleWidthBytes": 2,
+      "frames": 32634
+    },
+    {
+      "file": "app/src/main/res/raw/hoodie_pet_head_1.wav",
+      "source": "assets-source/hoodie/audio/v2/hoodie_pet_head_1.wav",
+      "sha256": "d3d2cae602d0ccdf8a66da0fd5d396a673ed79484ac002eeb0f8f08cee66434f",
+      "channels": 1,
+      "sampleRate": 44100,
+      "sampleWidthBytes": 2,
+      "frames": 28665
+    },
+    {
+      "file": "app/src/main/res/raw/hoodie_pet_head_2.wav",
+      "source": "assets-source/hoodie/audio/v2/hoodie_pet_head_2.wav",
+      "sha256": "278644af6be5892b8bd584d81eda3ad9fad9f8bf960235821b4b2672f862ccc9",
+      "channels": 1,
+      "sampleRate": 44100,
+      "sampleWidthBytes": 2,
+      "frames": 31311
+    },
+    {
+      "file": "app/src/main/res/raw/hoodie_purr.wav",
+      "source": "assets-source/hoodie/audio/v2/hoodie_purr.wav",
+      "sha256": "befb2701adb31236f65bb70f84828735fc5557a5ea6c01a392d8eef8ec868fca",
+      "channels": 1,
+      "sampleRate": 44100,
+      "sampleWidthBytes": 2,
+      "frames": 52920
+    },
+    {
+      "file": "app/src/main/res/raw/hoodie_tap_1.wav",
+      "source": "assets-source/hoodie/audio/v2/hoodie_tap_1.wav",
+      "sha256": "6a0f1f74c80f3216bcdffb67deb0554f512c0e45fde17e73e5be6416ec3be89f",
+      "channels": 1,
+      "sampleRate": 44100,
+      "sampleWidthBytes": 2,
+      "frames": 8379
+    },
+    {
+      "file": "app/src/main/res/raw/hoodie_tap_2.wav",
+      "source": "assets-source/hoodie/audio/v2/hoodie_tap_2.wav",
+      "sha256": "80904b09c9f5293ea6423a270630c19e889eb320febc2e16fc2030733d8cb0d5",
+      "channels": 1,
+      "sampleRate": 44100,
+      "sampleWidthBytes": 2,
+      "frames": 8379
+    },
+    {
+      "file": "app/src/main/res/raw/hoodie_tap_3.wav",
+      "source": "assets-source/hoodie/audio/v2/hoodie_tap_3.wav",
+      "sha256": "63c15f5085d389187d9f21f7710be89903c77fa363ab97851dc6296a0a0742fc",
+      "channels": 1,
+      "sampleRate": 44100,
+      "sampleWidthBytes": 2,
+      "frames": 8379
+    }
+  ]
+}
