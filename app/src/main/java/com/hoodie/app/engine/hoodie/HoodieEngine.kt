@@ -60,7 +60,8 @@ class HoodieEngine @Inject constructor(
         val versions = effectiveRoutine?.history(now - HoodieConfig.MAX_CATCH_UP_MS - DAY_MS, now).orEmpty()
         val env = SimulationEnv(zone, effective?.routine ?: routine, effective?.sleep ?: s.sleep, daysOff, versions)
 
-        val saved = stateDao.get()?.toDomain()
+        val savedEntity = stateDao.get()
+        val saved = savedEntity?.toDomain()
         val from = minOf(saved?.needsAt ?: now, now) - DAY_MS
         val events = contextDao.overlapping(from, now + 1).map { ContextSpan(it.type, it.startedAt, it.endedAt) }
         val contexts = EventContextTimeline(events) { t ->
@@ -76,7 +77,10 @@ class HoodieEngine @Inject constructor(
             HoodieSimulator.advance(saved, now, contexts, env)
         }
 
-        stateDao.upsert(result.state.toEntity())
+        // Repeated Home emissions at the same clock must not invalidate Room
+        // when reconciliation produced exactly the persisted state.
+        val resolvedEntity = result.state.toEntity()
+        if (resolvedEntity != savedEntity) stateDao.upsert(resolvedEntity)
         if (result.completed.isNotEmpty()) {
             activityDao.insertAll(result.completed.map { HoodieActivityEntity(activity = it.activity, startedAt = it.startedAt, endedAt = it.endedAt, userContext = it.userContext) })
         }

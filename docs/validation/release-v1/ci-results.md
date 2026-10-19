@@ -1,5 +1,7 @@
 # RELEASE-01 — qualidade
 
+Validação local mais recente: **1306 unitários aprovados e lintDebug sem erros**, após a correção de upserts redundantes. [Evidência](unit-results-after-noop.json). A CI verde do SHA corrigido, os instrumentados completos e os novos artefatos R8 continuam pendentes.
+
 ## Linha de base remota
 
 Commit `6e03a2880f4e5e8e4ea06469fcbfb3e5eb51a891`: [Android CI #77](https://github.com/rafaelvalquer/Hoodie/actions/runs/39174057417), concluída em 18/10/2026. `unit-tests`, `lint` e `assemble` aprovados; `instrumentation` reprovada. Logs remotos confirmam:
@@ -63,3 +65,15 @@ Defeito adicional confirmado no diagnóstico: `adb ... | grep -q ...` sob `pipef
 O emulador da CI recebe explicitamente 3072 MB; as invocações instrumentadas do Gradle usam no máximo dois workers, sem paralelismo e heap de 1 GB, após a compilação prévia. Isso reduz a disputa de recursos, mas não é uma aprovação do novo ambiente: exige outra execução integral. Bash e actionlint aprovaram as alterações. Nenhum retry automático foi adicionado.
 
 Revisão dos gates relacionados: `release-runtime-smoke.sh` também passou a usar snapshots atuais de Activity e Display, sem a seção histórica `lastanr`; exige o applicationId exato da variante, evitando aceitar outro pacote com o mesmo prefixo. Os snapshots de ambas as aberturas ficam nos relatórios. Os sete testes do verificador passaram, incluindo rejeição do prefixo `.homologacao` quando o pacote público é esperado e rejeição de pacote presente apenas em janela sem foco. A listagem de assets do APK também é gravada antes do `grep`, evitando o mesmo encerramento antecipado de pipe.
+
+## CI de `a9a693ac` e persistência da Home
+
+[Execução 39290009748](https://github.com/rafaelvalquer/Hoodie/actions/runs/39290009748): lint aprovado; **1303 unitários, 1302 aprovados, uma falha e zero ignorados**. A falha foi `HoodieInteractionHomeIntegrationTest#enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables`: os registros antes/depois eram iguais, mas o observer recebeu `Interaction invalidated [hoodie_state]`. Build e instrumentados não iniciaram por dependência. [Relatórios unitários](https://github.com/rafaelvalquer/Hoodie/actions/runs/39290009748/artifacts/12204754445), ZIP SHA-256 `be2c3a07d23b7cb9027a4f7453a25cff2977ba5fe6847c7cfc6fcb315b201991`.
+
+Diagnóstico local: os quatro casos originais passaram numa rodada, e a instrumentação temporária de escritas SQL passou nas três rodadas limitadas seguintes, sem escrita durante a fase observada. Essas passagens não apagam a falha da CI e não provaram qual chamada originou aquela notificação. O rastreamento temporário foi removido; os quatro testes e todas as asserções originais permanecem intactos.
+
+A investigação identificou uma escrita desnecessária verificável: `HoodieEngine.resolve()` fazia upsert de `hoodie_state` mesmo quando o simulador devolvia exatamente o estado já salvo. Uma regressão separada contou **três escritas SQL reais em três resoluções idênticas**, com zero esperado, e falhou antes da correção. O engine agora compara a entidade resultante com a entidade lida e faz upsert somente quando os valores diferem. Continua processando atividades/timeline e calculando necessidades ao vivo; não usa retorno antecipado, não muda schema e não elimina mudanças reais.
+
+Três regressões verificam ausência de escrita/novos registros para estado idêntico, persistência após avanço real do estado e atualização das necessidades visuais sem regravar uma atividade inalterada. Antes do terceiro caso, regras do engine, persistência do simulador, Home e regressão somaram **19 testes aprovados**, sem ignorados. A rodada posterior com os três casos de persistência e os quatro originais da Home passou **7 testes**, sem falhas/erros/ignorados. Uma nova suíte integral e CI do commit corrigido continuam necessárias.
+
+Validação integral local posterior: **1306 testes em 299 suítes, zero falhas, erros ou ignorados**, incluindo os seis exportadores visuais obrigatórios. `lintDebug` também passou; build completo desses dois gates em **13m28s**. [Contagens conferidas por casos reais, hashes dos blobs testados e resumo do lint](unit-results-after-noop.json). Os quatro testes originais da Home não foram alterados. Relatórios XML completos preservados localmente, com hash do ZIP no resumo. Essa aprovação local não substitui os instrumentados nem a CI verde do novo SHA; os artefatos R8 anteriores precisam ser reconstruídos após a mudança de produção.

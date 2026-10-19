@@ -1,6 +1,8 @@
 # RELEASE-05 — preparação da Google Play
 
-Estado: **documentação preparada; envio e revisão da Console pendentes**. Conta ainda indisponível. Contato de suporte confirmado: rafael.valquer@gmail.com. Confirmar o nome legal do responsável na abertura da conta; o e-mail não comprova a identidade legal.
+Estado: **documentação preparada; envio e revisão da Console pendentes**. Conta ainda indisponível. Identificação de contato do responsável e suporte: rafael.valquer@gmail.com.
+
+Em 19/10/2026, ao ser consultado sobre a identificação do responsável na política, o responsável reiterou `rafael.valquer@gmail.com`. Manter esse endereço como identificação de contato na política, conforme informado; a identificação cadastral da futura conta Play permanece a preencher na abertura da conta.
 
 Política: [texto](../../privacy-policy.md). URL HTTPS de referência: https://github.com/rafaelvalquer/Hoodie/blob/main/docs/privacy-policy.md. Conferir após o push que a versão atual abre sem login, tanto no navegador quanto pelo botão Privacidade das Configurações. Se a Console exigir outro formato/endereço, publicar HTML HTTPS estável e atualizar ambos os links antes do envio.
 

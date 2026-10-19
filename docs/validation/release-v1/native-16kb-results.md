@@ -21,3 +21,5 @@ O APK derivado de homologação foi instalado no AVD isolado `Hoodie_16KB_Releas
 Referências: [páginas de 16 KB](https://developer.android.com/guide/practices/page-sizes), [testar bundles](https://developer.android.com/guide/app-bundle/test).
 
 Gate de foco revisado executado sobre o mesmo APK R8 derivado, com pacote de homologação explícito: duas aberturas frias reais, PIDs diferentes, Activity retomada e foco atual no pacote correto em ambos os snapshots. Página 16384; buffer de crash vazio e nenhum erro nativo/fatal nos logs coletados. [Resumo com hash do APK e do script](native-focus-gate-runtime.json). É uma validação de início de processo em SO já aberto; o ANR anterior de SystemUI no boot do AVD não é apagado desta avaliação. A regressão funcional completa e a homologação física permanecem pendentes.
+
+Os artefatos identificados acima precedem a correção posterior de gravações redundantes em `HoodieEngine`. A evidência permanece vinculada aos seus hashes; reconstruir e repetir os gates relevantes para o novo candidato, sem promover os resultados anteriores como validação do binário alterado.

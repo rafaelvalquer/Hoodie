@@ -1,0 +1,29 @@
+{
+  "suites": 299,
+  "tests": 1306,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "reportedTotals": {
+    "tests": 1306,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "skippedTests": [],
+  "baseCommit": "a9a693ac341bf5e2becb50fef165130d3033b53d",
+  "testedGitBlobs": {
+    "app/src/main/java/com/hoodie/app/engine/hoodie/HoodieEngine.kt": "b8e02b94fe1bdaa67e02bf14282527fc934c7e06",
+    "app/src/test/java/com/hoodie/app/integration/HoodieEnginePersistenceTest.kt": "c0ca04b562f38594792cdf06efe82a3ce2b9c930",
+    "app/src/test/java/com/hoodie/app/integration/HoodieInteractionHomeIntegrationTest.kt": "66db35b72809d0cc1a93c2299c420727a00b0942"
+  },
+  "mandatoryVisualExportersEnabled": true,
+  "scope": "Complete local JVM suite after redundant-write correction, including all six visual exporters; instrumentation and R8 artifact verification remain separate gates.",
+  "lintDebug": {
+    "errors": 0,
+    "warnings": 68,
+    "reportSha256": "54078ee842ef9d728f18948e2afe8d7c28342e87467ef0e3286797e4964abb22"
+  },
+  "localJunitArchiveSha256": "0a5606d44485a4bd4f9f5ac51a466bb209e683df17b44027cfc9de8a67372046",
+  "gradleBuild": "BUILD SUCCESSFUL in 13m 28s"
+}

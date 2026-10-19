@@ -1,6 +1,6 @@
 # Política de privacidade — Hoodie
 
-Última atualização: 18 de outubro de 2026.
+Última atualização: 19 de outubro de 2026.
 
 Contato do responsável pelo Hoodie e suporte: **rafael.valquer@gmail.com**. Solicitações sobre privacidade, correção, exclusão e demais direitos podem ser enviadas a esse endereço. Não envie senhas de backup ou arquivos contendo sua rotina no primeiro contato.
 

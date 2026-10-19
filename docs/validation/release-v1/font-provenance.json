@@ -1,0 +1,26 @@
+{
+  "fontSha256": "034c77f1f05ec89421e4a63f0e3a4ca1ecf852cc6d2bf611f126f275728e017d",
+  "fontBytes": 118204,
+  "primarySource": "https://github.com/google/fonts/tree/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/pressstart2p",
+  "sourceFontUrl": "https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/pressstart2p/PressStart2P-Regular.ttf",
+  "sourceLicenseUrl": "https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/pressstart2p/OFL.txt",
+  "checkedAtUtc": "2026-10-19",
+  "fontMatchesPrimarySourceByteForByte": true,
+  "bundledLicenseMatchesPrimarySourceIgnoringLineEndings": true,
+  "license": "SIL Open Font License 1.1",
+  "fontMetadata": {
+    "0": "Copyright 2012 The Press Start 2P Project Authors (cody@zone38.net), with Reserved Font Name \"Press Start 2P\"",
+    "1": "Press Start 2P",
+    "2": "Regular",
+    "5": "Version 3.000",
+    "8": "CodeMan38",
+    "9": "CodeMan38",
+    "13": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+    "14": "http://scripts.sil.org/OFL"
+  },
+  "checkedApkSha256": "b63b15d265be62e87a7a25e509c10a5cdf12bb3d25c332d495622a69362f37ae",
+  "fontEntryInCheckedApk": "res/font/hoodie_pixel.ttf",
+  "licenseEntryInCheckedApk": "assets/licenses/press_start_2p_ofl.txt",
+  "scope": "Font provenance and inclusion in the APK identified by hash. Recheck final artifact; no general attestation of other assets.",
+  "sourceRepositoryCommit": "47d54ca1ebb14fd864695f1d39dc734f39017c33"
+}
