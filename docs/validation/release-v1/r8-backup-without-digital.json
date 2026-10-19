@@ -1,0 +1,48 @@
+{
+  "sourceWithDigitalSha256": "49dc83ddce1fbf644c202cb17fb8e3d7def5d72eab9984218a4c899459f289ff",
+  "withoutDigitalSha256": "1b6e945a38d1dc0fe1f119188d932944edeffd3c6ca25b2842a2ef843085d476",
+  "withoutDigitalBytes": 79920,
+  "pageSize": 16384,
+  "variant": "homologacao R8; APK derived from AAB; development signature",
+  "syntheticOnly": true,
+  "physicalHomologation": false,
+  "uiExportVerified": true,
+  "allRecordsAuthenticated": true,
+  "manifestIncludeDigital": false,
+  "digitalDatasetsAbsent": [
+    "app_category_overrides",
+    "daily_app_usage",
+    "daily_context_app_usage",
+    "daily_context_usage",
+    "daily_device_usage",
+    "daily_phone_timeline",
+    "daily_screen_hourly",
+    "phone_app_sessions"
+  ],
+  "missingOrChangedNonDigitalSourceRowsAfterSnapshotNormalization": {
+    "places": 0,
+    "routines": 0,
+    "day_exceptions": 0,
+    "location_events": 0,
+    "context_events": 0,
+    "context_confirmations": 0,
+    "hoodie_activities": 0,
+    "timeline_events": 0,
+    "memories": 0,
+    "mobility_sessions": 0,
+    "mobility_segments": 0,
+    "diary_corrections": 0,
+    "transport_patterns": 0,
+    "transport_evidence": 0,
+    "effective_routine_versions": 0
+  },
+  "openContextSnapshotBoundaries": [
+    {
+      "id": 124,
+      "field": "endedAt",
+      "firstSnapshotAt": 1792428011268,
+      "secondSnapshotAt": 1792428322386
+    }
+  ],
+  "scope": "Sequential exports from the same restored synthetic database. Contexts open at export are closed in each snapshot at its manifest.createdAt, by the existing BackupRepository contract; all other fields and historical rows remain exact. Extra current rows allowed. No physical/Play approval."
+}

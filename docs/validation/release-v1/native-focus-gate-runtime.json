@@ -1,0 +1,20 @@
+{
+  "apkSha256": "b63b15d265be62e87a7a25e509c10a5cdf12bb3d25c332d495622a69362f37ae",
+  "apkBytes": 11808633,
+  "package": "com.hoodie.app.homologacao",
+  "activity": "com.hoodie.app.MainActivity",
+  "pageSize": 16384,
+  "r8": true,
+  "developmentSignature": true,
+  "derivedFromAab": true,
+  "coldLaunches": 2,
+  "distinctProcessIds": [
+    "8374",
+    "8480"
+  ],
+  "currentFocusSnapshotsRetained": true,
+  "crashBufferBytes": 0,
+  "nativeOrFatalLogErrors": 0,
+  "scriptSha256": "f55abd0a21c81ea7d74d0d4d9fb0cc2405f595a7e1090d3b19daa4598a75e03f",
+  "scope": "Exact-package Activity/window readiness on two cold process launches; not full functional release regression, clean OS boot, physical homologation, or Play approval."
+}

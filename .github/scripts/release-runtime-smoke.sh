@@ -21,8 +21,15 @@ for opening in 1 2; do
   adb shell am start -W -n "$package/$activity" > "$output/launch-$opening.txt"
   grep -q 'Status: ok' "$output/launch-$opening.txt"
   deadline=$((SECONDS + 30))
-  until adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' | grep -q "$package" &&
-    adb shell dumpsys window | grep 'mCurrentFocus=' | grep -q "$package"; do
+  while true; do
+    # Read complete current snapshots. Full `dumpsys window` also contains
+    # historical last-ANR focus, which cannot prove the current release is focused.
+    adb shell dumpsys activity activities > "$output/activity-$opening.txt"
+    adb shell dumpsys window displays > "$output/window-$opening.txt"
+    if grep -E 'mResumedActivity|topResumedActivity' "$output/activity-$opening.txt" | grep -F " $package/" > /dev/null &&
+      python3 .github/scripts/verify-emulator-window.py "$output/window-$opening.txt" "$package"; then
+      break
+    fi
     test "$SECONDS" -lt "$deadline"
     sleep 1
   done

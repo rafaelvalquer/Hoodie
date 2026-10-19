@@ -31,6 +31,18 @@ class EmulatorWindowTest(unittest.TestCase):
         gate.verify('Window #1 Application Not Responding: old.process\n'
                     '  mCurrentFocus=Window{abc u0 com.hoodie.app/.MainActivity}\n')
 
+    def test_release_requires_its_exact_application_id(self):
+        gate.verify('mCurrentFocus=Window{abc u0 com.hoodie.app/.MainActivity}\n', 'com.hoodie.app')
+        with self.assertRaisesRegex(ValueError, 'Expected focused package'):
+            gate.verify('mCurrentFocus=Window{abc u0 com.hoodie.app.homologacao/.MainActivity}\n',
+                        'com.hoodie.app')
+
+    def test_release_does_not_accept_a_package_in_unfocused_history(self):
+        with self.assertRaisesRegex(ValueError, 'Expected focused package'):
+            gate.verify('Window #1 com.hoodie.app/.MainActivity\n'
+                        'mCurrentFocus=Window{abc u0 com.android.launcher/.Launcher}\n',
+                        'com.hoodie.app')
+
 
 if __name__ == '__main__':
     unittest.main()
