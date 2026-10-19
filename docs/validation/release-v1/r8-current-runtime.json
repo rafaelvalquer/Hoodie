@@ -1,0 +1,69 @@
+{
+  "appSourceCommit": "f69f6e6b4616d718ecfe297d2719e6786b6293b6",
+  "pageSize": 16384,
+  "public": {
+    "apkSha256": "8d2a9bbc674b3cbc49eef4e3f45e12248068c51616d0e30315671b812b8f9e08",
+    "processIds": [
+      2725,
+      2912
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "WARM"
+    ],
+    "distinctProcesses": true,
+    "bothAndroidLaunchStatesCold": false,
+    "originalSmokeColdClaimCorrected": true,
+    "evidenceNote": "Original smoke did not save stopped-pid files. Logcat records force-stop and a new WorkManager process before the second Activity; no retrospective empty-process witness is manufactured."
+  },
+  "homologacao": {
+    "apkSha256": "27268be8ef94ace9453390755a44624ecbdc840b355b5865c9f668d037422df8",
+    "pageSize": 16384,
+    "derivedApkProcessRestart": true,
+    "derivedApkColdLaunch": true,
+    "processIds": [
+      5442,
+      5541
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "COLD"
+    ],
+    "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation",
+    "smokeScriptSha256": "d76cc0cb0e86735bbc1f9092f15ffe74b0c39fc02705ac7fed133945ba8701a8",
+    "summaryScriptSha256": "1d300cc0d3a69cdcd1f85ecf12542c6164ba29a98d9c70ec5bce30ed6994f8fc"
+  },
+  "noFatalOrNativeErrorDetected": true,
+  "bootAnrEvents": "",
+  "scope": "Observed emulator boot and process starts only; no physical battery, geofence, upload-key or Play acceptance approval",
+  "rawEvidenceSha256": {
+    "public-runtime\\activity-1.txt": "1b951f101ab5632f0f40447477f6a231fda5ce7db562f45c8af77b6968f2475f",
+    "public-runtime\\activity-2.txt": "e3d10a5e3f3247d892cb2e4ffaffdf18c8d5fdaf7423ed6b6a6c122de9d90fb1",
+    "public-runtime\\crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public-runtime\\device-properties.txt": "1556ba9642ae44c2e2a464d0cfe81f05419bc0b9598fc7a20bc284513ecd968c",
+    "public-runtime\\launch-1.txt": "127db511967773b730e181f45e7754f534c5a3e3679d9e32c472be06938dfb01",
+    "public-runtime\\launch-2.txt": "7bfba223436f5f253bb71e0b36c38f1d9c537b43ec50ee478f2384997a2a5657",
+    "public-runtime\\logcat.txt": "878264b000c3c088e6cfff891bb0522a50c1867035185a8a6acbcdf87483352c",
+    "public-runtime\\pid-1.txt": "2e6eea343b2e0684951515028345ab20c6072403a8e5f35011ae05fa257e02c2",
+    "public-runtime\\pid-2.txt": "989c7ca524bea29b9d5e629203aebc6870173114f825bf5dfb78fb57898057c1",
+    "public-runtime\\result.json": "469bc05e3ac73b875a56cd9834b91ff17e7199f02cfdd69e52af37e97bf0b54e",
+    "public-runtime\\screen.png": "37930927043621e59b55a09e4f58f11dfaad1d999af4528cc99fb3ec5dcffeb9",
+    "public-runtime\\window-1.txt": "db9c9e93ebbaeda7585b62c01b693e5751c16f1bb8806ea9fdcb15fa180b4661",
+    "public-runtime\\window-2.txt": "9ed49ee075ea24a828ca190f2d1d26d8bf737e552d2b43211c96d2ec6d754824",
+    "homologacao-runtime-restart-gate\\activity-1.txt": "9a3f8b0971af7a7f837c850a342498a8c5b25d62a76601c3332f5d1e09e15f4f",
+    "homologacao-runtime-restart-gate\\activity-2.txt": "7c93f2bf8db0ce4133135aa89637de4db0cf45ec82ac0807e25b95c6a42007a4",
+    "homologacao-runtime-restart-gate\\crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "homologacao-runtime-restart-gate\\device-properties.txt": "85234bdff10788cdcfb42951dafc4f8480a189e0c8c0c273908e1f244c7f6345",
+    "homologacao-runtime-restart-gate\\launch-1.txt": "18014f27035b168d53ea9e5f8d0d3ba34ef89067282f0709c6564f6768b4f29e",
+    "homologacao-runtime-restart-gate\\launch-2.txt": "ab503c50b2bba7b5943d2125e27004633c43cd0ce333b36af7d5eb22ed621f0a",
+    "homologacao-runtime-restart-gate\\logcat.txt": "a7e952d39e61726a7b4976f28bbd066b6e0031b1996b846a5ee611e9982e91c4",
+    "homologacao-runtime-restart-gate\\pid-1.txt": "9fef57e5cf35a87d3c2666ac94ba36f9b04d8341fdc5095949be6e56e3c50fef",
+    "homologacao-runtime-restart-gate\\pid-2.txt": "19787686089468532ce77630cdc0197d12399823ab91c36e2fcc32cfb384af64",
+    "homologacao-runtime-restart-gate\\result.json": "4ac825e1e21219308971cc10e1add97180ef9d2d04ce8576011b0d95f4f8b0cd",
+    "homologacao-runtime-restart-gate\\screen.png": "c9f3b24c99ff5362cb5623448d42361ff8ea375755abfc9c31226fccf7044e63",
+    "homologacao-runtime-restart-gate\\stopped-pid-1.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "homologacao-runtime-restart-gate\\stopped-pid-2.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "homologacao-runtime-restart-gate\\window-1.txt": "0d6b4bb015b00e7bfbb1ef22a3a5d6620d07670192c81f0be38ef0aefe7dd35b",
+    "homologacao-runtime-restart-gate\\window-2.txt": "159d7c87c448ab1d20ef6d0719fc328ca6d6951409d045af611e32d8572b74a6"
+  }
+}

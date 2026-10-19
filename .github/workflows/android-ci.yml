@@ -58,6 +58,9 @@ jobs:
       - name: Diagnóstico de foco e ANR do emulador
         run: python3 .github/scripts/test_verify_emulator_window.py
 
+      - name: Evidência de reinício e estado de abertura do APK derivado
+        run: python3 .github/scripts/test_summarize_runtime_launches.py
+
       # Revisão visual de cenas alteradas: mantém o candidato mesmo se o golden falhar.
       - name: Upload candidate scene goldens
         if: always()
@@ -178,6 +181,8 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_8
+          # Match the reviewed reference producer; do not float rasterizer builds.
+          emulator-build: '15917651'
           cores: 2
           ram-size: 3072M
           heap-size: 256

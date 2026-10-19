@@ -1,0 +1,540 @@
+{
+  "static_alignment_passed": true,
+  "runtime_verified": false,
+  "archives": [
+    {
+      "artifact": "app-homologacao.aab",
+      "sha256": "bc5af9412eb684c118fc83da7855d4c70180bf784000544557bab77405f07208",
+      "libraries": [
+        {
+          "path": "base/lib/arm64-v8a/libandroidx.graphics.path.so",
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 7232,
+              "address": 23616,
+              "alignment": 16384
+            },
+            {
+              "offset": 8144,
+              "address": 40912,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/arm64-v8a/libdatastore_shared_counter.so",
+          "sha256": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 4544,
+              "address": 20928,
+              "alignment": 16384
+            },
+            {
+              "offset": 5160,
+              "address": 37928,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/arm64-v8a/libsqlcipher.so",
+          "sha256": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2058928,
+              "address": 2075312,
+              "alignment": 16384
+            },
+            {
+              "offset": 2084312,
+              "address": 2117080,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/armeabi-v7a/libandroidx.graphics.path.so",
+          "sha256": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 5312,
+              "address": 21696,
+              "alignment": 16384
+            },
+            {
+              "offset": 5772,
+              "address": 38540,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/armeabi-v7a/libdatastore_shared_counter.so",
+          "sha256": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2704,
+              "address": 19088,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/armeabi-v7a/libsqlcipher.so",
+          "sha256": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 1023568,
+              "address": 1039952,
+              "alignment": 16384
+            },
+            {
+              "offset": 1037776,
+              "address": 1070544,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/x86/libandroidx.graphics.path.so",
+          "sha256": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 7456,
+              "address": 23840,
+              "alignment": 16384
+            },
+            {
+              "offset": 7912,
+              "address": 40680,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/x86/libdatastore_shared_counter.so",
+          "sha256": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 3600,
+              "address": 19984,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/x86/libsqlcipher.so",
+          "sha256": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2221840,
+              "address": 2238224,
+              "alignment": 16384
+            },
+            {
+              "offset": 2235608,
+              "address": 2268376,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/x86_64/libandroidx.graphics.path.so",
+          "sha256": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 7872,
+              "address": 24256,
+              "alignment": 16384
+            },
+            {
+              "offset": 8808,
+              "address": 41576,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/x86_64/libdatastore_shared_counter.so",
+          "sha256": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 3872,
+              "address": 20256,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        },
+        {
+          "path": "base/lib/x86_64/libsqlcipher.so",
+          "sha256": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2190112,
+              "address": 2206496,
+              "alignment": 16384
+            },
+            {
+              "offset": 2215520,
+              "address": 2248288,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": null,
+          "compressed": true
+        }
+      ]
+    },
+    {
+      "artifact": "homologacao-from-aab.apk",
+      "sha256": "27268be8ef94ace9453390755a44624ecbdc840b355b5865c9f668d037422df8",
+      "libraries": [
+        {
+          "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 7232,
+              "address": 23616,
+              "alignment": 16384
+            },
+            {
+              "offset": 8144,
+              "address": 40912,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 2850816,
+          "compressed": false
+        },
+        {
+          "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+          "sha256": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 4544,
+              "address": 20928,
+              "alignment": 16384
+            },
+            {
+              "offset": 5160,
+              "address": 37928,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 2867200,
+          "compressed": false
+        },
+        {
+          "path": "lib/arm64-v8a/libsqlcipher.so",
+          "sha256": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2058928,
+              "address": 2075312,
+              "alignment": 16384
+            },
+            {
+              "offset": 2084312,
+              "address": 2117080,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 2883584,
+          "compressed": false
+        },
+        {
+          "path": "lib/armeabi-v7a/libandroidx.graphics.path.so",
+          "sha256": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 5312,
+              "address": 21696,
+              "alignment": 16384
+            },
+            {
+              "offset": 5772,
+              "address": 38540,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 4997120,
+          "compressed": false
+        },
+        {
+          "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+          "sha256": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2704,
+              "address": 19088,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 5013504,
+          "compressed": false
+        },
+        {
+          "path": "lib/armeabi-v7a/libsqlcipher.so",
+          "sha256": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 1023568,
+              "address": 1039952,
+              "alignment": 16384
+            },
+            {
+              "offset": 1037776,
+              "address": 1070544,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 5029888,
+          "compressed": false
+        },
+        {
+          "path": "lib/x86/libandroidx.graphics.path.so",
+          "sha256": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 7456,
+              "address": 23840,
+              "alignment": 16384
+            },
+            {
+              "offset": 7912,
+              "address": 40680,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 6078464,
+          "compressed": false
+        },
+        {
+          "path": "lib/x86/libdatastore_shared_counter.so",
+          "sha256": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 3600,
+              "address": 19984,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 6094848,
+          "compressed": false
+        },
+        {
+          "path": "lib/x86/libsqlcipher.so",
+          "sha256": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2221840,
+              "address": 2238224,
+              "alignment": 16384
+            },
+            {
+              "offset": 2235608,
+              "address": 2268376,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 6111232,
+          "compressed": false
+        },
+        {
+          "path": "lib/x86_64/libandroidx.graphics.path.so",
+          "sha256": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 7872,
+              "address": 24256,
+              "alignment": 16384
+            },
+            {
+              "offset": 8808,
+              "address": 41576,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 8372224,
+          "compressed": false
+        },
+        {
+          "path": "lib/x86_64/libdatastore_shared_counter.so",
+          "sha256": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 3872,
+              "address": 20256,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 8388608,
+          "compressed": false
+        },
+        {
+          "path": "lib/x86_64/libsqlcipher.so",
+          "sha256": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561",
+          "load_segments": [
+            {
+              "offset": 0,
+              "address": 0,
+              "alignment": 16384
+            },
+            {
+              "offset": 2190112,
+              "address": 2206496,
+              "alignment": 16384
+            },
+            {
+              "offset": 2215520,
+              "address": 2248288,
+              "alignment": 16384
+            }
+          ],
+          "zip_offset": 8404992,
+          "compressed": false
+        }
+      ]
+    }
+  ]
+}

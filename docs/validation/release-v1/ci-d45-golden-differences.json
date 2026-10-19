@@ -1,0 +1,54 @@
+{
+  "sourceRun": 39299025528,
+  "referenceApi": 34,
+  "referenceEmulatorVersion": "37.1.11.0",
+  "referenceEmulatorBuild": 15917651,
+  "ciApi": 34,
+  "ciEmulatorVersion": "37.2.12.0",
+  "ciEmulatorBuild": 16428233,
+  "changedImages": [
+    {
+      "image": "diary_full_360x640_f100_bottom",
+      "changedPixels": 3
+    },
+    {
+      "image": "diary_full_360x640_f130_bottom",
+      "changedPixels": 3
+    },
+    {
+      "image": "diary_full_360x800_f100_bottom",
+      "changedPixels": 3
+    },
+    {
+      "image": "diary_full_360x800_f130_bottom",
+      "changedPixels": 3
+    },
+    {
+      "image": "diary_full_411x891_f100_bottom",
+      "changedPixels": 3
+    },
+    {
+      "image": "diary_full_411x891_f130_bottom",
+      "changedPixels": 3
+    },
+    {
+      "image": "digital_full_411x891_f100",
+      "changedPixels": 3
+    },
+    {
+      "image": "digital_full_411x891_f130",
+      "changedPixels": 3
+    },
+    {
+      "image": "place_picker_full_411x891_f100_bottom",
+      "changedPixels": 1
+    },
+    {
+      "image": "place_picker_full_411x891_f130_bottom",
+      "changedPixels": 3
+    }
+  ],
+  "referenceImagesModified": false,
+  "comparisonToleranceModified": false,
+  "causeProven": false
+}

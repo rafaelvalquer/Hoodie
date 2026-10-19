@@ -3,6 +3,7 @@ set -euo pipefail
 apk=$1
 package=${2:-com.hoodie.app}
 activity=${3:-com.hoodie.app.MainActivity}
+[[ "$package" =~ ^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$ ]]
 output=${RUNTIME_REPORT_DIR:-app/build/reports/release-runtime}
 mkdir -p "$output"
 capture() {
@@ -16,8 +17,11 @@ adb shell getprop > "$output/device-properties.txt"
 adb logcat -c
 adb install -r "$apk"
 for opening in 1 2; do
-  # Here force-stop deliberately exercises a cold launch, not geofence delivery.
+  # Force-stop is only for process restart, not geofence delivery. WorkManager
+  # can start the NEW process before the Activity and Android may call it WARM.
   adb shell am force-stop "$package"
+  adb shell "pidof $package || [ \$? -eq 1 ]" > "$output/stopped-pid-$opening.txt"
+  test ! -s "$output/stopped-pid-$opening.txt"
   adb shell am start -W -n "$package/$activity" > "$output/launch-$opening.txt"
   grep -q 'Status: ok' "$output/launch-$opening.txt"
   deadline=$((SECONDS + 30))
@@ -37,4 +41,4 @@ for opening in 1 2; do
 done
 capture
 if grep -E 'UnsatisfiedLinkError|Fatal signal|FATAL EXCEPTION' "$output/logcat.txt"; then exit 1; fi
-printf '%s\n' '{"pageSize":16384,"derivedApkColdLaunch":true,"databaseMigrationAndBackupCoverage":"separate instrumented suite; full release journey requires homologation"}' > "$output/result.json"
+python3 .github/scripts/summarize-runtime-launches.py "$output"

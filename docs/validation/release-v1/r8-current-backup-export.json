@@ -1,0 +1,148 @@
+{
+  "bytes": 95135,
+  "sha256": "ae8c5c24c6b7bfcd6ac45481b7d301420460c337f00be9e573b3432795d84c8b",
+  "authenticatedUnits": 414,
+  "datasets": {
+    "places": {
+      "previous": 4,
+      "current": 4,
+      "previousMissingOrChanged": 0
+    },
+    "routines": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "day_exceptions": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "location_events": {
+      "previous": 44,
+      "current": 44,
+      "previousMissingOrChanged": 0
+    },
+    "context_events": {
+      "previous": 124,
+      "current": 125,
+      "previousMissingOrChanged": 1
+    },
+    "context_confirmations": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "hoodie_activities": {
+      "previous": 21,
+      "current": 29,
+      "previousMissingOrChanged": 0
+    },
+    "timeline_events": {
+      "previous": 147,
+      "current": 157,
+      "previousMissingOrChanged": 0
+    },
+    "memories": {
+      "previous": 3,
+      "current": 4,
+      "previousMissingOrChanged": 0
+    },
+    "daily_device_usage": {
+      "previous": 30,
+      "current": 30,
+      "previousMissingOrChanged": 0
+    },
+    "daily_app_usage": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "daily_context_app_usage": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "app_category_overrides": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "phone_app_sessions": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "daily_screen_hourly": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "daily_context_usage": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "daily_phone_timeline": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "mobility_sessions": {
+      "previous": 2,
+      "current": 2,
+      "previousMissingOrChanged": 0
+    },
+    "mobility_segments": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "diary_corrections": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "transport_patterns": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "transport_evidence": {
+      "previous": 1,
+      "current": 1,
+      "previousMissingOrChanged": 0
+    },
+    "effective_routine_versions": {
+      "previous": 3,
+      "current": 3,
+      "previousMissingOrChanged": 0
+    }
+  },
+  "appSourceCommit": "f69f6e6b4616d718ecfe297d2719e6786b6293b6",
+  "variant": "homologacao",
+  "versionCode": 6,
+  "includeDigital": true,
+  "previousExportSha256": "49dc83ddce1fbf644c202cb17fb8e3d7def5d72eab9984218a4c899459f289ff",
+  "authenticated": true,
+  "authenticatedEmptyTerminator": true,
+  "noTrailingBytes": true,
+  "contextChanges": [
+    {
+      "id": 124,
+      "changedFields": [
+        "endedAt"
+      ],
+      "previousSnapshotCutoff": 1792428011268,
+      "currentEndedAt": 1792433835205
+    }
+  ],
+  "strictAllPreviousRowsEqual": false,
+  "allOtherPreviousRecordsPreserved": true,
+  "limitations": [
+    "Consecutive exports after maintenance; does not override the original rich-fixture strict comparison failure",
+    "One open context was clipped at previous snapshot time and ended later; no arbitrary field differences allowed",
+    "New activity/context/timeline/memory records are allowed; no semantic duplication or all-settings-equivalence approval",
+    "No fresh physical-device restore, interrupted activation or external-document-provider approval"
+  ]
+}

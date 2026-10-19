@@ -32,9 +32,19 @@ java -jar "$BUNDLETOOL_JAR" validate --bundle="$aab"
 # jarsigner verifies both integrity and trust in the selected upload certificate.
 jarsigner -verify -strict -keystore "$HOODIE_UPLOAD_STORE_FILE" \
   -storepass:env HOODIE_UPLOAD_STORE_PASSWORD "$aab" > "$out/signature.txt"
+# bundletool 1.18.2 accepts only pass: or file:, unlike apksigner/keytool.
+# Keep passwords out of argv and uploaded artifacts; the caller's keystore
+# cleanup remains in its separate shell. No recursive cleanup is necessary.
+umask 077
+password_dir=$(mktemp -d "${RUNNER_TEMP:?Temporary signing directory required}/hoodie-bundletool.XXXXXX")
+store_password_file="$password_dir/store-password"
+key_password_file="$password_dir/key-password"
+trap 'rm -f -- "$store_password_file" "$key_password_file"; rmdir -- "$password_dir"' EXIT
+printf '%s' "$HOODIE_UPLOAD_STORE_PASSWORD" > "$store_password_file"
+printf '%s' "$HOODIE_UPLOAD_KEY_PASSWORD" > "$key_password_file"
 java -jar "$BUNDLETOOL_JAR" build-apks --bundle="$aab" --output="$out/hoodie.apks" \
   --mode=universal --ks="$HOODIE_UPLOAD_STORE_FILE" --ks-key-alias="$HOODIE_UPLOAD_KEY_ALIAS" \
-  --ks-pass=env:HOODIE_UPLOAD_STORE_PASSWORD --key-pass=env:HOODIE_UPLOAD_KEY_PASSWORD
+  --ks-pass="file:$store_password_file" --key-pass="file:$key_password_file"
 unzip -p "$out/hoodie.apks" universal.apk > "$out/hoodie-from-bundle.apk"
 apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)
 "$apksigner" verify --verbose --print-certs "$out/hoodie-from-bundle.apk" > "$out/apk-signature.txt"

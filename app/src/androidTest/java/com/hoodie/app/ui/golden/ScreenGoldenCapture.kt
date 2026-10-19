@@ -51,9 +51,14 @@ internal object ScreenGoldenCapture {
             actual.getPixels(rendered, 0, actual.width, 0, 0, actual.width, actual.height)
             val diff = IntArray(reference.size)
             var changed = 0
+            val firstDifferences = mutableListOf<String>()
             reference.indices.forEach { i ->
                 if (reference[i] != rendered[i]) {
                     changed++
+                    if (firstDifferences.size < 10) {
+                        firstDifferences += "(${i % actual.width},${i / actual.width}) " +
+                            "${Integer.toHexString(reference[i])}->${Integer.toHexString(rendered[i])}"
+                    }
                     diff[i] = Color.MAGENTA
                 } else {
                     diff[i] = Color.argb(255, Color.red(rendered[i]) / 3, Color.green(rendered[i]) / 3, Color.blue(rendered[i]) / 3)
@@ -64,7 +69,7 @@ internal object ScreenGoldenCapture {
                 val bitmap = Bitmap.createBitmap(diff, actual.width, actual.height, Bitmap.Config.ARGB_8888)
                 try { save(bitmap, File(output, "${name}_diff.png")) } finally { bitmap.recycle() }
             }
-            assertTrue("$name changed $changed pixels; actual/diff: $output", changed == 0)
+            assertTrue("$name changed $changed pixels; first differences: $firstDifferences; actual/diff: $output", changed == 0)
         } finally {
             expected.recycle()
         }
@@ -72,5 +77,12 @@ internal object ScreenGoldenCapture {
 
     private fun save(bitmap: Bitmap, file: File) {
         file.outputStream().use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        // UTP retrieves this directory before uninstalling the test app. Pulling
+        // app-specific files after Gradle returns can otherwise lose every diff.
+        InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")?.let { path ->
+            val runnerOutput = File(path, ASSET_DIRECTORY)
+            check(runnerOutput.mkdirs() || runnerOutput.isDirectory)
+            file.copyTo(File(runnerOutput, file.name), overwrite = true)
+        }
     }
 }

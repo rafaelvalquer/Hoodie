@@ -1,0 +1,50 @@
+{
+  "package": "com.hoodie.app",
+  "versionCodeBefore": 5,
+  "versionCodeAfter": 6,
+  "uidBefore": 10230,
+  "uidAfter": 10230,
+  "preserved": {
+    "catName": "Migracao",
+    "notificationPolicy": "SILENT",
+    "placeName": "Casa QA",
+    "placeType": "Casa",
+    "radiusMeters": 150,
+    "favorite": true,
+    "journeyArrivalPrefix": "Casa, Casa, chegada 17:40,"
+  },
+  "placeDisplayedOnce": true,
+  "journeyArrivalDisplayedOnce": true,
+  "monitoringUnavailableDisclosed": true,
+  "sourceAndTargetSchema": 12,
+  "limitations": [
+    "Synthetic profile and single place/journey only; not every database row audited",
+    "Same schema; historical schema migrations have separate instrumented coverage",
+    "Development certificate; not an upload-key or Play installation test",
+    "No physical devices or battery/geofence delivery approval"
+  ],
+  "uiEvidence": {
+    "after-update-diary.xml": "2371666b4ac836f3520c5cf674bf551cf4fbbd81d68a50e6887c3a5c70e39af2",
+    "after-update-home.xml": "76921753dd20e45ca5bee11f1c01f5b074b0fb4c674ad004f46bbd7b920d06a0",
+    "after-update-places.xml": "03e3137e1a5b4f43437ca9268c22c86e435f6e9b210496a6bfc1b6ed318e2dc0",
+    "after-update-settings.xml": "e7d06adebb153fcbb9393d946cfac70bddd481cb9bbe30a89a49568393a79263",
+    "before-update-diary.xml": "1786a21006ff582eaaec6e5ef680772f25b8e45e7fa94c03dfe53adabb2719a0",
+    "before-update-favorite.xml": "c54c45142cc2cf27886981447a7ac73e721de07a4e667bcfdaa9d081199820cd",
+    "before-update-places.xml": "55fe2f5c123121b827c6d2295df692a94f8def9b764529f9e2bd66a01158da22",
+    "before-update-settings-silent.xml": "3148855f2c730a92d91b4f65caab044cd2b5d5196e6856ff2b7f7a95544fe5f0",
+    "before-update-settings.xml": "225d70bc4d0dd439889a6115e6662d5fa207b2f1db4792f56ddd680ffa117115"
+  },
+  "sourceCommit": "6e03a2880f4e5e8e4ea06469fcbfb3e5eb51a891",
+  "targetAppSourceCommit": "f69f6e6b4616d718ecfe297d2719e6786b6293b6",
+  "targetMainSourceTree": "c4ad19d8ab2710dc955d76f28934383d2a23caad",
+  "apkSha256": "8d2a9bbc674b3cbc49eef4e3f45e12248068c51616d0e30315671b812b8f9e08",
+  "baselineApkSha256": "2f6422cdf6026f4cbd5595638837b888f4e2e7b52bc263d639ab2dc5b91a9d76",
+  "baselineCodeIntegrity": {
+    "unchangedNonMetaInfEntries": 246,
+    "contentEqual": true,
+    "baselineSha": "6e03a2880f4e5e8e4ea06469fcbfb3e5eb51a891",
+    "signature": "Re-signed with local Android Debug test certificate, not the CI private key or a Play upload key."
+  },
+  "baselineCiArtifactSha256": "734151d4cebb15e27a5aec97fdd3e40943f24f2c6d7e6b745602365c7aa27c87",
+  "method": "adb install -r; no uninstall or app data clear; development test certificate shared between old/new packages"
+}

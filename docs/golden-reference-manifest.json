@@ -1572,5 +1572,8 @@
   "comparisonEvidence": "app/build/outputs/androidTest-results/connected/debug/TEST-Hoodie_API34(AVD) - 14-_app-.xml",
   "comparisonPassedCases": 18,
   "comparisonFailedCases": 162,
-  "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:14/UE1A.230829.050/12077443:userdebug/dev-keys"
+  "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:14/UE1A.230829.050/12077443:userdebug/dev-keys",
+  "emulatorVersion": "37.1.11.0",
+  "emulatorBuild": 15917651,
+  "emulatorProvenance": "Local reference AVD startup log app/build/release-api34-resume.log; CI previously floated to 37.2.12.0/build 16428233"
 }

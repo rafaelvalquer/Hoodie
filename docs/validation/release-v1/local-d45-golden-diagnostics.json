@@ -1,0 +1,34 @@
+{
+  "strictCases": 10,
+  "strictPassed": 10,
+  "strictIgnored": 0,
+  "api": 34,
+  "emulatorBuild": 15917651,
+  "emulatorVersion": "37.1.11.0",
+  "baselineImagesChecked": 222,
+  "baselineImageHashesUnchanged": true,
+  "localEnvironmentApproved": false,
+  "environmentLimitation": "SystemUI ANR at 23:15:15.921 occurred before the targeted cases; current ANR focus was observed afterward. Results do not approve a stable OS or replace full remote CI.",
+  "captureCopyProbe": {
+    "purpose": "Artifact path diagnostic only; recordGoldens did not replace reviewed assets or count as strict test approval",
+    "files": [
+      {
+        "name": "diary_full_360x640_f100.png",
+        "sha256": "6fb1f17c768cd2116513158cb7c9211a5f6af6f5411666a4bb7638fc5821f528",
+        "pixelsEqualReference": true
+      },
+      {
+        "name": "diary_full_360x640_f100_bottom.png",
+        "sha256": "d1785725ed47ccdcd713bfcaebedc97482f699263dbf23af9b44eeed1e599e10",
+        "pixelsEqualReference": true
+      },
+      {
+        "name": "diary_full_360x640_f100_map.png",
+        "sha256": "f1df6f48115ae68c20ad6f122e571be4afaf0c53d5b9c27d871cb68902365cab",
+        "pixelsEqualReference": true
+      }
+    ]
+  },
+  "strictLogSha256": "70fa8b2c9cd8c5e88be132566df5310976d758694e0cb39c3aab02a0eb6a6f0e",
+  "anrLogSha256": "fadaded150f1f1403e77ee921a81cf701dd5b176b6d752b109f70ee3589dcb0a"
+}

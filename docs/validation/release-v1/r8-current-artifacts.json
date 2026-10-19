@@ -1,0 +1,66 @@
+{
+  "commit": "f69f6e6b4616d718ecfe297d2719e6786b6293b6",
+  "repositoryHeadAtValidation": "d45dc8983b66c74e777edb5d5ced831393ad53b5",
+  "workingTreeClean": false,
+  "appSourceTree": "77feeb3487a15ea2ba3a4a977c1d84f7bed4f624",
+  "scope": "Local QA with Android Debug certificate; no Play or upload-key approval",
+  "versionCode": 6,
+  "versionName": "0.2.0-dev",
+  "certificateSha256": "c5edf338b0f529f9f613bfbdf508112a2c819c183c292e056ce5fedd0688ac88",
+  "bundletoolSha256": "378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584",
+  "artifacts": [
+    {
+      "variant": "release",
+      "package": "com.hoodie.app",
+      "aab": {
+        "path": "app\\build\\outputs\\bundle\\release\\app-release.aab",
+        "bytes": 12156495,
+        "sha256": "d0c2d8aa1508406128aea07aaa3f16628ffc1f356be0880138498e1ecd5d78a0"
+      },
+      "apk": {
+        "path": "app\\build\\reports\\upgrade-r8-qa\\release-from-aab.apk",
+        "bytes": 11808534,
+        "sha256": "8d2a9bbc674b3cbc49eef4e3f45e12248068c51616d0e30315671b812b8f9e08"
+      },
+      "mappingSha256": "a6d5a0b77e8a595aae60b49bbda6e7a8bcd3d390528f496237136d0641852da5",
+      "backupEnabled": false,
+      "nativeLibraries": 12,
+      "staticPassed": true,
+      "runtimeVerified": false
+    },
+    {
+      "variant": "homologacao",
+      "package": "com.hoodie.app.homologacao",
+      "aab": {
+        "path": "app\\build\\outputs\\bundle\\homologacao\\app-homologacao.aab",
+        "bytes": 12158855,
+        "sha256": "bc5af9412eb684c118fc83da7855d4c70180bf784000544557bab77405f07208"
+      },
+      "apk": {
+        "path": "app\\build\\reports\\upgrade-r8-qa\\homologacao-from-aab.apk",
+        "bytes": 11808633,
+        "sha256": "27268be8ef94ace9453390755a44624ecbdc840b355b5865c9f668d037422df8"
+      },
+      "mappingSha256": "4e1e8c0c94ac943bba58cd5000d27afdec0a26c6c61ca0cad611776ce1467243",
+      "backupEnabled": true,
+      "nativeLibraries": 12,
+      "staticPassed": true,
+      "runtimeVerified": false
+    }
+  ],
+  "appBuildSourcesClean": true,
+  "build": {
+    "tasks": [
+      "lintRelease",
+      "assembleRelease",
+      "bundleRelease",
+      "bundleHomologacao"
+    ],
+    "logSha256": "36de15e4b00e43aa2cce8c7786f191b42f04f3a0ace159f03023dcf06b15401d",
+    "lintRelease": {
+      "errors": 0,
+      "warnings": 56,
+      "reportSha256": "cc07f7d630f058651e37d7b9e9fbccd17b2ee400c6cc4168fa9a7588cd38755f"
+    }
+  }
+}

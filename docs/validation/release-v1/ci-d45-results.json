@@ -1,0 +1,91 @@
+{
+  "commit": "d45dc8983b66c74e777edb5d5ced831393ad53b5",
+  "run": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39299025528",
+  "jobs": {
+    "unitTests": "success",
+    "lint": "success",
+    "assemble": "success",
+    "instrumentation": "failure"
+  },
+  "junit": {
+    "tests": 1306,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full": {
+    "tests": 388,
+    "passed": 378,
+    "failed": 10,
+    "skipped": 0
+  },
+  "functional": {
+    "tests": 208,
+    "passed": 208,
+    "failed": 0,
+    "skipped": 0
+  },
+  "failedTests": [
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+      "status": "failed",
+      "detail": ""
+    },
+    {
+      "test": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest#screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+      "status": "failed",
+      "detail": ""
+    }
+  ],
+  "artifactId": 12213476505,
+  "artifactSha256": "240b776bf21248248ed7fc5f330ef18c94f673565a1c3c0235c31f88ddbaed9c",
+  "missingDiffImages": true,
+  "gateApproved": false,
+  "nextAction": "Collect actual/diff PNGs through UTP additionalTestOutputDir and first differing coordinates/colors; preserve exact zero-pixel assertion and reviewed references"
+}
