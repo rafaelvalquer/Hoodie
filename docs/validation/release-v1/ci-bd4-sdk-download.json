@@ -1,0 +1,20 @@
+{
+  "commit": "bd4ff6feb4063ba720a3ed013a00ef94a8504ae4",
+  "run": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39341180106",
+  "job": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39341180106/job/118366456131",
+  "jobs": {
+    "unitTests": "success",
+    "lint": "success",
+    "assemble": "success",
+    "instrumentation": "failure"
+  },
+  "emulatorBuildInstalled": 15917651,
+  "failureStage": "system-image download before emulator creation",
+  "testsExecuted": 0,
+  "error": "Failed to download package archive for system-images/android-34/google_apis/x86_64: closed",
+  "requiredImageRevision": 14,
+  "localReferenceImageRevision": 14,
+  "officialCatalogImageRevision": 14,
+  "correction": "Preinstall image with up to three dependency-download attempts, preserve SDK logs/package metadata and reject image revision mismatch; test execution remains single-pass",
+  "gateApproved": false
+}

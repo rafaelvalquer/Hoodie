@@ -1,0 +1,201 @@
+{
+  "sourceSha256": "ae8c5c24c6b7bfcd6ac45481b7d301420460c337f00be9e573b3432795d84c8b",
+  "targetSha256": "7da3d3fa4dc54e3fd2d371a56bfea7d805bad96a3ebef54841d07147418eb00a",
+  "sourceBytes": 95135,
+  "targetBytes": 95827,
+  "sourceAuthenticatedUnits": 414,
+  "targetAuthenticatedUnits": 417,
+  "datasets": {
+    "app_category_overrides": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "context_confirmations": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "context_events": {
+      "sourceRows": 125,
+      "targetRows": 126,
+      "missingOrChangedSourceRows": 0
+    },
+    "daily_app_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "daily_context_app_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "daily_context_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "daily_device_usage": {
+      "sourceRows": 30,
+      "targetRows": 30,
+      "missingOrChangedSourceRows": 0
+    },
+    "daily_phone_timeline": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "daily_screen_hourly": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "day_exceptions": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "diary_corrections": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "effective_routine_versions": {
+      "sourceRows": 3,
+      "targetRows": 3,
+      "missingOrChangedSourceRows": 1
+    },
+    "hoodie_activities": {
+      "sourceRows": 29,
+      "targetRows": 29,
+      "missingOrChangedSourceRows": 0
+    },
+    "learned_routine_slots": {
+      "sourceRows": 0,
+      "targetRows": 0,
+      "missingOrChangedSourceRows": 0
+    },
+    "location_events": {
+      "sourceRows": 44,
+      "targetRows": 44,
+      "missingOrChangedSourceRows": 0
+    },
+    "memories": {
+      "sourceRows": 4,
+      "targetRows": 4,
+      "missingOrChangedSourceRows": 0
+    },
+    "mobility_segments": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "mobility_sessions": {
+      "sourceRows": 2,
+      "targetRows": 2,
+      "missingOrChangedSourceRows": 0
+    },
+    "phone_app_sessions": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "places": {
+      "sourceRows": 4,
+      "targetRows": 4,
+      "missingOrChangedSourceRows": 0
+    },
+    "routines": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "timeline_events": {
+      "sourceRows": 157,
+      "targetRows": 159,
+      "missingOrChangedSourceRows": 0
+    },
+    "transport_evidence": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    },
+    "transport_patterns": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0
+    }
+  },
+  "allSourceRecordsPreserved": false,
+  "settingsUnitCountSource": 1,
+  "settingsUnitCountTarget": 1,
+  "settingsExactlyEqual": true,
+  "appSourceCommit": "f69f6e6b4616d718ecfe297d2719e6786b6293b6",
+  "apkSha256": "27268be8ef94ace9453390755a44624ecbdc840b355b5865c9f668d037422df8",
+  "versionCode": 6,
+  "source": {
+    "avd": "Hoodie_16KB_Release",
+    "api": "37.1",
+    "pageSize": 16384,
+    "uid": 10229
+  },
+  "target": {
+    "avd": "Hoodie_API34_Release",
+    "api": 34,
+    "pageSize": 4096,
+    "uid": 10194,
+    "previousHomologacaoInstalled": false
+  },
+  "onlyEncryptedBackupTransferred": true,
+  "runtimePermissionsGranted": {
+    "android.permission.ACCESS_FINE_LOCATION": false,
+    "android.permission.ACCESS_COARSE_LOCATION": false,
+    "android.permission.ACCESS_BACKGROUND_LOCATION": false,
+    "android.permission.ACTIVITY_RECOGNITION": false,
+    "android.permission.POST_NOTIFICATIONS": false
+  },
+  "forecastIdentityChange": {
+    "sourceId": 4,
+    "targetId": 5,
+    "epochDay": 20746,
+    "effectiveFrom": 1792454400000,
+    "sourceSnapshotCreatedAt": 1792451406793,
+    "otherFieldsIdentical": true,
+    "isFutureAtSourceSnapshot": true
+  },
+  "restoredUi": {
+    "name": "Nuvem",
+    "places": [
+      "Academia",
+      "Casa",
+      "Restaurante",
+      "Trabalho"
+    ],
+    "workStart": "09:00",
+    "workEnd": "18:00",
+    "lunchStart": "12:00",
+    "lunchEnd": "13:00",
+    "wake": "07:00",
+    "sleep": "23:00"
+  },
+  "observedAnrEvents": "",
+  "crashBuffer": "",
+  "allHistoricalVersionsBeforeSourceCutoffPreserved": true,
+  "gateApproved": false,
+  "limitations": [
+    "Emulators only; independent Keystores but not two physical devices",
+    "Strict identity comparison failed on the future forecast; code correction and new R8 round-trip pending",
+    "No external document provider, interrupted activation or full semantic duplication approval"
+  ],
+  "uiEvidence": {
+    "first-access.xml": "ab6f67497931a2a45289a926591a06f778363f7ce925d069bc29877c57af6b18",
+    "authenticated-preview.xml": "a7d7cb1e939d0898fb4b1794a1abc1b0ab4574e28d7d361aedd5dd7b9b71fadf",
+    "after-activation.xml": "89cd94aa5c45924ddce6b538ac9285d34fb497806604f05cfef1ba8fdb4858e2",
+    "settings-restored.xml": "804f5a78bd9aede0ee0379002b63f3ea639e8d3ce7df410aa35d71c6f987d019",
+    "places-restored.xml": "9d3001b9974a601e29467535db21fd6052669c2bdf037943c143ee62d0614359",
+    "places-restored-scrolled.xml": "3b3b953fc6f36e055327e665c1e09baeedf58a7d64b0d32be117571f4502e8a5",
+    "routine-restored.xml": "0cc48a81662ca9c5a2cc85227b9901eb32999a6696e00b834100553a235fdee0",
+    "reexport-complete.xml": "e149584c83f7bef2f0e9f277a88d78620cd13873c0d49446631f5a9dc6ca49cc"
+  }
+}

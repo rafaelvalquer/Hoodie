@@ -1575,5 +1575,15 @@
   "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:14/UE1A.230829.050/12077443:userdebug/dev-keys",
   "emulatorVersion": "37.1.11.0",
   "emulatorBuild": 15917651,
-  "emulatorProvenance": "Local reference AVD startup log app/build/release-api34-resume.log; CI previously floated to 37.2.12.0/build 16428233"
+  "emulatorProvenance": "Local reference AVD startup log app/build/release-api34-resume.log; CI previously floated to 37.2.12.0/build 16428233",
+  "systemImagePackage": "system-images;android-34;google_apis;x86_64",
+  "systemImageRevision": 14,
+  "systemImageApiExtension": 7,
+  "catalogArchive": {
+    "url": "https://dl.google.com/android/repository/sys-img/google_apis/x86_64-34_r14.zip",
+    "bytes": 1563721130,
+    "checksumType": "sha1",
+    "checksum": "e0f6c9a0691aa27bd597d0deb1bcfdc943ac8ca7",
+    "source": "https://dl.google.com/android/repository/sys-img/google_apis/sys-img2-3.xml"
+  }
 }

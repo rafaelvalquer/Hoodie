@@ -169,6 +169,40 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" list device > "$RUNNER_TEMP/avd-devices.txt"
           cat "$RUNNER_TEMP/avd-devices.txt"
           grep -q '"pixel_8"' "$RUNNER_TEMP/avd-devices.txt"
+      - name: Preparar imagem API 34
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          image_dir="$ANDROID_HOME/system-images/android-34/google_apis/x86_64"
+          evidence=app/build/instrumentation-evidence
+          mkdir -p "$evidence"
+          for attempt in 1 2 3; do
+            if [[ -s "$image_dir/package.xml" && -s "$image_dir/system.img" && -s "$image_dir/source.properties" ]]; then
+              break
+            fi
+            echo "Preparing API 34 system image (download attempt $attempt/3)."
+            if "$sdkmanager" --sdk_root="$ANDROID_HOME" --install 'system-images;android-34;google_apis;x86_64' --channel=0 \
+                <<< 'y' > "$evidence/sdkmanager-$attempt.log" 2>&1; then
+              :
+            fi
+            cat "$evidence/sdkmanager-$attempt.log"
+            if [[ -s "$image_dir/package.xml" && -s "$image_dir/system.img" && -s "$image_dir/source.properties" ]]; then
+              break
+            fi
+            if [[ "$attempt" == 3 ]]; then
+              echo '::error::System image unavailable after three download attempts; no tests started.'
+              exit 1
+            fi
+            sleep 5
+          done
+          cp "$image_dir/source.properties" "$evidence/system-image-source.properties"
+          cp "$image_dir/package.xml" "$evidence/system-image-package.xml"
+          # Match the reviewed image, as well as its emulator executable.
+          if ! grep -Eq '^Pkg.Revision[[:space:]]*=[[:space:]]*14[[:space:]]*$' "$image_dir/source.properties"; then
+            echo '::error::Reviewed goldens require API 34 Google APIs image revision 14; see captured source.properties.'
+            exit 1
+          fi
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

@@ -15,7 +15,8 @@
       "aab": {
         "path": "app\\build\\outputs\\bundle\\release\\app-release.aab",
         "bytes": 12156495,
-        "sha256": "d0c2d8aa1508406128aea07aaa3f16628ffc1f356be0880138498e1ecd5d78a0"
+        "sha256": "d0c2d8aa1508406128aea07aaa3f16628ffc1f356be0880138498e1ecd5d78a0",
+        "archivedPath": "app\\build\\reports\\upgrade-r8-qa\\release-source-f69-v6.aab"
       },
       "apk": {
         "path": "app\\build\\reports\\upgrade-r8-qa\\release-from-aab.apk",
@@ -34,7 +35,8 @@
       "aab": {
         "path": "app\\build\\outputs\\bundle\\homologacao\\app-homologacao.aab",
         "bytes": 12158855,
-        "sha256": "bc5af9412eb684c118fc83da7855d4c70180bf784000544557bab77405f07208"
+        "sha256": "bc5af9412eb684c118fc83da7855d4c70180bf784000544557bab77405f07208",
+        "archivedPath": "app\\build\\reports\\upgrade-r8-qa\\homologacao-source-f69-v6.aab"
       },
       "apk": {
         "path": "app\\build\\reports\\upgrade-r8-qa\\homologacao-from-aab.apk",

@@ -1,0 +1,58 @@
+{
+  "baseCommit": "bd4ff6feb4063ba720a3ed013a00ef94a8504ae4",
+  "workingTreeSources": true,
+  "sourceBlobs": {
+    "app/src/main/java/com/hoodie/app/core/database/EffectiveRoutineVersion.kt": "fc4a44688bd1784c4d37cb28d002cd6427ad8a80",
+    "app/src/main/java/com/hoodie/app/data/repository/EffectiveRoutineRepository.kt": "cf6bdc0bf55e2270600c9e85c124dcc9572d97a5",
+    "app/src/test/java/com/hoodie/app/integration/EffectiveRoutinePersistenceTest.kt": "77e8231058dd7511ae0d03451984b690bd782468"
+  },
+  "before": {
+    "tests": 3,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "threeUnchangedRefreshWrites": 6,
+    "learningChangedIdFrom": 3,
+    "learningChangedIdTo": 4
+  },
+  "afterTargeted": {
+    "suites": 5,
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "reportedTotals": {
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "skippedTests": []
+  },
+  "fullSuite": {
+    "suites": 300,
+    "tests": 1309,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "reportedTotals": {
+      "tests": 1309,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "skippedTests": []
+  },
+  "nativeR8RoundTrip": "pending rebuild after source change",
+  "schemaVersion": 12,
+  "schemaExportChanged": false,
+  "redXmlSha256": "49018f5fcc4c99160bd6432c7e43e13bd21e40c74114b65bab3b8bafcdb3fb3b",
+  "fullSuiteXmlZipSha256": "f6c86c09c5cbda5299b1d39a9021057486b5ae7df9878abd1559d6b7813b0c30",
+  "lintDebug": {
+    "errors": 0,
+    "warnings": 68,
+    "xmlSha256": "54078ee842ef9d728f18948e2afe8d7c28342e87467ef0e3286797e4964abb22"
+  },
+  "fullGradleBuild": "BUILD SUCCESSFUL in 8m 23s",
+  "fullBuildLogSha256": "c3fd9422956781d1d134fb32b20f15eb11823c68fa9e53291a57932c716591dc"
+}
