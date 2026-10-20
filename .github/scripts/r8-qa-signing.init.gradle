@@ -1,0 +1,26 @@
+import groovy.json.JsonOutput
+
+// Read the effective development signing configuration; Android's user-home
+// location can differ between SDK/AGP versions and runner environments.
+gradle.projectsEvaluated {
+    def app = gradle.rootProject.project(':app')
+    app.tasks.register('writeQaSigningMetadata') {
+        mustRunAfter(app.tasks.named('bundleHomologacao'))
+        doLast {
+            def signing = app.extensions.getByName('android').buildTypes.getByName('homologacao').signingConfig
+            if (signing == null || signing.name != 'debug' ||
+                    !'androiddebugkey'.equalsIgnoreCase(signing.keyAlias) ||
+                    signing.storePassword != 'android' || signing.keyPassword != 'android') {
+                throw new GradleException('QA requires the standard development signing configuration, never an upload key.')
+            }
+            if (signing.storeFile == null || !signing.storeFile.isFile()) {
+                throw new GradleException('Configured development keystore is missing after the bundle build.')
+            }
+            def destination = new File(app.providers.gradleProperty('qaSigningMetadata').get())
+            destination.parentFile.mkdirs()
+            // No password or private key is serialized. The caller removes
+            // even this path-only metadata from RUNNER_TEMP on exit.
+            destination.setText(JsonOutput.toJson([storeFile: signing.storeFile.absolutePath]), 'UTF-8')
+        }
+    }
+}

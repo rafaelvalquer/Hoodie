@@ -1,0 +1,108 @@
+{
+  "commit": "f9a1c344901d63ad3e5b1a0227d19ada30865652",
+  "runId": 39423859415,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39423859415",
+  "conclusion": "failure after successful R8 bundle build; no APK derivation/runtime",
+  "gradleBuild": "BUILD SUCCESSFUL in 5m 27s",
+  "artifact": {
+    "id": 12265625216,
+    "sha256": "f1a847a5a563c4defea9d18561e9abf4dc49609d561ff2496e0440140faab6ad"
+  },
+  "aab": {
+    "bytes": 12160438,
+    "sha256": "b1f34438d43328435b20639c13aa3d4a8879250d6e61b47fb7d716382e91960f"
+  },
+  "publicCertificate": {
+    "subject": "C=US,O=Android,CN=Android Debug",
+    "sha256": "f5745a45ef81f5fd79b4b4c6e98cfb7c474d10484f090bbc12cf44916a540f69"
+  },
+  "comparisonWithLocalWindowsR8": {
+    "localAabSha256": "6d1858f67f7e0277a40a56cf74252564d544ce0e5de63d8fa9b812d753aec51d",
+    "linuxEntries": 269,
+    "localEntries": 269,
+    "nonSignatureDifferences": [
+      "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map",
+      "BUNDLE-METADATA/com.android.tools.build.profiles/baseline.prof",
+      "BUNDLE-METADATA/com.android.tools/r8.json",
+      "base/assets/metadata/dialogues.json",
+      "base/assets/metadata/interactive_dialogues.json",
+      "base/assets/metadata/personality-dialogues.json",
+      "base/assets/pixel/hoodie/art-status.json",
+      "base/assets/pixel/hoodie/hoodie_idle.json",
+      "base/assets/pixel/hoodie/hoodie_sleep.json",
+      "base/assets/pixel/hoodie/hoodie_transport.json",
+      "base/assets/pixel/hoodie/hoodie_walk.json",
+      "base/assets/pixel/hoodie/hoodie_work.json",
+      "base/dex/classes.dex",
+      "base/root/META-INF/version-control-info.textproto"
+    ],
+    "dexEqual": false,
+    "nativeLibrariesEqual": true,
+    "sameSignedArchive": false,
+    "differingJsonAssets": {
+      "base/assets/metadata/dialogues.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/metadata/interactive_dialogues.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/metadata/personality-dialogues.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/pixel/hoodie/art-status.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/pixel/hoodie/hoodie_idle.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/pixel/hoodie/hoodie_sleep.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/pixel/hoodie/hoodie_transport.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/pixel/hoodie/hoodie_walk.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      },
+      "base/assets/pixel/hoodie/hoodie_work.json": {
+        "jsonValuesEqual": true,
+        "equalAfterLfNormalization": true
+      }
+    }
+  },
+  "certificateExportPerformed": false,
+  "runtimeExecuted": false,
+  "assumedDebugKeystorePath": "HOME/.android/debug.keystore",
+  "followUp": "Resolve the effective standard development signing configuration through a Gradle init task; no private key or password in metadata/artifacts. Local model read passed without rebuilding the app. Do not treat the build as runtime acceptance.",
+  "localSigningModelValidation": {
+    "taskPassed": true,
+    "gradleTasksExecuted": 1,
+    "appRebuilt": false,
+    "logSha256": "3279e93707d63a7f7778dc6b3d638eaa5b9fa67af13d088d0225182d05a4ead2"
+  },
+  "causeScope": "After bundle and daemon-stop succeeded, the script stopped before certificate export. Its next check assumed HOME/.android/debug.keystore. The actual Linux signing path was not captured; the replacement reads the effective Gradle model.",
+  "localValidationOfDownloadedAab": {
+    "bundletoolValidatePassed": true,
+    "jarsignerStrictPassed": true,
+    "certificateTrust": "Temporary store contains only the public development certificate extracted from this AAB; no private key",
+    "bundleAlignment": "PAGE_ALIGNMENT_16K",
+    "nativeValidatorPassed": true,
+    "apkDerived": false,
+    "runtimeExecuted": false,
+    "logs": {
+      "bundle-validated.txt": "02f89bde449827a3f3e66cce51836978b6b54c39e6999b57713a531a49c35fa0",
+      "aab-signature-verified.txt": "4914b4c215e2e1e93292a2abf763fa78610fa7beea2a4bdd69ad2927798eb77f",
+      "bundle-config.txt": "d9c6f0c6d66e546e17f80bdacbb01ef7905aba0d7472b5e5e3620064e4c993a3",
+      "aab-native-static.json": "aa46c81132f5b4828c911981192255f9a17fb491e5d16546ab01313a21b9a1ee"
+    },
+    "signatureWarnings": "POSIX attributes not covered; JarInputStream manifest-order warning. JarFile verification passed. Not Play acceptance."
+  }
+}

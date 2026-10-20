@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 # Development certificate only. This is not the protected upload/release path.
 set -euo pipefail
+set +x
 : "${ANDROID_HOME:?Android SDK required}"
 : "${BUNDLETOOL_JAR:?Verified bundletool required}"
 : "${RUNNER_TEMP:?Runner temporary directory required}"
 out=app/build/reports/r8-qa
 mkdir -p "$out"
-./gradlew :app:bundleHomologacao -PHOODIE_VERSION_CODE=7 --no-parallel --max-workers=2
+umask 077
+private_dir=$(mktemp -d "$RUNNER_TEMP/hoodie-qa-signing.XXXXXX")
+signing_metadata="$private_dir/signing.json"
+password_file="$private_dir/password"
+trap 'rm -f -- "$signing_metadata" "$password_file"; rmdir -- "$private_dir"' EXIT
+./gradlew :app:bundleHomologacao :app:writeQaSigningMetadata \
+  --init-script .github/scripts/r8-qa-signing.init.gradle \
+  -PqaSigningMetadata="$signing_metadata" -PHOODIE_VERSION_CODE=7 \
+  --no-configuration-cache --no-parallel --max-workers=2
 ./gradlew --stop
-key="$HOME/.android/debug.keystore"
+key=$(python3 - "$signing_metadata" <<'PY'
+import json, pathlib, sys
+print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))['storeFile'])
+PY
+)
 test -s "$key"
 export QA_DEBUG_PASS=android
 keytool -exportcert -keystore "$key" -alias androiddebugkey \
@@ -16,10 +29,6 @@ keytool -exportcert -keystore "$key" -alias androiddebugkey \
 aab=app/build/outputs/bundle/homologacao/app-homologacao.aab
 java -jar "$BUNDLETOOL_JAR" validate --bundle="$aab" > "$out/bundle-validation.txt"
 jarsigner -verify -strict -keystore "$key" -storepass:env QA_DEBUG_PASS "$aab" > "$out/aab-signature.txt"
-umask 077
-password_dir=$(mktemp -d "$RUNNER_TEMP/hoodie-qa-password.XXXXXX")
-password_file="$password_dir/password"
-trap 'rm -f -- "$password_file"; rmdir -- "$password_dir"' EXIT
 printf '%s' "$QA_DEBUG_PASS" > "$password_file"
 java -jar "$BUNDLETOOL_JAR" build-apks --bundle="$aab" --output="$out/homologacao.apks" \
   --mode=universal --ks="$key" --ks-key-alias=androiddebugkey \
