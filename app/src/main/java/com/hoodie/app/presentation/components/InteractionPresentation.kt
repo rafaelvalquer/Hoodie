@@ -16,7 +16,8 @@ internal class InteractionPresentation {
     ) {
         frame = actual
         val current = request
-        if (current != null) {
+        // A new request can arrive while this frame's bitmap renders off Main.
+        if (current != null && current === renderedRequest) {
             if (actual.interactionStarted === current.response) started(current)
             if (!actual.interactionBusy) {
                 finished(current)

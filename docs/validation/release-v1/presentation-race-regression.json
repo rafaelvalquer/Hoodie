@@ -1,0 +1,39 @@
+{
+  "id": "HVR-INTERACTION-PRESENTATION-001",
+  "baseCommit": "6288349b1861561d946d389696ba756029defc70",
+  "before": {
+    "tests": 4,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "junitSha256": "77be34b2aef0fbc9f73018a5ed4f15734a15e4b1fc4185c775317afd4e6622ce",
+    "sourceSha256": {
+      "app/src/main/java/com/hoodie/app/presentation/components/InteractionPresentation.kt": "94605299084501a33981f3384a4ff48d3cc5f5503f59a8d9e37a92bba8e58351",
+      "app/src/main/java/com/hoodie/app/presentation/components/PixelViews.kt": "1135626ec8c92773a26d5948541b2d3fd517ba673aa1cebee3ac1c83068c1f48",
+      "app/src/test/java/com/hoodie/app/presentation/components/InteractionPresentationTest.kt": "f9629a535eff53053b40e49b695007ffeb66399c9e220f58a998826ad350b28b"
+    }
+  },
+  "after": {
+    "tests": 4,
+    "passed": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "junitSha256": "75c5f8d29b3d0fe7fd983e8ddd27a60c9a1b0f32516668120f3d03fff2f2dd9c",
+    "sourceSha256": {
+      "app/src/main/java/com/hoodie/app/presentation/components/InteractionPresentation.kt": "76909c20bdc935dc002e68996314f0e625a61a45dddae885380c5eadd6dc22c6",
+      "app/src/main/java/com/hoodie/app/presentation/components/PixelViews.kt": "1135626ec8c92773a26d5948541b2d3fd517ba673aa1cebee3ac1c83068c1f48",
+      "app/src/test/java/com/hoodie/app/presentation/components/InteractionPresentationTest.kt": "f9629a535eff53053b40e49b695007ffeb66399c9e220f58a998826ad350b28b"
+    }
+  },
+  "fix": "Only acknowledge the exact request captured with the frame before asynchronous bitmap rendering. An old idle frame cannot clear a newer request or acknowledge a replacement sharing its response.",
+  "coverage": [
+    "New request survives older idle bitmap",
+    "Real animation still announces start and finishes once",
+    "Replacement sharing response object is not acknowledged by old request frame",
+    "Matching idle frame still completes expired/cancelled request"
+  ],
+  "instrumentedBeachFailureClosed": false,
+  "fullCurrentCiApproved": false,
+  "scope": "Deterministic request/frame ownership regression with the real AnimationStateMachine. Full current-source unit/lint/build and instrumented validation remain required."
+}

@@ -6,6 +6,10 @@ Objetivo: investigar [HVR-NATIVE-API35-001](api35-native-crash.json) fora do hos
 
 Execução `c40f864b` concluída: build, assinaturas e estática passaram; o roteiro obteve 68 snapshots com os 30+30 exigidos. O resultado final permanece **reprovado** por SIGSEGV no Google Play Services (HeapTaskDaemon, MarkCompact, endereço 0xc). O exit-info preservado do Hoodie não mostra crash nessa rodada, mas o roteiro não executou a exportação concorrente que falhou antes. [Evidência verificada pelo digest do artefato](r8-qa-c40-runtime.json). Não houve mudança no gate para ignorar o fatal de outro processo.
 
+Execução `e1d80594`: diagnóstico aprovado, com duas aberturas COLD, página 16384, 30 leituras em Ajustes e 30 em Backup, sem crash nos buffers coletados. DEX, bibliotecas nativas, resources e mapping conferem com os do run `c40f864b`; a passagem não decorre de uma correção de código nem encerra o crash de exportação. [Artefatos verificados e limites](r8-qa-e1d-runtime.json). O código desses APKs antecede as integrações posteriores da Jornada.
+
+Auditoria da coleta encontrou 69 observações e apenas 68 XMLs: duas esperas `home-ready` usaram o mesmo nome e sobrescreveram a primeira hierarquia. O controlador agora usa nomes indexados, registra os caminhos em cada observação e recusa diretório não vazio antes de acessar o aparelho. A regressão reproduziu a perda (`69 != 68`) e os dois casos corrigidos passaram, incluindo preservação de evidência existente. [Prova e hashes](r8-evidence-retention-regression.json). Essa correção não recupera o XML perdido nem aprova retrospectivamente sua preservação; exige nova execução Android.
+
 O job:
 
 1. Compila `bundleHomologacao`, preservando mapping, commit e árvore de fontes. Verifica a flag de backup, o package de homologação e a versão gerada.

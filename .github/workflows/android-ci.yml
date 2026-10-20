@@ -59,6 +59,9 @@ jobs:
       - name: Integridade do diagnóstico com APKs preservados
         run: python3 .github/scripts/test_diagnose_exact_apk_pair.py
 
+      - name: Preservar cada leitura de acessibilidade R8
+        run: python3 .github/scripts/test_r8_qa_evidence.py
+
       - name: Diagnóstico de foco e ANR do emulador
         run: python3 .github/scripts/test_verify_emulator_window.py
       - name: Bloquear instrumentação após ANR de boot

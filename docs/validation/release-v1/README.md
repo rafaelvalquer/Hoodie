@@ -6,6 +6,8 @@ Estado inicial: `6e03a2880f4e`. Implementação em andamento; nenhuma aprovaçã
 
 Em 20/10/2026, a main recebeu merges de família/NPCs, corações de carinho e cenas de rua/carro. A árvore de fontes mudou; os resultados R8 anteriores continuam vinculados aos hashes de seus próprios binários. [Escopo observado](candidate-source-change.json). O conteúdo atual precisa de nova CI completa, R8/runtime e revisão das referências visuais impactadas antes do congelamento do candidato. Nenhuma aprovação anterior foi transferida automaticamente para essa árvore.
 
+Depois, a main recebeu a consolidação de visitas e a Jornada como cidade pixel art. Essas integrações foram preservadas. A árvore do commit `6288349b` difere da árvore `a1395fad` dos APKs R8 anteriores; a correção posterior da apresentação de interações também exige validação dos novos artefatos. [Regressão de identidade do frame](presentation-race-regression.json).
+
 | Entrega | Evidência exigida | Estado |
 |---|---|---|
 | RELEASE-01 | Unitários, lint, build e suíte instrumentada completa no mesmo SHA; CI verde | Em validação |

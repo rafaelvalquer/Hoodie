@@ -80,6 +80,20 @@ class EvidenceRetentionTest(unittest.TestCase):
             self.assertTrue((output/row['xml']).is_file())
             self.assertTrue((output/row['window']).is_file())
 
+    def test_existing_evidence_is_rejected_before_any_device_read(self):
+        base = (qa.ROOT/'app/build/reports/r8-evidence-tests').resolve()
+        base.mkdir(parents=True, exist_ok=True)
+        output = Path(tempfile.mkdtemp(prefix='existing-', dir=base)).resolve()
+        self.assertTrue(output.is_relative_to(base))
+        sentinel = output/'previous.xml'
+        sentinel.write_bytes(b'<previous-evidence/>')
+        argv = ['qa', '--serial', 'emulator-5554', '--output', str(output)]
+        with patch.object(sys, 'argv', argv), patch.object(qa, 'AndroidUi') as device:
+            with self.assertRaisesRegex(ValueError, 'new empty evidence directory'):
+                qa.main()
+            device.assert_not_called()
+        self.assertEqual(b'<previous-evidence/>', sentinel.read_bytes())
+
 
 if __name__ == '__main__':
     unittest.main()

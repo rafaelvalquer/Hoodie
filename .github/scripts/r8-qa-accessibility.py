@@ -26,21 +26,32 @@ def main():
     assert re.fullmatch(r'emulator-\d+', args.serial), 'Disposable emulator required'
     out = args.output
     out.mkdir(parents=True, exist_ok=True)
+    if any(out.iterdir()):
+        raise ValueError('A new empty evidence directory is required')
     ui = AndroidUi(args.serial)
     observations = []
+    snapshot_count = 0
 
     def snapshot(label):
+        nonlocal snapshot_count
+        snapshot_count += 1
+        stem = f'{snapshot_count:03d}-{label}'
         root, xml = ui.tree()
-        (out/f'{label}.xml').write_bytes(xml)
+        xml_name = f'{stem}.xml'
+        window_name = f'{stem}-window.txt'
+        with (out/xml_name).open('xb') as stream:
+            stream.write(xml)
         packages = {n.get('package') for n in root.iter('node')}
         assert packages == {PACKAGE}, f'Unexpected window owner: {packages}'
         window = ui.run('shell','dumpsys','window','displays')
-        (out/f'{label}-window.txt').write_bytes(window)
+        with (out/window_name).open('xb') as stream:
+            stream.write(window)
         focus = re.findall(r'^\s*mCurrentFocus=(.*)$',window.decode(errors='replace'),re.MULTILINE)
         assert focus and all(f' {PACKAGE}/' in value for value in focus), focus
         pid = ui.run('shell','pidof',PACKAGE).decode().strip()
         assert re.fullmatch(r'[1-9]\d*',pid), pid
-        observations.append(dict(stage=label,pid=int(pid),nodes=len(list(root.iter('node')))))
+        observations.append(dict(stage=label,pid=int(pid),nodes=len(list(root.iter('node'))),
+                                 xml=xml_name,window=window_name))
         (out/'observations.json').write_text(json.dumps(observations,indent=2)+'\n',encoding='utf-8')
         return root
 
@@ -79,6 +90,7 @@ def main():
     assert len({row['pid'] for row in observations}) == 1, 'Unexpected process restart'
     (out/'result.json').write_text(json.dumps(dict(
         passed=True,package=PACKAGE,snapshots=len(observations),
+        evidenceFormatVersion=2,retainedXmlFiles=len(observations),
         settingsSnapshots=30,backupSnapshots=30,
         scope='Accessibility node creation on unchanged screens; no export/restore or production acceptance'
     ),indent=2)+'\n',encoding='utf-8')

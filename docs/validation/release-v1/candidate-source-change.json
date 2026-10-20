@@ -10,5 +10,23 @@
   ],
   "previousRuntimeEvidence": "Remains scoped to ecdf8148/f9a1c344 and its recorded APK hashes; not acceptance of the new main app source",
   "releaseCandidateApproved": false,
-  "followUp": "Preserve the merged app changes and validate the current source with new full CI, R8/runtime and review of affected visual references before any freeze or promotion."
+  "followUp": "Preserve the merged app changes and validate the current source with new full CI, R8/runtime and review of affected visual references before any freeze or promotion.",
+  "subsequentIntegrations": [
+    {
+      "commit": "13262158",
+      "mainMerge": "d9f9409a",
+      "change": "Consolidation of consecutive visits in the Journey"
+    },
+    {
+      "commit": "a0e86f53",
+      "mainMerge": "6de0c732",
+      "change": "Pixel-art Journey city and camera following Hoodie"
+    },
+    {
+      "commit": "6288349b1861561d946d389696ba756029defc70",
+      "committedAppSourceTree": "9b24e3337ddea092ae8b978ebc036d98455fd156",
+      "change": "Interaction presentation extraction and validation evidence; three negative interaction tests still failed in this WIP commit."
+    }
+  ],
+  "currentValidation": "Merged features preserved. Request ownership fix is validated by its four focused tests; new full CI, R8/runtime, affected visual review and remaining physical/Play gates are required. Older a139 source artifacts do not approve the new source."
 }
