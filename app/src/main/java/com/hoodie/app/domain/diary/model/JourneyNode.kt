@@ -27,7 +27,15 @@ data class JourneyNode(
     val placeOccurrences: Int = 1,
     /** Tempo somado de todas as visitas a este lugar no dia. */
     val placeTotalMs: Long = durationMs,
+    /**
+     * Eventos canônicos que formam esta permanência (vários quando a Jornada uniu visitas
+     * consecutivas ao mesmo lugar). Edição e detalhes usam estes IDs — nunca o índice visual.
+     */
+    val sourceIntervals: List<VisitSourceInterval> = emptyList(),
 ) {
+    /** Permanência formada por mais de um evento de contexto. */
+    val isConsolidated: Boolean get() = sourceIntervals.size > 1
+
     /** "Retorno #2" a partir da segunda aparição. */
     val isReturn: Boolean get() = revisitCount > 0
     val returnNumber: Int get() = revisitCount + 1

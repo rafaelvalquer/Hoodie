@@ -19,6 +19,8 @@ import kotlin.math.roundToInt
  * mostrador de 24 h. Puro (JVM). Regras:
  * - recorta tudo no dia local e, hoje, no "agora";
  * - visitas repetidas continuam separadas (ids `journey-i`, os mesmos da Jornada);
+ * - uma permanência consolidada (vários eventos no mesmo lugar) é uma parada só: as partes usam o
+ *   mesmo id e a folga desconhecida entre elas continua [ClockSegment.Unknown];
  * - deslocamento entre duas visitas usa o meio dominante da Jornada (`journey-seg-i`);
  *   fora disso, trechos de mobilidade avulsos viram `move-k`;
  * - o que sobra vira [ClockSegment.Unknown] — nunca uma suposição.
@@ -69,16 +71,20 @@ object DayClockAssembler {
             val s = maxOf(n.arrivalAt, dayStart)
             val e = minOf(n.departureAt ?: cut, cut)
             if (e <= s) return@forEachIndexed
-            val context = dominant(diary.replay.contexts, s, e) ?: n.contextType ?: n.placeType.toContext()
-            val activity = dominant(diary.replay.activities, s, e) ?: n.hoodieActivity
-            items += Item(s, e, true, n.id) { a, b ->
+            // Consolidada: só os trechos com presença confirmada (a folga entre eventos não vira estadia) e
+            // um trecho por contexto (manhã em Casa, tarde trabalhando em casa): mesma parada, categorias certas.
+            val parts = if (n.isConsolidated) presenceParts(n.sourceIntervals, s, e) else listOf(s to e)
+            parts.forEach { (ps, pe) ->
+            val context = dominant(diary.replay.contexts, ps, pe) ?: n.contextType ?: n.placeType.toContext()
+            val activity = dominant(diary.replay.activities, ps, pe) ?: n.hoodieActivity
+            items += Item(ps, pe, true, n.id) { a, b ->
                 ClockSegment.Stay(
                     n.id, a, b, n.placeId, n.placeName, n.placeType,
                     ClockCategory.of(context.takeIf { it != UserContextType.COMMUTING } ?: n.placeType.toContext()),
                     activity, stopIndex = 0, visitNumber = n.revisitCount + 1,
-                    ongoing = n.departureAt == null || n.departureAt > cut,
+                    ongoing = (n.departureAt == null || n.departureAt > cut) && pe >= e,
                 )
-            }
+            } }
         }
         journey.segments.forEach { seg ->
             val s = maxOf(seg.startedAt, dayStart)
@@ -123,8 +129,14 @@ object DayClockAssembler {
         if (cut > cursor) fillGap(cursor, cut, null)
 
         // 3. Numeração das paradas e totais.
+        // Partes da mesma permanência (mesmo id) são a mesma parada.
         var stop = 0
-        val segments = out.map { s -> if (s is ClockSegment.Stay) s.copy(stopIndex = ++stop) else s }
+        var lastStayId: String? = null
+        val segments = out.map { s ->
+            if (s !is ClockSegment.Stay) return@map s
+            if (s.id != lastStayId) { stop++; lastStayId = s.id }
+            s.copy(stopIndex = stop)
+        }
         val totals = buildMap<ClockCategory, Int> {
             segments.forEach { s ->
                 val c = when (s) { is ClockSegment.Stay -> s.category; is ClockSegment.Move -> ClockCategory.COMMUTE; else -> null } ?: return@forEach
@@ -132,6 +144,22 @@ object DayClockAssembler {
             }
         }
         return DayClockData(date, zone, empty.dayStart, empty.dayLengthMinutes, if (today) minute(now) else null, segments, totals, marks)
+    }
+
+    /** Trechos de presença de uma permanência consolidada: união por contexto consecutivo, recortada em [s, e). */
+    private fun presenceParts(sources: List<com.hoodie.app.domain.diary.model.VisitSourceInterval>, s: Long, e: Long): List<Pair<Long, Long>> {
+        val out = mutableListOf<Pair<Long, Long>>()
+        var lastType: UserContextType? = null
+        sources.sortedBy { it.startAt }.forEach { src ->
+            val ps = maxOf(src.startAt, s); val pe = minOf(src.endAt, e)
+            if (pe <= ps) return@forEach
+            val last = out.lastOrNull()
+            if (last != null && src.contextType == lastType && ps <= last.second) out[out.lastIndex] = last.first to maxOf(last.second, pe)
+            else if (last != null && ps < last.second) { if (pe > last.second) out += last.second to pe } // contexto novo sobreposto: não conta duas vezes
+            else out += ps to pe
+            lastType = src.contextType
+        }
+        return out
     }
 
     private fun addUnknown(out: MutableList<ClockSegment>, a: Int, b: Int, id: () -> String) {

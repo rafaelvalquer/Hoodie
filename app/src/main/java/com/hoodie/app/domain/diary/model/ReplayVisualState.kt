@@ -38,4 +38,6 @@ data class DiaryVisitDetails(
     val phoneUsage: VisitPhoneUsage?,
     val hoodieActivities: List<HoodieActivity>,
     val events: List<DiaryTimelineItem>,
+    /** Eventos canônicos da permanência (mais de um quando a Jornada consolidou visitas). */
+    val sources: List<VisitSourceInterval> = emptyList(),
 )

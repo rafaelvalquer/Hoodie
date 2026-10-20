@@ -17,12 +17,12 @@ class DayHighlightEngine(
 ) {
     fun select(diary: DailyDiary, routine: List<LearnedRoutineSlot>, zone: ZoneId): DayHighlight? {
         if (diary.isException) return null
-        val gym = diary.visits.filter { it.placeType == PlaceType.GYM }.maxByOrNull { it.durationMs }
+        val gym = diary.journeyVisits.filter { it.placeType == PlaceType.GYM }.maxByOrNull { it.durationMs }
         if (gym != null && gym.durationMs >= 20 * 60_000L && (gym.confidence ?: 0f) >= .70f &&
             gym.source !in setOf(com.hoodie.app.core.model.ContextSource.ROUTINE, com.hoodie.app.core.model.ContextSource.ONBOARDING)) return DayHighlight(
             DayHighlightType.GYM, "day_report_highlight_gym", listOf((gym.durationMs / 60_000L).toString()),
             ConfidenceScore.fromPoints(90), "${gym.placeId}:${gym.arrivalAt}")
-        val homeReturn = diary.visits.lastOrNull { it.placeType == PlaceType.HOME && it.arrivalAt in diary.activityWindow.civilStartAt until diary.activityWindow.civilEndAt }
+        val homeReturn = diary.journeyVisits.lastOrNull { it.placeType == PlaceType.HOME && it.arrivalAt in diary.activityWindow.civilStartAt until diary.activityWindow.civilEndAt }
             ?: return null
         val dayGroup = com.hoodie.app.domain.routine.routineDayGroup(diary.summary.date.dayOfWeek)
         val learned = routine.firstOrNull { it.type == RoutineEventType.HOME_RETURN && it.dayGroup == dayGroup }

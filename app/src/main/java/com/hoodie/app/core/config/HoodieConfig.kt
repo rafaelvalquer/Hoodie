@@ -11,6 +11,12 @@ import com.hoodie.app.core.time.MINUTE_MS
 object HoodieConfig {
     /** Enable only after the backup/restore device matrix and production checks pass. */
     const val HOODIE_LOCAL_ENCRYPTED_BACKUP_V1 = com.hoodie.app.BuildConfig.LOCAL_ENCRYPTED_BACKUP_V1
+    /**
+     * Jornada: visitas consecutivas ao mesmo lugar (mesmo placeId, sem saída real entre elas) viram uma
+     * permanência só. É uma projeção: desligar volta à representação anterior sem tocar no Room.
+     * Desligada no release; ligada em debug e homologação.
+     */
+    const val HOODIE_CONSECUTIVE_VISIT_MERGE_V1 = com.hoodie.app.BuildConfig.CONSECUTIVE_VISIT_MERGE_V1
     /** Opt in only after validating touch interactions for the intended build. */
     const val HOODIE_TOUCH_INTERACTIONS_V1 = true
     const val HOODIE_REACTION_COORDINATOR_V1 = true

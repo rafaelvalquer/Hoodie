@@ -101,9 +101,13 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
     edit?.let { DiaryCorrectionSheet(it, vm.zone, vm::dismissCorrection, vm::saveCorrection) }
     var selectedNodeId by remember(state.selectedDate) { mutableStateOf<String?>(null) }
     val selectedDate by rememberUpdatedState(state.selectedDate)
+    val context = androidx.compose.ui.platform.LocalContext.current
     CollectUiEvents(vm.events) { event ->
         when (event) {
             is DiaryUiEvent.ShowPlaceDetails -> if (event.date == selectedDate) selectedNodeId = event.nodeId
+            is DiaryUiEvent.VisitsGrouped -> android.widget.Toast.makeText(
+                context, context.getString(R.string.diary_correction_grouped, event.placeName), android.widget.Toast.LENGTH_LONG,
+            ).show()
         }
     }
     val zone = vm.zone
@@ -143,12 +147,15 @@ fun DiaryScreen(vm: DiaryViewModel = hiltViewModel()) {
             refreshClock = vm::refreshClock,
             editEvent = vm::beginCorrection,
             editAt = vm::beginCorrectionAt,
+            editContext = vm::beginCorrectionForContext,
         ),
     )
 }
 
 internal data class DiaryActions(
     val editAt: (Long) -> Unit = {},
+    /** Editar um evento de contexto canônico pelo ID (períodos de um nó consolidado). */
+    val editContext: (Long) -> Unit = {},
     val editEvent: (com.hoodie.app.domain.diary.model.DiaryTimelineItem) -> Unit = {},
     val selectDate: (LocalDate) -> Unit = {},
     val retry: () -> Unit = {},
@@ -348,7 +355,13 @@ internal fun DiaryContent(
                     ?.let { onSelectedNodeChange(it.id) }
             },
             onDismiss = { selectedJourneyNodeId = null },
-            onEdit = if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS) ({ selectedJourneyNodeId = null; actions.editAt(journeyNode.arrivalAt) }) else null,
+            onEdit = if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS) ({
+                selectedJourneyNodeId = null
+                // Um evento só: edita pelo ID canônico; sem ID (dados antigos), pelo horário como antes.
+                journeyNode.sourceIntervals.singleOrNull()?.contextEventId?.takeIf { it >= 0 }?.let(actions.editContext)
+                    ?: actions.editAt(journeyNode.arrivalAt)
+            }) else null,
+            onEditSource = if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS) ({ id -> selectedJourneyNodeId = null; actions.editContext(id) }) else null,
         )
     }
 }

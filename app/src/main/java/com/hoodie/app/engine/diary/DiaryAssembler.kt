@@ -37,7 +37,8 @@ object DiaryAssembler {
         val summary = DailySummaryCalculator.compute(clippedContexts, date, dayStart, dayEnd, now)
         val map = DailyMapBuilder.build(visitEnriched)
         val replay = ReplaySequenceBuilder.build(visitEnriched, enriched, dayStart, minOf(dayEnd, now), dayContexts, dayActivities, now, map, window.activeStartAt, activityWindow?.activeEndAt)
-        return DailyDiary(summary, enriched, visitEnriched, map, replay, activityWindow = window)
+        val intervals = PlaceVisitBuilder.intervals(dayContexts, dayStart, dayEnd, now, window.activeStartAt, window.activeEndAt)
+        return DailyDiary(summary, enriched, visitEnriched, map, replay, activityWindow = window, contextIntervals = intervals)
     }
 
     private fun List<com.hoodie.app.domain.diary.model.DiaryTimelineItem>.lowerBoundTimestamp(timestamp: Long): Int {

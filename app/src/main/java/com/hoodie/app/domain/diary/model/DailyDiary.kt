@@ -49,6 +49,8 @@ data class PlaceVisit(
     /** Confiança do evento canônico que originou a visita. */
     val confidence: Float? = null,
     val source: com.hoodie.app.core.model.ContextSource? = null,
+    /** IDs dos eventos de contexto canônicos (Room) que formam a visita; mais de um após consolidar. */
+    val contextEventIds: List<Long> = emptyList(),
 )
 
 enum class DiaryMapNodeType { HOME, WORK, RESTAURANT, GYM, SCHOOL, MARKET, LEISURE, FAMILY, OTHER }
@@ -139,7 +141,17 @@ data class DailyDiary(
     /** Relógio civil para consultas e relógio ativo para Jornada/replay. */
     val activityWindow: DailyActivityWindow = DailyActivityWindow.EMPTY,
     val isException: Boolean = false,
-)
+    /** Eventos de contexto do dia (inclusive deslocamentos), recortados: evidência para consolidar visitas. */
+    val contextIntervals: List<VisitSourceInterval> = emptyList(),
+    /**
+     * Permanências da Jornada (visitas consecutivas ao mesmo lugar já agrupadas). null = sem projeção:
+     * a Jornada usa [visits] como antes. [visits] continua sendo a lista original, para auditoria e edição.
+     */
+    val journeyProjection: JourneyVisitProjection? = null,
+) {
+    /** Visitas como a Jornada, o mapa, o replay e o Relógio as mostram. */
+    val journeyVisits: List<PlaceVisit> get() = journeyProjection?.visits?.map { it.visit } ?: visits
+}
 
 /** Um trecho de deslocamento: só modo e horários — nunca posição ou rota. */
 data class DiaryMovement(

@@ -38,6 +38,23 @@ internal fun DiaryCorrectionSheet(state: DiaryEditState, zone: ZoneId, onDismiss
                 if (request.targetType == CorrectionTargetType.CONTEXT) EditChoice(stringResource(R.string.diary_edit_context), context?.label ?: "", UserContextType.entries.map { it.label to it }, !state.saving) { context = it }
                 EditChoice(stringResource(R.string.diary_edit_place), state.places.firstOrNull { it.id == placeId }?.name ?: stringResource(R.string.diary_edit_no_place),
                     listOf(stringResource(R.string.diary_edit_no_place) to null) + state.places.map { it.name to it.id }, !state.saving) { placeId = it }
+                // Trocou o lugar: sugere (sem obrigar) o contexto do novo lugar — trabalhar em casa continua possível.
+                var keptContextFor by remember(request.targetType, request.targetId) { mutableStateOf<Long?>(null) }
+                val newPlace = state.places.firstOrNull { it.id == placeId }
+                val suggested = newPlace?.type?.toContext()
+                if (request.targetType == CorrectionTargetType.CONTEXT && newPlace != null && placeId != request.placeId &&
+                    suggested != null && suggested != context && keptContextFor != placeId) {
+                    Text(stringResource(R.string.diary_edit_context_hint, newPlace.name), style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.testTag("diary_edit_context_hint"))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { context = suggested }, enabled = !state.saving, modifier = Modifier.testTag("diary_edit_context_use")) {
+                            Text(stringResource(R.string.diary_edit_context_use, suggested.label))
+                        }
+                        TextButton(onClick = { keptContextFor = placeId }, enabled = !state.saving, modifier = Modifier.testTag("diary_edit_context_keep")) {
+                            Text(stringResource(R.string.diary_edit_context_keep))
+                        }
+                    }
+                }
                 if (request.targetType == CorrectionTargetType.MOBILITY_SEGMENT || context == UserContextType.COMMUTING) EditChoice(stringResource(R.string.diary_edit_transport), mode?.label ?: stringResource(R.string.diary_edit_keep_transport),
                     listOf(stringResource(R.string.diary_edit_keep_transport) to null) + MovementMode.entries.filter { it != MovementMode.NONE }.map { it.label to it }, !state.saving) { mode = it }
                 OutlinedTextField(start, { start = it; inputError = false }, label = { Text(stringResource(R.string.diary_edit_start)) }, enabled = !state.saving, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("diary_edit_start"))

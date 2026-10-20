@@ -50,7 +50,7 @@ class DiaryLabViewModel @Inject constructor(private val deviceUsage: DeviceUsage
 fun DiaryLabScreen(modifier: Modifier = Modifier, vm: DiaryLabViewModel = hiltViewModel()) {
     val zone = ZoneId.systemDefault()
     val diary = remember { DiaryRegressionScenario.create(LocalDate.now(zone), zone) }
-    val layout = remember { DiaryMapLayoutEngine.layout(diary.visits) }
+    val layout = remember { DiaryMapLayoutEngine.layout(diary.journeyVisits) }
     val details = remember { ReplayHudAssembler.visitDetails(diary, diary.replay.endAt) }
     var replay by remember { mutableStateOf(ReplayUiState()) }
     var selectedNodeId by remember { mutableStateOf<String?>(null) }

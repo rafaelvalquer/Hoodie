@@ -12,8 +12,10 @@ import com.hoodie.app.engine.deviceusage.VisitPhoneUsageCalculator
 
 /**
  * DailyDiary → jornada do dia. Puro (sem Android, sem relógio próprio):
- * visitas viram nós na ordem, cada intervalo entre visitas vira um trecho com o
- * meio de transporte dominante, e cada nó sabe se é um retorno.
+ * permanências ([DailyDiary.journeyVisits]: visitas consecutivas ao mesmo lugar já unidas) viram
+ * nós na ordem, cada intervalo entre elas vira um trecho com o meio de transporte dominante, e
+ * cada nó sabe se é um retorno. IDs visuais (`journey-i`) seguem a lista consolidada; os eventos
+ * canônicos de cada nó ficam em [JourneyNode.sourceIntervals].
  */
 object JourneyMapAssembler {
 
@@ -21,7 +23,9 @@ object JourneyMapAssembler {
     const val MODE_MATCH_SLACK_MS = 2 * MINUTE_MS
 
     fun build(diary: DailyDiary, now: Long): JourneyMapData {
-        val visits = diary.visits.sortedBy { it.arrivalAt }
+        val projected = diary.journeyProjection?.visits?.sortedBy { it.visit.arrivalAt }
+        val visits = projected?.map { it.visit } ?: diary.visits.sortedBy { it.arrivalAt }
+        val sources = projected?.map { it.sourceIntervals }
         if (visits.isEmpty()) return JourneyMapData.EMPTY.copy(startAt = diary.replay.startAt, endAt = diary.replay.endAt)
         val phone = diary.phoneInsights
         val keys = visits.map(::placeKey)
@@ -45,11 +49,14 @@ object JourneyMapAssembler {
                 hoodieActivity = v.dominantHoodieActivity,
                 contextType = contextAt(diary, v.arrivalAt + v.durationMs / 2),
                 phoneUsageMs = phone?.let {
-                    VisitPhoneUsageCalculator.calculate(v.arrivalAt, v.departureAt, now, it.appSessions, it::labelOf, it::categoryOf)?.foregroundMs
+                    val parts = sources?.get(i)?.takeIf { s -> s.size > 1 }
+                    if (parts != null) VisitPhoneUsageCalculator.calculate(presence(parts, v, now), it.appSessions, it::labelOf, it::categoryOf)?.foregroundMs
+                    else VisitPhoneUsageCalculator.calculate(v.arrivalAt, v.departureAt, now, it.appSessions, it::labelOf, it::categoryOf)?.foregroundMs
                 } ?: 0L,
                 revisitCount = revisitCount,
                 placeOccurrences = occurrences.getValue(key),
                 placeTotalMs = totals.getValue(key),
+                sourceIntervals = sources?.get(i).orEmpty(),
             )
         }
         val segments = visits.zipWithNext().mapIndexed { i, (from, to) ->
@@ -84,6 +91,15 @@ object JourneyMapAssembler {
             .mapValues { (_, list) -> list.sumOf { (minOf(it.endedAt, to) - maxOf(it.startedAt, from)).coerceAtLeast(0) } }
             .filterValues { it > 0 }
             .maxByOrNull { it.value }?.key
+    }
+
+    /**
+     * Intervalos em que o usuário de fato esteve no lugar (união dos eventos de origem, recortada na
+     * permanência). A folga desconhecida entre eventos não entra.
+     */
+    fun presence(sources: List<com.hoodie.app.domain.diary.model.VisitSourceInterval>, visit: PlaceVisit, now: Long): List<Pair<Long, Long>> {
+        val until = visit.departureAt ?: now
+        return ConsecutivePlaceVisitConsolidator.union(sources.map { maxOf(it.startAt, visit.arrivalAt) to minOf(it.endAt, until) })
     }
 
     private fun placeKey(v: PlaceVisit) = v.placeId?.let { "id:$it" } ?: "name:${v.placeName.lowercase()}|${v.placeType}"

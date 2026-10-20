@@ -18,6 +18,7 @@ import com.hoodie.app.domain.phoneinsights.model.DailyPhoneInsights
 import com.hoodie.app.engine.diary.DiaryAssembler
 import com.hoodie.app.engine.diary.DiaryDigitalMerger
 import com.hoodie.app.engine.diary.DiaryMobilityMerger
+import com.hoodie.app.engine.diary.JourneyVisitProjectionBuilder
 import com.hoodie.app.engine.daycycle.DailyActivityWindowResolver
 import com.hoodie.app.core.model.SleepSchedule
 import kotlinx.coroutines.Dispatchers
@@ -163,9 +164,12 @@ class DiaryRepository @Inject constructor(
 
     suspend fun buildFullDiary(core: DiaryCoreSnapshot): DailyDiary = withContext(Dispatchers.Default) {
         val phone = core.phone.takeIf { core.showPhone }
-        DiaryMobilityMerger.merge(
-            DiaryDigitalMerger.merge(core.diary, phone, core.zone),
-            core.mobilityTrips, core.from, core.to, core.now, core.zone,
+        // Por último: a Jornada só consolida visitas depois de conhecer todos os deslocamentos do dia.
+        JourneyVisitProjectionBuilder.apply(
+            DiaryMobilityMerger.merge(
+                DiaryDigitalMerger.merge(core.diary, phone, core.zone),
+                core.mobilityTrips, core.from, core.to, core.now, core.zone,
+            ),
         ).copy(isException = core.isException)
     }
 
