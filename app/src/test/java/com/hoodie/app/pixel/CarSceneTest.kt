@@ -114,4 +114,12 @@ class CarSceneTest {
         buffer.pixels.forEach(bytes::putInt)
         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes.array()))
     }
+
+    @Test fun theCarDrivesForwardToTheLeft() {
+        // A arte tem a frente à esquerda: o fundo precisa correr para a direita (leitura em x - off).
+        val scene = car as CarSceneV3
+        assertTrue("fundo correndo para a esquerda = carro de ré", scene.scroll(2_000L, env(), 40f) < 0)
+        val bus = SceneRegistry[SceneId.BUS] as com.hoodie.app.pixel.scene.LayeredTransportScene
+        assertTrue("interiores continuam como estavam", bus.scroll(2_000L, env(), 40f) > 0)
+    }
 }

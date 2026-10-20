@@ -63,22 +63,21 @@ class StreetScene : PixelScene(SceneId.STREET) {
                 }
             }
             // Ralos na sarjeta (a cada 160 px, sincronizado com árvores/postes)
-            val offDrain = ((t / 25) % 160).toInt()
+            val offDrain = Math.floorMod(t / 25, 160L).toInt()
             for (i in -1..2) {
                 val dx = i * 160 - offDrain + 60
-                if (dx in -4..239) {
+                if (dx in -9..239) {
                     b.box(dx, 258, dx + 8, 262, drainColor)
                     b.hline(dx + 1, dx + 7, 259, P.OUTLINE)
                     b.hline(dx + 1, dx + 7, 261, P.OUTLINE)
                 }
             }
             // Faixa de pedestre (aparece a cada 320 px no ciclo)
-            val offCross = ((t / 25) % 320).toInt()
-            val cx = 160 - offCross
-            if (cx > -30 && cx < 260) {
-                for (sy in 270..314 step 8) {
-                    b.box(cx, sy, cx + 22, sy + 4, crosswalkWhite)
-                }
+            // Cópias a cada 320 px: a emenda do ciclo cai sempre fora da tela.
+            val offCross = Math.floorMod(t / 25, 320L).toInt()
+            for (i in -1..1) {
+                val cx = i * 320 + 160 - offCross
+                if (cx > -30 && cx < 260) for (sy in 270..314 step 8) b.box(cx, sy, cx + 22, sy + 4, crosswalkWhite)
             }
             // Meio-fio
             b.box(0, 262, 239, 264, curbTop)
@@ -90,9 +89,9 @@ class StreetScene : PixelScene(SceneId.STREET) {
             val roadPatch = ((t / 25) % 200).toInt()
             for (i in -1..2) {
                 val rpx = i * 200 - roadPatch + 80
-                if (rpx in -6..239) b.box(rpx, 300, rpx + 12, 303, roadDark)
+                if (rpx in -13..239) b.box(rpx, 300, rpx + 12, 303, roadDark)
                 val rpx2 = i * 200 - roadPatch + 30
-                if (rpx2 in -6..239) b.box(rpx2, 278, rpx2 + 8, 280, roadDark)
+                if (rpx2 in -9..239) b.box(rpx2, 278, rpx2 + 8, 280, roadDark)
             }
             // Faixa contínua de borda (topo da pista)
             b.hline(0, 239, 269, laneWhite)
@@ -103,10 +102,15 @@ class StreetScene : PixelScene(SceneId.STREET) {
 
         // ── Prop 2: Árvores melhoradas, postes, hidrantes, banco, lixeira, ponto de ônibus ──
         Prop(2) { b, env, t ->
-            val off = ((t / 25) % 160).toInt()
+            val scroll = t / 25
+            val off = Math.floorMod(scroll, 160L).toInt()
+            // Identidade presa ao trecho do mundo (não ao índice do laço): quando `off` volta a zero
+            // o objeto que estava num ponto da calçada continua o mesmo.
+            val tile = Math.floorDiv(scroll, 160L)
             val night = env.period == DayPeriod.NIGHT || env.period == DayPeriod.EVENING
             for (i in -1..2) {
                 val x = i * 160 - off + 40
+                val alt = Math.floorMod(tile + i, 2L).toInt()
 
                 // ── Árvore melhorada ──
                 // Sombra no chão
@@ -116,7 +120,7 @@ class StreetScene : PixelScene(SceneId.STREET) {
                 b.vline(x - 1, 182, 210, P.FURNITURE_LIGHT) // reflexo no tronco
                 b.vline(x + 2, 185, 212, PixelBuffer.mix(P.FURNITURE, P.OUTLINE, 0.3f)) // sombra
                 // Copa: múltiplos discos sobrepostos para formato orgânico
-                val treeSize = if (i % 2 == 0) 0 else 2 // variação de tamanho
+                val treeSize = if (alt == 0) 0 else 2 // variação de tamanho
                 b.disc(x, 168, 18 + treeSize, P.OUTLINE)       // contorno
                 b.disc(x, 168, 17 + treeSize, P.LEAF)           // base verde
                 b.disc(x - 7, 163, 9 + treeSize, P.OUTLINE)     // contorno do tufo esquerdo
@@ -144,7 +148,7 @@ class StreetScene : PixelScene(SceneId.STREET) {
                 }
 
                 // ── Hidrante (a cada segunda posição) ──
-                if (i % 2 == 0) {
+                if (alt == 0) {
                     val hx = x + 24
                     b.outlined(hx - 3, 205, hx + 3, 214, hydrantRed, P.OUTLINE)
                     b.box(hx - 4, 202, hx + 4, 206, hydrantRed)
@@ -154,7 +158,7 @@ class StreetScene : PixelScene(SceneId.STREET) {
                 }
 
                 // ── Banco (a cada segunda posição, alternando com hidrante) ──
-                if (i % 2 == 1) {
+                if (alt == 1) {
                     val bx = x + 24
                     // Pernas
                     b.box(bx - 10, 247, bx - 8, 258, P.METAL_DARK)
@@ -175,144 +179,163 @@ class StreetScene : PixelScene(SceneId.STREET) {
             }
 
             // ── Ponto de ônibus (aparece uma vez no ciclo de 320) ──
-            val offBus = ((t / 25) % 320).toInt()
-            val bsx = 280 - offBus
-            if (bsx > -20 && bsx < 250) {
-                // Poste do ponto
-                b.box(bsx - 1, 170, bsx + 1, 214, P.METAL_DARK)
-                // Placa
-                b.outlined(bsx - 8, 170, bsx + 8, 184, busSignBlue, P.OUTLINE)
-                // Ícone de ônibus simplificado na placa
-                b.box(bsx - 4, 174, bsx + 4, 180, P.WHITE)
-                b.box(bsx - 3, 175, bsx + 3, 179, busSignBlue)
-                b.set(bsx - 2, 178, P.WHITE); b.set(bsx + 2, 178, P.WHITE) // janelas
-                // Telhado de cobertura
-                b.outlined(bsx - 14, 185, bsx + 14, 188, P.METAL, P.OUTLINE)
-                b.box(bsx + 12, 188, bsx + 14, 214, P.METAL_DARK)
-            }
+            val offBus = Math.floorMod(t / 25, 320L).toInt()
+            for (i in -1..1) {
+                val bsx = i * 320 + 280 - offBus
+                if (bsx > -20 && bsx < 260) {
+                    // Poste do ponto
+                    b.box(bsx - 1, 170, bsx + 1, 214, P.METAL_DARK)
+                    // Placa
+                    b.outlined(bsx - 8, 170, bsx + 8, 184, busSignBlue, P.OUTLINE)
+                    // Ícone de ônibus simplificado na placa
+                    b.box(bsx - 4, 174, bsx + 4, 180, P.WHITE)
+                    b.box(bsx - 3, 175, bsx + 3, 179, busSignBlue)
+                    b.set(bsx - 2, 178, P.WHITE); b.set(bsx + 2, 178, P.WHITE) // janelas
+                    // Telhado de cobertura
+                    b.outlined(bsx - 14, 185, bsx + 14, 188, P.METAL, P.OUTLINE)
+                    b.box(bsx + 12, 188, bsx + 14, 214, P.METAL_DARK)
+                }
 
-            // ── Semáforo (aparece uma vez no ciclo de 320, em posição diferente do ponto) ──
-            val tlx = 140 - offBus
-            if (tlx > -12 && tlx < 250) {
-                b.box(tlx - 1, 152, tlx + 1, 214, P.METAL_DARK)
-                b.outlined(tlx - 4, 152, tlx + 4, 172, P.OUTLINE, P.OUTLINE)
-                b.box(tlx - 3, 153, tlx + 3, 171, 0xFF3A3A3A.toInt())
-                // Luz vermelha/verde/amarela baseada no tempo
-                val phase = ((t / 2500) % 3).toInt()
-                val redOn = if (phase == 0) 0xFFE83030.toInt() else 0xFF5A2020.toInt()
-                val yelOn = if (phase == 1) P.YELLOW else 0xFF5A5020.toInt()
-                val grnOn = if (phase == 2) 0xFF30E840.toInt() else 0xFF205A20.toInt()
-                b.disc(tlx, 157, 2, redOn)
-                b.disc(tlx, 162, 2, yelOn)
-                b.disc(tlx, 167, 2, grnOn)
+                // ── Semáforo (aparece uma vez no ciclo de 320, em posição diferente do ponto) ──
+                val tlx = i * 320 + 140 - offBus
+                if (tlx > -12 && tlx < 250) {
+                    b.box(tlx - 1, 152, tlx + 1, 214, P.METAL_DARK)
+                    b.outlined(tlx - 4, 152, tlx + 4, 172, P.OUTLINE, P.OUTLINE)
+                    b.box(tlx - 3, 153, tlx + 3, 171, 0xFF3A3A3A.toInt())
+                    // Luz vermelha/verde/amarela baseada no tempo
+                    val phase = ((t / 2500) % 3).toInt()
+                    val redOn = if (phase == 0) 0xFFE83030.toInt() else 0xFF5A2020.toInt()
+                    val yelOn = if (phase == 1) P.YELLOW else 0xFF5A5020.toInt()
+                    val grnOn = if (phase == 2) 0xFF30E840.toInt() else 0xFF205A20.toInt()
+                    b.disc(tlx, 157, 2, redOn)
+                    b.disc(tlx, 162, 2, yelOn)
+                    b.disc(tlx, 167, 2, grnOn)
+                }
             }
         },
 
-        // ── Prop 310: Dois carros em pistas opostas ──
+        // ── Prop 310: Carros, um de cada vez, alternando as pistas ──
         Prop(310) { b, env, t ->
             val night = env.period == DayPeriod.NIGHT || env.period == DayPeriod.EVENING
-            drawSedan(b, t, night)
             drawHatchback(b, t, night)
+            drawSedan(b, t, night)
         },
     )
 
-    // ── Sedan (pista inferior, direita→esquerda, y ≈ 296-312) ──
-    private fun drawSedan(b: PixelBuffer, t: Long, night: Boolean) {
-        val cycle = 4800L
-        val p = t % cycle
-        if (p >= 2800) return
-        val x = 260 - (p * 420 / 2800).toInt()
-        val color = carColors[((t / cycle) % 5).toInt()]
-        val colorDark = PixelBuffer.mix(color, P.OUTLINE, 0.25f)
+    /**
+     * Uma passagem de carro: posição [x] da carroceria e cor escolhida pela passagem inteira
+     * (nunca por `t`), para o carro não trocar de cor/modelo enquanto cruza a tela.
+     */
+    internal class CarPass(val x: Int, val color: Int, val progressMs: Long)
 
-        // Carroceria inferior (corpo)
-        b.outlined(x, 296, x + 54, 310, color, P.OUTLINE)
-        b.hline(x + 1, x + 53, 297, PixelBuffer.mix(color, P.WHITE, 0.2f)) // reflexo superior
-        b.hline(x + 1, x + 53, 309, colorDark) // sombra inferior
-        // Para-choque dianteiro (frente = esquerda, pois vai para a esquerda)
-        b.box(x - 2, 298, x, 308, P.METAL_DARK)
-        // Para-choque traseiro
-        b.box(x + 54, 298, x + 56, 308, P.METAL_DARK)
-        // Teto / cabine (formato curvo simulado com degraus)
-        b.outlined(x + 12, 288, x + 42, 298, color, P.OUTLINE)
-        b.box(x + 10, 292, x + 12, 298, color); b.set(x + 10, 292, P.OUTLINE) // inclinação dianteira
-        b.box(x + 42, 290, x + 44, 298, color); b.set(x + 42, 290, P.OUTLINE) // inclinação traseira
-        // Janelas
-        b.box(x + 14, 290, x + 25, 296, glass)
-        b.box(x + 14, 290, x + 16, 296, glassDark) // pilar A
-        b.box(x + 27, 290, x + 38, 296, glass)
-        b.box(x + 38, 290, x + 40, 296, glassDark) // pilar C
-        b.vline(x + 26, 290, 296, P.OUTLINE) // pilar B
-        // Silhueta do motorista (dentro da janela dianteira)
-        b.box(x + 18, 291, x + 23, 294, PixelBuffer.mix(glass, P.OUTLINE, 0.4f))
-        // Faróis e lanternas
-        if (night) {
-            b.box(x - 2, 300, x, 304, P.LAMP_LIGHT) // farol dianteiro
-            // Cone de luz no asfalto
-            b.box(x - 14, 305, x - 2, 308, PixelBuffer.mix(P.LAMP_LIGHT, road, 0.7f))
-        }
-        b.box(x + 54, 300, x + 56, 303, P.RED) // lanterna traseira
-        // Rodas com raios girando
-        val spokeAngle = (p / 60.0)
-        for (wx in intArrayOf(x + 10, x + 42)) {
-            b.disc(wx, 312, 6, P.OUTLINE) // pneu
-            b.disc(wx, 312, 4, P.METAL)   // aro
-            b.disc(wx, 312, 1, P.OUTLINE)  // centro
-            // Raios (3 linhas girando)
-            for (k in 0..2) {
-                val a = spokeAngle + k * 2.094 // 120° entre raios
-                val dx = (kotlin.math.cos(a) * 3).toInt()
-                val dy = (kotlin.math.sin(a) * 3).toInt()
-                b.line(wx, 312, wx + dx, 312 + dy, P.OUTLINE)
-            }
+    /** Sedan na pista de baixo (direita → esquerda); visível em [0, SEDAN_MS) de cada ciclo. */
+    internal fun sedanPass(t: Long): CarPass? {
+        val p = Math.floorMod(t, CAR_CYCLE_MS)
+        if (p >= SEDAN_MS) return null
+        val pass = Math.floorDiv(t, CAR_CYCLE_MS)
+        return CarPass(250 - (p * 360 / SEDAN_MS).toInt(), carColors[Math.floorMod(pass * 3, 5L).toInt()], p)
+    }
+
+    /** Hatch na pista de cima (esquerda → direita), meio ciclo depois do sedan: nunca juntos. */
+    internal fun hatchPass(t: Long): CarPass? {
+        val shifted = t - CAR_CYCLE_MS / 2
+        val p = Math.floorMod(shifted, CAR_CYCLE_MS)
+        if (p >= HATCH_MS) return null
+        val pass = Math.floorDiv(shifted, CAR_CYCLE_MS)
+        return CarPass(-90 + (p * 340 / HATCH_MS).toInt(), carColors[Math.floorMod(pass * 3 + 2, 5L).toInt()], p)
+    }
+
+    /** Cabine em degraus: [left]/[right] dão as bordas em cada linha (0 = teto). */
+    private inline fun cabin(b: PixelBuffer, y0: Int, rows: Int, color: Int, left: (Int) -> Int, right: (Int) -> Int) {
+        for (r in 0 until rows) {
+            val l = left(r); val rt = right(r)
+            b.hline(l, rt, y0 + r, if (r == 0) P.OUTLINE else color)
+            b.set(l, y0 + r, P.OUTLINE); b.set(rt, y0 + r, P.OUTLINE)
         }
     }
 
-    // ── Hatchback (pista superior, esquerda→direita, y ≈ 272-286) ──
-    private fun drawHatchback(b: PixelBuffer, t: Long, night: Boolean) {
-        val cycle = 6400L
-        val phase = (t + 1600L) % cycle // offset para não coincidir com o sedan
-        if (phase >= 3200) return
-        val x = -50 + (phase * 350 / 3200).toInt() // vai da esquerda para a direita
-        val color = carColors[((t / cycle + 2) % 5).toInt()]
-        val colorDark = PixelBuffer.mix(color, P.OUTLINE, 0.25f)
+    private fun wheel(b: PixelBuffer, cx: Int, cy: Int, r: Int, angle: Double) {
+        b.disc(cx, cy, r, P.OUTLINE)       // pneu
+        b.disc(cx, cy, r - 3, P.METAL)     // aro
+        b.disc(cx, cy, 1, P.OUTLINE)       // centro
+        for (k in 0..2) {
+            val a = angle + k * 2.094 // 120° entre raios
+            b.line(cx, cy, cx + (kotlin.math.cos(a) * (r - 3)).toInt(), cy + (kotlin.math.sin(a) * (r - 3)).toInt(), P.OUTLINE)
+        }
+    }
 
-        // Carroceria (menor que o sedan)
-        b.outlined(x, 274, x + 40, 286, color, P.OUTLINE)
-        b.hline(x + 1, x + 39, 275, PixelBuffer.mix(color, P.WHITE, 0.2f))
-        b.hline(x + 1, x + 39, 285, colorDark)
-        // Para-choques
-        b.box(x + 40, 276, x + 42, 284, P.METAL_DARK) // frente (direita, pois vai para a direita)
-        b.box(x - 2, 276, x, 284, P.METAL_DARK) // traseira
-        // Cabine/teto (hatchback: traseira mais reta)
-        b.outlined(x + 8, 266, x + 34, 276, color, P.OUTLINE)
-        b.box(x + 6, 270, x + 8, 276, color); b.set(x + 6, 270, P.OUTLINE) // inclinação traseira
-        b.box(x + 34, 268, x + 36, 276, color); b.set(x + 34, 268, P.OUTLINE) // inclinação dianteira
-        // Janelas
-        b.box(x + 10, 268, x + 20, 274, glass)
-        b.box(x + 22, 268, x + 32, 274, glass)
-        b.vline(x + 21, 268, 274, P.OUTLINE) // pilar
-        // Silhueta do motorista
-        b.box(x + 24, 269, x + 29, 272, PixelBuffer.mix(glass, P.OUTLINE, 0.4f))
-        // Faróis e lanternas (espelhado: frente = direita)
-        if (night) {
-            b.box(x + 40, 278, x + 42, 282, P.LAMP_LIGHT)
-            b.box(x + 42, 281, x + 52, 284, PixelBuffer.mix(P.LAMP_LIGHT, road, 0.7f))
+    // ── Sedan (pista de baixo, frente à esquerda, y ≈ 274-318) ──
+    private fun drawSedan(b: PixelBuffer, t: Long, night: Boolean) {
+        val car = sedanPass(t) ?: return
+        val x = car.x
+        val color = car.color
+        val colorDark = PixelBuffer.mix(color, P.OUTLINE, 0.25f)
+        val tint = PixelBuffer.mix(glass, P.OUTLINE, 0.4f)
+
+        // Cabine: para-brisa inclinado na frente (esquerda), vidro traseiro mais curto.
+        cabin(b, 274, 16, color, { r -> x + 26 - r * 2 / 3 }, { r -> x + 76 + r / 2 })
+        for (y in 277..288) {
+            val r = y - 274
+            b.hline(x + 29 - r * 2 / 3, x + 48, y, glass)
+            b.hline(x + 52, x + 73 + r / 2, y, glass)
         }
-        b.box(x - 2, 278, x, 281, P.RED) // lanterna traseira
-        // Rodas com raios
-        val spokeAngle = (phase / 55.0)
-        for (wx in intArrayOf(x + 8, x + 34)) {
-            b.disc(wx, 288, 5, P.OUTLINE)
-            b.disc(wx, 288, 3, P.METAL)
-            b.disc(wx, 288, 1, P.OUTLINE)
-            for (k in 0..2) {
-                val a = spokeAngle + k * 2.094
-                val dx = (kotlin.math.cos(a) * 2.5).toInt()
-                val dy = (kotlin.math.sin(a) * 2.5).toInt()
-                b.line(wx, 288, wx + dx, 288 + dy, P.OUTLINE)
-            }
+        b.box(x + 49, 276, x + 51, 289, P.OUTLINE) // pilar B
+        b.box(x + 34, 279, x + 42, 287, tint)      // motorista
+        // Carroceria
+        b.outlined(x, 289, x + 100, 309, color, P.OUTLINE)
+        b.hline(x + 1, x + 99, 290, PixelBuffer.mix(color, P.WHITE, 0.2f)) // reflexo
+        b.hline(x + 1, x + 99, 308, colorDark)
+        b.vline(x + 50, 291, 306, colorDark) // porta
+        b.box(x + 56, 294, x + 59, 295, P.METAL) // maçaneta
+        b.box(x - 3, 296, x, 307, P.METAL_DARK)          // para-choque dianteiro
+        b.box(x + 100, 296, x + 103, 307, P.METAL_DARK)  // traseiro
+        b.box(x, 293, x + 4, 297, if (night) P.LAMP_LIGHT else P.CREAM) // farol
+        b.box(x + 96, 293, x + 100, 297, P.RED)                          // lanterna
+        if (night) b.box(x - 26, 301, x - 4, 306, PixelBuffer.mix(P.LAMP_LIGHT, road, 0.7f))
+        // Rodas: indo para a esquerda giram no sentido anti-horário.
+        val angle = -car.progressMs / 55.0
+        wheel(b, x + 22, 310, 9, angle)
+        wheel(b, x + 78, 310, 9, angle)
+    }
+
+    // ── Hatchback (pista de cima, frente à direita, y ≈ 268-310) ──
+    private fun drawHatchback(b: PixelBuffer, t: Long, night: Boolean) {
+        val car = hatchPass(t) ?: return
+        val x = car.x
+        val color = car.color
+        val colorDark = PixelBuffer.mix(color, P.OUTLINE, 0.25f)
+        val tint = PixelBuffer.mix(glass, P.OUTLINE, 0.4f)
+
+        // Cabine: traseira quase reta (esquerda), para-brisa inclinado na frente (direita).
+        cabin(b, 268, 16, color, { r -> x + 8 - r / 5 }, { r -> x + 54 + r * 2 / 3 })
+        for (y in 271..282) {
+            val r = y - 268
+            b.hline(x + 11 - r / 5, x + 32, y, glass)
+            b.hline(x + 36, x + 51 + r * 2 / 3, y, glass)
         }
+        b.box(x + 33, 270, x + 35, 283, P.OUTLINE) // pilar
+        b.box(x + 40, 273, x + 47, 281, tint)      // motorista
+        // Carroceria
+        b.outlined(x, 283, x + 80, 301, color, P.OUTLINE)
+        b.hline(x + 1, x + 79, 284, PixelBuffer.mix(color, P.WHITE, 0.2f))
+        b.hline(x + 1, x + 79, 300, colorDark)
+        b.vline(x + 38, 285, 298, colorDark) // porta
+        b.box(x + 43, 288, x + 46, 289, P.METAL)
+        b.box(x + 80, 290, x + 83, 300, P.METAL_DARK) // para-choque dianteiro
+        b.box(x - 3, 290, x, 300, P.METAL_DARK)       // traseiro
+        b.box(x + 76, 287, x + 80, 291, if (night) P.LAMP_LIGHT else P.CREAM) // farol
+        b.box(x, 287, x + 3, 291, P.RED)                                      // lanterna
+        if (night) b.box(x + 84, 294, x + 106, 299, PixelBuffer.mix(P.LAMP_LIGHT, road, 0.7f))
+        // Rodas: indo para a direita giram no sentido horário.
+        val angle = car.progressMs / 55.0
+        wheel(b, x + 17, 302, 8, angle)
+        wheel(b, x + 63, 302, 8, angle)
+    }
+
+    internal companion object {
+        const val CAR_CYCLE_MS = 9_600L
+        const val SEDAN_MS = 3_000L
+        const val HATCH_MS = 3_400L
     }
 
     override fun lights(env: SceneEnv): List<Light> = listOf(Light.Glow(120, 230, 120, 0.45f))
