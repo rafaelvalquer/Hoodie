@@ -4,6 +4,8 @@ Workflow: `.github/workflows/android-r8-qa.yml` (**R8 development runtime QA**).
 
 Objetivo: investigar [HVR-NATIVE-API35-001](api35-native-crash.json) fora do host Windows, com AAB de homologação realmente otimizado por R8 e APK derivado. Não usa conta Play, chave de upload nem segredos de distribuição. A variante existente usa o certificado Android Debug do runner; a identificação continua de desenvolvimento, código QA 7. A pipeline protegida de release permanece separada.
 
+Execução `c40f864b` concluída: build, assinaturas e estática passaram; o roteiro obteve 68 snapshots com os 30+30 exigidos. O resultado final permanece **reprovado** por SIGSEGV no Google Play Services (HeapTaskDaemon, MarkCompact, endereço 0xc). O exit-info preservado do Hoodie não mostra crash nessa rodada, mas o roteiro não executou a exportação concorrente que falhou antes. [Evidência verificada pelo digest do artefato](r8-qa-c40-runtime.json). Não houve mudança no gate para ignorar o fatal de outro processo.
+
 O job:
 
 1. Compila `bundleHomologacao`, preservando mapping, commit e árvore de fontes. Verifica a flag de backup, o package de homologação e a versão gerada.
