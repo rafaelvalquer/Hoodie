@@ -119,3 +119,5 @@ Os registros novos localizaram a sequência: o runner enviou `input keyevent 82`
 A inicialização passa a usar o mesmo emulador oficial/build 15917651 em diretório isolado, com [SHA-256 e origem registrados](linux-emulator-provenance.json), configuração de display definida antes do boot e espera pelo foco real, sem injetar a tecla prematura. ANR registrado no boot bloqueia a execução antes do Gradle. A suíte permanece inteira e os goldens continuam exatos. A regressão de orquestração reproduziu o início indevido do Gradle no script anterior e passou os três cenários após o bloqueio; são fixtures de ADB/Gradle, não testes reais de aplicativo.
 
 O bootstrap é compartilhado pela CI, pelo runtime do release e pelo [diagnóstico R8 em Linux/KVM](r8-development-qa.md). Actionlint e sintaxe foram conferidos; a execução remota da nova inicialização e os gates completos continuam pendentes.
+
+A concorrência preserva a execução Android já iniciada: commits novos aguardam seu próprio run completo, evitando perder uma suíte em andamento durante ajustes de documentação ou do diagnóstico independente. A exigência de CI no SHA do candidato continua igual.

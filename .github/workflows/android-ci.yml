@@ -13,7 +13,8 @@ on:
 
 concurrency:
   group: android-ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Preserve the running evidence; newer commits wait for their own full run.
+  cancel-in-progress: false
 
 jobs:
   unit-tests:

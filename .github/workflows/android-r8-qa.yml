@@ -44,7 +44,8 @@ jobs:
           set -euo pipefail
           BUNDLETOOL_JAR="$RUNNER_TEMP/bundletool.jar"
           echo "BUNDLETOOL_JAR=$BUNDLETOOL_JAR" >> "$GITHUB_ENV"
-          sdkmanager 'ndk;28.2.13676358' 'build-tools;36.0.0'
+          mkdir -p app/build/reports/r8-qa
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'build-tools;36.0.0' > app/build/reports/r8-qa/sdk-tools.log 2>&1
           curl --fail --location --retry 3 https://github.com/google/bundletool/releases/download/1.18.2/bundletool-all-1.18.2.jar -o "$BUNDLETOOL_JAR"
           printf '%s  %s\n' '378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584' "$BUNDLETOOL_JAR" | sha256sum --check -
       - name: AAB R8 de homologação com certificado de desenvolvimento
@@ -57,7 +58,7 @@ jobs:
           mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
           ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
           out=app/build/reports/r8-qa
-          sdkmanager --install 'system-images;android-35;google_apis_ps16k;x86_64' > "$out/sdk-image.log" 2>&1
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'system-images;android-35;google_apis_ps16k;x86_64' > "$out/sdk-image.log" 2>&1
           image="$ANDROID_HOME/system-images/android-35/google_apis_ps16k/x86_64"
           test -s "$image/system.img"
           cp "$image/source.properties" "$out/system-image-source.properties"

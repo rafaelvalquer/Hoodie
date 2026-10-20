@@ -57,7 +57,7 @@ jobs:
       - name: Ferramentas fixadas
         run: |
           set -euo pipefail
-          sdkmanager 'ndk;28.2.13676358' 'build-tools;36.0.0'
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'build-tools;36.0.0'
           curl --fail --location --retry 3 https://github.com/google/bundletool/releases/download/1.18.2/bundletool-all-1.18.2.jar -o "$RUNNER_TEMP/bundletool.jar"
           printf '%s  %s\n' '378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584' "$RUNNER_TEMP/bundletool.jar" | sha256sum --check -
       - name: Gerar, assinar e verificar AAB e APK derivado
@@ -128,7 +128,7 @@ jobs:
           set -euo pipefail
           out=app/build/reports/native-runtime
           mkdir -p "$out"
-          sdkmanager --install 'system-images;android-35;google_apis_ps16k;x86_64' > "$out/sdk-image.log" 2>&1
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'system-images;android-35;google_apis_ps16k;x86_64' > "$out/sdk-image.log" 2>&1
           image="$ANDROID_HOME/system-images/android-35/google_apis_ps16k/x86_64"
           test -s "$image/system.img"
           cp "$image/source.properties" "$out/system-image-source.properties"
