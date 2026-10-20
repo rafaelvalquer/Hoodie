@@ -56,11 +56,12 @@ class VenueInteractionCoordinator(private val seed: Int) {
 
     // ───── Intervalos nomeados (porta do elevador aberta etc.) ─────
 
-    data class Interval(val name: String, val start: Long, val end: Long)
+    /** [tag] carrega um dado do intervalo (ex.: a fala do Hoodie na sala da família). */
+    data class Interval(val name: String, val start: Long, val end: Long, val tag: String? = null)
 
     private val intervals = ArrayList<Interval>()
 
-    fun addInterval(name: String, start: Long, end: Long) { intervals += Interval(name, start, end) }
+    fun addInterval(name: String, start: Long, end: Long, tag: String? = null) { intervals += Interval(name, start, end, tag) }
 
     fun intervals(name: String): List<Interval> = intervals.filter { it.name == name }
 

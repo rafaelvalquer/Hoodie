@@ -43,6 +43,9 @@ enum class VenueRole(val staff: Boolean = false) {
 
     // Hotel
     RECEPTIONIST(staff = true), HOTEL_GUEST, HOTEL_VISITOR,
+
+    // Família do Hoodie
+    FAMILY_DAD, FAMILY_MOM, FAMILY_BROTHER,
 }
 
 /**

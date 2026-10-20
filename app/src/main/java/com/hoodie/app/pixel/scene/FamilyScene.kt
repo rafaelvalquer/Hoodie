@@ -4,14 +4,15 @@ import com.hoodie.app.core.time.DayPeriod
 import com.hoodie.app.pixel.renderer.PixelBuffer
 
 /**
- * Sala da família: papel de parede, retratos, sofá, poltrona da outra pessoa (à esquerda,
- * com a xícara dela), mesinha com petiscos, TV e luminária. Não há NPC desenhado.
+ * Sala da família: papel de parede, retratos, sofá, poltrona do pai (à esquerda, com a xícara
+ * dele), mesinha com petiscos, TV e luminária. Pai, mãe e irmão do Hoodie vêm do FamilyVenue
+ * (o pai na poltrona, a mãe no sofá ao lado do Hoodie, o irmão andando pela sala).
  * Props dinâmicos: o prato perde um petisco enquanto o Hoodie come (SNACK_IN_HAND),
  * a TV liga quando o diretor pede e a xícara da poltrona solta vapor.
  */
 class FamilyScene : PixelScene(SceneId.FAMILY) {
     override val spots = mapOf(
-        SpotId.FAMILY_SOFA to Spot(150, 202),
+        SpotId.FAMILY_SOFA to Spot(com.hoodie.app.pixel.npc.venue.FamilyVenue.HOODIE_SOFA_X, com.hoodie.app.pixel.npc.venue.FamilyVenue.SOFA_Y),
         SpotId.FAMILY_TABLE to Spot(116, 272),
         SpotId.WINDOW to Spot(120, 160),
         SpotId.DOOR to Spot(214, 160),
@@ -62,11 +63,16 @@ class FamilyScene : PixelScene(SceneId.FAMILY) {
             b.outlined(104, 166, 118, 206, c, P.OUTLINE); b.hline(106, 116, 168, light)
             b.outlined(190, 166, 204, 206, c, P.OUTLINE); b.hline(192, 202, 168, light)
         },
-        // Poltrona da outra pessoa, saindo pela esquerda, com xícara fumegante.
-        Prop(208) { b, _, t ->
+        // Poltrona do pai, saindo pela esquerda: encosto e almofada do assento atrás de quem senta…
+        Prop(150) { b, _, _ ->
             val c = 0xFF5C8F7A.toInt()
             b.outlined(-10, 152, 34, 208, c, P.OUTLINE)
             b.outlined(-10, 186, 44, 208, c, P.OUTLINE); b.hline(-8, 42, 188, 0xFF79AD95.toInt())
+        },
+        // …borda do assento, braço e mesinha com a xícara fumegante na frente.
+        Prop(208) { b, _, t ->
+            val c = 0xFF5C8F7A.toInt()
+            b.outlined(-10, 200, 44, 208, c, P.OUTLINE); b.hline(-8, 42, 202, 0xFF79AD95.toInt())
             b.outlined(32, 166, 46, 208, c, P.OUTLINE)
             SceneArt.mug(b, 52, 194)
             b.outlined(48, 201, 64, 210, P.FURNITURE, P.OUTLINE)

@@ -212,6 +212,8 @@ object NpcRenderer {
         movementOverride: NpcMovement? = null,
         officeFrameStateOverride: com.hoodie.app.pixel.npc.office.OfficeNpcFrameState? = null,
         leisureFrameStateOverride: com.hoodie.app.pixel.npc.leisure.LeisureNpcFrameState? = null,
+        /** Não-nulo: o balão de fala é guardado aqui para ser desenhado depois (por cima de todos). */
+        speechSink: MutableList<() -> Unit>? = null,
     ) {
         val measureOffice = BuildConfig.DEBUG && slot.officeBrain != null
         var stageStarted = if (measureOffice) ScenePerformanceMonitor.nowNanos() else 0L
@@ -343,15 +345,18 @@ object NpcRenderer {
                 ?: venueSpeech?.let { NpcSpeechProfile(listOf(it.line), visibleMs = it.durationMs) }
                 ?: speechProfile
             speech?.let { activeProfile ->
-            NpcSpeechBubbleRenderer.draw(
-                b, activeProfile, movement.x, movement.floorY, slot.seed, timeMs,
-                storySpeech?.let { (timeMs - it.second).coerceAtLeast(0) }
-                    ?: officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
-                    ?: leisureSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
-                    ?: venueSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
-                    ?: movement.localTimeMs, frame.anchors.head.y,
-                (slot.definition.characterStyle.species.headHeight * slot.scale).roundToInt().coerceAtLeast(1),
-            )
+            val elapsed = storySpeech?.let { (timeMs - it.second).coerceAtLeast(0) }
+                ?: officeSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
+                ?: leisureSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
+                ?: venueSpeech?.let { (timeMs - it.startedAt).coerceAtLeast(0) }
+                ?: movement.localTimeMs
+            val headY = frame.anchors.head.y
+            val headHeight = (slot.definition.characterStyle.species.headHeight * slot.scale).roundToInt().coerceAtLeast(1)
+            val bubble = {
+                NpcSpeechBubbleRenderer.draw(b, activeProfile, movement.x, movement.floorY, slot.seed, timeMs, elapsed, headY, headHeight)
+            }
+            // Cenas apertadas (sala da família) desenham os balões depois de todos os personagens.
+            speechSink?.add(bubble) ?: bubble()
             }
         }
         if (measureOffice) {

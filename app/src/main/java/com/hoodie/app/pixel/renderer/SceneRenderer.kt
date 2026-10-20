@@ -60,6 +60,9 @@ class SceneRenderer(private var collectInteractionElements: Boolean = false) {
     var lastInteractionHitMask: ByteArray? = null
         private set
     val buffer = PixelBuffer(PixelScene.SCENE_W, PixelScene.SCENE_H)
+    /** Balões de fala adiados para depois de todos os personagens (só onde [deferSpeech]). */
+    private val deferredSpeech = ArrayList<() -> Unit>()
+    private var deferSpeech = false
 
     private data class BgKey(val scene: SceneId, val period: DayPeriod, val variant: Int)
     private val backgrounds = LinkedHashMap<BgKey, PixelBuffer>(20, .75f, true)
@@ -319,6 +322,8 @@ class SceneRenderer(private var collectInteractionElements: Boolean = false) {
             sceneCopyNanos = ScenePerformanceMonitor.nowNanos() - stageStarted
             stageStarted = ScenePerformanceMonitor.nowNanos()
         }
+        deferSpeech = scene.id == SceneId.FAMILY
+        deferredSpeech.clear()
         var npcDrawingNanos = 0L
         var objectNanos = 0L
         var npcBeforeCharacterNanos = 0L
@@ -365,6 +370,11 @@ class SceneRenderer(private var collectInteractionElements: Boolean = false) {
                 npcDrawingNanos += drawCompositionEntry(entry, env, timeMs, measureScene)
             }
         }
+        // Balões guardados (sala da família): por cima de todos os personagens e móveis.
+        if (deferredSpeech.isNotEmpty()) actorMask.track(buffer) { deferredSpeech.forEach { it() } }
+        deferredSpeech.clear()
+        deferSpeech = false
+        drawHoodieFamilySpeech(env, frame, timeMs)
 
         if (measureScene) {
             val frontObjectsNanos = ScenePerformanceMonitor.nowNanos() - stageStarted -
@@ -438,7 +448,7 @@ class SceneRenderer(private var collectInteractionElements: Boolean = false) {
 
     private fun drawAmbientNpc(slot: com.hoodie.app.pixel.npc.AmbientNpcSlot, timeMs: Long, measure: Boolean): Long {
         val started = if (measure) ScenePerformanceMonitor.nowNanos() else 0L
-        actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs) }
+        actorMask.track(buffer) { NpcRenderer.draw(buffer, slot, timeMs, speechSink = if (deferSpeech) deferredSpeech else null) }
         return if (measure) ScenePerformanceMonitor.nowNanos() - started else 0L
     }
 
@@ -494,6 +504,22 @@ class SceneRenderer(private var collectInteractionElements: Boolean = false) {
         facingOverride: Pair<String, Facing>?,
     ): NpcMovement? = facingOverride?.takeIf { it.first == slot.definition.id }?.let { (_, facing) ->
         NpcMotionController.movement(slot, timeMs).copy(facing = facing)
+    }
+
+    /**
+     * Fala do Hoodie numa conversa com a família: mesmo balão em pixel dos parentes, sobre a cabeça
+     * dele. Só aparece com ele sentado no lugar dele do sofá (fora dali a conversa segue sem ele).
+     */
+    private fun drawHoodieFamilySpeech(env: SceneEnv, frame: RenderFrame, timeMs: Long) {
+        val speech = (env.venueAmbient as? com.hoodie.app.pixel.npc.venue.FamilyAmbient)?.hoodieSpeech ?: return
+        if (!com.hoodie.app.pixel.npc.venue.FamilyVenue.hoodieOnSofa(frame.x, frame.y)) return
+        val anchors = frame.sprite.anchors
+        com.hoodie.app.pixel.npc.NpcSpeechBubbleRenderer.draw(
+            buffer, com.hoodie.app.pixel.npc.NpcSpeechProfile(listOf(speech.line), visibleMs = speech.durationMs),
+            frame.x, frame.y, 0, timeMs, timeMs - speech.startedAt,
+            anchors.head.y - anchors.feet.y + com.hoodie.app.pixel.character.CharacterCanvas.FEET.y,
+            com.hoodie.app.pixel.character.species.CatSpecies.headHeight,
+        )
     }
 
     private fun envWithAmbientNpcState(
