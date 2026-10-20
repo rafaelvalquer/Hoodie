@@ -1,0 +1,630 @@
+{
+  "sourceCommit": "c40f864bb8920ddafd7065c7d23235f4fd41e6f1",
+  "diagnosticCommit": "e0be072ee660d0a3641dc4d906f71cecb10245b5",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39482391425",
+  "artifactId": 12293445059,
+  "artifactSha256": "933ca6eb7e042bee1116c0fbd2c192cf1b75c7026cba235a49ff9172baaeb0c8",
+  "apkSha256": [
+    "33a3b55dd099ca041c7f482f4deb101b5964168265562ab75b856c6e24066955",
+    "a32b0997e90824c28476657a6e28aab5a76c0da44cc91e7d188facfb9bf88410"
+  ],
+  "tests": 180,
+  "passed": 170,
+  "skipped": 0,
+  "failures": [
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+      "status": -2
+    },
+    {
+      "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+      "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+      "status": -2
+    }
+  ],
+  "diagnosticPassed": false,
+  "caseOrderSha256": "21bd2079925a8cb8b113dab7c943171395df091f00006c34450470885c505298",
+  "differences": [
+    {
+      "image": "diary_full_360x640_f100_bottom.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 218,
+          "y": 404,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 218,
+          "y": 449,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 217,
+          "y": 450,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "4e63b6864942dae5f5fcb25aac9e9ef7aa5c54a1984f051581e8bd487752d064"
+    },
+    {
+      "image": "diary_full_360x640_f130_bottom.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 228,
+          "y": 353,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 228,
+          "y": 398,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 227,
+          "y": 399,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "960cec89c43118a7271fa1478629691d2eb0dc588a02ce9b70407c3f41e560e5"
+    },
+    {
+      "image": "diary_full_360x800_f100_bottom.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 218,
+          "y": 564,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 218,
+          "y": 609,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 217,
+          "y": 610,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "92cc3757c2a9d1089996b870d282f03b822f88228db7e7c053f922081bf5b383"
+    },
+    {
+      "image": "diary_full_360x800_f130_bottom.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 228,
+          "y": 513,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 228,
+          "y": 558,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 227,
+          "y": 559,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "6484f7b529725d41ce3f6604be5017da6aec986a64511212a5208be1e7233d8b"
+    },
+    {
+      "image": "diary_full_411x891_f100_bottom.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 243,
+          "y": 655,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 243,
+          "y": 700,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 242,
+          "y": 701,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "42bcac0c9ef3cf21ef69fe0ae41424372ae7df1b9b8e2d284010c000422a117d"
+    },
+    {
+      "image": "diary_full_411x891_f130_bottom.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 253,
+          "y": 630,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 253,
+          "y": 675,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 252,
+          "y": 676,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "f03862fae2c61ba90dccca28a0f23abb8f8e85f04bd9eed46a2aa90589fd3634"
+    },
+    {
+      "image": "digital_full_411x891_f100.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 242,
+          "y": 520,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 242,
+          "y": 521,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 242,
+          "y": 522,
+          "expected": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "actual": [
+            63,
+            116,
+            109,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "3fb5230f0ea628a3a0450f23e1d8bc38255b36ab71247e9f1c342d6ecb6bda08"
+    },
+    {
+      "image": "digital_full_411x891_f130.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 242,
+          "y": 589,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 242,
+          "y": 590,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 242,
+          "y": 591,
+          "expected": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "actual": [
+            63,
+            116,
+            109,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "28af5d47c6e67fbf12c55ba8447e9fa1478ecb7f1e027b55a4111590a8ce8b0f"
+    },
+    {
+      "image": "place_picker_full_411x891_f100_bottom.png",
+      "changedPixels": 1,
+      "pixels": [
+        {
+          "x": 59,
+          "y": 668,
+          "expected": [
+            127,
+            159,
+            220,
+            255
+          ],
+          "actual": [
+            127,
+            159,
+            219,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "68fa62e584abb75e12f3ae7bc8d7e8132ae98a13f5f0058f8f2ac12c89ff7155"
+    },
+    {
+      "image": "place_picker_full_411x891_f130_bottom.png",
+      "changedPixels": 3,
+      "pixels": [
+        {
+          "x": 71,
+          "y": 657,
+          "expected": [
+            88,
+            109,
+            154,
+            255
+          ],
+          "actual": [
+            88,
+            108,
+            154,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 66,
+          "y": 662,
+          "expected": [
+            89,
+            111,
+            157,
+            255
+          ],
+          "actual": [
+            89,
+            111,
+            156,
+            255
+          ],
+          "maxChannelDelta": 1
+        },
+        {
+          "x": 67,
+          "y": 668,
+          "expected": [
+            127,
+            159,
+            220,
+            255
+          ],
+          "actual": [
+            127,
+            159,
+            219,
+            255
+          ],
+          "maxChannelDelta": 1
+        }
+      ],
+      "matchesOriginalFullSuitePixels": true,
+      "actualPngSha256": "64ed6c7b5a50cff1e6f8f16915ca17056001f461cf197d8a86960de295620873"
+    }
+  ],
+  "changedPixels": 28,
+  "maxChannelDelta": 1,
+  "windowsIdenticalPairControlCompleted": false,
+  "interpretation": "The original c40 binary pair reproduces ten failures in the isolated original 180-case matrix. Pixel equality against the preserved full-suite images is recorded per image. Cross-host attribution still requires the same pair and case order on Windows; no baseline, tolerance or assertion was changed."
+}

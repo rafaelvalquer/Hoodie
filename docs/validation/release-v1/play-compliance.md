@@ -6,6 +6,8 @@ Em 19/10/2026, ao ser consultado sobre a identificação do responsável na pol�
 
 Política: [texto](../../privacy-policy.md). URL HTTPS de referência: https://github.com/rafaelvalquer/Hoodie/blob/main/docs/privacy-policy.md. Conferir após o push que a versão atual abre sem login, tanto no navegador quanto pelo botão Privacidade das Configurações. Se a Console exigir outro formato/endereço, publicar HTML HTTPS estável e atualizar ambos os links antes do envio.
 
+Disponibilidade pública conferida em 20/10/2026: requisição HTTPS sem autenticação/cookies e com configurações pessoais do curl desativadas recebeu HTTP 200. O artigo HTML renderizado corresponde integralmente ao texto local após normalizar a marcação e espaços. O código do botão Privacidade usa esse mesmo endereço; sua abertura real no navegador de um aparelho continua pendente. [Método, hashes e limites](privacy-public-url.json). Essa verificação não aprova a política pela Google Play nem substitui a análise de tráfego e os demais itens de conformidade.
+
 ## Segurança dos Dados — inventário para declaração
 
 Não enviar esta matriz automaticamente como formulário. Validar tráfego da variante release e as definições atuais da Console, incluindo provedores externos e tratamento temporário.

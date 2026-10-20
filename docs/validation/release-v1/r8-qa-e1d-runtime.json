@@ -1,0 +1,76 @@
+{
+  "commit": "e1d8059431b58a9061469cdea1a323d2e5b68028",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39481156115",
+  "artifactId": 12292155851,
+  "artifactSha256": "c63b0066e67826350942d4dea70f0afd0a6ce02a5ca361a1872dd3acbcc76df2",
+  "build": {
+    "commit": "e1d8059431b58a9061469cdea1a323d2e5b68028",
+    "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+    "versionCode": 7,
+    "scope": "Development signing; no upload key, Play submission, physical or production approval",
+    "aabSha256": "ba1cfc7449fdcafcc5dd41997bb4b6023e1d72be81c0794d7527d80ef67b2e53",
+    "apkSha256": "19ac25ef306ebb40062c061cb06ba06ac6b371fabeb36f0c22ec25fab58693b8",
+    "mappingSha256": "2c7c71370f52875c36ad51457dc1db0d2ae4eb1d68bf7c7cd10bcca3d66d7afa",
+    "certificateSha256": "cf2e0364fb0509d8c229ead362e7778797b35e0020b75ba2989442ec2a935372",
+    "apkDexSha256": {
+      "classes.dex": "feed5075d4f1fa904bb6a4829f105e74ba8ec27b3d86c84ade82993f7e82a8f5"
+    },
+    "apkNativeSha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+      "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+      "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+      "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+      "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+      "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+      "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+      "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+      "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+    },
+    "resourcesArscSha256": "fe117b7d33aac0c1b089006dfc66b36bdc99749dfd86bd8fc92b61647c3580cd",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+    "runtimeVerified": false,
+    "fullBackupJourneyApproved": false
+  },
+  "runtime": {
+    "pageSize": 16384,
+    "derivedApkProcessRestart": true,
+    "derivedApkColdLaunch": true,
+    "processIds": [
+      3062,
+      3231
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "COLD"
+    ],
+    "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+  },
+  "accessibility": {
+    "passed": true,
+    "package": "com.hoodie.app.homologacao",
+    "snapshots": 69,
+    "settingsSnapshots": 30,
+    "backupSnapshots": 30,
+    "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance",
+    "retainedXmlFiles": 68,
+    "repeatedStage": "home-ready",
+    "repeatedStageObservations": 2,
+    "allObservationsPreservedAsDistinctXml": false
+  },
+  "staticAlignmentPassed": true,
+  "independentlyVerifiedInnerArtifacts": true,
+  "diagnosticPassed": true,
+  "fullReleaseRuntimeApproved": false,
+  "priorExportCrashResolved": false,
+  "comparisonWithFailedC40": {
+    "appSourceTree": true,
+    "apkDexSha256": true,
+    "apkNativeSha256": true,
+    "resourcesArscSha256": true,
+    "mappingSha256": true
+  },
+  "interpretation": "Two real cold launches and unchanged-screen accessibility passed without recorded crash. DEX/native/resources/mapping match the c40 run that failed in Google Play Services. This is no code fix or proof of sustained runtime, export/restore, migration, physical homologation or upload signing."
+}

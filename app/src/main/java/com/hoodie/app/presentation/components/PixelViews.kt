@@ -62,12 +62,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
-private class InteractionPresentation {
-    var frame: RenderFrame? = null
-    var request: InteractionRequest? = null
-    var active = true
-}
-
 /** Fixed animation time for previews and visual regression captures. Null keeps live rendering. */
 data class PixelRenderFrame(
     val animationMillis: Long = 1_000L,
@@ -162,16 +156,11 @@ fun HoodieSceneView(
     val currentScenePresented by rememberUpdatedState(onScenePresented)
     val visualPresentedCallback by rememberUpdatedState(onVisualPresented)
 
-    fun presented(frame: RenderFrame) {
+    fun presented(frame: RenderFrame, renderedRequest: InteractionRequest?) {
         interaction.frame?.scene?.id?.takeIf { it != frame.scene.id }?.let(com.hoodie.app.pixel.performance.SceneDiagnostics::stopPresentation)
         val actual = frame.copy(env = renderer.lastPresentedEnvironment ?: frame.env,
             interactionElements = renderer.lastInteractionElements, interactionHitMask = renderer.lastInteractionHitMask)
-        interaction.frame = actual
-        val request = interaction.request
-        if (request != null) {
-            if (actual.interactionStarted === request.response) startedCallback(request)
-            if (!actual.interactionBusy) { finishedCallback(request); interaction.request = null }
-        }
+        interaction.present(actual, renderedRequest, startedCallback, finishedCallback)
         frames++
         currentScenePresented?.invoke(frame.scene.id)
         frame.interactionVisual?.let { visualPresentedCallback?.invoke(it) }
@@ -202,7 +191,8 @@ fun HoodieSceneView(
         if (fixedFrame != null) {
             machine.frame(fixedFrame.animationMillis, fixedFrame.minuteOfDay, fixedFrame.period)?.let { f ->
                 val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis, currentInteractionsEnabled) { presented(rendered) }
+                val renderedRequest = interaction.request
+                renderAndPresent(renderer, rendererMutex, bitmap, rendered, fixedFrame.animationMillis, currentInteractionsEnabled) { presented(rendered, renderedRequest) }
             }
             return@LaunchedEffect
         }
@@ -223,7 +213,8 @@ fun HoodieSceneView(
                 }
                 machine.frame(t, currentClockMinute ?: (time.hour * 60 + time.minute), period)?.let { f ->
                     val rendered = if (sceneOverride == null) f else f.copy(scene = sceneOverride)
-                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t, currentInteractionsEnabled) { presented(rendered) }
+                    val renderedRequest = interaction.request
+                    renderAndPresent(renderer, rendererMutex, bitmap, rendered, t, currentInteractionsEnabled) { presented(rendered, renderedRequest) }
                 }
             }
         }

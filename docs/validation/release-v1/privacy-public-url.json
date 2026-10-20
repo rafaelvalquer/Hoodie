@@ -1,0 +1,20 @@
+{
+  "checkedAtUtc": "2026-10-20T19:27:31.090Z",
+  "url": "https://github.com/rafaelvalquer/Hoodie/blob/main/docs/privacy-policy.md",
+  "method": "curl -q --fail --location, no authentication/cookie arguments; personal curl configuration disabled",
+  "httpStatus": 200,
+  "renderedArticlePresent": true,
+  "canonicalFullTextMatchesLocalPolicy": true,
+  "localPolicySha256": "bcdedd359696b8b170e452c02c6b9d601aba607b947101b54057afc2a63dbda3",
+  "responseHtmlSha256": "8618b48a5924b3980250c20330fcd31241543091e075534dea1393f5f76ee36f",
+  "responseHeadersSha256": "8548f6635704c4057dabd8e634c32a6cc206ccb0298ab2875179c431803df505",
+  "appPrivacyButton": {
+    "path": "app/src/main/java/com/hoodie/app/presentation/screens/settings/SettingsScreen.kt",
+    "line": 357,
+    "sameUrl": true,
+    "sourceInspected": true,
+    "deviceBrowserLaunchVerified": false
+  },
+  "playComplianceApproved": false,
+  "scope": "Anonymous HTTPS availability and full rendered text only; no Play review, traffic audit, device browser launch or legal-compliance approval."
+}
