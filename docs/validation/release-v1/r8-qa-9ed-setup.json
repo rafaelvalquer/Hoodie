@@ -1,0 +1,19 @@
+{
+  "commit": "9ed89fe43bdfae0c928437a5a34564de3ea917e2",
+  "runId": 39423287938,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39423287938",
+  "jobId": 118629387360,
+  "status": "failure",
+  "failedStep": "Preparar ferramentas oficiais",
+  "cause": "sdkmanager not available on PATH; exit 127",
+  "evidence": [
+    "2026-10-20T12:34:34.8699533Z /home/runner/work/_temp/17ef0446-51e0-4545-ab8a-bd04588788b9.sh: line 4: sdkmanager: command not found",
+    "2026-10-20T12:34:34.8708855Z ##[error]Process completed with exit code 127.",
+    "2026-10-20T12:34:35.0715221Z ##[error]No files were found with the provided path: app/build/outputs/bundle/homologacao/*.aab"
+  ],
+  "aabBuilt": false,
+  "runtimeExecuted": false,
+  "androidTestsExecuted": 0,
+  "artifactUploaded": false,
+  "followUp": "Use the absolute SDK Manager path, create the evidence directory before SDK setup, and preserve its log. Keep the failed run; do not retry the unchanged job."
+}

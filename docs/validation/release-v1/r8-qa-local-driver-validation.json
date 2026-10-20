@@ -1,0 +1,33 @@
+{
+  "scope": "Validation of the Python onboarding/accessibility driver and metadata processor, not Linux or 16 KB runtime approval",
+  "api": 34,
+  "pageSize": 4096,
+  "avd": "Hoodie_R8_A11y_API34",
+  "apkSha256": "4da6145c60e497487bcf3182e936da0c866017efee4ae0c8419c11f784f7b7ee",
+  "result": {
+    "passed": true,
+    "package": "com.hoodie.app.homologacao",
+    "snapshots": 70,
+    "settingsSnapshots": 30,
+    "backupSnapshots": 30,
+    "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance"
+  },
+  "pids": [
+    4792
+  ],
+  "nodeObservations": 3617,
+  "driverSha256": "9f0b1e352206a5153a60fa86f535d1e4c48e5dc10eafe91fa7b417e7ccbf2da8",
+  "observationsSha256": "dd1c5c92519aca05393e89a898502d317c13e5d4b9a4f21c9a0318872d7cf59e",
+  "exitInfoSha256": "06c81f958698e0fc90bcea6c586273f0bbb6de5f7f62f3cdc445b86928497e6d",
+  "bootAnrEvidenceSha256": "a7a3e7e2c14de30ad669dd7fc764dc9ddc16fa9d99d181691ce6df543e5afd87",
+  "otherCrashProcesses": [],
+  "metadataProcessor": {
+    "executedAgainstExistingArtifacts": true,
+    "dexFiles": 1,
+    "nativeLibraries": 12,
+    "allComparedHashesMatched": true,
+    "gradleRebuildExecuted": false
+  },
+  "linuxQaExecuted": false,
+  "nativeExportCrashClosed": false
+}

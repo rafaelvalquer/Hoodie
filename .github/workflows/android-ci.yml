@@ -13,7 +13,8 @@ on:
 
 concurrency:
   group: android-ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Preserve the running evidence; newer commits wait for their own full run.
+  cancel-in-progress: false
 
 jobs:
   unit-tests:
@@ -57,6 +58,8 @@ jobs:
 
       - name: Diagnóstico de foco e ANR do emulador
         run: python3 .github/scripts/test_verify_emulator_window.py
+      - name: Bloquear instrumentação após ANR de boot
+        run: bash .github/scripts/test-qa-boot-gate.sh
 
       - name: Evidência de reinício e estado de abertura do APK derivado
         run: python3 .github/scripts/test_summarize_runtime_launches.py
@@ -213,31 +216,10 @@ jobs:
           mkdir -p app/build/instrumentation-evidence
           nproc > app/build/instrumentation-evidence/host-cpu-count.txt
           free -m > app/build/instrumentation-evidence/host-memory.txt
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh
       - name: Connected tests (API 34)
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
-          profile: pixel_8
-          # Match the reviewed reference producer; do not float rasterizer builds.
-          emulator-build: '15917651'
-          # The previous boot reported 100% guest CPU, CPU pressure 72.86%
-          # and memory pressure 20.17% before the first test (run 39344406307).
-          cores: 4
-          ram-size: 4096M
-          heap-size: 256
-          emulator-options: -no-window -gpu swiftshader_indirect -memory 4096 -no-snapshot -noaudio -no-boot-anim
-          disable-animations: true
-          script: |
-            adb shell wm size 1080x2400
-            adb shell wm density 420
-            adb shell setprop debug.hwui.renderer skiagl
-            adb shell settings put system font_scale 1.0
-            adb shell settings put secure show_ime_with_hard_keyboard 1
-            # Test the virtual keyboard, without Gboard's first-run stylus tutorial.
-            adb shell settings put secure stylus_handwriting_enabled 0
-            bash .github/scripts/connected-tests.sh
+        run: bash .github/scripts/run-qa-emulator.sh 34 google_apis .github/scripts/connected-tests.sh
       - name: Upload instrumentation reports
         if: always()
         uses: actions/upload-artifact@v4

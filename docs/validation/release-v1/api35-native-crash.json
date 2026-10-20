@@ -159,5 +159,28 @@
     }
   },
   "runtimeGateApproved": false,
-  "followUp": "Keep this failed export and native defect open. Validate the authenticated file on API34 independently, then investigate crash with controlled runtime/accessibility comparisons without removing semantics or weakening tests."
+  "followUp": "Keep this failed export and native defect open. Validate the authenticated file on API34 independently, then investigate crash with controlled runtime/accessibility comparisons without removing semantics or weakening tests.",
+  "publishedAppCrashTrace": {
+    "path": "docs/validation/release-v1/api35-native-crash.txt",
+    "sha256": "e30090935b02485673629128e48160eac09a8fd56dfd049c286e829512dd5d4a",
+    "textNormalization": "UTF-8, LF, trailing blank lines omitted; raw full crash buffer hash remains under files."
+  },
+  "apkDexSha256": {
+    "classes.dex": "e605409f56d486d6473dc0c733fcbdfc7944374502023496c4a648a0d5d25c86"
+  },
+  "apkNativeSha256": {
+    "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+    "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+    "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+    "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+    "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+    "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+    "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+    "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+    "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+    "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+    "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+    "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+  },
+  "resourcesArscSha256": "fe117b7d33aac0c1b089006dfc66b36bdc99749dfd86bd8fc92b61647c3580cd"
 }

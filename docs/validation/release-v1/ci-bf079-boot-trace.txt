@@ -1,0 +1,15 @@
+GitHub runner log:
+2026-10-20T11:52:47.1849897Z Emulator booted.
+2026-10-20T11:52:47.1926580Z [command]/usr/local/lib/android/sdk/platform-tools/adb -s emulator-5554 shell input keyevent 82
+2026-10-20T11:52:57.5920342Z Android focused window ready after 1 snapshot(s)
+
+Android input dispatcher before the first test:
+10-20 11:52:47.227   546   653 W InputDispatcher: Waiting because no window has focus but ActivityRecord{ba2e17e u0 com.android.settings/.FallbackHome t5} may eventually add a window when it finishes starting up. Will wait for 5000ms
+10-20 11:52:47.694   546   653 W InputDispatcher: Waiting because no window has focus but ActivityRecord{dce07a5 u0 com.google.android.googlesdksetup/.DefaultActivity t6} may eventually add a window when it finishes starting up. Will wait for 5000ms
+10-20 11:52:49.321   546   653 W InputDispatcher: Waiting because no window has focus but ActivityRecord{c8d66c9 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7} may eventually add a window when it finishes starting up. Will wait for 5000ms
+10-20 11:52:54.328   546   653 E InputDispatcher: Dropping KEY event because there is no focused window
+10-20 11:52:54.672   546   653 I WindowManager: ANR in ActivityRecord{c8d66c9 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}.  Reason: Input dispatching timed out (Application does not have a focused window)
+
+Preflight ANR event (recorded before focus verification):
+--------- beginning of events
+10-20 11:52:55.237   546  3146 I am_anr  : [0,1190,com.google.android.apps.nexuslauncher,885767749,Input dispatching timed out (Application does not have a focused window)]

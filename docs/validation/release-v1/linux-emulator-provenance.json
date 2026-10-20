@@ -1,0 +1,7 @@
+{
+  "url": "https://dl.google.com/android/repository/emulator-linux_x64-15917651.zip",
+  "bytes": 334378080,
+  "sha256": "95771e0ae431897b2a4bd2d97fa095f29a8b0624a7b216baf529f9306161c266",
+  "sourceProperties": "Pkg.UserSrc=false\nPkg.Revision=37.1.11\nPkg.Path=emulator\nPkg.Desc=Android Emulator\nPkg.BuildId=15917651",
+  "checksumProvenance": "Locally computed from the archive fetched over HTTPS from dl.google.com; pinned for subsequent downloads. Not represented as a separate Google-published checksum."
+}

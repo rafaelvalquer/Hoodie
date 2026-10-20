@@ -1,0 +1,25 @@
+10-20 00:35:02.088  6223  6223 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 6223 (app.homologacao), pid 6223 (app.homologacao)
+10-20 00:35:02.566  7686  7686 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-20 00:35:02.566  7686  7686 F DEBUG   : Build fingerprint: 'google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys'
+10-20 00:35:02.566  7686  7686 F DEBUG   : Revision: '0'
+10-20 00:35:02.566  7686  7686 F DEBUG   : ABI: 'x86_64'
+10-20 00:35:02.567  7686  7686 F DEBUG   : Timestamp: 2026-10-20 00:35:02.250558700+0000
+10-20 00:35:02.567  7686  7686 F DEBUG   : Process uptime: 170s
+10-20 00:35:02.567  7686  7686 F DEBUG   : Page size: 16384 bytes
+10-20 00:35:02.567  7686  7686 F DEBUG   : Cmdline: com.hoodie.app.homologacao
+10-20 00:35:02.567  7686  7686 F DEBUG   : pid: 6223, tid: 6223, name: app.homologacao  >>> com.hoodie.app.homologacao <<<
+10-20 00:35:02.567  7686  7686 F DEBUG   : uid: 10207
+10-20 00:35:02.567  7686  7686 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000
+10-20 00:35:02.568  7686  7686 F DEBUG   : Cause: null pointer dereference
+10-20 00:35:02.568  7686  7686 F DEBUG   :     rax 0000000000000001  rbx 0000000000000000  rcx 00007403a347cf00  rdx 0000000000053238
+10-20 00:35:02.568  7686  7686 F DEBUG   :     r8  0000000070c1a750  r9  0000000014c8e2c0  r10 0000000070eccd38  r11 0000000000000020
+10-20 00:35:02.568  7686  7686 F DEBUG   :     r12 00000000ffffffff  r13 0000000014076da8  r14 0000000014c8e150  r15 00000000142edbc8
+10-20 00:35:02.568  7686  7686 F DEBUG   :     rdi 00007402de042df8  rsi 00000000142edc70
+10-20 00:35:02.568  7686  7686 F DEBUG   :     rbp 000000001407b608  rsp 00007ff5a4321958  rip 0000000000000000
+10-20 00:35:02.569  7686  7686 F DEBUG   : 5 total frames
+10-20 00:35:02.569  7686  7686 F DEBUG   : backtrace:
+10-20 00:35:02.569  7686  7686 F DEBUG   :       #00 pc 0000000000000000  <unknown>
+10-20 00:35:02.569  7686  7686 F DEBUG   :       #01 pc 0000000000158559  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (u1.y.h+2489)
+10-20 00:35:02.569  7686  7686 F DEBUG   :       #02 pc 00000000007f5ad7  [stack]
+10-20 00:35:02.569  7686  7686 F DEBUG   :       #03 pc 0000000000162775  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (h3.e.createAccessibilityNodeInfo+101)
+10-20 00:35:02.569  7686  7686 F DEBUG   :       #04 pc 0000000000000002  <unknown>
