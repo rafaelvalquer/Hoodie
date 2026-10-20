@@ -1,0 +1,60 @@
+{
+  "runId": 39431958446,
+  "jobId": 118658983269,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39431958446",
+  "commit": "b6098ed205120624b5d6b01ae08895339cc5053f",
+  "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+  "aabSha256": "caf7e2f8411354c151f17904b78f719a44cf13d4231731b0b0725b243ed349fa",
+  "apkSha256": "b2c2979aae3259d232cb680f4c4e352b1f7ba8a0aa49a71ddfb1d8ba2008e39f",
+  "certificateSha256": "fae7373fd2999d113e58c832f06b229e8a5a628cbd56c9c1b7e45ea405a4077d",
+  "artifactId": 12269646057,
+  "artifactZipSha256": "9832c17b3ac4f14fda1f257bf245b19e74fca52f1cceebc53350a9aba10c5ce7",
+  "buildAndDerivationPassed": true,
+  "staticGatePassed": true,
+  "nativeLibrariesPerArchive": [
+    12,
+    12
+  ],
+  "launch": {
+    "pageSize": 16384,
+    "derivedApkProcessRestart": true,
+    "derivedApkColdLaunch": false,
+    "processIds": [
+      3663,
+      3991
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "WARM"
+    ],
+    "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+  },
+  "accessibility": {
+    "passed": true,
+    "package": "com.hoodie.app.homologacao",
+    "snapshots": 69,
+    "settingsSnapshots": 30,
+    "backupSnapshots": 30,
+    "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance"
+  },
+  "accessibilityPids": [
+    3991
+  ],
+  "bootAnrRecorded": false,
+  "outcome": "failure",
+  "fatalProcess": "com.google.android.as",
+  "fatalUid": 10135,
+  "fatalThread": "Profile Saver",
+  "fatalSignal": "SIGABRT",
+  "abortMessage": "Check failed: copied_methods_start <= methods->size() (copied_methods_start=3, methods->size()=0) java.lang.Class<doq>",
+  "hoodieCrashInCollectedExitInfo": false,
+  "runtimeGateApproved": false,
+  "originalHoodieDefect": "HVR-NATIVE-API35-001 remains open; these stable-screen reads do not reproduce the export concurrency or prove a shared cause.",
+  "evidenceFiles": {
+    "build.json": "44fa42a2c30c5eea2ae106eca1856cc715798120124f4113c3dd8f28eef3bbba",
+    "runtime/final-crashes.txt": "2d4a09a50426fc045fb5a326b0b1ed70465685f902c6d0a3e957e6a1b48fbea7",
+    "runtime/exit-info.txt": "333053b4ea1ac9151ec47b00e84979dd5e0ffd5663e6f1d7102a4e15b7a9d279",
+    "runtime/accessibility/result.json": "13c84c7dc2adb95ab89c8013576f4225f77fb9c750ef8712aebb53b0945ec003",
+    "native/static-results.json": "0cdf7dced81dc7d5ec846893554ef7e56e81a3f6ace8b0c65c2cf69932d476d0"
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "commit": "794741b63faff019d2d5ee0372c8db3632787347",
+  "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+  "apkSha256": "c424c66b182221b6fab8e884b89743be81a0a477c255acb35d397bff4369b630",
+  "scope": "Actual Linux-derived R8 development APK on Windows-hosted emulators. Synthetic data only. Not the b609 binary, a physical test or production approval.",
+  "source": {
+    "avd": "Hoodie_Linux_R8_API35",
+    "api": 35,
+    "pageSize": 16384,
+    "imageRevision": 5,
+    "guestCores": 4,
+    "guestRamMb": 4096,
+    "cleanInstallation": true,
+    "uid": 10207,
+    "initialRestoreCompleted": true,
+    "restoredPlaces": 4,
+    "restoredContexts": 127,
+    "restoredMemories": 4,
+    "homeName": "Nuvem",
+    "exportUiSuccess": true,
+    "export": {
+      "sha256": "44add711a7f60bd0d8ed5fbd8c1462fc0af33af8613e2f6bb1af41b77c803ee9",
+      "bytes": 97960,
+      "authenticatedUnits": 420,
+      "manifest": {
+        "kind": "manifest",
+        "formatVersion": 1,
+        "appVersion": "0.2.0-dev-homologacao",
+        "databaseSchemaVersion": 12,
+        "createdAt": 1792503907976,
+        "timezone": "GMT",
+        "backupId": "e29324cc-b722-4693-bec5-3fdb90ee1e7c",
+        "includeDigital": true,
+        "counts": {
+          "places": 4,
+          "routines": 1,
+          "day_exceptions": 1,
+          "location_events": 40,
+          "context_events": 128,
+          "context_confirmations": 1,
+          "hoodie_activities": 29,
+          "timeline_events": 163,
+          "memories": 4,
+          "daily_device_usage": 30,
+          "daily_app_usage": 1,
+          "daily_context_app_usage": 1,
+          "app_category_overrides": 1,
+          "phone_app_sessions": 1,
+          "daily_screen_hourly": 1,
+          "daily_context_usage": 1,
+          "daily_phone_timeline": 1,
+          "mobility_sessions": 2,
+          "mobility_segments": 1,
+          "diary_corrections": 1,
+          "learned_routine_slots": 0,
+          "transport_patterns": 1,
+          "transport_evidence": 1,
+          "effective_routine_versions": 4
+        },
+        "datasetVersions": {
+          "places": 1,
+          "routines": 1,
+          "day_exceptions": 1,
+          "location_events": 1,
+          "context_events": 1,
+          "context_confirmations": 1,
+          "hoodie_activities": 1,
+          "timeline_events": 1,
+          "memories": 1,
+          "daily_device_usage": 1,
+          "daily_app_usage": 1,
+          "daily_context_app_usage": 1,
+          "app_category_overrides": 1,
+          "phone_app_sessions": 1,
+          "daily_screen_hourly": 1,
+          "daily_context_usage": 1,
+          "daily_phone_timeline": 1,
+          "mobility_sessions": 1,
+          "mobility_segments": 1,
+          "diary_corrections": 1,
+          "learned_routine_slots": 1,
+          "transport_patterns": 1,
+          "transport_evidence": 1,
+          "effective_routine_versions": 1
+        }
+      }
+    },
+    "effectiveRoutineVersions": [
+      {
+        "id": 1,
+        "epochDay": -9223372036854775808,
+        "effectiveFrom": -9223372036854775808,
+        "inputKey": "manual",
+        "snapshot": "{\"date\":\"2026-09-01\",\"from\":1788256800000,\"workMode\":\"OFFICE\",\"days\":[\"MONDAY\",\"TUESDAY\"],\"manualMinutes\":[540,1080,720,780,420,1380],\"values\":{\"WAKE\":{\"minute\":420,\"origin\":\"MANUAL\",\"count\":0},\"SLEEP\":{\"minute\":1380,\"origin\":\"MANUAL\",\"count\":0},\"WORK_START\":{\"minute\":540,\"origin\":\"MANUAL\",\"count\":0},\"WORK_END\":{\"minute\":1080,\"origin\":\"MANUAL\",\"count\":0},\"LUNCH_START\":{\"minute\":720,\"origin\":\"MANUAL\",\"count\":0},\"LUNCH_END\":{\"minute\":780,\"origin\":\"MANUAL\",\"count\":0}}}"
+      },
+      {
+        "id": 2,
+        "epochDay": 20745,
+        "effectiveFrom": 1792368000000,
+        "inputKey": "Routine(workMode=OFFICE, days=[MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY], startMinute=540, endMinute=1080, lunchStartMinute=720, lunchEndMinute=780)|SleepSchedule(wakeMinute=420, sleepMinute=1380)|[]",
+        "snapshot": "{\"date\":\"2026-10-19\",\"from\":1792368000000,\"workMode\":\"OFFICE\",\"days\":[\"MONDAY\",\"TUESDAY\",\"WEDNESDAY\",\"THURSDAY\",\"FRIDAY\"],\"manualMinutes\":[540,1080,720,780,420,1380],\"values\":{\"WAKE\":{\"minute\":420,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"WORK_START\":{\"minute\":540,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"LUNCH_START\":{\"minute\":720,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"LUNCH_END\":{\"minute\":780,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"WORK_END\":{\"minute\":1080,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"SLEEP\":{\"minute\":1380,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false}}}"
+      },
+      {
+        "id": 4,
+        "epochDay": 20746,
+        "effectiveFrom": 1792454400000,
+        "inputKey": "Routine(workMode=OFFICE, days=[MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY], startMinute=540, endMinute=1080, lunchStartMinute=720, lunchEndMinute=780)|SleepSchedule(wakeMinute=420, sleepMinute=1380)|[]",
+        "snapshot": "{\"date\":\"2026-10-20\",\"from\":1792454400000,\"workMode\":\"OFFICE\",\"days\":[\"MONDAY\",\"TUESDAY\",\"WEDNESDAY\",\"THURSDAY\",\"FRIDAY\"],\"manualMinutes\":[540,1080,720,780,420,1380],\"values\":{\"WAKE\":{\"minute\":420,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"WORK_START\":{\"minute\":540,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"LUNCH_START\":{\"minute\":720,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"LUNCH_END\":{\"minute\":780,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"WORK_END\":{\"minute\":1080,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"SLEEP\":{\"minute\":1380,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false}}}"
+      },
+      {
+        "id": 5,
+        "epochDay": 20747,
+        "effectiveFrom": 1792540800000,
+        "inputKey": "Routine(workMode=OFFICE, days=[MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY], startMinute=540, endMinute=1080, lunchStartMinute=720, lunchEndMinute=780)|SleepSchedule(wakeMinute=420, sleepMinute=1380)|[]",
+        "snapshot": "{\"date\":\"2026-10-21\",\"from\":1792540800000,\"workMode\":\"OFFICE\",\"days\":[\"MONDAY\",\"TUESDAY\",\"WEDNESDAY\",\"THURSDAY\",\"FRIDAY\"],\"manualMinutes\":[540,1080,720,780,420,1380],\"values\":{\"WAKE\":{\"minute\":420,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"WORK_START\":{\"minute\":540,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"LUNCH_START\":{\"minute\":720,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"LUNCH_END\":{\"minute\":780,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"WORK_END\":{\"minute\":1080,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false},\"SLEEP\":{\"minute\":1380,\"origin\":\"MANUAL\",\"count\":0,\"learnedMinute\":null,\"deviation\":null,\"shiftLimited\":false}}}"
+      }
+    ],
+    "hoodieNativeCrashObserved": false,
+    "globalSmokePassed": false,
+    "globalFailure": "Google Search interactor SIGABRT on Profile Saver; same assertion text, different process/class from the Linux CI failure. No shared cause with the earlier Hoodie SIGSEGV proven."
+  },
+  "target": {
+    "avd": "Hoodie_Linux_R8_API34",
+    "api": 34,
+    "pageSize": 4096,
+    "cleanInstallation": true,
+    "sameApkInstalled": true,
+    "onlyEncryptedBackupTransferred": true,
+    "transferredSha256": "44add711a7f60bd0d8ed5fbd8c1462fc0af33af8613e2f6bb1af41b77c803ee9",
+    "restoreAttempted": false,
+    "blockedBeforeFirstRestoreTap": true,
+    "blockingDialog": "Process system isn't responding",
+    "systemAnrsPreserved": true,
+    "confirmationExecuted": false,
+    "reexportPerformed": false
+  },
+  "strictRoundTripApproved": false,
+  "runtimeGateApproved": false,
+  "originalHoodieNativeDefectClosed": false,
+  "witnesses": {
+    "docs/validation/release-v1/r8-linux-794-ui/authenticated-preview.xml": "0d5dc6f701e7d8d294446f86f831732bde32425ee31ef621b8a63e3d841521d6",
+    "docs/validation/release-v1/r8-linux-794-ui/home-after-restore.xml": "c6b493b06c6a0520376a2e4c4e7bf95a6c3cbcde87c8f9fe75aae8eea02993ef",
+    "docs/validation/release-v1/r8-linux-794-ui/export-complete.xml": "217ad3946405ac85e599041badffdd47ae0cbf145cbdf752d4c8fa32bc9137ca",
+    "docs/validation/release-v1/r8-linux-794-ui/target-system-anr.xml": "c7a7571e347e3bfaac5824f5db977a47b0d340f384dd069310adf6e990461163"
+  },
+  "localEvidence": {
+    "r8-794-linux-build/source-final-logcat.txt": {
+      "bytes": 4263516,
+      "sha256": "66ba873ec68f025c4200dc0128b5980fb8e55909fa474e571c0aa57d4bf052f9"
+    },
+    "r8-794-linux-build/source-final-crashes.txt": {
+      "bytes": 4664,
+      "sha256": "d81b9d30e1007e8577e25a0f83804c14545ad79f3159b7b6d09ed1b5ee946fa8"
+    },
+    "r8-794-linux-build/source-app-exit-info.txt": {
+      "bytes": 935,
+      "sha256": "cbfcfba6e3f869aeed76e962b01e0062c68a97c4a5073f5cb85b522957aee150"
+    },
+    "r8-794-linux-build/source-export.log": {
+      "bytes": 151,
+      "sha256": "29561031a675e3944245c53dea283f1bf3c3baa80eec52a75f47c7f89cfa63a8"
+    },
+    "r8-794-linux-target/target-restore.log": {
+      "bytes": 768,
+      "sha256": "dbad0d47d16b3423429e85a82ea34ba2e54ad22f05ab7ba4946e0364a006c464"
+    },
+    "r8-794-linux-target/final-anr.txt": {
+      "bytes": 1940,
+      "sha256": "0b4c455dd8ba60ed40ee4846603926bc5b9418974a96922646b852ce2b7463b0"
+    },
+    "r8-794-linux-target/final-window.txt": {
+      "bytes": 16710,
+      "sha256": "4c758288699f592a0ce8292d9d6b94f2b6494fe031b6c254f1f8a71b0894b8e1"
+    }
+  }
+}
