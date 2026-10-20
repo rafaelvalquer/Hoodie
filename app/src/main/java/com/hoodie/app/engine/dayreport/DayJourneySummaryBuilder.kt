@@ -6,7 +6,7 @@ import com.hoodie.app.domain.dayreport.DayReportStop
 
 object DayJourneySummaryBuilder {
     fun build(diary: DailyDiary): List<DayReportStop> {
-        val visits = diary.visits.sortedBy { it.arrivalAt }
+        val visits = diary.journeyVisits.sortedBy { it.arrivalAt }
         return visits.mapIndexedNotNull { index, visit ->
             val previous = visits.getOrNull(index - 1)
             val movement = previous?.let { before -> diary.movements

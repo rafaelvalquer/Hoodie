@@ -44,9 +44,11 @@ android {
     buildTypes {
         getByName("debug") {
             buildConfigField("boolean", "LOCAL_ENCRYPTED_BACKUP_V1", "false")
+            buildConfigField("boolean", "CONSECUTIVE_VISIT_MERGE_V1", "true")
         }
         getByName("release") {
             buildConfigField("boolean", "LOCAL_ENCRYPTED_BACKUP_V1", "false")
+            buildConfigField("boolean", "CONSECUTIVE_VISIT_MERGE_V1", "false")
             signingConfig = signingConfigs.findByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
@@ -59,6 +61,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
             buildConfigField("boolean", "LOCAL_ENCRYPTED_BACKUP_V1", "true")
+            buildConfigField("boolean", "CONSECUTIVE_VISIT_MERGE_V1", "true")
         }
     }
     buildFeatures { compose = true; buildConfig = true }

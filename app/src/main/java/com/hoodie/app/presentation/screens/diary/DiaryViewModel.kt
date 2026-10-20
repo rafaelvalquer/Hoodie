@@ -62,6 +62,22 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
+    /** Abre a correção de um evento de contexto específico (nunca escolhido pelo índice visual). */
+    fun beginCorrectionForContext(contextEventId: Long) {
+        if (!com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS) return
+        viewModelScope.launch {
+            val edit = withContext(Dispatchers.IO) {
+                val db = database?.get() ?: return@withContext null
+                val event = db.contextEventDao().getById(contextEventId)
+                val request = event?.let {
+                    com.hoodie.app.domain.correction.DiaryCorrection(com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT, it.id, it.type, it.placeId, it.startedAt, it.endedAt)
+                }
+                DiaryEditState(request, db.placeDao().getAll(), error = if (request == null) "Não há um evento de contexto neste horário." else null)
+            }
+            _editState.value = edit
+        }
+    }
+
     fun beginCorrectionAt(timestamp: Long) = beginCorrection(com.hoodie.app.domain.diary.model.DiaryTimelineItem(
         id = "edit@$timestamp", timestamp = timestamp, type = com.hoodie.app.domain.diary.model.DiaryTimelineType.CONTEXT_CHANGE,
         actor = com.hoodie.app.domain.diary.model.DiaryActor.USER, title = "",
@@ -75,6 +91,7 @@ class DiaryViewModel @Inject constructor(
             try {
                 withContext(Dispatchers.IO) { requireNotNull(corrections?.get()).save(request) }
                 _editState.value = null
+                if (request.targetType == com.hoodie.app.domain.correction.CorrectionTargetType.CONTEXT) pendingGroupCheck = request.targetId
                 val date = _state.value.selectedDate
                 dayCache.remove(date)
                 dirtyDates += date
@@ -110,6 +127,8 @@ class DiaryViewModel @Inject constructor(
     private val dayClockCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.domain.diary.clock.DayClockData>()
     private val journeyDataCache = linkedMapOf<java.time.LocalDate, com.hoodie.app.domain.diary.model.JourneyMapData>()
     private val dirtyDates = mutableSetOf<java.time.LocalDate>()
+    /** Evento corrigido há pouco: se a Jornada o agrupar com vizinhos, avisa na tela. */
+    private var pendingGroupCheck: Long? = null
 
     init {
         if (com.hoodie.app.core.config.HoodieConfig.SMART_DIARY_CORRECTIONS && database != null) viewModelScope.launch {
@@ -325,6 +344,19 @@ class DiaryViewModel @Inject constructor(
 
                 val diary = loadDiary.buildFullDiary(core)
                 if (!isActive(key)) return@launch
+                pendingGroupCheck?.let { id ->
+                    pendingGroupCheck = null
+                    diary.journeyProjection?.visitOf(id)?.takeIf { it.isMerged }?.let { group ->
+                        _events.trySend(DiaryUiEvent.VisitsGrouped(group.visit.placeName))
+                    }
+                }
+                // Recarga do mesmo dia (correção salva): mantém o instante do replay se ainda existir, pausado.
+                val previous = _state.value
+                val keptReplay = previous.replay.currentTimestamp
+                    ?.takeIf { previous.diary != null && previous.selectedDate == date && previous.replay.state != ReplayState.IDLE }
+                    ?.takeIf { it in diary.replay.startAt..diary.replay.endAt }
+                    ?.let { replayAt(previous.replay.copy(state = ReplayState.PAUSED, wakeTransition = false), diary, it, zone) }
+                if (keptReplay != null) stopReplay()
                 if (date.isBefore(clock.today())) {
                     dayCache[date] = diary
                     trimCache()
@@ -338,7 +370,7 @@ class DiaryViewModel @Inject constructor(
                     summaryState = summaryState(diary),
                     isLoading = false,
                     error = null,
-                    replay = ReplayUiState(),
+                    replay = keptReplay ?: ReplayUiState(),
                     journeyState = SectionState.Loading,
                     clockState = SectionState.Loading,
                 )
@@ -392,7 +424,7 @@ class DiaryViewModel @Inject constructor(
                     val journeyStarted = android.os.SystemClock.elapsedRealtime()
                     val clockStarted = android.os.SystemClock.elapsedRealtime()
                     val journeyDeferred = async(Dispatchers.Default) {
-                        com.hoodie.app.engine.diary.PreparedJourneyBuilder.build(mapData, zone, diary.visits)
+                        com.hoodie.app.engine.diary.PreparedJourneyBuilder.build(mapData, zone, diary.journeyVisits)
                     }
                     val clockDeferred = async(Dispatchers.Default) {
                         assembleClock(diary, key.date, mapData)

@@ -41,17 +41,29 @@ object ReplayHudAssembler {
     fun periodAt(timestamp: Long, zone: ZoneId): DayPeriod = DayPeriod.of(Instant.ofEpochMilli(timestamp).atZone(zone).hour)
 
     /** Detalhe de cada visita do dia: celular (sessões ∩ visita), atividades do Hoodie e eventos. */
-    fun visitDetails(diary: DailyDiary, now: Long): List<DiaryVisitDetails> = diary.visits.mapIndexed { i, v ->
+    fun visitDetails(diary: DailyDiary, now: Long): List<DiaryVisitDetails> {
+        // Mesmas permanências da Jornada (índice = visitIndex do nó), com os eventos de origem.
+        val projected = diary.journeyProjection?.visits?.sortedBy { it.visit.arrivalAt }
+        val visits = projected?.map { it.visit } ?: diary.visits
+        return visits.mapIndexed { i, v -> details(diary, i, v, projected?.get(i)?.sourceIntervals.orEmpty(), now) }
+    }
+
+    private fun details(diary: DailyDiary, i: Int, v: com.hoodie.app.domain.diary.model.PlaceVisit,
+        sources: List<com.hoodie.app.domain.diary.model.VisitSourceInterval>, now: Long): DiaryVisitDetails {
         val end = v.departureAt ?: now
         val phone = diary.phoneInsights
-        DiaryVisitDetails(
+        return DiaryVisitDetails(
             index = i,
             visit = v,
-            phoneUsage = phone?.let { VisitPhoneUsageCalculator.calculate(v.arrivalAt, v.departureAt, now, it.appSessions, it::labelOf, it::categoryOf) },
+            phoneUsage = phone?.let {
+                if (sources.size > 1) VisitPhoneUsageCalculator.calculate(JourneyMapAssembler.presence(sources, v, now), it.appSessions, it::labelOf, it::categoryOf)
+                else VisitPhoneUsageCalculator.calculate(v.arrivalAt, v.departureAt, now, it.appSessions, it::labelOf, it::categoryOf)
+            },
             hoodieActivities = diary.replay.activities
                 .filter { (range, _) -> range.first < end && range.last > v.arrivalAt }
                 .sortedBy { it.first.first }.map { it.second }.distinct(),
             events = diary.timeline.filter { it.id in v.relatedTimelineIds },
+            sources = sources,
         )
     }
 }

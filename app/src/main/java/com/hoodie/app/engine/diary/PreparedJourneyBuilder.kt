@@ -30,7 +30,7 @@ data class PreparedJourney(
 
 object PreparedJourneyBuilder {
     fun build(diary: DailyDiary, now: Long, zone: ZoneId): PreparedJourney =
-        build(JourneyMapAssembler.build(diary, now), zone, diary.visits)
+        build(JourneyMapAssembler.build(diary, now), zone, diary.journeyVisits)
 
     fun build(data: JourneyMapData, zone: ZoneId, visits: List<PlaceVisit> = emptyList()): PreparedJourney {
         val placeLayout = DiaryMapLayoutEngine.layout(visits)

@@ -13,6 +13,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -40,6 +42,7 @@ object JourneyDetails {
         add(JourneyDetailLine(R.string.journey_details_arrival, formatClock(node.arrivalAt, zone)))
         add(JourneyDetailLine(R.string.journey_details_departure, node.departureAt?.let { formatClock(it, zone) } ?: ongoing))
         add(JourneyDetailLine(R.string.journey_details_duration, formatDuration(node.durationMs)))
+        if (node.isConsolidated) add(JourneyDetailLine(R.string.journey_details_grouped, node.sourceIntervals.size.toString()))
         add(JourneyDetailLine(R.string.journey_details_appearances, node.placeOccurrences.toString()))
         if (node.placeOccurrences > 1) add(JourneyDetailLine(R.string.journey_details_place_total, formatDuration(node.placeTotalMs)))
         node.hoodieActivity?.let { add(JourneyDetailLine(R.string.journey_details_hoodie, "${it.emoji} ${it.label}")) }
@@ -72,13 +75,16 @@ fun JourneyNodeDetailsSheet(
     onSeeAll: () -> Unit,
     onDismiss: () -> Unit,
     onEdit: (() -> Unit)? = null,
+    /** Editar um evento canônico específico (nós consolidados: cada período original tem o seu). */
+    onEditSource: ((Long) -> Unit)? = null,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(), containerColor = HoodieColors.Panel) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp).testTag("journey_details"),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            onEdit?.let { PixelButton(stringResource(R.string.diary_edit_event), it, Modifier.fillMaxWidth()) }
+            // Nó consolidado representa vários eventos: editar é sempre por período, nunca "o primeiro".
+            if (!node.isConsolidated) onEdit?.let { PixelButton(stringResource(R.string.diary_edit_event), it, Modifier.fillMaxWidth()) }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "${node.placeType.emoji} ${node.placeName.uppercase()}", style = MaterialTheme.typography.headlineSmall,
@@ -93,6 +99,7 @@ fun JourneyNodeDetailsSheet(
                     Text(line.value, style = MaterialTheme.typography.bodyMedium, color = HoodieColors.Ink)
                 }
             }
+            if (node.isConsolidated) SourceIntervals(node, zone, onEditSource)
             SectionLabel(stringResource(R.string.journey_details_phone))
             val phone = details?.phoneUsage
             if (phone == null || phone.isEmpty) {
@@ -109,6 +116,35 @@ fun JourneyNodeDetailsSheet(
             }
             PixelButton(stringResource(R.string.journey_details_see_all), onSeeAll, Modifier.fillMaxWidth().testTag("journey_details_see_all"))
             Text(stringResource(R.string.journey_details_note), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+        }
+    }
+}
+
+/**
+ *     [ VER PERÍODOS ORIGINAIS ]
+ *     08:00–09:00 · Casa                [Editar]
+ *     09:00–10:00 · Casa (corrigido)    [Editar]
+ */
+@Composable
+private fun SourceIntervals(node: JourneyNode, zone: ZoneId, onEditSource: ((Long) -> Unit)?) {
+    var open by androidx.compose.runtime.saveable.rememberSaveable(node.id) { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.material3.TextButton(onClick = { open = !open }, modifier = Modifier.testTag("journey_details_sources_toggle")) {
+        Text(stringResource(if (open) R.string.journey_details_hide_sources else R.string.journey_details_show_sources))
+    }
+    if (!open) return
+    Text(stringResource(R.string.journey_details_sources_hint), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted)
+    val ongoing = stringResource(R.string.journey_details_ongoing)
+    val corrected = stringResource(R.string.journey_details_source_corrected)
+    node.sourceIntervals.forEach { source ->
+        Row(Modifier.fillMaxWidth().testTag("journey_details_source_${source.contextEventId}"), verticalAlignment = Alignment.CenterVertically) {
+            val end = if (source.open) ongoing else formatClock(source.endAt, zone)
+            val label = "${formatClock(source.startAt, zone)}–$end · ${node.placeName}" + if (source.corrected) " $corrected" else ""
+            Text(label, style = MaterialTheme.typography.bodySmall, color = HoodieColors.Ink, modifier = Modifier.weight(1f))
+            if (onEditSource != null && source.contextEventId >= 0) {
+                androidx.compose.material3.TextButton(onClick = { onEditSource(source.contextEventId) }) {
+                    Text(stringResource(R.string.journey_details_source_edit))
+                }
+            }
         }
     }
 }

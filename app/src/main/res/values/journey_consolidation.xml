@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HOODIE-JOURNEY-01: permanências consolidadas da Jornada. -->
+<resources>
+    <string name="journey_details_grouped">Registros agrupados</string>
+    <string name="journey_details_show_sources">Ver períodos originais</string>
+    <string name="journey_details_hide_sources">Ocultar períodos originais</string>
+    <string name="journey_details_source_corrected">(corrigido)</string>
+    <string name="journey_details_source_edit">Editar</string>
+    <string name="journey_details_sources_hint">Cada período é um registro separado; edite o que quiser corrigir.</string>
+    <string name="diary_edit_context_hint">Você alterou o local para %1$s. Deseja atualizar também o contexto deste período?</string>
+    <string name="diary_edit_context_use">Usar contexto %1$s</string>
+    <string name="diary_edit_context_keep">Manter a atividade atual</string>
+    <string name="diary_correction_grouped">Local atualizado. As permanências consecutivas em %1$s foram agrupadas na Jornada.</string>
+</resources>

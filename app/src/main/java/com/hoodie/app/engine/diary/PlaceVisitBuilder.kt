@@ -62,13 +62,31 @@ object PlaceVisitBuilder {
                     activeEndAt != null && activeEndAt < minOf(dayEnd, now) -> visibleEnd
                     else -> null
                 }
-                PlaceVisit(event.placeId, name, type, start, departure, end - start, 1, related.map { it.id }, dominant, event.confidence, event.source)
-            }.sortedBy { it.arrivalAt }.toList()
+                PlaceVisit(event.placeId, name, type, start, departure, end - start, 1, related.map { it.id }, dominant, event.confidence, event.source, listOf(event.id))
+            }.sortedWith(compareBy<PlaceVisit> { it.arrivalAt }.thenBy { it.contextEventIds.firstOrNull() ?: 0L }).toList()
         fun key(visit: PlaceVisit): String = visit.placeId?.let { "place:$it" }
             ?: if (visit.placeType == PlaceType.OTHER) "unknown:${visit.arrivalAt}" else "type:${visit.placeType.name}"
         val counts = visits.groupingBy(::key).eachCount()
         return visits.map { it.copy(visitsCount = counts[key(it)] ?: 1) }
     }
+
+    /**
+     * Todos os eventos de contexto do dia (inclusive deslocamentos) recortados como as visitas:
+     * a evidência que a consolidação da Jornada usa para achar saídas reais.
+     */
+    fun intervals(
+        contexts: List<ContextEventEntity>, dayStart: Long, dayEnd: Long, now: Long,
+        activeStartAt: Long = dayStart, activeEndAt: Long? = null,
+    ): List<com.hoodie.app.domain.diary.model.VisitSourceInterval> = contexts.mapNotNull { event ->
+        val start = maxOf(event.startedAt, dayStart, activeStartAt)
+        val visibleEnd = minOf(dayEnd, now, activeEndAt ?: dayEnd)
+        val end = minOf(event.endedAt ?: now, visibleEnd)
+        if (end <= start) null else com.hoodie.app.domain.diary.model.VisitSourceInterval(
+            event.id, event.placeId, event.type, start, end,
+            open = event.endedAt == null || event.endedAt > visibleEnd,
+            corrected = event.source == com.hoodie.app.core.model.ContextSource.USER_CORRECTION,
+        )
+    }.sortedWith(compareBy({ it.startAt }, { it.contextEventId }))
 
     private fun List<DiaryTimelineItem>.lowerBoundTimestamp(value: Long): Int {
         var low = 0
