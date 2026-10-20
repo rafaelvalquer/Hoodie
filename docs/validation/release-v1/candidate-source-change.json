@@ -1,0 +1,14 @@
+{
+  "observedHead": "eb7ca0aa59c41ace39a5502e0e2b5d1b8c33a91d",
+  "previousAppSourceTree": "60d5516a0bf58a76b833e99782abce06498c88bd",
+  "currentAppSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+  "concurrentMerge": "4042235f952fba8fb4e8404a3cb85e353f662956",
+  "changes": [
+    "Family NPCs in the home scene",
+    "Petting heart effects",
+    "Street/car scene changes"
+  ],
+  "previousRuntimeEvidence": "Remains scoped to ecdf8148/f9a1c344 and its recorded APK hashes; not acceptance of the new main app source",
+  "releaseCandidateApproved": false,
+  "followUp": "Preserve the merged app changes and validate the current source with new full CI, R8/runtime and review of affected visual references before any freeze or promotion."
+}

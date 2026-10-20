@@ -3,6 +3,12 @@
 set -euo pipefail
 : "${RUNNER_TEMP:?Runner temporary directory required}"
 : "${GITHUB_ENV:?GitHub environment file required}"
+out=${1:-app/build/instrumentation-evidence/emulator-install}
+case "$out" in
+  app/build/instrumentation-evidence/emulator-install|app/build/reports/r8-qa/emulator-install|app/build/reports/native-runtime/emulator-install) ;;
+  *) echo 'Unsupported emulator evidence directory' >&2; exit 1 ;;
+esac
+mkdir -p "$out"
 archive="$RUNNER_TEMP/emulator-linux_x64-15917651.zip"
 tools="$RUNNER_TEMP/hoodie-emulator-15917651"
 test ! -e "$tools"
@@ -13,6 +19,14 @@ mkdir "$tools"
 unzip -q "$archive" -d "$tools"
 binary="$tools/emulator/emulator"
 test -x "$binary"
-"$binary" -version > "$tools/version.txt" 2>&1
-grep -q 15917651 "$tools/version.txt"
+ldd "$binary" > "$out/loader-dependencies.txt" 2>&1 || true
+status=0
+"$binary" -version > "$out/version.txt" 2>&1 || status=$?
+cat "$out/version.txt"
+if [[ "$status" != 0 ]]; then
+  cat "$out/loader-dependencies.txt"
+  echo "::error::Pinned emulator could not execute (exit $status); see loader/version evidence."
+  exit "$status"
+fi
+grep -q 15917651 "$out/version.txt"
 echo "HOODIE_EMULATOR_BIN=$binary" >> "$GITHUB_ENV"

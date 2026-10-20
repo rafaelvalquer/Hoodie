@@ -1,0 +1,16 @@
+{
+  "runId": 39423287833,
+  "commit": "9ed89fe43bdfae0c928437a5a34564de3ea917e2",
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39423287833",
+  "unitTests": "success",
+  "lint": "success",
+  "assemble": "success",
+  "instrumentation": "failure",
+  "failedStep": "Instalar emulador oficial fixado",
+  "archiveChecksumPassed": true,
+  "emulatorVersionCommandExit": 127,
+  "androidTestsExecuted": 0,
+  "androidBootStarted": false,
+  "loaderCause": "Unknown: version stderr was redirected into RUNNER_TEMP outside the uploaded evidence paths.",
+  "followUp": "Capture ldd and version output in the workflow evidence and print the failure before any Android/R8 compilation. No OS library or emulator-version change without the actual loader diagnosis."
+}

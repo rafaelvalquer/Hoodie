@@ -48,6 +48,8 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'build-tools;36.0.0' > app/build/reports/r8-qa/sdk-tools.log 2>&1
           curl --fail --location --retry 3 https://github.com/google/bundletool/releases/download/1.18.2/bundletool-all-1.18.2.jar -o "$BUNDLETOOL_JAR"
           printf '%s  %s\n' '378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584' "$BUNDLETOOL_JAR" | sha256sum --check -
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh app/build/reports/r8-qa/emulator-install
       - name: AAB R8 de homologação com certificado de desenvolvimento
         run: bash .github/scripts/r8-qa-build.sh
       - name: Preparar catálogo e imagem API 35 de 16 KB
@@ -71,8 +73,6 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Instalar emulador oficial fixado
-        run: bash .github/scripts/install-qa-emulator.sh
       - name: APK derivado e diagnóstico de acessibilidade em 16 KB
         run: bash .github/scripts/run-qa-emulator.sh 35 google_apis_ps16k .github/scripts/r8-qa-runtime.sh
       - name: Evidências de desenvolvimento, sem chave privada

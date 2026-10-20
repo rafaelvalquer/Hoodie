@@ -114,6 +114,8 @@ jobs:
         with:
           name: release-${{ github.sha }}
           path: release-artifacts
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh app/build/reports/native-runtime/emulator-install
       - name: Compilar testes nativos antes de iniciar o emulador
         run: |
           ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
@@ -133,8 +135,6 @@ jobs:
           test -s "$image/system.img"
           cp "$image/source.properties" "$out/system-image-source.properties"
           cp "$image/package.xml" "$out/system-image-package.xml"
-      - name: Instalar emulador oficial fixado
-        run: bash .github/scripts/install-qa-emulator.sh
       - name: APK derivado e SQLCipher em runtime 16 KB
         run: bash .github/scripts/run-qa-emulator.sh 35 google_apis_ps16k .github/scripts/native-runtime-ci.sh
       - uses: actions/upload-artifact@v4

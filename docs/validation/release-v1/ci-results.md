@@ -121,3 +121,7 @@ A inicialização passa a usar o mesmo emulador oficial/build 15917651 em diret�
 O bootstrap é compartilhado pela CI, pelo runtime do release e pelo [diagnóstico R8 em Linux/KVM](r8-development-qa.md). Actionlint e sintaxe foram conferidos; a execução remota da nova inicialização e os gates completos continuam pendentes.
 
 A concorrência preserva a execução Android já iniciada: commits novos aguardam seu próprio run completo, evitando perder uma suíte em andamento durante ajustes de documentação ou do diagnóstico independente. A exigência de CI no SHA do candidato continua igual.
+
+## Primeira execução do bootstrap próprio
+
+[39423287833](https://github.com/rafaelvalquer/Hoodie/actions/runs/39423287833), SHA `9ed89fe4`: unitários, lint e assemble passaram. O download oficial passou no checksum, mas a chamada `emulator -version` retornou 127 antes do boot; nenhum teste Android iniciou. O stderr estava em diretório temporário fora dos artefatos. [Diagnóstico e limites](ci-9ed-loader-setup.json). O instalador agora publica `ldd`/versão e imprime a falha, antes de compilar os APKs/R8. A causa do loader ainda precisa ser observada; não foi atribuída a uma biblioteca sem evidência.

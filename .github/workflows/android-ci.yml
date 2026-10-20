@@ -156,6 +156,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh
       - name: Compilar os APKs antes de iniciar o emulador
         run: |
           ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
@@ -216,8 +218,6 @@ jobs:
           mkdir -p app/build/instrumentation-evidence
           nproc > app/build/instrumentation-evidence/host-cpu-count.txt
           free -m > app/build/instrumentation-evidence/host-memory.txt
-      - name: Instalar emulador oficial fixado
-        run: bash .github/scripts/install-qa-emulator.sh
       - name: Connected tests (API 34)
         run: bash .github/scripts/run-qa-emulator.sh 34 google_apis .github/scripts/connected-tests.sh
       - name: Upload instrumentation reports
