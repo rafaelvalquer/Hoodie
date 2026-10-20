@@ -114,9 +114,45 @@ object NpcCharacterRegistry {
         outfitLight = 0xFF80B898, outfit = 0xFF5E9A78, outfitDark = 0xFF34405E, accent = 0xFFE88FA6,
     )
 
+    // ───── Família do Hoodie: mesma espécie e o mesmo azul, em tons diferentes ─────
+
+    /** Pai: azul mais escuro, cardigã marrom (roupa casual). */
+    val FAMILY_DAD = CharacterStyle(
+        id = "family_dad", species = CatSpecies, outfit = OutfitStyle.Casual,
+        palette = CharacterPalette(
+            outline = INK, furLight = 0xFF8EA6D8.toInt(), fur = 0xFF6A86C4.toInt(), furDark = 0xFF4E66A6.toInt(), inner = 0xFF3C5094.toInt(),
+            outfitLight = 0xFFC49A6C.toInt(), outfit = 0xFF9A6E48.toInt(), outfitDark = 0xFF6E4C32.toInt(),
+            shirt = 0xFFF3EBD9.toInt(), accent = 0xFFE8D2A8.toInt(),
+        ),
+    )
+    /** Mãe: azul mais claro, blusa rosada. */
+    val FAMILY_MOM = CharacterStyle(
+        id = "family_mom", species = CatSpecies, outfit = OutfitStyle.Casual,
+        palette = CharacterPalette(
+            outline = INK, furLight = 0xFFD2E0FA.toInt(), fur = 0xFFA8C2F0.toInt(), furDark = 0xFF7F9EDA.toInt(), inner = 0xFFE8A0BC.toInt(),
+            outfitLight = 0xFFF4B8C8.toInt(), outfit = 0xFFE08AA4.toInt(), outfitDark = 0xFFB0607E.toInt(),
+            shirt = 0xFFFFF4F0.toInt(), accent = 0xFFFFE6A8.toInt(),
+        ),
+    )
+    /** Irmão caçula: o azul do Hoodie, camiseta esportiva laranja e corpo menor (cabeça grande de criança). */
+    val FAMILY_BROTHER = CharacterStyle(
+        id = "family_brother", species = CatSpecies, outfit = OutfitStyle.Sport,
+        palette = CharacterPalette(
+            outline = INK, furLight = 0xFFB4CCF6.toInt(), fur = 0xFF8AACEA.toInt(), furDark = 0xFF6888CE.toInt(), inner = 0xFF4E69B0.toInt(),
+            outfitLight = 0xFFF6B070.toInt(), outfit = 0xFFE88A44.toInt(), outfitDark = 0xFFB4622C.toInt(),
+            shirt = 0xFFF3EBD9.toInt(), accent = 0xFFFFF2C8.toInt(),
+        ),
+        artProfile = CatSpecies.artProfile.copy(
+            proportions = com.hoodie.app.pixel.character.ProportionProfile.CAT.copy(
+                shoulderWidth = 20, torsoHeight = 19, hipWidth = 18, legLength = 8, footWidth = 9,
+            ),
+        ),
+    )
+
     val all: List<CharacterStyle> = listOf(
         BULLDOG_EXEC, DOG_WORKER, DOG_SHOPPER, RABBIT_ANALYST, RABBIT_READER, RABBIT_WALKER,
         MOUSE_COMMUTER, DUCK_SLEEPY, RACCOON_COMMUTER, CAT_COLLEAGUE, CAT_GUEST,
+        FAMILY_DAD, FAMILY_MOM, FAMILY_BROTHER,
     )
 
     private fun cat(

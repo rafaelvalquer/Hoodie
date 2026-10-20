@@ -91,7 +91,8 @@ class VenueSceneRoutingTest {
     }
 
     @Test fun everyVenueSceneIsRegisteredWithItsSpots() {
-        VenueTestFixtures.scenes.forEach { id ->
+        // A sala da família usa o motor de venues, mas não é um estabelecimento (vem do contexto VISITING).
+        VenueTestFixtures.scenes.filter { it != SceneId.FAMILY }.forEach { id ->
             val scene = SceneRegistry[id]
             assertEquals(id, scene.id)
             HoodieActivity.entries.forEach { a ->

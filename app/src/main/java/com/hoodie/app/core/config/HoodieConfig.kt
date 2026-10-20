@@ -66,6 +66,8 @@ object HoodieConfig {
     const val VENUE_MALL = false
     const val VENUE_CINEMA = false
     const val VENUE_HOTEL = false
+    /** Pai, mãe e irmão do Hoodie na sala da Família, conversando entre si e com ele. */
+    const val FAMILY_NPCS_V1 = true
     /**
      * Personalidade do Hoodie 2.0: traços estáveis puxam (sem forçar) café e descanso nas
      * microações, reações curtas a momentos do dia e falas próprias com limites de frequência.
