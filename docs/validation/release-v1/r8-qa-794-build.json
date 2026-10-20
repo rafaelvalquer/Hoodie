@@ -1,0 +1,53 @@
+{
+  "commit": "794741b63faff019d2d5ee0372c8db3632787347",
+  "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+  "runId": 39429362426,
+  "jobId": 118650049376,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39429362426",
+  "buildPassed": true,
+  "buildDuration": "7m15s",
+  "developmentSignatureVerified": true,
+  "derivedApkSignatureSchemes": [
+    "v2",
+    "v3"
+  ],
+  "aabSha256": "ec0d9ec8e245ee468ac2dfb79c2bd3f9f669ebc88541fbf4ebadcb1df7c160b5",
+  "apkSha256": "c424c66b182221b6fab8e884b89743be81a0a477c255acb35d397bff4369b630",
+  "certificateSha256": "f60b2a2d54634602245297c5d4552a68b4983535f9ecb886e054fe81ea71d7e5",
+  "artifactId": 12267647272,
+  "artifactZipSha256": "dc61c8bbf255adbcbe84228cb3ebf5ee72a1fc721b59b219d7b4dba40d9000fd",
+  "headlessVersionProbePassed": true,
+  "emulatorBuild": 15917651,
+  "bundleConfig16k": true,
+  "remoteStaticGatePassed": false,
+  "failedGate": "Native tool discovery before zipalign/readelf inspection",
+  "diagnosis": "find with -type f omitted llvm-readelf, which is a symbolic link in the official Linux NDK r28c archive. The preserved bundle config passed, and there is no ZIP/ELF result from the failed remote script.",
+  "ndkArchiveMetadata": {
+    "url": "https://dl.google.com/android/repository/android-ndk-r28c-linux.zip",
+    "centralDirectoryBytes": 1540425,
+    "entries": 8996,
+    "tools": [
+      {
+        "path": "android-ndk-r28c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf",
+        "mode": "0o120777",
+        "symlink": true
+      },
+      {
+        "path": "android-ndk-r28c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readobj",
+        "mode": "0o100755",
+        "symlink": false
+      }
+    ]
+  },
+  "localInspection": {
+    "zipalignPassed": true,
+    "pythonStaticInventoryPassed": true,
+    "aabNativeLibraries": 12,
+    "apkNativeLibraries": 12,
+    "readelfInspectedLibraries": 12
+  },
+  "androidBootStarted": false,
+  "androidTestsExecuted": 0,
+  "runtimeGateApproved": false,
+  "scope": "Development signing only; no upload key, Play acceptance, physical or production approval. Static rechecks of the downloaded artifacts do not replace the required Linux script execution or runtime."
+}

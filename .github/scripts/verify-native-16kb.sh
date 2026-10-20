@@ -10,10 +10,17 @@ output=${NATIVE_REPORT_DIR:-app/build/reports/native-16kb}
 mkdir -p "$output"
 java -jar "$BUNDLETOOL_JAR" dump config --bundle="$aab" > "$output/bundle-config.txt"
 grep -q PAGE_ALIGNMENT_16K "$output/bundle-config.txt"
-zipalign=$(find "$ANDROID_HOME/build-tools" -name zipalign -type f | sort -V | tail -1)
-readelf=$(find "$ANDROID_HOME/ndk" -name llvm-readelf -type f | sort -V | tail -1)
-test -x "$zipalign"
-test -x "$readelf"
+# Linux NDK r28c ships llvm-readelf as a symlink to llvm-readobj. Follow SDK
+# tool links, while still requiring the selected target to be executable.
+zipalign=$(find -L "$ANDROID_HOME/build-tools" -name zipalign -type f | sort -V | tail -1)
+readelf=$(find -L "$ANDROID_HOME/ndk" -name llvm-readelf -type f | sort -V | tail -1)
+printf 'zipalign=%s\nllvm-readelf=%s\n' "$zipalign" "$readelf" > "$output/tool-paths.txt"
+if [[ ! -x "$zipalign" || ! -x "$readelf" ]]; then
+  cat "$output/tool-paths.txt"
+  echo '::error::Executable zipalign and llvm-readelf are required; see tool-paths.txt.'
+  exit 1
+fi
+"$readelf" --version > "$output/readelf-version.txt"
 for apk in "$@"; do
   "$zipalign" -c -P 16 -v 4 "$apk" > "$output/$(basename "$apk").zipalign.txt"
 done

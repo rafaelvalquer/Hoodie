@@ -1,0 +1,20 @@
+{
+  "commit": "b3fc0fed6918052343b7172e7f719d70cbc38bdf",
+  "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+  "runId": 39428245487,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39428245487",
+  "unitJobId": 118649965629,
+  "unitArtifactId": 12267756518,
+  "artifactZipSha256": "0a82198e9776afbd3989d730880eb04562547e84331d142ec60c88dd22aa7439",
+  "verification": "Downloaded artifact matched GitHub digest. Counted actual testcase elements in TEST-*.xml and checked the sum against declared suite test counts.",
+  "suites": 302,
+  "tests": 1319,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "lint": "success",
+  "assemble": "success",
+  "instrumentation": "failed at graphical emulator version probe before Android boot; fixed by the subsequent headless probe change",
+  "ciGateApproved": false,
+  "scope": "Results include the recent scene/family merges. Unit success does not approve instrumentation, R8 runtime, visuals or production."
+}
