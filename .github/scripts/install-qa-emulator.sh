@@ -20,11 +20,16 @@ unzip -q "$archive" -d "$tools"
 binary="$tools/emulator/emulator"
 test -x "$binary"
 ldd "$binary" > "$out/loader-dependencies.txt" 2>&1 || true
+# Probe the same headless executable selected for the actual Android boot.
+# The graphical QEMU binary requires libpulse even when only asking its version.
+ldd "$tools/emulator/qemu/linux-x86_64/qemu-system-x86_64-headless" \
+  > "$out/headless-loader-dependencies.txt" 2>&1 || true
 status=0
-"$binary" -version > "$out/version.txt" 2>&1 || status=$?
+"$binary" -no-window -version > "$out/version.txt" 2>&1 || status=$?
 cat "$out/version.txt"
 if [[ "$status" != 0 ]]; then
   cat "$out/loader-dependencies.txt"
+  cat "$out/headless-loader-dependencies.txt"
   echo "::error::Pinned emulator could not execute (exit $status); see loader/version evidence."
   exit "$status"
 fi

@@ -42,7 +42,7 @@ p.write_text('\n'.join(lines+[f'{key}={value}' for key,value in values.items()])
 PY
 cp "$QA_AVD_CONFIG" "$out/emulator-config.ini"
 cp "$image/source.properties" "$out/emulator-image.properties"
-"$HOODIE_EMULATOR_BIN" -version > "$out/emulator-version.txt" 2>&1
+"$HOODIE_EMULATOR_BIN" -no-window -version > "$out/emulator-version.txt" 2>&1
 setsid "$HOODIE_EMULATOR_BIN" -avd "$avd_name" -sysdir "$image" -port 5554 \
   -no-window -gpu swiftshader_indirect -memory 4096 -cores 4 -accel on \
   -no-snapshot -noaudio -no-boot-anim > "$out/emulator-stdout.txt" 2> "$out/emulator-stderr.txt" &

@@ -1,0 +1,14 @@
+{
+  "commit": "b3fc0fed6918052343b7172e7f719d70cbc38bdf",
+  "runId": 39428245205,
+  "jobId": 118646180999,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39428245205",
+  "failedStep": "Instalar emulador oficial fixado",
+  "exitCode": 127,
+  "loaderError": "qemu-system-x86_64: error while loading shared libraries: libpulse.so.0: cannot open shared object file: No such file or directory",
+  "androidBootStarted": false,
+  "androidTestsExecuted": 0,
+  "diagnosis": "The version probe selected graphical QEMU, while the boot command uses -no-window. Direct ELF NEEDED entries of the official pinned headless binary do not include libpulse.so.0. This static inspection does not establish complete transitive loader availability or successful Linux execution.",
+  "change": "Use -no-window for both version probes to match the runtime command, and preserve headless ldd diagnostics. Keep the same pinned emulator archive, Android images and test gates.",
+  "validationRequired": "The next Linux CI run must execute the headless version probe and Android boot. No runtime approval is inferred from this change."
+}
