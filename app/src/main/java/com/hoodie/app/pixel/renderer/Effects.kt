@@ -1,13 +1,17 @@
 package com.hoodie.app.pixel.renderer
 
 /** Sistema de partículas mínimo — sempre em pixel art, nunca alpha suave demais. */
-enum class EffectKind { STEAM, SLEEP_Z, MUSIC, SWEAT, SPARKLE, DUST }
+enum class EffectKind { STEAM, SLEEP_Z, MUSIC, SWEAT, SPARKLE, DUST, HEARTS }
 
 object Effects {
     private val Z_SMALL = listOf("###", "  #", " # ", "#  ", "###")
     private val Z_BIG = listOf("####", "   #", "  # ", " #  ", "####")
     private val NOTE = listOf("  ##", "  # ", "  # ", "### ", "##  ")
     private val SPARK = listOf(" # ", "###", " # ")
+    private val HEART = listOf("## ##", "#####", " ### ", "  #  ")
+    private const val HEART_PINK = 0xFFFF7FA8.toInt()
+    private const val HEART_FADED = 0x99FF7FA8.toInt()
+    private const val HEART_SHINE = 0xFFFFD3E2.toInt()
 
     fun draw(b: PixelBuffer, kind: EffectKind, x: Int, y: Int, t: Long) {
         when (kind) {
@@ -40,6 +44,16 @@ object Effects {
             }
             EffectKind.SPARKLE -> for (k in 0..2) {
                 if (((t / 250) + k) % 3 == 0L) b.glyph(SPARK, x + k * 11 - 10, y + (k % 2) * 8, 0xFFFFF2A8.toInt())
+            }
+            // Carinho: três corações sobem defasados da cabeça, com leve zigue-zague, e somem no topo.
+            EffectKind.HEARTS -> for (k in 0..2) {
+                val phase = (t + k * 500) % 1500
+                val rise = (phase / 100).toInt()
+                val sway = if ((phase / 250) % 2 == 0L) 0 else 1
+                val hx = x + (k - 1) * 7 + sway - 2
+                val hy = y - rise - (k % 2) * 3
+                b.glyph(HEART, hx, hy, if (phase >= 1100) HEART_FADED else HEART_PINK)
+                if (phase < 1100) b.set(hx + 1, hy + 1, HEART_SHINE)
             }
             EffectKind.DUST -> for (k in 0..3) {
                 val phase = (t + k * 220) % 880

@@ -289,6 +289,8 @@ class AnimationStateMachine(
         }
         transients.removeAll { it.until < now }
         transients.forEach { effects += it.kind to (it.x to it.y) }
+        // Carinho (segurar o dedo): corações saem da cabeça enquanto a reação toca.
+        if (interactiveSprite?.first in PETTING) effects += EffectKind.HEARTS to ((left + sprite.anchors.head.x) to (top + sprite.anchors.head.y - 8))
 
         // variant escolhe a aparência; daySeed, a história do dia. Só o Passeio 2.0 usa a semente
         // separada por enquanto: as outras cenas mantêm a semente histórica (= variant).
@@ -605,6 +607,7 @@ class AnimationStateMachine(
 
     companion object {
         const val FADE_MS = 420L
+        private val PETTING = setOf(AnimationId.PET_HEAD, AnimationId.PURR, AnimationId.NUZZLE)
         const val DOOR_FRAME_MS = 100L
         /** Flags que acompanham o Hoodie desde a porta, não só quando a cena abre direto no loop. */
         private val CARRIED_IN = setOf(SceneFlag.SUITCASE_HELD)
