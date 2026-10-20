@@ -1,0 +1,72 @@
+name: Exact APK golden diagnosis
+
+# Diagnostic only: original Android CI remains mandatory and unchanged.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-golden-control.yml'
+      - '.github/scripts/diagnose-exact-apk-pair.py'
+      - '.github/scripts/exact-golden-control.sh'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: exact-golden-diagnosis
+  cancel-in-progress: false
+
+jobs:
+  preserved-pair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Recuperar o par original, sem recompilar
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: rafaelvalquer/Hoodie
+          run-id: 39465411317
+          artifact-ids: 12286957891
+          path: ${{ runner.temp }}/exact-pair
+          merge-multiple: true
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh app/build/reports/exact-golden-control/emulator-install
+      - name: Preparar a imagem de referência
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;23.0'
+          test ! -e "$ANDROID_HOME/cmdline-tools/preinstalled"
+          mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
+          ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'system-images;android-34;google_apis;x86_64'
+          grep -Eq '^Pkg.Revision[[:space:]]*=[[:space:]]*14[[:space:]]*$' "$ANDROID_HOME/system-images/android-34/google_apis/x86_64/source.properties"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Registrar host e executar os 180 goldens exatos
+        env:
+          EXACT_PAIR_ROOT: ${{ runner.temp }}/exact-pair
+        run: |
+          mkdir -p app/build/reports/exact-golden-control
+          lscpu > app/build/reports/exact-golden-control/host-cpu.txt
+          free -m > app/build/reports/exact-golden-control/host-memory.txt
+          bash .github/scripts/run-qa-emulator.sh 34 google_apis .github/scripts/exact-golden-control.sh
+      - name: Preservar o resultado mesmo reprovado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exact-golden-control-${{ github.sha }}
+          path: app/build/reports/exact-golden-control/
+          if-no-files-found: error

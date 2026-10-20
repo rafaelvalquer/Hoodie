@@ -56,6 +56,9 @@ jobs:
       - name: Integridade das evidências JUnit
         run: python3 .github/scripts/test_verify_junit.py
 
+      - name: Integridade do diagnóstico com APKs preservados
+        run: python3 .github/scripts/test_diagnose_exact_apk_pair.py
+
       - name: Diagnóstico de foco e ANR do emulador
         run: python3 .github/scripts/test_verify_emulator_window.py
       - name: Bloquear instrumentação após ANR de boot

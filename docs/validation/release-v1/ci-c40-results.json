@@ -1,0 +1,94 @@
+{
+  "commit": "c40f864bb8920ddafd7065c7d23235f4fd41e6f1",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39465411317",
+  "artifactId": 12286957891,
+  "artifactSha256": "c63961b6fba6227f4115cf9c369251e882ed12e40206cf40a05e5e751c2e01a5",
+  "stages": {
+    "targeted": {
+      "tests": 42,
+      "passed": 42,
+      "failures": [],
+      "errors": 0,
+      "skipped": 0,
+      "junitSha256": "9f00dac7333482d858ae51a66b7aa7e22752d772963b36e3d3a440f6f90019df"
+    },
+    "full": {
+      "tests": 388,
+      "passed": 378,
+      "failures": [
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+          "message": ""
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+          "message": ""
+        }
+      ],
+      "errors": 0,
+      "skipped": 0,
+      "junitSha256": "d7220ebf858348ea289ba69f11763e2a1384d1e067181d3f7756543608a3e590"
+    }
+  },
+  "exactApkPair": {
+    "commit": "c40f864bb8920ddafd7065c7d23235f4fd41e6f1",
+    "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+    "scope": "Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.",
+    "apks": {
+      "app": {
+        "path": "app/build/outputs/apk/debug/app-debug.apk",
+        "bytes": 25911833,
+        "sha256": "33a3b55dd099ca041c7f482f4deb101b5964168265562ab75b856c6e24066955"
+      },
+      "instrumentation": {
+        "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+        "bytes": 6127674,
+        "sha256": "a32b0997e90824c28476657a6e28aab5a76c0da44cc91e7d188facfb9bf88410"
+      }
+    }
+  },
+  "approved": false,
+  "scope": "Completed original suites, no retries or skips. Exact debug binaries preserved for cross-host diagnosis; no release approval."
+}

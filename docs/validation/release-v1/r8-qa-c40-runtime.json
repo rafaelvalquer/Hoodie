@@ -1,0 +1,80 @@
+{
+  "commit": "c40f864bb8920ddafd7065c7d23235f4fd41e6f1",
+  "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39465411771",
+  "artifactId": 12284733412,
+  "artifactSha256": "60611e7fecb296ee32aba8cd9f71822ee8d8fed61a802d8d0a6293b14e04c449",
+  "build": {
+    "commit": "c40f864bb8920ddafd7065c7d23235f4fd41e6f1",
+    "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+    "versionCode": 7,
+    "scope": "Development signing; no upload key, Play submission, physical or production approval",
+    "aabSha256": "42c4b3bb4f81464c13d97c3e22112e4cb2124ea922d9188744f741737e08111b",
+    "apkSha256": "b5c4ec3fa36ea9daa5d0a9ed5a93b13cbed75651d7d4805f569d8fa6debc4ca6",
+    "mappingSha256": "2c7c71370f52875c36ad51457dc1db0d2ae4eb1d68bf7c7cd10bcca3d66d7afa",
+    "certificateSha256": "6ff24a5207cef4066a5a4c5d7e0ad7c9172aad0add8184c25ee6eb1951694323",
+    "apkDexSha256": {
+      "classes.dex": "feed5075d4f1fa904bb6a4829f105e74ba8ec27b3d86c84ade82993f7e82a8f5"
+    },
+    "apkNativeSha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+      "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+      "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+      "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+      "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+      "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+      "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+      "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+      "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+    },
+    "resourcesArscSha256": "fe117b7d33aac0c1b089006dfc66b36bdc99749dfd86bd8fc92b61647c3580cd",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+    "runtimeVerified": false,
+    "fullBackupJourneyApproved": false
+  },
+  "staticAlignmentPassed": true,
+  "librariesPerArchive": 12,
+  "runtime": {
+    "pageSize": 16384,
+    "derivedApkProcessRestart": true,
+    "derivedApkColdLaunch": false,
+    "processIds": [
+      2833,
+      3028
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "WARM"
+    ],
+    "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+  },
+  "accessibility": {
+    "passed": true,
+    "package": "com.hoodie.app.homologacao",
+    "snapshots": 68,
+    "settingsSnapshots": 30,
+    "backupSnapshots": 30,
+    "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance"
+  },
+  "runtimeApproved": false,
+  "observedFatal": {
+    "process": "com.google.android.gms",
+    "pid": 1505,
+    "uid": 10144,
+    "thread": "HeapTaskDaemon",
+    "signal": "SIGSEGV",
+    "faultAddress": "0xc",
+    "topFrame": "art::gc::collector::MarkCompact::ScanObject<true>",
+    "timestampUtc": "2026-10-20T17:31:18.510Z"
+  },
+  "evidenceSha256": {
+    "runtime/final-crashes.txt": "6ede2441b99a4360e78e3ed9d55e80669ab6716c0c501910e3d7f35ad96ccd5c",
+    "runtime/exit-info.txt": "e516094835870ea7dd8cd9b0f7f9c6b8bc1a165a82d868316838960f9af53e13",
+    "runtime/accessibility/observations.json": "7474e390e2c6898fd064e1b122cc82ba648fbc1e887051e28c7f6247dc56c32e",
+    "native/static-results.json": "4224994cb45cffc4ded97ba9265cbdd888fb14208b89d3802c7b6407c5ab023e"
+  },
+  "interpretation": "Global runtime gate failed. No Hoodie native crash appears in the collected exit-info; the prior Hoodie export-time crash remains open. Static alignment and unchanged-screen accessibility do not prove export, restore, migration, or physical homologation."
+}

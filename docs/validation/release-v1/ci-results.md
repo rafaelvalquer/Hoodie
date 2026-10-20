@@ -1,6 +1,8 @@
 # RELEASE-01 — qualidade
 
-CI mais recente concluída: `6eeb43e7`, com unitários, lint e assemble aprovados, **42/42 direcionados e 378/388 completos**, sem ignorados. As dez falhas são comparações visuais exatas; os 208 testes não golden da suíte completa passaram. [JUnit, hashes e análise dos pixels](ci-6eeb-results.json). A CI completa permanece reprovada. A árvore atual também tem [1319 unitários conferidos em XML na rodada anterior](ci-b3-unit-results.json).
+CI mais recente concluída: `c40f864b`, com unitários, lint e assemble aprovados, **42/42 direcionados e 378/388 completos**, sem ignorados. As dez falhas são comparações visuais exatas; os 208 testes não golden da suíte completa passaram. [Casos reais do JUnit e identidade dos APKs exatos](ci-c40-results.json). A CI completa permanece reprovada. A árvore atual também tem [1319 unitários conferidos em XML na rodada anterior](ci-b3-unit-results.json).
+
+Os dois APKs de `c40f864b` foram recuperados do artefato com digest conferido. O APK de instrumentação conserva as 222 referências originais, verificadas individualmente. O controle entre hosts ainda precisa executar esses mesmos binários com escopo e ordem comparáveis; a coleta dos APKs não prova a causa das divergências. A análise independente dos 28 pixels da rodada anterior continua em [ci-6eeb-results.json](ci-6eeb-results.json).
 
 Validação local anterior: **1306 unitários aprovados e lintDebug sem erros**, após a correção de upserts redundantes. [Evidência](unit-results-after-noop.json). Os resultados históricos abaixo continuam associados aos respectivos SHAs.
 

@@ -2,6 +2,8 @@
 
 Estado: **validação parcial; gate de distribuição ainda aberto**.
 
+Último diagnóstico Linux, `c40f864b`: assinatura de desenvolvimento, APK derivado do AAB e alinhamento estático das 12 bibliotecas por arquivo aprovados. Runtime confirmou página 16384, processos 2833/3028 com classificações COLD/WARM e 68 hierarquias de acessibilidade, incluindo 30 em Ajustes e 30 em Backup. O gate global **falhou**: `com.google.android.gms`, UID 10144, sofreu SIGSEGV no HeapTaskDaemon/MarkCompact. O exit-info coletado do Hoodie contém apenas o force-stop solicitado pelo roteiro; isso não encerra o crash anterior durante exportação, nem comprova migração/restauração. [Hashes, casos observados e limites](r8-qa-c40-runtime.json).
+
 Emulador usado na rodada inicial: Pixel_8, Android API 37, x86_64. `adb -s emulator-5554 shell getconf PAGE_SIZE` retornou `16384` naquela execução (página de memória do SO; não confundir com página SQLite). A validação posterior do APK de homologação usa o AVD isolado descrito abaixo.
 
 Rodada instrumentada `com.hoodie.app.database,com.hoodie.app.backup`: **29 testes aprovados**, 254,504 s. Exercita biblioteca SQLCipher real, criação, inserts/consultas, reabertura cifrada, migrações históricas, backup com/sem digital, restauração em novas chaves, destruição das chaves antigas, falhas/cancelamento e recuperação por journal. Executada no APK debug; não substitui regressão do APK release derivado do AAB.
