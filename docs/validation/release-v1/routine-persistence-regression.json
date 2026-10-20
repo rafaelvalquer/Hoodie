@@ -43,7 +43,7 @@
     },
     "skippedTests": []
   },
-  "nativeR8RoundTrip": "pending rebuild after source change",
+  "nativeR8RoundTrip": "Future routine ID and all four version rows exactly preserved, with identical settings; see r8-routine-fix-roundtrip.json. Strict full-row comparison still fails for two expired raw location events. API35 native export crash remains open.",
   "schemaVersion": 12,
   "schemaExportChanged": false,
   "redXmlSha256": "49018f5fcc4c99160bd6432c7e43e13bd21e40c74114b65bab3b8bafcdb3fb3b",

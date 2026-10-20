@@ -1,0 +1,86 @@
+name: R8 development runtime QA
+
+# No upload/Play credentials. Separate from the protected release workflow.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-r8-qa.yml'
+      - '.github/scripts/r8-qa-*'
+      - '.github/scripts/install-qa-emulator.sh'
+      - '.github/scripts/run-qa-emulator.sh'
+      - '.github/scripts/release-runtime-smoke.sh'
+      - '.github/scripts/verify-native-16kb.*'
+      - 'tools/android_ui.py'
+      - 'app/src/main/**'
+      - 'app/build.gradle.kts'
+      - 'app/proguard-rules.pro'
+      - 'gradle/**'
+      - 'gradle.properties'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r8-development-qa-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  development-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Preparar ferramentas oficiais
+        run: |
+          set -euo pipefail
+          BUNDLETOOL_JAR="$RUNNER_TEMP/bundletool.jar"
+          echo "BUNDLETOOL_JAR=$BUNDLETOOL_JAR" >> "$GITHUB_ENV"
+          sdkmanager 'ndk;28.2.13676358' 'build-tools;36.0.0'
+          curl --fail --location --retry 3 https://github.com/google/bundletool/releases/download/1.18.2/bundletool-all-1.18.2.jar -o "$BUNDLETOOL_JAR"
+          printf '%s  %s\n' '378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584' "$BUNDLETOOL_JAR" | sha256sum --check -
+      - name: AAB R8 de homologação com certificado de desenvolvimento
+        run: bash .github/scripts/r8-qa-build.sh
+      - name: Preparar catálogo e imagem API 35 de 16 KB
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;23.0'
+          test ! -e "$ANDROID_HOME/cmdline-tools/preinstalled"
+          mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
+          ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
+          out=app/build/reports/r8-qa
+          sdkmanager --install 'system-images;android-35;google_apis_ps16k;x86_64' > "$out/sdk-image.log" 2>&1
+          image="$ANDROID_HOME/system-images/android-35/google_apis_ps16k/x86_64"
+          test -s "$image/system.img"
+          cp "$image/source.properties" "$out/system-image-source.properties"
+          cp "$image/package.xml" "$out/system-image-package.xml"
+          grep -Eq '^Pkg.Revision[[:space:]]*=[[:space:]]*5[[:space:]]*$' "$image/source.properties"
+          nproc > "$out/host-cpu-count.txt"
+          free -m > "$out/host-memory.txt"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh
+      - name: APK derivado e diagnóstico de acessibilidade em 16 KB
+        run: bash .github/scripts/run-qa-emulator.sh 35 google_apis_ps16k .github/scripts/r8-qa-runtime.sh
+      - name: Evidências de desenvolvimento, sem chave privada
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-r8-qa-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            app/build/outputs/bundle/homologacao/*.aab
+            app/build/outputs/mapping/homologacao/mapping.txt
+            app/build/reports/r8-qa/

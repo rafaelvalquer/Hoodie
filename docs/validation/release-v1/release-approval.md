@@ -8,7 +8,7 @@ RC e estável usam o mesmo código validado, alterando apenas identificação ne
 
 Antes de aprovar: CI no SHA, AAB assinado, 16 KB estático/runtime, SQLCipher/migrações, backup A/B e interrupções, manifesto/permissões, política pública, Segurança dos Dados, aparelhos, beta, assets/licenças, contato e nenhum P0/P1 aberto.
 
-Bloqueadores técnicos observados no código `ecdf8148`: [CI com sete falhas de foco após ANR do Launcher](ci-ecdf-results.json) e [HVR-NATIVE-API35-001](api35-native-crash.json), SIGSEGV no processo do Hoodie durante observação de acessibilidade na exportação R8/16 KB. A causa do crash ainda não foi provada; estática de alinhamento e autenticação do arquivo não resolvem essa pendência nem aprovam runtime.
+Bloqueadores técnicos observados no código `ecdf8148`: a [CI mais recente executou 42 direcionados com oito falhas após ANR de boot](ci-bf079-results.json) e [HVR-NATIVE-API35-001](api35-native-crash.json), SIGSEGV no processo do Hoodie durante observação de acessibilidade na exportação R8/16 KB. A causa do crash ainda não foi provada; estática de alinhamento e autenticação do arquivo não resolvem essa pendência nem aprovam runtime. A identidade das previsões já foi preservada no [round-trip R8 corrigido](r8-routine-fix-roundtrip.json), sem aprovação integral do backup.
 
 | Gate | Aprovação/evidência |
 |---|---|

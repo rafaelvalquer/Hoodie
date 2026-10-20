@@ -109,3 +109,13 @@ Correção adicional identificada no round-trip de backup: previsões de rotina 
 O preflight aceitou o Launcher focado às 00:10:10 UTC, mas o Android registrou um ANR do Launcher às 00:10:19, antes do primeiro teste às 00:11:02. O diagnóstico reportou CPU total 100%, pressão de CPU média de dez segundos 72,86% e pressão de memória 20,17%, no guest de dois cores/3072 MB. O foco momentaneamente saudável não comprovou estabilidade do boot.
 
 O workflow passa a registrar os recursos reais do host e oferecer quatro cores/4096 MB ao guest; Logcat, ANRs e crash do preflight ficam preservados antes da limpeza dos logs de teste. A alteração responde à contenção observada, mas ainda não é uma correção comprovada: exige nova CI completa. Nenhum timeout de teste, asserção, referência visual ou quantidade de casos foi alterado, e não há retry automático dos testes.
+
+## CI de `bf079dee` e entrada antes do foco
+
+[Execução 39416243303](https://github.com/rafaelvalquer/Hoodie/actions/runs/39416243303): unitários, lint e assemble aprovados. Direcionados **42: 34 aprovados, oito falhos, zero erros/ignorados**; a suíte completa não iniciou. Além das sete falhas de foco anteriores, OFFICE falhou em apresentar de fato o gesto no teste de desempenho. [Casos, artefato e recursos](ci-bf079-results.json). O host confirmou quatro CPUs e aproximadamente 16 GB; aumentar os recursos não resolveu o boot.
+
+Os registros novos localizaram a sequência: o runner enviou `input keyevent 82` às 11:52:47.192 UTC, logo após `sys.boot_completed`; às 11:52:47.227 o InputDispatcher já aguardava uma janela focada. O evento KEY foi descartado por falta de foco e o ANR do Launcher foi registrado antes de o preflight aceitar a janela. O diálogo apareceu depois. [Trecho exato do job e do Android](ci-bf079-boot-trace.txt). A inspeção apenas do foco naquele instante não bastava.
+
+A inicialização passa a usar o mesmo emulador oficial/build 15917651 em diretório isolado, com [SHA-256 e origem registrados](linux-emulator-provenance.json), configuração de display definida antes do boot e espera pelo foco real, sem injetar a tecla prematura. ANR registrado no boot bloqueia a execução antes do Gradle. A suíte permanece inteira e os goldens continuam exatos. A regressão de orquestração reproduziu o início indevido do Gradle no script anterior e passou os três cenários após o bloqueio; são fixtures de ADB/Gradle, não testes reais de aplicativo.
+
+O bootstrap é compartilhado pela CI, pelo runtime do release e pelo [diagnóstico R8 em Linux/KVM](r8-development-qa.md). Actionlint e sintaxe foram conferidos; a execução remota da nova inicialização e os gates completos continuam pendentes.

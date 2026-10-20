@@ -17,7 +17,7 @@ adb shell getprop > "$output/device-properties.txt"
 # Preserve boot diagnostics before isolating application launch logs. A past
 # SystemUI ANR must remain visible even if the current app focus is healthy.
 adb logcat -d -v threadtime > "$output/preflight-logcat.txt" 2>&1
-adb logcat -d -b events -s am_anr > "$output/preflight-anr-events.txt" 2>&1
+adb logcat -d -b events -v threadtime -s am_anr > "$output/preflight-anr-events.txt" 2>&1
 adb logcat -d -b crash > "$output/preflight-crashes.txt" 2>&1
 adb logcat -c
 adb install -r "$apk"

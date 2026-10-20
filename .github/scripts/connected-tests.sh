@@ -20,8 +20,7 @@ capture() {
   cp -R app/build/outputs/connected_android_test_additional_output "$output/additional-output" 2>/dev/null || true
   python3 .github/scripts/summarize-instrumentation.py "$output" || true
 }
-adb shell input keyevent KEYCODE_WAKEUP
-adb shell wm dismiss-keyguard
+# run-qa-emulator.sh owns device setup; no key is injected before focus exists.
 # boot_completed can precede the launcher's focused window. Wait for that state,
 # preserving every complete snapshot; a focused ANR still fails immediately.
 if ! python3 .github/scripts/verify-emulator-window.py --wait-for-focus "$evidence"; then
@@ -31,8 +30,13 @@ fi
 # Keep boot failures even when their dialog no longer owns focus. Clearing the
 # buffer for the tests must not erase the environment's earlier ANR evidence.
 adb logcat -d -v threadtime > "$evidence/preflight-logcat.txt" 2>&1
-adb logcat -d -b events -s am_anr > "$evidence/preflight-anr-events.txt" 2>&1
+adb logcat -d -b events -v threadtime -s am_anr > "$evidence/preflight-anr-events.txt" 2>&1
 adb logcat -d -b crash > "$evidence/preflight-crashes.txt" 2>&1
+if grep -E 'am_anr[[:space:]]*:' "$evidence/preflight-anr-events.txt"; then
+  capture environment-boot-anr
+  echo '::error::Boot ANR recorded before instrumentation; no tests started.'
+  exit 1
+fi
 adb logcat -c
 suspects='com.hoodie.app.pixel.ScenePerformanceDeviceTest,com.hoodie.app.ui.HoodieTouchInteractionTest,com.hoodie.app.ui.PlacePickerScreenTest,com.hoodie.app.ui.SetupAndDemoUiTest,com.hoodie.app.ui.DemoReplayUiTest,com.hoodie.app.ui.StoreSceneDeviceTest'
 test_status=0

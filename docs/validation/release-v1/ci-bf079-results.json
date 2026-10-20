@@ -1,0 +1,122 @@
+{
+  "commit": "bf079dee8cde5f0ea6ec9eec445d99b1f0aa711d",
+  "runId": 39416243303,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39416243303",
+  "jobs": {
+    "unitTests": "success",
+    "lint": "success",
+    "assemble": "success",
+    "instrumentation": "failure"
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 34,
+    "failed": 8,
+    "errors": 0,
+    "skipped": 0,
+    "failures": [
+      {
+        "test": "com.hoodie.app.pixel.ScenePerformanceDeviceTest#elevenScenesPublishFramesAndReportAllStages",
+        "detail": [
+          "java.lang.AssertionError: OFFICE must really present touch",
+          "at org.junit.Assert.fail(Assert.java:89)",
+          "at org.junit.Assert.assertTrue(Assert.java:42)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#disabledFeatureLeavesSceneWithoutGestureSemantics",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#longPressReleaseNeverGeneratesAdditionalTap",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#androidAccessibilityFrameworkOffersNamedPettingAction",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#draggingFromSpriteCancelsPetting",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#quickTapIsExactlyOneGestureAndBackgroundIsIgnored",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#accessiblePettingIsAvailableAndFeatureOffInstallsNoTarget",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.PlacePickerScreenTest#teclado_nao_cobre_o_salvar_nem_o_campo",
+        "detail": [
+          "java.lang.AssertionError: Janela sem foco antes de abrir IME: interactive=true, keyguardLocked=false, lifecycle=RESUMED, attached=true, visibility=0, focus=null; captura=/storage/emulated/0/Android/data/com.hoodie.app/files/stabilization-window-focus-timeout.png",
+          "at com.hoodie.app.ui.PlacePickerScreenTest.teclado_nao_cobre_o_salvar_nem_o_campo(PlacePickerScreenTest.kt:424)",
+          "... 54 trimmed"
+        ]
+      }
+    ]
+  },
+  "fullSuiteExecuted": false,
+  "artifact": {
+    "id": 12262417181,
+    "sha256": "af9744c1fdabbfa1f577ee423e49012adaa41f66331564a854a688bb9758c5dd",
+    "junitSha256": "142f8d60c5ae554d3cc7ba2baccd2f93230f1d5fcb2c1807b196bb29590bae60"
+  },
+  "host": {
+    "cpuCount": 4,
+    "memoryMb": 15983
+  },
+  "guest": {
+    "cores": 4,
+    "ramMb": 4096
+  },
+  "boot": {
+    "emulatorBootedUtc": "2026-10-20T11:52:47.1849897Z",
+    "menuKeySentUtc": "2026-10-20T11:52:47.1926580Z",
+    "firstNoFocusedWindowWait": "2026-10-20T11:52:47.227Z",
+    "anrRegisteredUtc": "2026-10-20T11:52:55.237Z",
+    "focusAcceptedUtc": "2026-10-20T11:52:57.5920342Z",
+    "firstTestStartedUtc": "2026-10-20T11:53:55.8979797Z",
+    "anrPresentInPreflight": true
+  },
+  "traceSha256": "518e95e48cb2fee0d80af73cb4b60b6773d65ee347b3fa81b5721a09b26c3653",
+  "qualityGateApproved": false,
+  "followUp": "Replace the bootstrap which injects MENU immediately after sys.boot_completed. Wait for actual focus without key injection, keep the reviewed emulator/display, and reject boot ANRs before tests. Requires remote verification; no assertions, references or timeouts relaxed.",
+  "bootGateRegression": {
+    "beforeScriptStartedGradleDespiteAnr": true,
+    "afterScenariosPassed": 3,
+    "afterCases": [
+      "boot ANR blocks before Gradle",
+      "healthy boot runs both phases",
+      "diagnostic mention of am_anr is not an event"
+    ],
+    "kind": "Mocked orchestration, not Android application tests",
+    "redLogSha256": "f1109bf113acc5e394b126aedadfd61cb4e750766112ca8f5569b13ed3e29e39",
+    "greenLogSha256": "a713bdefbc08ff1bbd7e0c70387f40febdd620cc1f46508e0d6dc69e69c93d33"
+  }
+}

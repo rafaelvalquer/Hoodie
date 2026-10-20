@@ -1,0 +1,384 @@
+{
+  "comparison": "Exact source-record inclusion, independently authenticated",
+  "sourceSha256": "18a78094c6813290598d6200df6a3f457b7dedadc4fba584a6654535fa07ec5d",
+  "targetSha256": "eae5a8e456a10217c53f7a4d974ede8258336a9248a833cecdb8605ce762860f",
+  "sourceBytes": 97191,
+  "targetBytes": 97572,
+  "sourceAuthenticatedUnits": 418,
+  "targetAuthenticatedUnits": 419,
+  "sourceManifest": {
+    "kind": "manifest",
+    "formatVersion": 1,
+    "appVersion": "0.2.0-dev-homologacao",
+    "databaseSchemaVersion": 12,
+    "createdAt": 1792456490428,
+    "timezone": "GMT",
+    "backupId": "1da30b5e-baf5-40ce-b84c-1ae6fbc8e511",
+    "includeDigital": true,
+    "counts": {
+      "places": 4,
+      "routines": 1,
+      "day_exceptions": 1,
+      "location_events": 44,
+      "context_events": 126,
+      "context_confirmations": 1,
+      "hoodie_activities": 29,
+      "timeline_events": 159,
+      "memories": 4,
+      "daily_device_usage": 30,
+      "daily_app_usage": 1,
+      "daily_context_app_usage": 1,
+      "app_category_overrides": 1,
+      "phone_app_sessions": 1,
+      "daily_screen_hourly": 1,
+      "daily_context_usage": 1,
+      "daily_phone_timeline": 1,
+      "mobility_sessions": 2,
+      "mobility_segments": 1,
+      "diary_corrections": 1,
+      "learned_routine_slots": 0,
+      "transport_patterns": 1,
+      "transport_evidence": 1,
+      "effective_routine_versions": 4
+    },
+    "datasetVersions": {
+      "places": 1,
+      "routines": 1,
+      "day_exceptions": 1,
+      "location_events": 1,
+      "context_events": 1,
+      "context_confirmations": 1,
+      "hoodie_activities": 1,
+      "timeline_events": 1,
+      "memories": 1,
+      "daily_device_usage": 1,
+      "daily_app_usage": 1,
+      "daily_context_app_usage": 1,
+      "app_category_overrides": 1,
+      "phone_app_sessions": 1,
+      "daily_screen_hourly": 1,
+      "daily_context_usage": 1,
+      "daily_phone_timeline": 1,
+      "mobility_sessions": 1,
+      "mobility_segments": 1,
+      "diary_corrections": 1,
+      "learned_routine_slots": 1,
+      "transport_patterns": 1,
+      "transport_evidence": 1,
+      "effective_routine_versions": 1
+    }
+  },
+  "targetManifest": {
+    "kind": "manifest",
+    "formatVersion": 1,
+    "appVersion": "0.2.0-dev-homologacao",
+    "databaseSchemaVersion": 12,
+    "createdAt": 1792496568049,
+    "timezone": "GMT",
+    "backupId": "8c550bbc-0196-444d-a20c-69ed5a785c8f",
+    "includeDigital": true,
+    "counts": {
+      "places": 4,
+      "routines": 1,
+      "day_exceptions": 1,
+      "location_events": 42,
+      "context_events": 127,
+      "context_confirmations": 1,
+      "hoodie_activities": 29,
+      "timeline_events": 161,
+      "memories": 4,
+      "daily_device_usage": 30,
+      "daily_app_usage": 1,
+      "daily_context_app_usage": 1,
+      "app_category_overrides": 1,
+      "phone_app_sessions": 1,
+      "daily_screen_hourly": 1,
+      "daily_context_usage": 1,
+      "daily_phone_timeline": 1,
+      "mobility_sessions": 2,
+      "mobility_segments": 1,
+      "diary_corrections": 1,
+      "learned_routine_slots": 0,
+      "transport_patterns": 1,
+      "transport_evidence": 1,
+      "effective_routine_versions": 4
+    },
+    "datasetVersions": {
+      "places": 1,
+      "routines": 1,
+      "day_exceptions": 1,
+      "location_events": 1,
+      "context_events": 1,
+      "context_confirmations": 1,
+      "hoodie_activities": 1,
+      "timeline_events": 1,
+      "memories": 1,
+      "daily_device_usage": 1,
+      "daily_app_usage": 1,
+      "daily_context_app_usage": 1,
+      "app_category_overrides": 1,
+      "phone_app_sessions": 1,
+      "daily_screen_hourly": 1,
+      "daily_context_usage": 1,
+      "daily_phone_timeline": 1,
+      "mobility_sessions": 1,
+      "mobility_segments": 1,
+      "diary_corrections": 1,
+      "learned_routine_slots": 1,
+      "transport_patterns": 1,
+      "transport_evidence": 1,
+      "effective_routine_versions": 1
+    }
+  },
+  "datasets": {
+    "app_category_overrides": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "context_confirmations": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "context_events": {
+      "sourceRows": 126,
+      "targetRows": 127,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 1
+    },
+    "daily_app_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "daily_context_app_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "daily_context_usage": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "daily_device_usage": {
+      "sourceRows": 30,
+      "targetRows": 30,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "daily_phone_timeline": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "daily_screen_hourly": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "day_exceptions": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "diary_corrections": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "effective_routine_versions": {
+      "sourceRows": 4,
+      "targetRows": 4,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "hoodie_activities": {
+      "sourceRows": 29,
+      "targetRows": 29,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "learned_routine_slots": {
+      "sourceRows": 0,
+      "targetRows": 0,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "location_events": {
+      "sourceRows": 44,
+      "targetRows": 42,
+      "missingOrChangedSourceRows": 2,
+      "additionalRows": 0
+    },
+    "memories": {
+      "sourceRows": 4,
+      "targetRows": 4,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "mobility_segments": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "mobility_sessions": {
+      "sourceRows": 2,
+      "targetRows": 2,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "phone_app_sessions": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "places": {
+      "sourceRows": 4,
+      "targetRows": 4,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "routines": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "timeline_events": {
+      "sourceRows": 159,
+      "targetRows": 161,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 2
+    },
+    "transport_evidence": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    },
+    "transport_patterns": {
+      "sourceRows": 1,
+      "targetRows": 1,
+      "missingOrChangedSourceRows": 0,
+      "additionalRows": 0
+    }
+  },
+  "settingsExactlyEqual": true,
+  "allSourceRecordsExactlyPreserved": false,
+  "futureRoutineIdsAtSource": [
+    5
+  ],
+  "futureRoutineRowsExactlyPreserved": true,
+  "scope": "Inclusion of all source rows with exact IDs and all fields; additional live rows reported separately. Does not prove semantic absence of duplicates, physical-device acceptance, interruption handling, or Play acceptance.",
+  "appSourceCommit": "ecdf8148e6221d057ca52afdbf3612a28daea759",
+  "repositoryHeadAtComparison": "bf079dee8cde5f0ea6ec9eec445d99b1f0aa711d",
+  "versionCode": 7,
+  "apkSha256": "4da6145c60e497487bcf3182e936da0c866017efee4ae0c8419c11f784f7b7ee",
+  "sourceRuntime": {
+    "avd": "Hoodie_API35_16KB_Release",
+    "api": 35,
+    "pageSize": 16384,
+    "uid": 10207,
+    "initialInstallationClean": true,
+    "exportUiSuccessObserved": false,
+    "exportNativeCrash": "HVR-NATIVE-API35-001"
+  },
+  "targetRuntime": {
+    "avd": "Hoodie_API34_Release",
+    "api": 34,
+    "pageSize": 4096,
+    "uid": 10194,
+    "restoreOverExistingSyntheticData": true,
+    "previewPlaces": 4,
+    "previewContexts": 126,
+    "previewMemories": 4,
+    "homeNuvemAfterActivation": true,
+    "exportUiSuccessObserved": true
+  },
+  "futureRoutineRemainsFutureAtTarget": true,
+  "routineIdentityCorrectionVerified": true,
+  "completeBackupGateApproved": false,
+  "runtimeGateApproved": false,
+  "rawLocationDivergence": {
+    "sourceRows": 44,
+    "targetRows": 42,
+    "missingRows": [
+      {
+        "id": 77,
+        "placeId": 1,
+        "timestamp": 1789898400000,
+        "transition": "ENTER"
+      },
+      {
+        "id": 78,
+        "placeId": 2,
+        "timestamp": 1789902000000,
+        "transition": "ENTER"
+      }
+    ],
+    "comparisonCutoffDerivedFromTargetExport": 1789904568049,
+    "allUnexpiredSourceRowsPreserved": true,
+    "interpretation": "Exactly the two source raw events older than the existing 30-day retention cutoff are absent. Exports are over eleven hours apart. Does not prove worker execution time or approve strict full-row equality; no retention policy was changed."
+  },
+  "negativeControl": {
+    "sourceCode": "f69f6e6b4616d718ecfe297d2719e6786b6293b6",
+    "strictComparisonRejected": true,
+    "futureRoutineIdChanged": true,
+    "settingsExactlyEqual": true,
+    "reportSha256": "59d138a5249bcf7ae0448d37722b073af5dffa07b71ea475cf6941430c362ed7"
+  },
+  "uiHarnessIncident": "Before confirmation, button was clipped. No activation tap occurred; fresh preview validated, scrolled into view, confirmation performed once. Original harness failure preserved.",
+  "rawEvidence": {
+    "target-api34-restore.log": {
+      "bytes": 567,
+      "sha256": "2dca45856eb1303959696f2ff882ec088c690374fa5e2c249ad8cf28c9fc7f92"
+    },
+    "target-api34-resumed-activation.log": {
+      "bytes": 54,
+      "sha256": "a3d42b2d1de22953acf03429a39fa654e7058482621d1fb05d5fe74d70c53990"
+    },
+    "target-api34-export.log": {
+      "bytes": 154,
+      "sha256": "8a2c5dd68528b77695ae6a2d7b5c7f40b1d9430da2ae6a206ff3e2bd9464f417"
+    },
+    "target-api34-final-exit-info.txt": {
+      "bytes": 555,
+      "sha256": "beb1d534c8a431c4f97af5889cbbb579cca32e888433c30c763237c038b76723"
+    },
+    "target-api34-final-crashes.txt": {
+      "bytes": 7664,
+      "sha256": "b47241f714ab9d1b30d9d9044b227975aa95ac2ac39d7cfb1059a80150ba4072"
+    },
+    "target-api34-input-sha256.txt": {
+      "bytes": 125,
+      "sha256": "d5dfe545f92555c1f77c1d3cbd11789e5cb1bf481d58b901d6a9624912dbd366"
+    },
+    "fixed-roundtrip-comparison.log": {
+      "bytes": 6685,
+      "sha256": "ad61d9f38337cd12ca97d52ac617748b637907ad482100f4734800d7734347c4"
+    }
+  },
+  "uiEvidence": {
+    "target-api34-restore/preview-after-scroll.xml": "59faa05196440f8811546c846811eb71bde384c08451f85a7e0b2a11bb946482",
+    "target-api34-restore/after-activation-resumed.xml": "640852fccd00c0792040b58425a9a43b48d4841fe6889d0bf0fba46d0fad5129",
+    "target-api34-export/export-complete.xml": "484ada1bfad215b1a052f512ff8459e7c882dc25b44686f66e826b3b6cd51756"
+  },
+  "publishedUiEvidence": {
+    "authenticated-preview.xml": "59faa05196440f8811546c846811eb71bde384c08451f85a7e0b2a11bb946482",
+    "home-after-restore.xml": "640852fccd00c0792040b58425a9a43b48d4841fe6889d0bf0fba46d0fad5129",
+    "export-complete.xml": "484ada1bfad215b1a052f512ff8459e7c882dc25b44686f66e826b3b6cd51756"
+  }
+}
