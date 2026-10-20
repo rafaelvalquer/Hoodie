@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Jornada em cidade pixel art. -->
+<resources>
+    <string name="city_overview">Visão geral</string>
+    <string name="city_follow">Seguir o Hoodie</string>
+    <string name="city_hud_walking">Caminhando para %1$s</string>
+    <string name="city_hud_car">De carro para %1$s</string>
+    <string name="city_hud_bus">De ônibus para %1$s</string>
+    <string name="city_hud_at">Em %1$s</string>
+    <string name="city_hud_arriving">Chegando: %1$s</string>
+    <string name="city_hud_leaving">Saindo: %1$s</string>
+    <string name="city_hud_next">Próximo: %1$s · %2$s</string>
+    <string name="city_hud_end">Fim do dia</string>
+    <string name="city_card_arrival">Chegada %1$s · %2$s</string>
+    <string name="city_card_until_now">até agora</string>
+    <string name="city_card_return">Retorno · %1$dª visita</string>
+    <string name="city_card_grouped">%1$d registros agrupados</string>
+    <string name="city_footer">A cidade é um mapa de brincadeira: os prédios são os seus lugares do dia, não as ruas de verdade.</string>
+</resources>

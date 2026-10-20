@@ -199,6 +199,11 @@ object HoodieConfig {
     // ── Diário: Jornada do Dia 3.0 (overworld em capítulos + relógio) ──
     /** Overworld em serpentina com capítulos. false = Jornada 2.0 (zigue-zague) durante a transição. */
     const val DIARY_JOURNEY_MAP_V3 = true
+    /**
+     * Jornada como cidade pixel art em perspectiva 3/4 (substitui o overworld V3 no modo Jornada):
+     * o Hoodie anda pelas calçadas entre os prédios dos lugares do dia, com câmera que o segue.
+     */
+    const val DIARY_JOURNEY_CITY = true
     /** Botão [RELÓGIO] no seletor do mapa. */
     const val DIARY_CLOCK_VIEW = true
 

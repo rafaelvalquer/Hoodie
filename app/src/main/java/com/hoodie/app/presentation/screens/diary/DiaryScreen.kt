@@ -243,8 +243,15 @@ internal fun DiaryContent(
                             val cluster = overworld.clusterNodes(stop.id)
                             if (cluster.isNotEmpty()) quickStops = cluster else overworld.nodeOf(stop.id)?.let { selectedJourneyNodeId = it.id }
                         }
+                        val city = preparedJourney?.city?.takeIf { com.hoodie.app.core.config.HoodieConfig.DIARY_JOURNEY_CITY }
                         when (state.mapMode) {
-                        com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY -> if (overworld.isChapters) {
+                        com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY -> if (city != null) {
+                                PixelPanel(Modifier.fillMaxWidth().testTag("journey_map")) {
+                                    SectionLabel(stringResource(R.string.journey_title))
+                                    JourneyCityView(city, state.replay, zone, onOpenNode = { selectedJourneyNodeId = it }, modifier = Modifier.padding(top = 8.dp))
+                                    Text(stringResource(R.string.city_footer), style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, modifier = Modifier.padding(top = 8.dp))
+                                }
+                            } else if (overworld.isChapters) {
                                 JourneyChaptersView(
                                     overworld, state.replay, zone, state.manualChapter, state.selectedDate == today, nowMillis,
                                     selectedJourneyNodeId, onOpenChapter = actions.openChapter, onStop = onStop,
@@ -292,7 +299,7 @@ internal fun DiaryContent(
                             preparedCache = preparedJourney?.legacyCache,
                         )
                     }
-                    DiaryReplayHud(state.replay.visual, zone)
+                    if (state.mapMode != com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY || preparedJourney?.city == null) DiaryReplayHud(state.replay.visual, zone)
                     JourneyReplayControls(state.replay, journey.data, zone, onToggle = toggleReplay, onSeek = actions.seek, onReset = actions.reset, onSpeed = actions.setSpeed)
                 }
                 else if (state.journeyState == SectionState.Loading) {

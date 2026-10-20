@@ -26,6 +26,8 @@ data class PreparedJourney(
     val placeLayout: DiaryMapLayout,
     val overworld: JourneyOverworldModel?,
     val overworldCaches: Map<com.hoodie.app.engine.diary.journey.OverworldLayout, OverworldRenderCache>,
+    /** Cidade pixel art da Jornada (null com a flag desligada ou sem visitas). */
+    val city: com.hoodie.app.pixel.diary.city.CityScene? = null,
 )
 
 object PreparedJourneyBuilder {
@@ -37,6 +39,7 @@ object PreparedJourneyBuilder {
         val legacyLayout = JourneyLayoutEngine.layout(data)
         val legacyCache = if (HoodieConfig.DIARY_JOURNEY_PRECOMPUTE) JourneyRenderCache.create(legacyLayout) else null
         val legacyClock = if (!HoodieConfig.DIARY_DAY_CLOCK_V2) DayClockLegacyAssembler.build(data, zone) else null
+        val city = if (HoodieConfig.DIARY_JOURNEY_CITY) com.hoodie.app.engine.diary.city.CityPlan.build(data)?.let(com.hoodie.app.pixel.diary.city.CityScene::build) else null
         val overworld = if (HoodieConfig.DIARY_JOURNEY_MAP_V3) JourneyOverworldModel.build(data, zone) else null
         val preparedOverworld = overworld
         val caches = if (!HoodieConfig.DIARY_JOURNEY_PRECOMPUTE || preparedOverworld == null) emptyMap() else buildMap {
@@ -53,6 +56,6 @@ object PreparedJourneyBuilder {
                 put(layout, OverworldRenderCache.create(scene))
             }
         }
-        return PreparedJourney(data, legacyLayout, legacyCache, legacyClock, placeLayout, overworld, caches)
+        return PreparedJourney(data, legacyLayout, legacyCache, legacyClock, placeLayout, overworld, caches, city)
     }
 }

@@ -189,7 +189,11 @@ class DiaryViewModel @Inject constructor(
             while (timestamp < diary.replay.endAt) {
                 delay(80)
                 val nowElapsed = android.os.SystemClock.elapsedRealtime()
-                timestamp = advanceReplay(timestamp, nowElapsed - last, _state.value.replay.speed, diary.replay.endAt)
+                // Na cidade, o relógio acompanha o passo do Hoodie nos trajetos (caminhada legível).
+                val city = (_state.value.journeyState as? SectionState.Ready)?.data?.city?.plan
+                    ?.takeIf { _state.value.mapMode == com.hoodie.app.domain.diary.journey.DiaryMapMode.JOURNEY }
+                timestamp = city?.advance(timestamp, nowElapsed - last, _state.value.replay.speed.minutesPerSecond, diary.replay.endAt)
+                    ?: advanceReplay(timestamp, nowElapsed - last, _state.value.replay.speed, diary.replay.endAt)
                 last = nowElapsed
                 _state.value = _state.value.copy(replay = replayAt(_state.value.replay, diary, timestamp, zone))
             }
