@@ -1,0 +1,163 @@
+{
+  "id": "HVR-NATIVE-API35-001",
+  "status": "open; cause unproven; blocks runtime acceptance",
+  "commit": "ecdf8148e6221d057ca52afdbf3612a28daea759",
+  "apkSha256": "4da6145c60e497487bcf3182e936da0c866017efee4ae0c8419c11f784f7b7ee",
+  "versionCode": 7,
+  "package": "com.hoodie.app.homologacao",
+  "avd": "Hoodie_API35_16KB_Release",
+  "api": 35,
+  "pageSize": 16384,
+  "imageRevision": 5,
+  "imageBuild": "AE3A.240806.043/12960925",
+  "emulatorVersion": "37.1.11.0 / build 15917651",
+  "guestCores": 4,
+  "guestRamMb": 4096,
+  "cleanInstallation": true,
+  "processId": 6223,
+  "uid": 10207,
+  "signal": "SIGSEGV",
+  "faultAddress": "0x0",
+  "exitReason": "APP CRASH(NATIVE)",
+  "crashTimestampUtc": "2026-10-20T00:35:02.593Z",
+  "jitFrames": [
+    "u1.y.h+2489",
+    "h3.e.createAccessibilityNodeInfo+101"
+  ],
+  "mappedClasses": [
+    "androidx.compose.ui.platform.AndroidComposeViewAccessibilityDelegateCompat$ComposeAccessibilityNodeProvider",
+    "androidx.core.view.accessibility.AccessibilityNodeProviderCompat$AccessibilityNodeProviderApi26"
+  ],
+  "otherProcessesWithNativeCrashes": [
+    "com.google.android.apps.messaging"
+  ],
+  "causeAttribution": "No proven attribution to Compose, R8, ART, emulator, SQLCipher, or app source. Other system/app crashes are context, not a causal proof.",
+  "initialRestore": {
+    "uiCompleted": true,
+    "places": 4,
+    "contexts": 125,
+    "memories": 4
+  },
+  "smoke": {
+    "pageSize": 16384,
+    "derivedApkProcessRestart": true,
+    "derivedApkColdLaunch": true,
+    "processIds": [
+      4186,
+      4357
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "COLD"
+    ],
+    "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+  },
+  "export": {
+    "sha256": "18a78094c6813290598d6200df6a3f457b7dedadc4fba584a6654535fa07ec5d",
+    "bytes": 97191,
+    "authenticatedUnits": 418,
+    "manifest": {
+      "kind": "manifest",
+      "formatVersion": 1,
+      "appVersion": "0.2.0-dev-homologacao",
+      "databaseSchemaVersion": 12,
+      "createdAt": 1792456490428,
+      "timezone": "GMT",
+      "backupId": "1da30b5e-baf5-40ce-b84c-1ae6fbc8e511",
+      "includeDigital": true,
+      "counts": {
+        "places": 4,
+        "routines": 1,
+        "day_exceptions": 1,
+        "location_events": 44,
+        "context_events": 126,
+        "context_confirmations": 1,
+        "hoodie_activities": 29,
+        "timeline_events": 159,
+        "memories": 4,
+        "daily_device_usage": 30,
+        "daily_app_usage": 1,
+        "daily_context_app_usage": 1,
+        "app_category_overrides": 1,
+        "phone_app_sessions": 1,
+        "daily_screen_hourly": 1,
+        "daily_context_usage": 1,
+        "daily_phone_timeline": 1,
+        "mobility_sessions": 2,
+        "mobility_segments": 1,
+        "diary_corrections": 1,
+        "learned_routine_slots": 0,
+        "transport_patterns": 1,
+        "transport_evidence": 1,
+        "effective_routine_versions": 4
+      },
+      "datasetVersions": {
+        "places": 1,
+        "routines": 1,
+        "day_exceptions": 1,
+        "location_events": 1,
+        "context_events": 1,
+        "context_confirmations": 1,
+        "hoodie_activities": 1,
+        "timeline_events": 1,
+        "memories": 1,
+        "daily_device_usage": 1,
+        "daily_app_usage": 1,
+        "daily_context_app_usage": 1,
+        "app_category_overrides": 1,
+        "phone_app_sessions": 1,
+        "daily_screen_hourly": 1,
+        "daily_context_usage": 1,
+        "daily_phone_timeline": 1,
+        "mobility_sessions": 1,
+        "mobility_segments": 1,
+        "diary_corrections": 1,
+        "learned_routine_slots": 1,
+        "transport_patterns": 1,
+        "transport_evidence": 1,
+        "effective_routine_versions": 1
+      }
+    },
+    "futureRoutineIds": [
+      5
+    ],
+    "uiSuccessObserved": false,
+    "appCrashed": true
+  },
+  "files": {
+    "api35-export-crash.txt": {
+      "bytes": 13484,
+      "sha256": "d46af056386a1911d4c98f4937863f72c953facaab342764ca52c360651fccfd"
+    },
+    "api35-export-exit-info.txt": {
+      "bytes": 1272,
+      "sha256": "f72afe385841c3bfbc08728ca7500daa9dff86f0eb1fa9c1e16aa30126789345"
+    },
+    "api35-export-logcat.txt": {
+      "bytes": 7587851,
+      "sha256": "aee51b073e4300772cccabdc731980c6d5329ac061628dc97d926a330e80863c"
+    },
+    "api35-source-export.log": {
+      "bytes": 795,
+      "sha256": "e26632dfc7f3922d95e5d56c8b8c9f49950258004d7fa8edb2601de9ff8a53ab"
+    },
+    "api35-initial-restore.log": {
+      "bytes": 167,
+      "sha256": "086c4fe310e43d4e40104ff08afd1c20d9498da14aeafd74dc87dcdc51f7d5a5"
+    },
+    "api35-final-properties.txt": {
+      "bytes": 33703,
+      "sha256": "ea579ce24969ed3d846773776b0f792790e79e5cd68d75c2c1b021f2b0ee6a0e"
+    },
+    "api35-package-after.txt": {
+      "bytes": 14855,
+      "sha256": "bb9950a14ada89626ceaef4ab5f96aa975a7cd172e1b02d1f34a83d521a002e4"
+    },
+    "api35-clean-install-guard.txt": {
+      "bytes": 42,
+      "sha256": "6b7e3de144591b91dc30804a34902a6e56032f00812e8b3fd99c9d2fe0ba5437"
+    }
+  },
+  "runtimeGateApproved": false,
+  "followUp": "Keep this failed export and native defect open. Validate the authenticated file on API34 independently, then investigate crash with controlled runtime/accessibility comparisons without removing semantics or weakening tests."
+}

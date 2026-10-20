@@ -28,6 +28,11 @@ if ! python3 .github/scripts/verify-emulator-window.py --wait-for-focus "$eviden
   capture environment-not-ready
   exit 1
 fi
+# Keep boot failures even when their dialog no longer owns focus. Clearing the
+# buffer for the tests must not erase the environment's earlier ANR evidence.
+adb logcat -d -v threadtime > "$evidence/preflight-logcat.txt" 2>&1
+adb logcat -d -b events -s am_anr > "$evidence/preflight-anr-events.txt" 2>&1
+adb logcat -d -b crash > "$evidence/preflight-crashes.txt" 2>&1
 adb logcat -c
 suspects='com.hoodie.app.pixel.ScenePerformanceDeviceTest,com.hoodie.app.ui.HoodieTouchInteractionTest,com.hoodie.app.ui.PlacePickerScreenTest,com.hoodie.app.ui.SetupAndDemoUiTest,com.hoodie.app.ui.DemoReplayUiTest,com.hoodie.app.ui.StoreSceneDeviceTest'
 test_status=0

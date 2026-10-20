@@ -1,0 +1,106 @@
+{
+  "commit": "ecdf8148e6221d057ca52afdbf3612a28daea759",
+  "runId": 39344406307,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39344406307",
+  "jobs": {
+    "lint": "success",
+    "unitTests": "success",
+    "assemble": "success",
+    "instrumentation": "failure"
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 35,
+    "failed": 7,
+    "errors": 0,
+    "skipped": 0,
+    "failures": [
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#disabledFeatureLeavesSceneWithoutGestureSemantics",
+        "message": "",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#longPressReleaseNeverGeneratesAdditionalTap",
+        "message": "",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#androidAccessibilityFrameworkOffersNamedPettingAction",
+        "message": "",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#draggingFromSpriteCancelsPetting",
+        "message": "",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#quickTapIsExactlyOneGestureAndBackgroundIsIgnored",
+        "message": "",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.HoodieTouchInteractionTest#accessiblePettingIsAvailableAndFeatureOffInstallsNoTarget",
+        "message": "",
+        "detail": [
+          "androidx.compose.ui.test.ComposeTimeoutException: Condition still not satisfied after 10000 ms",
+          "at androidx.compose.ui.test.AndroidComposeUiTestEnvironment$AndroidComposeUiTestImpl.waitUntil(ComposeUiTest.android.kt:504)",
+          "at androidx.compose.ui.test.junit4.AndroidComposeTestRule.waitUntil(AndroidComposeTestRule.android.kt:339)"
+        ]
+      },
+      {
+        "test": "com.hoodie.app.ui.PlacePickerScreenTest#teclado_nao_cobre_o_salvar_nem_o_campo",
+        "message": "",
+        "detail": [
+          "java.lang.AssertionError: Janela sem foco antes de abrir IME: interactive=true, keyguardLocked=false, lifecycle=RESUMED, attached=true, visibility=0, focus=null; captura=/storage/emulated/0/Android/data/com.hoodie.app/files/stabilization-window-focus-timeout.png",
+          "at com.hoodie.app.ui.PlacePickerScreenTest.teclado_nao_cobre_o_salvar_nem_o_campo(PlacePickerScreenTest.kt:424)",
+          "... 54 trimmed"
+        ]
+      }
+    ]
+  },
+  "fullSuiteExecuted": false,
+  "qualityGateApproved": false,
+  "artifact": {
+    "id": 12231234766,
+    "sha256": "620e080f0f4821e7be59abe72d8e10cc50b941c6930aa7ed6ea4e7ef0639f669",
+    "junitSha256": "2dba6ef615271ddb76cd512548c31ee29662b60f474f5f9a46712e496df99bf0"
+  },
+  "environment": {
+    "preflightFocusSnapshots": 1,
+    "launcherAnr": [
+      "10-20 00:10:19.635   521  2875 E ActivityManager: ANR in com.google.android.apps.nexuslauncher (com.google.android.apps.nexuslauncher/.NexusLauncherActivity)"
+    ],
+    "firstTestStartUtc": "2026-10-20T00:11:02.8793694Z",
+    "anrBeforeFirstTest": true,
+    "guestCpuCores": 2,
+    "guestRamMb": 3072,
+    "reportedTotalCpuPercent": 100,
+    "cpuPressureAvg10Percent": 72.86,
+    "memoryPressureSomeAvg10Percent": 20.17,
+    "systemImageRevision": 14,
+    "sdkDownloadAttempts": 1
+  },
+  "followUp": "Preserve preflight Logcat/ANR/crash buffers before clear; record host resources and allocate 4 guest cores/4096 MB. Not a proven fix; a new full CI run must pass. No tests retried or relaxed."
+}

@@ -1,0 +1,154 @@
+{
+  "commit": "ecdf8148e6221d057ca52afdbf3612a28daea759",
+  "versionCode": 7,
+  "avd": "Hoodie_16KB_Release",
+  "api": "37.1",
+  "pageSize": 16384,
+  "runs": [
+    {
+      "directory": "app/build/reports/routine-r8-qa/source-public-runtime",
+      "commandExitCode": 0,
+      "files": {
+        "activity-1.txt": {
+          "bytes": 29610,
+          "sha256": "0ff0f818754c5c732ff0c3c84fd7f6111e5e5cd5188645fd91a7b258166842a8"
+        },
+        "activity-2.txt": {
+          "bytes": 32195,
+          "sha256": "38df92953b4c98817dea867aab4ef7a707c34b6a2fb2a89aec22f808d43faf81"
+        },
+        "crashes.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "device-properties.txt": {
+          "bytes": 24640,
+          "sha256": "fdbc4ec27b1fb348ace68ce90ba672b63c2b91d202bd2bfa5b3a481c46c7e204"
+        },
+        "launch-1.txt": {
+          "bytes": 171,
+          "sha256": "7fa0b99583af42ebef5f076f92ec8cf0a5ab0a6765185c349334cff4095afb7b"
+        },
+        "launch-2.txt": {
+          "bytes": 169,
+          "sha256": "c16fd3993c36a3cdaba56566f9a538228f6cd3089688727a345cb8dce9d90272"
+        },
+        "logcat.txt": {
+          "bytes": 2022539,
+          "sha256": "c4dee429457b0fa98db494cbeca1a03d4300b0541424a4f95768a42880fc3f9b"
+        },
+        "pid-1.txt": {
+          "bytes": 6,
+          "sha256": "f975780905375171261475c70c470275016a7988b4f8cb33b611ea913fdee845"
+        },
+        "pid-2.txt": {
+          "bytes": 6,
+          "sha256": "6c11cbd400aabcf194194c0f7b008bd8fc44baeac9aefd04154dcf16cbc31c95"
+        },
+        "result.json": {
+          "bytes": 319,
+          "sha256": "1349f289dd17d5d86244664657244c0446c57f73f1f9f61d88d378d7b6b28279"
+        },
+        "screen.png": {
+          "bytes": 15845,
+          "sha256": "f1cac2c20151f4bbaff0182180faa219bdc31487d04d219794159ef7b6a2944b"
+        },
+        "stopped-pid-1.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stopped-pid-2.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "window-1.txt": {
+          "bytes": 16004,
+          "sha256": "6a1fb998401c6e182bef7008348197ba835b9047c745813f4bfc39b945e92ccf"
+        },
+        "window-2.txt": {
+          "bytes": 18257,
+          "sha256": "609cfeb0e98b3bd687576c7185dd7d7d128d10b14bd6d5803ee86e378f3bd3e4"
+        }
+      },
+      "androidAnrEvents": [
+        "10-20 00:13:52.888   704  2564 I am_anr  : [0,1076,com.android.systemui,550026765,executing service com.android.systemui/.keyguard.KeyguardService, waited 60035ms]"
+      ],
+      "bootStableApproved": false,
+      "processEvidence": {
+        "pageSize": 16384,
+        "derivedApkProcessRestart": true,
+        "derivedApkColdLaunch": false,
+        "processIds": [
+          2382,
+          2647
+        ],
+        "androidLaunchStates": [
+          "COLD",
+          "WARM"
+        ],
+        "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+      },
+      "preflightAnrCapturedByScript": false
+    },
+    {
+      "directory": "app/build/reports/routine-r8-qa/source-hom-runtime",
+      "commandExitCode": 1,
+      "files": {
+        "activity-1.txt": {
+          "bytes": 32595,
+          "sha256": "511c1a068a21e410f2e889bfd284acac76b89b3fe6895490dcc473102578ce04"
+        },
+        "crashes.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "device-properties.txt": {
+          "bytes": 24640,
+          "sha256": "a198ce95a2bfef08f2f46d49fc62cc9181c051b615773fba4badd039cb12b8d8"
+        },
+        "launch-1.txt": {
+          "bytes": 221,
+          "sha256": "b3a1100247fd22dc7c81721294cd2cfdc167b084358c15659fa981b4e7a35b9c"
+        },
+        "logcat.txt": {
+          "bytes": 1588558,
+          "sha256": "8e52333b0a9690f0180e8799536c74b103c0c162ba21813ca3ab9150dc5674cc"
+        },
+        "preflight-anr-events.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "preflight-crashes.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "preflight-logcat.txt": {
+          "bytes": 1949480,
+          "sha256": "367c0e88da9580d8f63db061d3cc7240fb5140953eb9a3897cfe66de9a277eb4"
+        },
+        "screen.png": {
+          "bytes": 15845,
+          "sha256": "f1cac2c20151f4bbaff0182180faa219bdc31487d04d219794159ef7b6a2944b"
+        },
+        "stopped-pid-1.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "window-1.txt": {
+          "bytes": 18636,
+          "sha256": "f4d4d204d1df7a4d20be9b33a2f426e3591cbd95ca07421b485285ceae4c5324"
+        }
+      },
+      "androidAnrEvents": [
+        "10-20 00:17:50.558   701  1798 I am_anr  : [0,1149,com.android.phone,818429517,Broadcast of Intent { act=android.safetycenter.action.REFRESH_SAFETY_SOURCES flg=0x10000010 xflg=0x4 pkg=com.android.phone cmp=com.android.phone/.security.SafetySourceReceiver (has extras) }]",
+        "10-20 00:18:03.813   701  1937 I am_anr  : [0,1011,com.android.systemui,550026765,executing service com.android.systemui/.SystemUIService, waited 61293ms]"
+      ],
+      "bootStableApproved": false,
+      "processEvidence": null,
+      "preflightAnrCapturedByScript": true
+    }
+  ],
+  "backupRoundTripApproved": false,
+  "releaseGateApproved": false,
+  "followUp": "Preserve both failures. Boot diagnostics are now collected before logcat clear. Prepare separate API 35 google_apis_ps16k revision 5 AVD for further diagnosis; do not overwrite these results."
+}

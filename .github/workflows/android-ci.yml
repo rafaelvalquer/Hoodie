@@ -208,6 +208,11 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Registrar recursos do runner
+        run: |
+          mkdir -p app/build/instrumentation-evidence
+          nproc > app/build/instrumentation-evidence/host-cpu-count.txt
+          free -m > app/build/instrumentation-evidence/host-memory.txt
       - name: Connected tests (API 34)
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -217,10 +222,12 @@ jobs:
           profile: pixel_8
           # Match the reviewed reference producer; do not float rasterizer builds.
           emulator-build: '15917651'
-          cores: 2
-          ram-size: 3072M
+          # The previous boot reported 100% guest CPU, CPU pressure 72.86%
+          # and memory pressure 20.17% before the first test (run 39344406307).
+          cores: 4
+          ram-size: 4096M
           heap-size: 256
-          emulator-options: -no-window -gpu swiftshader_indirect -memory 3072 -no-snapshot -noaudio -no-boot-anim
+          emulator-options: -no-window -gpu swiftshader_indirect -memory 4096 -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
             adb shell wm size 1080x2400
