@@ -123,4 +123,45 @@ class StreetSceneContinuityTest {
             PreviewExport.write(File(dir, "seam-${p.name.lowercase()}.png"), sheet, 1, null)
         }
     }
+
+    private fun layer(baseline: Int, t: Long, p: DayPeriod = DayPeriod.DAY): PixelBuffer {
+        val prop = StreetScene().props().first { it.baseline == baseline }
+        return PixelBuffer(240, 320).apply { fill(bg); prop.draw(this, SceneEnv(p, 12 * 60), t) }
+    }
+
+    @Test fun streetObjectsNeverSwapOrPopInPlace() {
+        // Calçada/asfalto (Prop 1) e árvores, postes, hidrante/banco, ponto e semáforo (Prop 2):
+        // cada passo de 25 ms é só 1 px de translação, inclusive nas emendas de 160 e 320 px.
+        var t = 0L
+        while (t < 2 * 320 * 25L + 100) {
+            val sameLight = t / 2500 == (t + 25) / 2500
+            if (sameLight) {
+                assertShifted(layer(1, t), layer(1, t + 25), 200, 319, "chão t=$t")
+                assertShifted(layer(2, t), layer(2, t + 25), 140, 262, "objetos t=$t")
+            }
+            t += 25
+        }
+    }
+
+    @Test fun carsKeepTheirLookForTheWholePassAndNeverOverlap() {
+        val street = StreetScene()
+        var lastSedan: Int? = null; var lastHatch: Int? = null
+        for (t in 0L until 4 * StreetScene.CAR_CYCLE_MS step 10) {
+            val sedan = street.sedanPass(t); val hatch = street.hatchPass(t)
+            assertFalse("dois carros ao mesmo tempo em t=$t", sedan != null && hatch != null)
+            if (sedan != null && lastSedan != null) assertEquals("sedan trocou em t=$t", lastSedan, sedan.color)
+            if (hatch != null && lastHatch != null) assertEquals("hatch trocou em t=$t", lastHatch, hatch.color)
+            lastSedan = sedan?.color; lastHatch = hatch?.color
+        }
+    }
+
+    @Test fun carsAreSizedNextToTheHoodie() {
+        // Hoodie tem 72 px; o carro precisa ter pelo menos ~55% disso de altura.
+        listOf(StreetScene.SEDAN_MS / 2, StreetScene.CAR_CYCLE_MS / 2 + StreetScene.HATCH_MS / 2).forEach { t ->
+            val img = layer(310, t)
+            val rows = (0 until 320).filter { y -> (0 until 240).any { x -> img[x, y] != bg } }
+            assertTrue("carro baixo demais em t=$t: ${rows.size} px", rows.size >= 40)
+            assertTrue("carro invadiu a calçada em t=$t", rows.first() >= 268)
+        }
+    }
 }

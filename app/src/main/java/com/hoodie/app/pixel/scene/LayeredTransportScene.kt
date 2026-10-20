@@ -29,6 +29,12 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
     protected open val nearPxPerSecond = 40f
     protected open val fallbackSpeed = .8f
 
+    /**
+     * Sentido da viagem na tela. Com a frente do veículo à esquerda (carro), o fundo corre para a
+     * direita; sem isso o veículo parece andar de ré.
+     */
+    protected open val travelsLeft: Boolean = false
+
     /** O Hoodie senta de frente (ancorado pelo quadril no slot `seat_hip`), como no ônibus. */
     open val seatsFacingFront: Boolean = false
 
@@ -76,12 +82,16 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
         return floor(timeMs.coerceAtLeast(0) * speed * pxPerSecond / 1000.0).toInt()
     }
 
+    /** Deslocamento de leitura do fundo, já no sentido da viagem. */
+    internal fun scroll(timeMs: Long, env: SceneEnv, pxPerSecond: Float): Int =
+        offset(timeMs, env, pxPerSecond).let { if (travelsLeft) -it else it }
+
     private fun drawBackLayers(b: PixelBuffer, env: SceneEnv, timeMs: Long) {
         val p = env.period
         val mask = art.mask
         listOf("bg_far" to farPxPerSecond, "bg_mid" to midPxPerSecond, "bg_near" to nearPxPerSecond).forEach { (name, speed) ->
             val layer = art.layer(name, p) ?: return@forEach
-            blitScrolled(b, layer, offset(timeMs, env, speed), mask)
+            blitScrolled(b, layer, scroll(timeMs, env, speed), mask)
         }
         art.layer("vehicle_back", p)?.let { b.blit(it, 0, bodySway(timeMs, env)) }
     }
@@ -109,7 +119,7 @@ abstract class LayeredTransportScene(id: SceneId, protected val art: SceneArt) :
         // Janelas acesas do fundo: pixels de `bg_*` com cor emissiva, onde o veículo não cobre.
         listOf("bg_far" to farPxPerSecond, "bg_mid" to midPxPerSecond, "bg_near" to nearPxPerSecond).forEach { (name, speed) ->
             val layer = art.layer(name, p) ?: return@forEach
-            val off = offset(timeMs, env, speed)
+            val off = scroll(timeMs, env, speed)
             for (y in 0 until SCENE_H) for (x in 0 until SCENE_W) {
                 val i = y * SCENE_W + x
                 if (covered[i] || art.mask?.get(i) == false) continue
@@ -204,9 +214,12 @@ class CarSceneV3(art: SceneArt) : LayeredTransportScene(SceneId.CAR, art) {
 
     private val wheels = art.slotsWithPrefix("wheel_").values.toList()
 
-    /** Raios girando sobre o aro desenhado na arte (que fica fixo no chão). */
+    // Frente à esquerda: o carro anda para a esquerda.
+    override val travelsLeft = true
+
+    /** Raios girando sobre o aro desenhado na arte (fixo no chão); anti-horário, indo para a esquerda. */
     override fun drawDynamicFront(b: PixelBuffer, env: SceneEnv, timeMs: Long) {
-        val angle = offset(timeMs, env, nearPxPerSecond) / 8.0
+        val angle = -offset(timeMs, env, nearPxPerSecond) / 8.0
         wheels.forEach { c ->
             for (k in 0..2) {
                 val a = angle + k * 2 * Math.PI / 3
