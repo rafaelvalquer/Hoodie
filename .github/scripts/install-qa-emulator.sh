@@ -5,7 +5,7 @@ set -euo pipefail
 : "${GITHUB_ENV:?GitHub environment file required}"
 out=${1:-app/build/instrumentation-evidence/emulator-install}
 case "$out" in
-  app/build/instrumentation-evidence/emulator-install|app/build/reports/r8-qa/emulator-install|app/build/reports/native-runtime/emulator-install) ;;
+  app/build/instrumentation-evidence/emulator-install|app/build/reports/r8-qa/emulator-install|app/build/reports/native-runtime/emulator-install|app/build/reports/exact-golden-control/emulator-install) ;;
   *) echo 'Unsupported emulator evidence directory' >&2; exit 1 ;;
 esac
 mkdir -p "$out"

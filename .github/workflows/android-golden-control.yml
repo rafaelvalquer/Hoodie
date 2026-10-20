@@ -9,6 +9,7 @@ on:
       - '.github/workflows/android-golden-control.yml'
       - '.github/scripts/diagnose-exact-apk-pair.py'
       - '.github/scripts/exact-golden-control.sh'
+      - '.github/scripts/install-qa-emulator.sh'
 
 permissions:
   contents: read
