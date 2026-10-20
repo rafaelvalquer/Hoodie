@@ -1,0 +1,647 @@
+{
+  "commit": "6eeb43e7afeea57c75187463894ca5c003ddec19",
+  "appSourceTree": "a1395fad3f4f7cedc39672782286a52e86c6f3c6",
+  "runId": 39434545695,
+  "jobId": 118686378441,
+  "url": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39434545695",
+  "artifactId": 12274729781,
+  "artifactZipSha256": "3004f247f3f7e6991d59f57e23d9a1ac8fca96e317aa86f8d9c19f2c65f4b02d",
+  "unit": "success",
+  "lint": "success",
+  "assemble": "success",
+  "instrumentation": "failure",
+  "phases": [
+    {
+      "path": "instrumentation-evidence/full/results/connected/debug/TEST-emulator-5554 - 14-_app-.xml",
+      "tests": 388,
+      "failures": 10,
+      "errors": 0,
+      "skipped": 0,
+      "nonGoldenTests": 208,
+      "failedCases": [
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]"
+        },
+        {
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]"
+        }
+      ]
+    },
+    {
+      "path": "instrumentation-evidence/targeted/results/connected/debug/TEST-emulator-5554 - 14-_app-.xml",
+      "tests": 42,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "nonGoldenTests": 42,
+      "failedCases": []
+    }
+  ],
+  "originalReviewedImagesVerified": 222,
+  "originalReviewedImagesUnchanged": true,
+  "changedPixels": 28,
+  "maxChannelDelta": 1,
+  "pixelAnalysis": [
+    {
+      "name": "diary_full_360x640_f100_bottom_actual.png",
+      "size": [
+        360,
+        640
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 218,
+          "y": 404,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 218,
+          "y": 449,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 217,
+          "y": 450,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "diary_full_360x640_f130_bottom_actual.png",
+      "size": [
+        360,
+        640
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 228,
+          "y": 353,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 228,
+          "y": 398,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 227,
+          "y": 399,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "diary_full_360x800_f100_bottom_actual.png",
+      "size": [
+        360,
+        800
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 218,
+          "y": 564,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 218,
+          "y": 609,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 217,
+          "y": 610,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "diary_full_360x800_f130_bottom_actual.png",
+      "size": [
+        360,
+        800
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 228,
+          "y": 513,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 228,
+          "y": 558,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 227,
+          "y": 559,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "diary_full_411x891_f100_bottom_actual.png",
+      "size": [
+        411,
+        891
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 243,
+          "y": 655,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 243,
+          "y": 700,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 701,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "diary_full_411x891_f130_bottom_actual.png",
+      "size": [
+        411,
+        891
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 253,
+          "y": 630,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 253,
+          "y": 675,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 252,
+          "y": 676,
+          "expected": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "actual": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "digital_full_411x891_f100_actual.png",
+      "size": [
+        411,
+        891
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 242,
+          "y": 520,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 521,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 522,
+          "expected": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "actual": [
+            63,
+            116,
+            109,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "digital_full_411x891_f130_actual.png",
+      "size": [
+        411,
+        891
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 242,
+          "y": 589,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 590,
+          "expected": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "actual": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 591,
+          "expected": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "actual": [
+            63,
+            116,
+            109,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "place_picker_full_411x891_f100_bottom_actual.png",
+      "size": [
+        411,
+        891
+      ],
+      "changedPixels": 1,
+      "differences": [
+        {
+          "x": 59,
+          "y": 668,
+          "expected": [
+            127,
+            159,
+            220,
+            255
+          ],
+          "actual": [
+            127,
+            159,
+            219,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    },
+    {
+      "name": "place_picker_full_411x891_f130_bottom_actual.png",
+      "size": [
+        411,
+        891
+      ],
+      "changedPixels": 3,
+      "differences": [
+        {
+          "x": 71,
+          "y": 657,
+          "expected": [
+            88,
+            109,
+            154,
+            255
+          ],
+          "actual": [
+            88,
+            108,
+            154,
+            255
+          ]
+        },
+        {
+          "x": 66,
+          "y": 662,
+          "expected": [
+            89,
+            111,
+            157,
+            255
+          ],
+          "actual": [
+            89,
+            111,
+            156,
+            255
+          ]
+        },
+        {
+          "x": 67,
+          "y": 668,
+          "expected": [
+            127,
+            159,
+            220,
+            255
+          ],
+          "actual": [
+            127,
+            159,
+            219,
+            255
+          ]
+        }
+      ],
+      "maxChannelDelta": 1
+    }
+  ],
+  "interpretation": "Differences are localized to rounded controls. Host/rendering cause is not proven; no baseline or tolerance changed.",
+  "otherObservedFailure": {
+    "runId": 39429362126,
+    "case": "ScenePerformanceDeviceTest#elevenScenesPublishFramesAndReportAllStages",
+    "assertion": "BEACH must really present touch",
+    "status": "Failed in the preceding run, passed in this run; cause remains unproven. No retry used to convert that failed run into approval."
+  },
+  "followUp": "Preserve the exact app/test APK pair, CPU capabilities and SurfaceFlinger diagnostics. Use identical binaries across hosts to distinguish environment from compilation/source differences.",
+  "ciGateApproved": false
+}

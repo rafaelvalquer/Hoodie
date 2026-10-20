@@ -1,6 +1,16 @@
 # RELEASE-01 — qualidade
 
-Validação local mais recente: **1306 unitários aprovados e lintDebug sem erros**, após a correção de upserts redundantes. [Evidência](unit-results-after-noop.json). Os 1306 unitários também passaram na CI do SHA corrigido; a CI completa verde, os instrumentados completos e os novos artefatos R8 continuam pendentes.
+CI mais recente concluída: `6eeb43e7`, com unitários, lint e assemble aprovados, **42/42 direcionados e 378/388 completos**, sem ignorados. As dez falhas são comparações visuais exatas; os 208 testes não golden da suíte completa passaram. [JUnit, hashes e análise dos pixels](ci-6eeb-results.json). A CI completa permanece reprovada. A árvore atual também tem [1319 unitários conferidos em XML na rodada anterior](ci-b3-unit-results.json).
+
+Validação local anterior: **1306 unitários aprovados e lintDebug sem erros**, após a correção de upserts redundantes. [Evidência](unit-results-after-noop.json). Os resultados históricos abaixo continuam associados aos respectivos SHAs.
+
+## Diferenças visuais preservadas e próximo controle
+
+O ZIP da rodada `6eeb43e7` foi conferido pelo digest publicado pelo GitHub. Os PNGs reais foram comparados independentemente com as referências: **28 pixels distribuídos por dez imagens, com delta máximo de um nível por canal**, nas bordas arredondadas do seletor de velocidade, das barras digitais e do raio do lugar. As 222 imagens revisadas conservam seus hashes. A localização dos pixels foi inspecionada nas imagens; a causa no host/renderizador ainda não foi provada. Não houve tolerância, máscara ou regravação de baseline.
+
+Para o próximo controle, o job preserva os dois APKs exatos usados na instrumentação e seus hashes, além das capacidades da CPU, propriedades do Android e SurfaceFlinger antes dos testes. Isso permite executar o mesmo par binário em outro host, sem atribuir uma diferença a renderização quando também mudou a compilação. Esses APKs são debug e não substituem os APKs R8 derivados do AAB.
+
+O run anterior `39429362126` teve ainda uma falha em `ScenePerformanceDeviceTest#elevenScenesPublishFramesAndReportAllStages`: “BEACH must really present touch”. Esse caso passou na rodada atual, sem retry dentro do run; a passagem não prova a causa nem resolve a instabilidade anterior. O caso continua na suíte completa.
 
 ## Linha de base remota
 

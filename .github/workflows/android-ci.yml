@@ -217,9 +217,34 @@ jobs:
         run: |
           mkdir -p app/build/instrumentation-evidence
           nproc > app/build/instrumentation-evidence/host-cpu-count.txt
+          lscpu > app/build/instrumentation-evidence/host-cpu-info.txt
           free -m > app/build/instrumentation-evidence/host-memory.txt
       - name: Connected tests (API 34)
         run: bash .github/scripts/run-qa-emulator.sh 34 google_apis .github/scripts/connected-tests.sh
+      - name: Identificar os APKs exatos da instrumentação
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, subprocess
+          pair = {
+              'app': pathlib.Path('app/build/outputs/apk/debug/app-debug.apk'),
+              'instrumentation': pathlib.Path('app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk'),
+          }
+          if not all(p.is_file() for p in pair.values()):
+              print('APK pair unavailable: compilation did not produce both files.')
+              raise SystemExit(0)
+          report = {
+              'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+              'appSourceTree': subprocess.check_output(['git', 'rev-parse', 'HEAD:app/src'], text=True).strip(),
+              'scope': 'Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.',
+              'apks': {name: {'path': str(p), 'bytes': p.stat().st_size,
+                              'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
+                       for name, p in pair.items()},
+          }
+          out = pathlib.Path('app/build/instrumentation-evidence/apk-pair.json')
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
+          PY
       - name: Upload instrumentation reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -230,4 +255,6 @@ jobs:
             app/build/outputs/androidTest-results/
             app/build/outputs/connected_android_test_additional_output/
             app/build/instrumentation-evidence/
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
           if-no-files-found: ignore

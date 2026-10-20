@@ -84,6 +84,8 @@ adb shell settings put system font_scale 1.0
 adb shell settings put secure show_ime_with_hard_keyboard 1
 adb shell settings put secure stylus_handwriting_enabled 0
 python3 .github/scripts/verify-emulator-window.py --wait-for-focus "$out/initial-focus"
+adb shell getprop > "$out/emulator-boot-properties.txt"
+adb shell dumpsys SurfaceFlinger > "$out/emulator-boot-surfaceflinger.txt"
 adb shell dumpsys power > "$out/emulator-boot-power.txt"
 adb logcat -d -v threadtime > "$out/emulator-boot-logcat.txt"
 adb logcat -d -b events -v threadtime -s am_anr > "$out/emulator-boot-anr.txt"
