@@ -2,6 +2,8 @@
 
 Estado: **validação parcial; gate de distribuição ainda aberto**.
 
+Evidência mais recente: `a11cb02a` completou o roteiro R8 de backup mínimo em API36/revisão7 com página16384, restauração/reabertura, exportação via SAF e autenticação independente. API35 reprovou no mesmo workflow e a comparação estrita do fixture continua falha. [Resultados e limites](r8-a11-api36-backup-results.json). Isso não aprova histórico completo, migração, aparelhos físicos ou o gate de release.
+
 Último diagnóstico Linux, `c40f864b`: assinatura de desenvolvimento, APK derivado do AAB e alinhamento estático das 12 bibliotecas por arquivo aprovados. Runtime confirmou página 16384, processos 2833/3028 com classificações COLD/WARM e 68 hierarquias de acessibilidade, incluindo 30 em Ajustes e 30 em Backup. O gate global **falhou**: `com.google.android.gms`, UID 10144, sofreu SIGSEGV no HeapTaskDaemon/MarkCompact. O exit-info coletado do Hoodie contém apenas o force-stop solicitado pelo roteiro; isso não encerra o crash anterior durante exportação, nem comprova migração/restauração. [Hashes, casos observados e limites](r8-qa-c40-runtime.json).
 
 Emulador usado na rodada inicial: Pixel_8, Android API 37, x86_64. `adb -s emulator-5554 shell getconf PAGE_SIZE` retornou `16384` naquela execução (página de memória do SO; não confundir com página SQLite). A validação posterior do APK de homologação usa o AVD isolado descrito abaixo.

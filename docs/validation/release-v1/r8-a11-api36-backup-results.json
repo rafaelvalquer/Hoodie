@@ -1,0 +1,269 @@
+{
+  "runId": 39586104086,
+  "commit": "a11cb02a725d0b77b9346a3b41f210c05ff4fe99",
+  "matrixConclusion": "failure",
+  "observations": [
+    {
+      "api": 35,
+      "artifactId": 12341070612,
+      "artifactSha256": "3d58157e0605b3625018d50293b5c98050c11cf88803832412705331f52a2e76",
+      "jobConclusion": "failure",
+      "build": {
+        "commit": "a11cb02a725d0b77b9346a3b41f210c05ff4fe99",
+        "appSourceTree": "377e31042687d57e8272544c6c4c62f31f49b27f",
+        "versionCode": 7,
+        "scope": "Development signing; no upload key, Play submission, physical or production approval",
+        "aabSha256": "bdf97ce894732d184b1ef2aea5a87937e0b70bf07a2f414b73d6a02f35a8122d",
+        "apkSha256": "aa89ddb553254a2e55cb05f65ab9bc0f5f1279fc745fdbd8f2e0ab452a4116ae",
+        "mappingSha256": "4751e83b2707e44367edeca9b4ec6f9cd008c90314e72c854baec3651f59bfc5",
+        "certificateSha256": "46c6e9f97cc915932e5037a30d26136e4c425fb43eb974dbf6ab5285e563b08e",
+        "apkDexSha256": {
+          "classes.dex": "a15f475375e1996fce688ee10558f4d4a5015b2cb1d97a35d2907a926bbc6bd3"
+        },
+        "apkNativeSha256": {
+          "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+          "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+          "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+          "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+          "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+          "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+          "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+          "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+          "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+          "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+          "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+        },
+        "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+        "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+        "runtimeVerified": false,
+        "fullBackupJourneyApproved": false
+      },
+      "staticAlignmentPassed": true,
+      "crashProcesses": [
+        "com.google.android.apps.nexuslauncher"
+      ],
+      "crashBufferSha256": "83eabfa35b678e19b13d03036ccd91c19051c4499ed7f1cb678fc4f253ff2262",
+      "systemImage": "Pkg.Desc=System Image Page Size 16k x86_64 with Google APIs.\nPkg.Revision=5\nPkg.Dependencies=emulator#33.1.24\nAndroidVersion.ApiLevel=35\nAndroidVersion.ExtensionLevel=13\nAndroidVersion.IsBaseSdk=true\nSystemImage.Abi=x86_64\nSystemImage.TagId=google_apis,page_size_16kb\nSystemImage.TagDisplay=Google APIs,16 KB Page Size\nSystemImage.GpuSupport=true\nAddon.VendorId=google\nAddon.VendorDisplay=Google Inc.\n",
+      "backupStarted": false
+    },
+    {
+      "api": 36,
+      "artifactId": 12339837418,
+      "artifactSha256": "fed2ff3abf76b0df767986559e077861cca70fda11bbf844c6954d775660bb78",
+      "jobConclusion": "success",
+      "build": {
+        "commit": "a11cb02a725d0b77b9346a3b41f210c05ff4fe99",
+        "appSourceTree": "377e31042687d57e8272544c6c4c62f31f49b27f",
+        "versionCode": 7,
+        "scope": "Development signing; no upload key, Play submission, physical or production approval",
+        "aabSha256": "0b33770570949f80818f7daa264aefbdf12f6411893bbe7b1e5c21e3105f535c",
+        "apkSha256": "5e6002b8dac3ab7e674f9b56cfacbe9e5a82525d1de37365fe891a0206e03303",
+        "mappingSha256": "4751e83b2707e44367edeca9b4ec6f9cd008c90314e72c854baec3651f59bfc5",
+        "certificateSha256": "65acb81480f20c19f9740694650a9863264ab41d3df7a5d7fc2828e54cec7b1c",
+        "apkDexSha256": {
+          "classes.dex": "a15f475375e1996fce688ee10558f4d4a5015b2cb1d97a35d2907a926bbc6bd3"
+        },
+        "apkNativeSha256": {
+          "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+          "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+          "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+          "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+          "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+          "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+          "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+          "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+          "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+          "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+          "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+        },
+        "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+        "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+        "runtimeVerified": false,
+        "fullBackupJourneyApproved": false
+      },
+      "staticAlignmentPassed": true,
+      "crashProcesses": [],
+      "crashBufferSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "systemImage": "Pkg.Desc=System Image Page Size 16k x86_64 with Google APIs.\nPkg.Revision=7\nPkg.Dependencies=emulator#35.4.9\nAndroidVersion.ApiLevel=36\nAndroidVersion.ExtensionLevel=17\nAndroidVersion.IsBaseSdk=true\nSystemImage.Abi=x86_64\nSystemImage.TagId=google_apis,page_size_16kb\nSystemImage.TagDisplay=Google APIs,16 KB Page Size\nSystemImage.GpuSupport=true\nAddon.VendorId=google\nAddon.VendorDisplay=Google Inc.\n",
+      "backupStarted": true,
+      "launches": {
+        "pageSize": 16384,
+        "derivedApkProcessRestart": true,
+        "derivedApkColdLaunch": true,
+        "processIds": [
+          2989,
+          3164
+        ],
+        "androidLaunchStates": [
+          "COLD",
+          "COLD"
+        ],
+        "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+      },
+      "accessibility": {
+        "passed": true,
+        "package": "com.hoodie.app.homologacao",
+        "snapshots": 69,
+        "evidenceFormatVersion": 2,
+        "retainedXmlFiles": 69,
+        "settingsSnapshots": 30,
+        "backupSnapshots": 30,
+        "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance"
+      },
+      "backup": {
+        "passed": true,
+        "sourceFixtureSha256": "c0d7739652d6b5e1a8e1c6df1b7cf592342db6d334c6c1b6d16fa016b43e20a7",
+        "apkSha256": "5e6002b8dac3ab7e674f9b56cfacbe9e5a82525d1de37365fe891a0206e03303",
+        "api": 36,
+        "pageSize": 16384,
+        "processIds": [
+          "3164",
+          "7946",
+          "8099"
+        ],
+        "fixtureRestored": true,
+        "reopenedAfterRestore": true,
+        "exportSuccessObserved": true,
+        "accessibilitySnapshotsDuringExport": 1,
+        "reexportSha256": "558dc0f660a9509681c1c5b6553b44f5ced42323ece5efd02911809826537765",
+        "reexportBytes": 6639,
+        "reexportAuthenticatedByAppUi": true,
+        "independentlyAuthenticated": false,
+        "snapshots": 34,
+        "releaseApproved": false,
+        "scope": "Permanent one-place fixture restored/reopened/exported via UI and SAF on R8. Minimal diagnostic, not full-history/cross-device/physical/interruption/provider acceptance or closure of HVR-NATIVE-API35-001."
+      },
+      "independentAuthentication": {
+        "passed": true,
+        "sha256": "558dc0f660a9509681c1c5b6553b44f5ced42323ece5efd02911809826537765",
+        "bytes": 6639,
+        "formatVersion": 1,
+        "iterations": 600000,
+        "authenticatedUnits": 9,
+        "authenticatedTerminator": true,
+        "counts": {
+          "places": 1,
+          "routines": 0,
+          "day_exceptions": 0,
+          "location_events": 0,
+          "context_events": 1,
+          "context_confirmations": 0,
+          "hoodie_activities": 0,
+          "timeline_events": 2,
+          "memories": 0,
+          "daily_device_usage": 0,
+          "daily_app_usage": 0,
+          "daily_context_app_usage": 0,
+          "app_category_overrides": 0,
+          "phone_app_sessions": 0,
+          "daily_screen_hourly": 0,
+          "daily_context_usage": 0,
+          "daily_phone_timeline": 0,
+          "mobility_sessions": 0,
+          "mobility_segments": 0,
+          "diary_corrections": 0,
+          "learned_routine_slots": 0,
+          "transport_patterns": 0,
+          "transport_evidence": 0,
+          "effective_routine_versions": 3
+        },
+        "includeDigital": true,
+        "rowSchemaValidated": false,
+        "releaseApproved": false,
+        "scope": "Independent AES-GCM/EOF, envelope/order and manifest-count audit with public synthetic phrase. No row-field/relationship, duplicate, migration, UI or physical-device acceptance."
+      },
+      "independentAuthenticationRecheckedLocally": true,
+      "strictComparator": {
+        "scriptSha256": "b886932197e96d68abe208c7f8135316a9b0cb2831eff17049e4a1cae053a522",
+        "exitCode": 1,
+        "stdout": "{\n  \"places\": {\n    \"sourceRows\": 1,\n    \"targetRows\": 1,\n    \"missingOrChangedRows\": 1\n  }\n}\n",
+        "stderr": "Traceback (most recent call last):\n  File \"C:\\Projetos\\Hoodie\\app\\build\\compare_synthetic_backups.py\", line 48, in <module>\n    assert all(row['missingOrChangedRows'] == 0 for row in result.values()), 'Historical rows changed or missing'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Historical rows changed or missing\n",
+        "passed": false,
+        "placeFieldDifferences": {
+          "radiusMeters": {
+            "source": 150.0,
+            "target": 150,
+            "sourceType": "float",
+            "targetType": "int"
+          },
+          "longitude": {
+            "source": -46.0,
+            "target": -46,
+            "sourceType": "float",
+            "targetType": "int"
+          },
+          "latitude": {
+            "source": -23.0,
+            "target": -23,
+            "sourceType": "float",
+            "targetType": "int"
+          }
+        },
+        "notes": "Original strict canonical comparator unchanged. Numeric observation does not convert strict representation failure into acceptance."
+      },
+      "fullHistoryApproved": false,
+      "releaseApproved": false,
+      "retainedWitnesses": [
+        {
+          "file": "r8-a11-api36-ui/009-authenticated-preview.xml",
+          "sha256": "c1702667aa35bce1961e21d1a06d32cf9f14fad78ba80c8751978d6f9057bc24",
+          "stage": "authenticated-preview",
+          "exportBusy": false
+        },
+        {
+          "file": "r8-a11-api36-ui/010-authenticated-preview.xml",
+          "sha256": "016ebaae7c20b235eeec43bc6bd48fc2f43b6a0273c2c9abda8a59322c2fe94f",
+          "stage": "authenticated-preview",
+          "exportBusy": false
+        },
+        {
+          "file": "r8-a11-api36-ui/012-restored-home.xml",
+          "sha256": "e43f99ed369fa513c628212b72e002d03b1e00a1fe078adf679da1ec5c4eee91",
+          "stage": "restored-home",
+          "exportBusy": false
+        },
+        {
+          "file": "r8-a11-api36-ui/013-restored-home.xml",
+          "sha256": "87ef00822cded6057e6a94784dd18b878a8ef05b795bd5662cf2db2a33726137",
+          "stage": "restored-home",
+          "exportBusy": false
+        },
+        {
+          "file": "r8-a11-api36-ui/014-reopened-home.xml",
+          "sha256": "738b9b82c63c10ef33d7391be35287ea685feaa9bb04679d795e36b2537ebbd1",
+          "stage": "reopened-home",
+          "exportBusy": false
+        },
+        {
+          "file": "r8-a11-api36-ui/015-reopened-home.xml",
+          "sha256": "87ef00822cded6057e6a94784dd18b878a8ef05b795bd5662cf2db2a33726137",
+          "stage": "reopened-home",
+          "exportBusy": false
+        },
+        {
+          "file": "r8-a11-api36-ui/026-export-progress.xml",
+          "sha256": "bb381abe220ad3544a7f3a4a6a6c2f4a0588b1968f1ca2a993d43a27d06bb2b6",
+          "stage": "export-progress",
+          "exportBusy": true
+        },
+        {
+          "file": "r8-a11-api36-ui/033-authenticated-preview.xml",
+          "sha256": "b0bf68a1d74cb7ed7fc2ba920dc68e092841e4355bd1c284c3b95b7d69812c6f",
+          "stage": "authenticated-preview",
+          "exportBusy": false
+        },
+        {
+          "file": "r8-a11-api36-ui/034-authenticated-preview.xml",
+          "sha256": "9b368e9e8d4853d723e360cb365ad5c7eef7dc444507660b94617a3c43fd617c",
+          "stage": "authenticated-preview",
+          "exportBusy": false
+        }
+      ]
+    }
+  ],
+  "sameDexNativeResourcesAndMappingAcrossImages": true,
+  "releaseApproved": false,
+  "limits": "API36 minimal fixture UI/SAF/authentication passed in 16KB; API35 failed and is not hidden. Not migration/full-history/cross-device/physical/provider/interruption or upload-signed release acceptance. Known native Hoodie defects remain open."
+}

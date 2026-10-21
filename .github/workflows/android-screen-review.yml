@@ -39,8 +39,8 @@ jobs:
         with:
           github-token: ${{ github.token }}
           repository: rafaelvalquer/Hoodie
-          run-id: 39521916887
-          artifact-ids: 12315206989
+          run-id: 39584775889
+          artifact-ids: 12342336371
           path: ${{ runner.temp }}/screen-review-pair
           merge-multiple: true
       - name: Instalar emulador oficial fixado

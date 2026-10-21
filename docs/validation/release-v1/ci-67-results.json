@@ -1,0 +1,126 @@
+{
+  "commit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "sourceTree": "377e31042687d57e8272544c6c4c62f31f49b27f",
+  "runId": 39584775889,
+  "instrumentationArtifactId": 12342336371,
+  "instrumentationArtifactSha256": "96180d94563ba60df7e1096528293c3a690ec80adef1b8e58e32be194dfd1f5a",
+  "full": {
+    "tests": 390,
+    "passed": 376,
+    "failed": 14,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "screenMatchesReviewedBaseline[diary_normal_360x640_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_normal_360x640_f100 changed 4790 pixels; first differences: [(33,624) ff26294a->ff415c4e, (34,624) ff26294a->ff588557, (35,624) ff26294a->ff659c5e, (36,624) ff26294a->ff679f5f, (37,624) ff26294a->ff679f5f, (38,624) ff26294a->ff679f5f, (39,624) ff26294a->ff679f5f, (40,624) ff26294a->ff679f5f, (41,624) ff26294a->ff679f5f, (42,624) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_normal_360x800_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_normal_360x800_f100 changed 53890 pixels; first differences: [(33,624) ff26294a->ff415c4e, (34,624) ff26294a->ff588557, (35,624) ff26294a->ff659c5e, (36,624) ff26294a->ff679f5f, (37,624) ff26294a->ff679f5f, (38,624) ff26294a->ff679f5f, (39,624) ff26294a->ff679f5f, (40,624) ff26294a->ff679f5f, (41,624) ff26294a->ff679f5f, (42,624) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_normal_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_normal_411x891_f100 changed 97603 pixels; first differences: [(33,624) ff26294a->ff536b55, (34,624) ff26294a->ff77a063, (35,624) ff26294a->ff8bbc6d, (36,624) ff26294a->ff8ec06e, (37,624) ff26294a->ff8ec06e, (38,624) ff26294a->ff8ec06e, (39,624) ff26294a->ff8ec06e, (40,624) ff26294a->ff8ec06e, (41,624) ff26294a->ff8ec06e, (42,624) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_normal_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_normal_411x891_f130 changed 69105 pixels; first differences: [(33,698) ff26294a->ff536b55, (34,698) ff26294a->ff77a063, (35,698) ff26294a->ff8bbc6d, (36,698) ff26294a->ff8ec06e, (37,698) ff26294a->ff8ec06e, (38,698) ff26294a->ff8ec06e, (39,698) ff26294a->ff8ec06e, (40,698) ff26294a->ff8ec06e, (41,698) ff26294a->ff8ec06e, (42,698) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x640_f100_map changed 175300 pixels; first differences: [(18,0) ff33375e->ff0f1124, (19,0) ff33375e->ff0f1124, (20,0) ff33375e->ff0f1124, (21,0) ff33375e->ff0f1124, (22,0) ff33375e->ff0f1124, (23,0) ff33375e->ff0f1124, (24,0) ff33375e->ff0f1124, (25,0) ff33375e->ff0f1124, (26,0) ff33375e->ff0f1124, (27,0) ff33375e->ff0f1124]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x640_f130_map changed 172898 pixels; first differences: [(18,0) ff33375e->ff26294a, (19,0) ff33375e->ff26294a, (20,0) ff33375e->ff26294a, (21,0) ff33375e->ff26294a, (22,0) ff33375e->ff26294a, (23,0) ff33375e->ff26294a, (24,0) ff33375e->ff26294a, (25,0) ff33375e->ff26294a, (26,0) ff33375e->ff26294a, (27,0) ff33375e->ff26294a]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x800_f100 changed 2090 pixels; first differences: [(33,793) ff26294a->ff415c4e, (34,793) ff26294a->ff588557, (35,793) ff26294a->ff659c5e, (36,793) ff26294a->ff679f5f, (37,793) ff26294a->ff679f5f, (38,793) ff26294a->ff679f5f, (39,793) ff26294a->ff679f5f, (40,793) ff26294a->ff679f5f, (41,793) ff26294a->ff679f5f, (42,793) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x800_f130_map changed 210655 pixels; first differences: [(31,0) ffc1c5dc->ff33375e, (32,0) ffe9edff->ff33375e, (33,0) ffa9adc7->ff33375e, (36,0) ffd9ddf0->ff33375e, (37,0) ffe9edff->ff33375e, (38,0) ff9195b1->ff33375e, (39,0) ffcbcfe4->ff33375e, (40,0) ffe9edff->ff33375e, (41,0) ffe9edff->ff33375e, (42,0) ffe4e8fb->ff33375e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_411x891_f100 changed 34388 pixels; first differences: [(33,793) ff26294a->ff536b55, (34,793) ff26294a->ff77a063, (35,793) ff26294a->ff8bbc6d, (36,793) ff26294a->ff8ec06e, (37,793) ff26294a->ff8ec06e, (38,793) ff26294a->ff8ec06e, (39,793) ff26294a->ff8ec06e, (40,793) ff26294a->ff8ec06e, (41,793) ff26294a->ff8ec06e, (42,793) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_411x891_f130_map changed 260298 pixels; first differences: [(16,0) ff1b1d33->ff0f1124, (17,0) ff1b1d33->ff0f1124, (18,0) ff1b1d33->ff33375e, (19,0) ff1b1d33->ff33375e, (20,0) ff1b1d33->ff33375e, (21,0) ff1b1d33->ff33375e, (22,0) ff1b1d33->ff33375e, (23,0) ff1b1d33->ff33375e, (24,0) ff1b1d33->ff33375e, (25,0) ff1b1d33->ff33375e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f100 changed 3 pixels; first differences: [(242,520) ff5f8a85->ff5f8b85, (242,521) ff5f8a85->ff5f8b85, (242,522) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f130 changed 3 pixels; first differences: [(242,589) ff5f8a85->ff5f8b85, (242,590) ff5f8a85->ff5f8b85, (242,591) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f100_bottom changed 1 pixels; first differences: [(59,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f130_bottom changed 3 pixels; first differences: [(71,657) ff586d9a->ff586c9a, (66,662) ff596f9d->ff596f9c, (67,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      }
+    ]
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "cityRegressions": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "nonGolden": {
+    "tests": 210,
+    "passed": 210,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "duplicateJUnitVerifiedAndCountedOnce": true,
+  "apkPair": {
+    "commit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+    "appSourceTree": "377e31042687d57e8272544c6c4c62f31f49b27f",
+    "scope": "Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.",
+    "apks": {
+      "app": {
+        "path": "app/build/outputs/apk/debug/app-debug.apk",
+        "bytes": 26102669,
+        "sha256": "c52c0cc8784d0fc68b3b9e5010c722a15aa5d105e178d6bf7b3952ea99eb5e27"
+      },
+      "instrumentation": {
+        "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+        "bytes": 6132762,
+        "sha256": "5620a465bdfb5b9d6d1f87221d1267e012ff764c1ad0e114ba944322b60a03d4"
+      }
+    }
+  },
+  "qualityGateApproved": false,
+  "interpretation": "Both City regressions passed, including narrow 320dp/font130% layout before and after camera switch. All 210 non-golden cases passed. Fourteen visual comparisons remain failed. No baseline promotion or tolerance change."
+}

@@ -1,4 +1,4 @@
-"""Capture review candidates from the frozen f20 APKs; never promotes baselines.
+"""Capture review candidates from the frozen 67bd2d7b APKs; never promotes baselines.
 
 Two independent CI jobs use identical APKs and all 180 cases/222 images. This
 is recording evidence, not a successful baseline comparison or release gate.
@@ -12,10 +12,10 @@ import re
 import struct
 import subprocess
 
-SOURCE = 'f20cef3355d3bfd5f6309c0cd4ecf543c2b6811d'
-SOURCE_TREE = '5188f6983ceb14bd2d09132f6b43d2b8ae75511a'
-HASHES = ('c784a09b42a4feead241bd9096c407c8267207a8f7a84b7047a4baae576fa681',
-          'ea1be0945b8881d615952b3945bfb643e54b30d480292e4d6de65067bdc40825')
+SOURCE = '67bd2d7b5925b087c7beb3dd4418ce308a5752ec'
+SOURCE_TREE = '377e31042687d57e8272544c6c4c62f31f49b27f'
+HASHES = ('c52c0cc8784d0fc68b3b9e5010c722a15aa5d105e178d6bf7b3952ea99eb5e27',
+          '5620a465bdfb5b9d6d1f87221d1267e012ff764c1ad0e114ba944322b60a03d4')
 CLASS = 'com.hoodie.app.ui.golden.ScreenGoldenMatrixTest'
 PACKAGES = ('com.hoodie.app', 'com.hoodie.app.test')
 
