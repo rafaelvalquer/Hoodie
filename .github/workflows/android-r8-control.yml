@@ -1,0 +1,87 @@
+name: Frozen R8 runtime control
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-r8-control.yml'
+      - '.github/scripts/frozen-r8-runtime.sh'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: frozen-r8-runtime-control
+  cancel-in-progress: false
+
+jobs:
+  control:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: api35-4kb
+            target: google_apis
+            revision: 9
+            page: 4096
+          - label: api35-16kb
+            target: google_apis_ps16k
+            revision: 5
+            page: 16384
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Recuperar o APK exato que sofreu SIGSEGV
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: rafaelvalquer/Hoodie
+          run-id: 39521350075
+          artifact-ids: 12311985399
+          path: ${{ runner.temp }}/frozen-r8
+          merge-multiple: true
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh app/build/reports/frozen-r8-control/emulator-install
+      - name: Preparar imagem e registrar sua revisão exata
+        env:
+          CONTROL_TARGET: ${{ matrix.target }}
+          CONTROL_REVISION: ${{ matrix.revision }}
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;23.0'
+          test ! -e "$ANDROID_HOME/cmdline-tools/preinstalled"
+          mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
+          ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "system-images;android-35;$CONTROL_TARGET;x86_64"
+          grep -Eq "^Pkg.Revision[[:space:]]*=[[:space:]]*$CONTROL_REVISION[[:space:]]*$" "$ANDROID_HOME/system-images/android-35/$CONTROL_TARGET/x86_64/source.properties"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Executar uma observação por ambiente sem recompilar
+        env:
+          FROZEN_R8_ROOT: ${{ runner.temp }}/frozen-r8
+          CONTROL_PAGE_SIZE: ${{ matrix.page }}
+          CONTROL_TARGET: ${{ matrix.target }}
+        run: |
+          mkdir -p app/build/reports/frozen-r8-control
+          lscpu > app/build/reports/frozen-r8-control/host-cpu.txt
+          free -m > app/build/reports/frozen-r8-control/host-memory.txt
+          bash .github/scripts/run-qa-emulator.sh 35 "$CONTROL_TARGET" .github/scripts/frozen-r8-runtime.sh
+      - name: Preservar inclusive falhas de boot e crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-r8-${{ matrix.label }}-${{ github.sha }}
+          path: app/build/reports/frozen-r8-control/
+          if-no-files-found: error
