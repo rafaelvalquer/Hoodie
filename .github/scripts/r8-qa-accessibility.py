@@ -16,6 +16,23 @@ sys.path.insert(0, str(ROOT/'tools'))
 from android_ui import AndroidUi
 
 PACKAGE = 'com.hoodie.app.homologacao'
+UI_READY_TIMEOUT = 45
+
+
+def wait_for_welcome(snapshot, label):
+    """Focus can belong to SplashScreen before RootState reaches ONBOARDING."""
+    deadline = time.monotonic()+UI_READY_TIMEOUT
+    while True:
+        root = snapshot('welcome')
+        if any(n.get('content-desc') == label and n.get('enabled') == 'true' for n in root.iter('node')):
+            return root
+        visible = {value for n in root.iter('node')
+                   for value in (n.get('text'), n.get('content-desc')) if value}
+        # Wait only for the observed, intentional SplashScreen. A database error,
+        # unexpected navigation or different owner must remain an immediate failure.
+        assert visible == {'HOODIE', 'Seu companheiro de rotina.'}, ('Unexpected initial UI', visible)
+        assert time.monotonic() < deadline, 'Onboarding did not become ready; SplashScreen remained visible'
+        time.sleep(.5)
 
 
 def main():
@@ -65,15 +82,14 @@ def main():
     strings = {n.get('name'): (n.text or '').strip('"')
                for n in ET.parse(ROOT/'app/src/main/res/values/strings.xml').getroot()}
     # Each CI installation is new: no existing data or permissions are touched.
-    root = snapshot('welcome')
-    assert any(n.get('content-desc') == strings['ui_onboarding_screen_3'] for n in root.iter('node'))
+    wait_for_welcome(snapshot, strings['ui_onboarding_screen_3'])
     tap(strings['ui_onboarding_screen_3'],'before-name')
     root = snapshot('name')
     fields = [n for n in root.iter('node') if n.get('class') == 'android.widget.EditText']
     assert len(fields) == 1 and fields[0].get('text') == 'Hoodie'
     tap(strings['ui_onboarding_screen_3'],'before-tracking')
     tap(strings['prog_enter_home'],'before-home')
-    deadline = time.monotonic()+45
+    deadline = time.monotonic()+UI_READY_TIMEOUT
     while True:
         root = snapshot('home-ready')
         if any(n.get('content-desc') == 'Hoodie' for n in root.iter('node')):

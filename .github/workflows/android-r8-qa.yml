@@ -108,3 +108,5 @@ jobs:
             app/build/reports/r8-qa/
             app/build/outputs/androidTest-results/
             app/build/reports/androidTests/
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/androidTest/debug/*.apk

@@ -1,0 +1,86 @@
+{
+  "runId": 39632377488,
+  "jobId": 119333760698,
+  "artifactId": 12361160436,
+  "artifactSha256": "4c5caf2acb8af463ba1e7f29137435cce4977c98558bd9fb075ecc2fd3f4ba96",
+  "build": {
+    "commit": "f41b99b4bb8b18422ab1fa72b0e95097a9abe464",
+    "appSourceTree": "083af6a76aef317bef631aedf43c11db85d80162",
+    "versionCode": 7,
+    "scope": "Development signing; no upload key, Play submission, physical or production approval",
+    "aabSha256": "3eebabecefa65694e19950fc78f2ce67fb83bc451ed44a2095288a8263b5886a",
+    "apkSha256": "b3b2759a291bf78d41555f4592501196f8f160291779f588589fabe5495b4fe9",
+    "mappingSha256": "4751e83b2707e44367edeca9b4ec6f9cd008c90314e72c854baec3651f59bfc5",
+    "certificateSha256": "a0a27994bba54959ee19427bd05d034ce63eecb373fc4284120c8a4046364dd1",
+    "apkDexSha256": {
+      "classes.dex": "a15f475375e1996fce688ee10558f4d4a5015b2cb1d97a35d2907a926bbc6bd3"
+    },
+    "apkNativeSha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+      "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+      "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+      "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+      "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+      "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+      "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+      "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+      "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+    },
+    "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+    "runtimeVerified": false,
+    "fullBackupJourneyApproved": false
+  },
+  "api": 36,
+  "pageSize": 16384,
+  "failure": "Initial accessibility read expected onboarding while the intentional SplashScreen was still displayed.",
+  "originalObservations": [
+    {
+      "stage": "welcome",
+      "pid": 3170,
+      "nodes": 7,
+      "xml": "001-welcome.xml",
+      "window": "001-welcome-window.txt"
+    }
+  ],
+  "witnesses": [
+    {
+      "file": "r8-f41-api36-splash.xml",
+      "sha256": "e43f99ed369fa513c628212b72e002d03b1e00a1fe078adf679da1ec5c4eee91"
+    },
+    {
+      "file": "r8-f41-api36-splash-window.txt",
+      "sha256": "b07a394875283c71a05f6a89967d279521a61749f076cae6ad0189bb607bc465"
+    }
+  ],
+  "unchangedPayloadsComparedWith75": {
+    "apkDexSha256": true,
+    "apkNativeSha256": true,
+    "resourcesArscSha256": true,
+    "mappingSha256": true
+  },
+  "crashBufferEmpty": true,
+  "databaseTestsExecuted": false,
+  "driverReplay": {
+    "originalDriverSha256": "ae4a5f42247312eeb2912d491f29b683fb948f74cd728bd214e1d9da6d405aee",
+    "observedSplashRejectsBeforeAnyInput": true,
+    "correctedDriverPreservesObservedSplashAndCompletesSimulatedFlow": true,
+    "retainedSimulatedSnapshots": 70,
+    "scope": "Offline replay using actual XML plus a fake UI; not Android execution or runtime acceptance."
+  },
+  "correction": {
+    "readiness": "Enabled onboarding action; only the exact known SplashScreen is polled.",
+    "deadlineSeconds": 45,
+    "existingHomeDeadlineUnchanged": true,
+    "allSnapshotsRetained": true,
+    "testCasesRetried": false,
+    "appRestarted": false,
+    "unexpectedUiStillFails": true,
+    "androidRuntimeVerified": false
+  },
+  "nativeDefectsClosed": false,
+  "releaseApproved": false
+}

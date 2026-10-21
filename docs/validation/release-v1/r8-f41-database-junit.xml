@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.hoodie.app.database.Migration1To2InstrumentedTest" tests="13" failures="0" errors="0" skipped="0" time="13.355" timestamp="2026-10-21T16:26:03" hostname="localhost">
+  <properties>
+    <property name="device" value="emulator-5554 - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="migration10To11PreservesTripsCorrectionsAndManualConfiguration" classname="com.hoodie.app.database.Migration1To2InstrumentedTest" time="0.244" />
+  <testcase name="allHistoricalVersionsReachCurrentSchemaOnDevice" classname="com.hoodie.app.database.Migration1To2InstrumentedTest" time="0.862" />
+  <testcase name="timelineAntigaSobreviveEGanhaOrigem" classname="com.hoodie.app.database.Migration1To2InstrumentedTest" time="0.031" />
+  <testcase name="ctSec002_upgradeDeTextoPuroParaCifradoSemPerderDados" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="2.735" />
+  <testcase name="senhaIrrecuperavelNaoAbreNemRegeneraSenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="0.553" />
+  <testcase name="senhaErradaNaoAbre" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="1.031" />
+  <testcase name="ctSec003_reaberturaComNovaInstanciaUsaAMesmaSenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="1.057" />
+  <testcase name="ctSec001_instalacaoNovaJaNasceCifrada" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="0.554" />
+  <testcase name="encryptedSchema11PreservesRelatedHistoryThroughMigrationAndReopen" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="2.759" />
+  <testcase name="ctSec004_deleteRemoveBancoESenha" classname="com.hoodie.app.database.EncryptedDatabaseTest" time="0.554" />
+  <testcase name="digitalV5HistorySurvivesEncryptedReopen" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="1.057" />
+  <testcase name="sqlCipherNativeLibraryLoads" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="0.003" />
+  <testcase name="encryptedPlaceCanBeInsertedReadAndReopened" classname="com.hoodie.app.database.SqlCipherRuntimeTest" time="1.054" />
+</testsuite>

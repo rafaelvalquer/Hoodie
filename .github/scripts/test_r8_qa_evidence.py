@@ -55,6 +55,61 @@ class FakeUi:
 
 
 class EvidenceRetentionTest(unittest.TestCase):
+    def test_splash_is_retained_until_real_welcome_action_is_ready(self):
+        class LoadingUi(FakeUi):
+            splash_reads = 0
+            def tree(self):
+                if self.state == 'welcome' and self.splash_reads < 2:
+                    self.splash_reads += 1
+                    root = ET.Element('hierarchy')
+                    for text in ('HOODIE', 'Seu companheiro de rotina.'):
+                        ET.SubElement(root, 'node', {'package': qa.PACKAGE, 'text': text})
+                    return root, ET.tostring(root, encoding='utf-8')
+                return super().tree()
+
+        base = (qa.ROOT/'app/build/reports/r8-evidence-tests').resolve()
+        base.mkdir(parents=True, exist_ok=True)
+        output = Path(tempfile.mkdtemp(prefix='splash-', dir=base)).resolve()
+        argv = ['qa', '--serial', 'emulator-5554', '--output', str(output)]
+        with patch.object(sys, 'argv', argv), patch.object(qa, 'AndroidUi', LoadingUi), patch.object(qa.time, 'sleep'):
+            qa.main()
+        observations = json.loads((output/'observations.json').read_text())
+        welcomes = [row for row in observations if row['stage'] == 'welcome']
+        self.assertEqual(3, len(welcomes))
+        self.assertEqual(71, len(observations))
+        for row in observations:
+            self.assertTrue((output/row['xml']).is_file())
+            self.assertTrue((output/row['window']).is_file())
+        trees = [ET.parse(output/row['xml']).getroot() for row in welcomes]
+        self.assertEqual({'HOODIE', 'Seu companheiro de rotina.'}, {n.get('text') for n in trees[0].iter('node')})
+        self.assertTrue(any(n.get('content-desc') == LoadingUi('test').strings['ui_onboarding_screen_3'] for n in trees[-1].iter('node')))
+
+    def test_stuck_splash_expires_without_restarting_or_tapping(self):
+        root = ET.fromstring('<hierarchy><node text="HOODIE"/><node text="Seu companheiro de rotina."/></hierarchy>')
+        reads = []
+        def snapshot(label):
+            reads.append(label)
+            return root
+        with patch.object(qa.time, 'monotonic', side_effect=[0, 46]), patch.object(qa.time, 'sleep') as sleep:
+            with self.assertRaisesRegex(AssertionError, 'SplashScreen remained visible'):
+                qa.wait_for_welcome(snapshot, 'Começar')
+        self.assertEqual(['welcome'], reads)
+        sleep.assert_not_called()
+
+    def test_unexpected_initial_ui_is_not_waited_away(self):
+        root = ET.fromstring('<hierarchy><node text="Banco inacessível"/></hierarchy>')
+        with patch.object(qa.time, 'sleep') as sleep:
+            with self.assertRaisesRegex(AssertionError, 'Unexpected initial UI'):
+                qa.wait_for_welcome(lambda label: root, 'Começar')
+        sleep.assert_not_called()
+
+    def test_disabled_welcome_action_does_not_approve_readiness(self):
+        root = ET.fromstring('<hierarchy><node content-desc="Começar" enabled="false"/></hierarchy>')
+        with patch.object(qa.time, 'sleep') as sleep:
+            with self.assertRaisesRegex(AssertionError, 'Unexpected initial UI'):
+                qa.wait_for_welcome(lambda label: root, 'Começar')
+        sleep.assert_not_called()
+
     def test_every_poll_keeps_its_own_xml_and_window(self):
         base = (qa.ROOT/'app/build/reports/r8-evidence-tests').resolve()
         base.mkdir(parents=True, exist_ok=True)
