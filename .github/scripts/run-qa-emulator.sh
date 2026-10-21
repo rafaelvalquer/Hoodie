@@ -90,8 +90,6 @@ adb shell dumpsys SurfaceFlinger > "$out/emulator-boot-surfaceflinger.txt"
 adb shell dumpsys power > "$out/emulator-boot-power.txt"
 adb logcat -d -v threadtime > "$out/emulator-boot-logcat.txt"
 adb logcat -d -b events -v threadtime -s am_anr > "$out/emulator-boot-anr.txt"
-if grep -E 'am_anr[[:space:]]*:' "$out/emulator-boot-anr.txt"; then
-  echo '::error::Android recorded an ANR during boot; no tests started.'
-  exit 1
-fi
+adb logcat -d -b crash -v threadtime > "$out/emulator-boot-crashes.txt"
+python3 .github/scripts/verify-emulator-boot.py "$out/emulator-boot-anr.txt" "$out/emulator-boot-crashes.txt"
 bash "$test_script"

@@ -1,0 +1,98 @@
+{
+  "commit": "7d614b9f4c5ecf40863d2efcbf8688903d283b25",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39512162703",
+  "artifactId": 12309770022,
+  "artifactSha256": "8cd8da275c34453f3a084700f3666dedee881051d9e8187bd167efc18177f9ba",
+  "duplicateReportExcluded": "outputs/androidTest-results duplicates the full phase; not a second run",
+  "phases": [
+    {
+      "report": "instrumentation-evidence/full/results/connected/debug/TEST-emulator-5554 - 14-_app-.xml",
+      "tests": 388,
+      "passed": 374,
+      "failed": 14,
+      "skipped": 0,
+      "failures": [
+        {
+          "name": "screenMatchesReviewedBaseline[diary_normal_360x640_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: diary_normal_360x640_f100 changed 4790 pixels; first differences: [(33,624) ff26294a->ff415c4e, (34,624) ff26294a->ff588557, (35,624) ff26294a->ff659c5e, (36,624) ff26294a->ff679f5f, (37,624) ff26294a->ff679f5f, (38,624) ff26294a->ff679f5f, (39,624) ff26294a->ff679f5f, (40,624) ff26294a->ff679f5f, (41,624) ff26294a->ff679f5f, (42,624) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_normal_360x800_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: diary_normal_360x800_f100 changed 53890 pixels; first differences: [(33,624) ff26294a->ff415c4e, (34,624) ff26294a->ff588557, (35,624) ff26294a->ff659c5e, (36,624) ff26294a->ff679f5f, (37,624) ff26294a->ff679f5f, (38,624) ff26294a->ff679f5f, (39,624) ff26294a->ff679f5f, (40,624) ff26294a->ff679f5f, (41,624) ff26294a->ff679f5f, (42,624) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_normal_411x891_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: diary_normal_411x891_f100 changed 97603 pixels; first differences: [(33,624) ff26294a->ff536b55, (34,624) ff26294a->ff77a063, (35,624) ff26294a->ff8bbc6d, (36,624) ff26294a->ff8ec06e, (37,624) ff26294a->ff8ec06e, (38,624) ff26294a->ff8ec06e, (39,624) ff26294a->ff8ec06e, (40,624) ff26294a->ff8ec06e, (41,624) ff26294a->ff8ec06e, (42,624) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_normal_411x891_f130]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: diary_normal_411x891_f130 changed 69105 pixels; first differences: [(33,698) ff26294a->ff536b55, (34,698) ff26294a->ff77a063, (35,698) ff26294a->ff8bbc6d, (36,698) ff26294a->ff8ec06e, (37,698) ff26294a->ff8ec06e, (38,698) ff26294a->ff8ec06e, (39,698) ff26294a->ff8ec06e, (40,698) ff26294a->ff8ec06e, (41,698) ff26294a->ff8ec06e, (42,698) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "androidx.compose.ui.test.junit4.android.ComposeNotIdleException: Idling resource timed out: possibly due to compose being busy."
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "androidx.compose.ui.test.junit4.android.ComposeNotIdleException: Idling resource timed out: possibly due to compose being busy."
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: diary_full_360x800_f100 changed 2090 pixels; first differences: [(33,793) ff26294a->ff415c4e, (34,793) ff26294a->ff588557, (35,793) ff26294a->ff659c5e, (36,793) ff26294a->ff679f5f, (37,793) ff26294a->ff679f5f, (38,793) ff26294a->ff679f5f, (39,793) ff26294a->ff679f5f, (40,793) ff26294a->ff679f5f, (41,793) ff26294a->ff679f5f, (42,793) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "androidx.compose.ui.test.junit4.android.ComposeNotIdleException: Idling resource timed out: possibly due to compose being busy."
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: diary_full_411x891_f100 changed 34388 pixels; first differences: [(33,793) ff26294a->ff536b55, (34,793) ff26294a->ff77a063, (35,793) ff26294a->ff8bbc6d, (36,793) ff26294a->ff8ec06e, (37,793) ff26294a->ff8ec06e, (38,793) ff26294a->ff8ec06e, (39,793) ff26294a->ff8ec06e, (40,793) ff26294a->ff8ec06e, (41,793) ff26294a->ff8ec06e, (42,793) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "androidx.compose.ui.test.junit4.android.ComposeNotIdleException: Idling resource timed out: possibly due to compose being busy."
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: digital_full_411x891_f100 changed 3 pixels; first differences: [(242,520) ff5f8a85->ff5f8b85, (242,521) ff5f8a85->ff5f8b85, (242,522) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: digital_full_411x891_f130 changed 3 pixels; first differences: [(242,589) ff5f8a85->ff5f8b85, (242,590) ff5f8a85->ff5f8b85, (242,591) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: place_picker_full_411x891_f100_bottom changed 1 pixels; first differences: [(59,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        },
+        {
+          "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+          "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+          "diagnostic": "java.lang.AssertionError: place_picker_full_411x891_f130_bottom changed 3 pixels; first differences: [(71,657) ff586d9a->ff586c9a, (66,662) ff596f9d->ff596f9c, (67,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+        }
+      ]
+    },
+    {
+      "report": "instrumentation-evidence/targeted/results/connected/debug/TEST-emulator-5554 - 14-_app-.xml",
+      "tests": 42,
+      "passed": 42,
+      "failed": 0,
+      "skipped": 0,
+      "failures": []
+    }
+  ],
+  "qualityGateApproved": false,
+  "interpretation": "All 42 targeted and 208 non-golden full-suite cases passed. The integrated city changes Diary pixels and four Diary cases time out with pending recompositions. Four Digital/PlacePicker cases retain small known host differences. No reference updates, ignored cases or tolerance changes."
+}

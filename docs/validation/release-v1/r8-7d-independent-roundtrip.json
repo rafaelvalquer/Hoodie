@@ -1,0 +1,359 @@
+{
+  "commit": "7d614b9f4c5ecf40863d2efcbf8688903d283b25",
+  "source": {
+    "avd": "Hoodie_Linux_R8_API35",
+    "api": 35,
+    "pageSize": 16384,
+    "apkSha256": "c424c66b182221b6fab8e884b89743be81a0a477c255acb35d397bff4369b630",
+    "backupSha256": "44add711a7f60bd0d8ed5fbd8c1462fc0af33af8613e2f6bb1af41b77c803ee9",
+    "globalRuntimeApproved": false
+  },
+  "target": {
+    "avd": "Hoodie_Golden_Exact_API34",
+    "api": 34,
+    "pageSize": 4096,
+    "uid": 10194,
+    "apkSha256": "acd14f6ff4f2c69d35d4e31bfa91b7bdd466dd0860e7c32093fb1178e9e3fb78",
+    "certificateSha256": "a2278b21bb76e86800bb4f3948fccb72fbbf5bd01b905695f273295eaa1eb62c",
+    "backupSha256": "1e1a46b075c9e5d0da6e7f512433ea0b1eb727a56a3c98a5fe2a2c1e47be620c",
+    "backupBytes": 98657
+  },
+  "evidenceOfIndependentKeystores": "Fresh distinct AVD userdata, clean target package, encrypted backup file alone transferred; no old app data, SQLCipher password or Keystore material copied. Target reexport authenticated with all source coordinates/records exactly preserved.",
+  "ui": {
+    "restoreCompleted": true,
+    "exportCompleted": true,
+    "releaseApproved": false,
+    "serial": "emulator-5568",
+    "sourceBackupSha256": "44add711a7f60bd0d8ed5fbd8c1462fc0af33af8613e2f6bb1af41b77c803ee9",
+    "targetApkSha256": "acd14f6ff4f2c69d35d4e31bfa91b7bdd466dd0860e7c32093fb1178e9e3fb78",
+    "beforeRestorePid": "8879",
+    "afterRestorePid": "9481",
+    "targetBackupSha256": "1e1a46b075c9e5d0da6e7f512433ea0b1eb727a56a3c98a5fe2a2c1e47be620c",
+    "targetBackupBytes": 98657
+  },
+  "comparison": {
+    "comparison": "Exact source-record inclusion, independently authenticated",
+    "sourceSha256": "44add711a7f60bd0d8ed5fbd8c1462fc0af33af8613e2f6bb1af41b77c803ee9",
+    "targetSha256": "1e1a46b075c9e5d0da6e7f512433ea0b1eb727a56a3c98a5fe2a2c1e47be620c",
+    "sourceBytes": 97960,
+    "targetBytes": 98657,
+    "sourceAuthenticatedUnits": 420,
+    "targetAuthenticatedUnits": 423,
+    "sourceManifest": {
+      "kind": "manifest",
+      "formatVersion": 1,
+      "appVersion": "0.2.0-dev-homologacao",
+      "databaseSchemaVersion": 12,
+      "createdAt": 1792503907976,
+      "timezone": "GMT",
+      "backupId": "e29324cc-b722-4693-bec5-3fdb90ee1e7c",
+      "includeDigital": true,
+      "counts": {
+        "places": 4,
+        "routines": 1,
+        "day_exceptions": 1,
+        "location_events": 40,
+        "context_events": 128,
+        "context_confirmations": 1,
+        "hoodie_activities": 29,
+        "timeline_events": 163,
+        "memories": 4,
+        "daily_device_usage": 30,
+        "daily_app_usage": 1,
+        "daily_context_app_usage": 1,
+        "app_category_overrides": 1,
+        "phone_app_sessions": 1,
+        "daily_screen_hourly": 1,
+        "daily_context_usage": 1,
+        "daily_phone_timeline": 1,
+        "mobility_sessions": 2,
+        "mobility_segments": 1,
+        "diary_corrections": 1,
+        "learned_routine_slots": 0,
+        "transport_patterns": 1,
+        "transport_evidence": 1,
+        "effective_routine_versions": 4
+      },
+      "datasetVersions": {
+        "places": 1,
+        "routines": 1,
+        "day_exceptions": 1,
+        "location_events": 1,
+        "context_events": 1,
+        "context_confirmations": 1,
+        "hoodie_activities": 1,
+        "timeline_events": 1,
+        "memories": 1,
+        "daily_device_usage": 1,
+        "daily_app_usage": 1,
+        "daily_context_app_usage": 1,
+        "app_category_overrides": 1,
+        "phone_app_sessions": 1,
+        "daily_screen_hourly": 1,
+        "daily_context_usage": 1,
+        "daily_phone_timeline": 1,
+        "mobility_sessions": 1,
+        "mobility_segments": 1,
+        "diary_corrections": 1,
+        "learned_routine_slots": 1,
+        "transport_patterns": 1,
+        "transport_evidence": 1,
+        "effective_routine_versions": 1
+      }
+    },
+    "targetManifest": {
+      "kind": "manifest",
+      "formatVersion": 1,
+      "appVersion": "0.2.0-dev-homologacao",
+      "databaseSchemaVersion": 12,
+      "createdAt": 1792538559641,
+      "timezone": "Etc/UTC",
+      "backupId": "116f8706-0c2d-41e7-80c4-66dbb287504f",
+      "includeDigital": true,
+      "counts": {
+        "places": 4,
+        "routines": 1,
+        "day_exceptions": 1,
+        "location_events": 40,
+        "context_events": 129,
+        "context_confirmations": 1,
+        "hoodie_activities": 29,
+        "timeline_events": 165,
+        "memories": 4,
+        "daily_device_usage": 30,
+        "daily_app_usage": 1,
+        "daily_context_app_usage": 1,
+        "app_category_overrides": 1,
+        "phone_app_sessions": 1,
+        "daily_screen_hourly": 1,
+        "daily_context_usage": 1,
+        "daily_phone_timeline": 1,
+        "mobility_sessions": 2,
+        "mobility_segments": 1,
+        "diary_corrections": 1,
+        "learned_routine_slots": 0,
+        "transport_patterns": 1,
+        "transport_evidence": 1,
+        "effective_routine_versions": 4
+      },
+      "datasetVersions": {
+        "places": 1,
+        "routines": 1,
+        "day_exceptions": 1,
+        "location_events": 1,
+        "context_events": 1,
+        "context_confirmations": 1,
+        "hoodie_activities": 1,
+        "timeline_events": 1,
+        "memories": 1,
+        "daily_device_usage": 1,
+        "daily_app_usage": 1,
+        "daily_context_app_usage": 1,
+        "app_category_overrides": 1,
+        "phone_app_sessions": 1,
+        "daily_screen_hourly": 1,
+        "daily_context_usage": 1,
+        "daily_phone_timeline": 1,
+        "mobility_sessions": 1,
+        "mobility_segments": 1,
+        "diary_corrections": 1,
+        "learned_routine_slots": 1,
+        "transport_patterns": 1,
+        "transport_evidence": 1,
+        "effective_routine_versions": 1
+      }
+    },
+    "datasets": {
+      "app_category_overrides": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "context_confirmations": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "context_events": {
+        "sourceRows": 128,
+        "targetRows": 129,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 1
+      },
+      "daily_app_usage": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "daily_context_app_usage": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "daily_context_usage": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "daily_device_usage": {
+        "sourceRows": 30,
+        "targetRows": 30,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "daily_phone_timeline": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "daily_screen_hourly": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "day_exceptions": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "diary_corrections": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "effective_routine_versions": {
+        "sourceRows": 4,
+        "targetRows": 4,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "hoodie_activities": {
+        "sourceRows": 29,
+        "targetRows": 29,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "learned_routine_slots": {
+        "sourceRows": 0,
+        "targetRows": 0,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "location_events": {
+        "sourceRows": 40,
+        "targetRows": 40,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "memories": {
+        "sourceRows": 4,
+        "targetRows": 4,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "mobility_segments": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "mobility_sessions": {
+        "sourceRows": 2,
+        "targetRows": 2,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "phone_app_sessions": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "places": {
+        "sourceRows": 4,
+        "targetRows": 4,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "routines": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "timeline_events": {
+        "sourceRows": 163,
+        "targetRows": 165,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 2
+      },
+      "transport_evidence": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      },
+      "transport_patterns": {
+        "sourceRows": 1,
+        "targetRows": 1,
+        "missingOrChangedSourceRows": 0,
+        "additionalRows": 0
+      }
+    },
+    "settingsExactlyEqual": true,
+    "allSourceRecordsExactlyPreserved": true,
+    "futureRoutineIdsAtSource": [
+      5
+    ],
+    "futureRoutineRowsExactlyPreserved": true,
+    "scope": "Inclusion of all source rows with exact IDs and all fields; additional live rows reported separately. Does not prove semantic absence of duplicates, physical-device acceptance, interruption handling, or Play acceptance."
+  },
+  "independentRestoreDiagnosticPassed": true,
+  "physicalDeviceAcceptance": false,
+  "currentApk16KbJourneyApproved": false,
+  "permissionsRemainDenied": true,
+  "targetCrashBuffersEmpty": true,
+  "expectedProcessExit": "EXIT_SELF status 0 during restore",
+  "diaryNavigation": {
+    "readOnlyEvidenceValidationPassed": true,
+    "samePid": true,
+    "citySemanticsPresent": true,
+    "originalControllerExit": 1,
+    "reportingError": "UnicodeEncodeError printing emoji to cp1252 after navigation assertions and XML were saved; actions were not replayed to hide the error."
+  },
+  "witnessSha256": {
+    "authenticated-preview.xml": "421c9bda524220682f90166461381276de43946ef641c52838d9a7d57d6599c0",
+    "home-after-restore.xml": "a534a0235a23d65f9af61241d8d11f01f0ef66b1792fd8f174a696593ef95f04",
+    "export-complete.xml": "51080573de42fa10646f1a7de8bb2010731835c9c4be7e03af86d0ecf5217569",
+    "diary.xml": "93134580005d25b7afa8a3f64c9f8c8645b7ca11edbc29ebad3843151a1b2bd5",
+    "diary.png": "72ad99ff3184ce488c12d5543ccbb1ddc7488d3162f85f739c415635a0238775"
+  },
+  "originalWitnessSha256": {
+    "authenticated-preview.xml": "421c9bda524220682f90166461381276de43946ef641c52838d9a7d57d6599c0",
+    "home-after-restore.xml": "a534a0235a23d65f9af61241d8d11f01f0ef66b1792fd8f174a696593ef95f04",
+    "export-complete.xml": "51080573de42fa10646f1a7de8bb2010731835c9c4be7e03af86d0ecf5217569",
+    "diary.xml": "93134580005d25b7afa8a3f64c9f8c8645b7ca11edbc29ebad3843151a1b2bd5",
+    "diary.png": "72ad99ff3184ce488c12d5543ccbb1ddc7488d3162f85f739c415635a0238775"
+  },
+  "witnessNormalization": "XML witness copies normalize CRLF to LF only; raw originals retained locally. PNG is byte-identical.",
+  "additionalRows": {
+    "contextEvents": 1,
+    "timelineEvents": 2,
+    "fullSemanticDuplicateAuditApproved": false,
+    "hasBusinessPayloadIdenticalToSource": false
+  },
+  "limitations": [
+    "Source and target APKs are different revisions; this proves cross-version restore, not a same-candidate two-device campaign.",
+    "Current target was tested in 4 KB; current 16 KB runtime and the earlier API 35 export crash remain unresolved.",
+    "Physical devices, interruption/provider/low-space scenarios, a manually created post-restore activity, geofence registration with real permissions, upload signing and Play acceptance remain separate requirements."
+  ]
+}

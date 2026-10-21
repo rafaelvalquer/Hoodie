@@ -1,0 +1,42 @@
+{
+  "sourceCommit": "c40f864bb8920ddafd7065c7d23235f4fd41e6f1",
+  "apkSha256": [
+    "33a3b55dd099ca041c7f482f4deb101b5964168265562ab75b856c6e24066955",
+    "a32b0997e90824c28476657a6e28aab5a76c0da44cc91e7d188facfb9bf88410"
+  ],
+  "windows": {
+    "tests": 180,
+    "passed": 180,
+    "failures": 0,
+    "skipped": 0,
+    "avd": "Hoodie_Golden_Exact_API34",
+    "serial": "emulator-5568",
+    "rawEventsSha256": "462f8ddb6b9c7ba5fb79d35ec1c8c4e16526acd841d0991e79cec58e21696d27",
+    "resultSha256": "181c98d194171ec61b13773da7914c203cf4075e70388b87d8fe9a02dc5dc55a",
+    "emulatorVersionSha256": "e5caa341136010f6f2d27768c8d9ea04f68f6f6c4860461ebec4264014d84647",
+    "bootGatePassed": true,
+    "bootSeconds": 97.5,
+    "crashBufferEmpty": true,
+    "currentFocusWithoutAnr": true
+  },
+  "linux": {
+    "tests": 180,
+    "passed": 170,
+    "failures": 10,
+    "skipped": 0,
+    "run": 39482391425,
+    "rawEventsSha256": "9007858177a165af594fc305be805bca36c80baa6155b90193bdf2cd6680830f",
+    "resultSha256": "ea6a08aabb170bc4aec4a89ac9820a3d2c1b4a2112a26a3a8dccb0e1d2f623d3"
+  },
+  "identicalCaseOrder": true,
+  "matchedAndroidProperties": {
+    "ro.build.fingerprint": "google/sdk_gphone64_x86_64/emu64xa:14/UE1A.230829.050/12077443:userdebug/dev-keys",
+    "ro.build.version.sdk": "34",
+    "ro.product.cpu.abi": "x86_64",
+    "persist.sys.timezone": "Etc/UTC",
+    "debug.hwui.renderer": "skiagl"
+  },
+  "interpretation": "Bit-identical app and test APKs, same case order and matched guest configuration reproduce the ten failures only in Linux. This establishes an execution-environment rendering difference; the specific host/compiler/graphics component has not been isolated.",
+  "baselineOrToleranceChanged": false,
+  "releaseApproved": false
+}

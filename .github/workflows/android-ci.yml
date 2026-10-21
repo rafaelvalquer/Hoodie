@@ -66,6 +66,8 @@ jobs:
         run: python3 .github/scripts/test_verify_emulator_window.py
       - name: Bloquear instrumentação após ANR de boot
         run: bash .github/scripts/test-qa-boot-gate.sh
+      - name: Bloquear APKs após crash do sistema no boot
+        run: python3 -m unittest discover -s .github/scripts -p 'test_verify_emulator_boot.py'
 
       - name: Evidência de reinício e estado de abertura do APK derivado
         run: python3 .github/scripts/test_summarize_runtime_launches.py

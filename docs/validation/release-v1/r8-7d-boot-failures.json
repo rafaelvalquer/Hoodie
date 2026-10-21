@@ -1,0 +1,151 @@
+{
+  "sourceCandidate": "7d614b9f4c5ecf40863d2efcbf8688903d283b25",
+  "linux": {
+    "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39512162731",
+    "artifactId": 12307030076,
+    "artifactSha256": "ee728eb2ea392973c3fdbb0de4357f956308cbe26a58f658697afbb65dccf25e",
+    "build": {
+      "commit": "7d614b9f4c5ecf40863d2efcbf8688903d283b25",
+      "appSourceTree": "2c6f0bcad0e2fde4c8cb0b06b8c2851d829ea5d0",
+      "versionCode": 7,
+      "scope": "Development signing; no upload key, Play submission, physical or production approval",
+      "aabSha256": "7253b1dc63f4074ac5d59b08562ae09e14d685c6c347a8ab76f1555e5f90d8a4",
+      "apkSha256": "acd14f6ff4f2c69d35d4e31bfa91b7bdd466dd0860e7c32093fb1178e9e3fb78",
+      "mappingSha256": "57049e362611916e8bf5a22466e0e3c7629092c8560ce821598524adf6a97805",
+      "certificateSha256": "a2278b21bb76e86800bb4f3948fccb72fbbf5bd01b905695f273295eaa1eb62c",
+      "apkDexSha256": {
+        "classes.dex": "473e1c0e3fe6ee81442ea68846153da19df1ad216b4576767bd71e8856cc359a"
+      },
+      "apkNativeSha256": {
+        "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+        "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+        "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+        "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+        "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+        "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+        "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+        "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+        "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+        "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+        "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+        "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+      },
+      "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+      "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+      "runtimeVerified": false,
+      "fullBackupJourneyApproved": false
+    },
+    "runtimeSmoke": {
+      "pageSize": 16384,
+      "derivedApkProcessRestart": true,
+      "derivedApkColdLaunch": true,
+      "processIds": [
+        4161,
+        4406
+      ],
+      "androidLaunchStates": [
+        "COLD",
+        "COLD"
+      ],
+      "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+    },
+    "qaApproved": false,
+    "retainedObservations": 22,
+    "retainedXmlFiles": 22,
+    "evidenceNamesUnique": true,
+    "crashAlreadyBeforeApkInstall": true,
+    "bootLogSha256": "4c4d4e95815b05a5b13d48724833e6c9d9fdde036482d2be84f9d6f8c710e4bf",
+    "bootAnrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fatalBootRecords": [
+      "10-20 23:07:19.892   583  1313 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x18 in tid 1313 (binder:583_B), pid 583 (system_server)",
+      "10-20 23:07:28.229  1424  1453 E AndroidRuntime: *** FATAL EXCEPTION IN SYSTEM PROCESS: ActivityManager",
+      "10-20 23:07:28.267  1424  2495 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x10 in tid 2495 (binder:1424_14), pid 1424 (system_server)"
+    ],
+    "laterFailure": "SystemServer PID 2845 SIGSEGV during accessibility read; uiautomator returned 137. No full 30+30 or final accessibility success. Empty exit-info after system restart cannot prove Hoodie did not crash."
+  },
+  "windows": {
+    "avd": "Hoodie_R8_Current_16KB_API371",
+    "api": "37.1",
+    "imageRevision": 9,
+    "pageSize": 16384,
+    "bootAnrSha256": "b8f1826c5badb8d66317bc11db4de48ae017a0bb0fc9af7190b2700dc81d7baf",
+    "bootCrashesSha256": "90b85eb08cd6f71b7f9345a28f9964cf6cf7a4670bd9b38e49310e87a728df3e",
+    "bootAnrRecords": [
+      "10-20 23:53:57.581   679  3739 I am_anr  : [0,1464,com.google.android.gms.persistent,-1597325755,Broadcast of Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x15000010 xflg=0x4 cmp=com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver (has extras) }]"
+    ],
+    "apkInstalled": false,
+    "restoreStarted": false,
+    "preflightExit": 1,
+    "preparationScope": "Earlier sys.boot_completed and focus success did not establish prolonged boot health; recheck rejected later boot ANR.",
+    "shutdown": {
+      "avd": "Hoodie_R8_Current_16KB_API371",
+      "serial": "emulator-5570",
+      "apkAbsent": true,
+      "reason": "Recorded Play Services boot ANR; application installation and restore never started",
+      "stopOutput": "OK: killing emulator, bye bye\r\r\nOK\r\r\n",
+      "avdFilesPreserved": true,
+      "appDataDeleted": false,
+      "observations": [
+        {
+          "sample": 0,
+          "ownedSerialPresent": true
+        },
+        {
+          "sample": 1,
+          "ownedSerialPresent": true
+        },
+        {
+          "sample": 2,
+          "ownedSerialPresent": false
+        }
+      ]
+    },
+    "sourceBPreflight": {
+      "sourceSha256": "1e1a46b075c9e5d0da6e7f512433ea0b1eb727a56a3c98a5fe2a2c1e47be620c",
+      "createdAtUtc": "2026-10-20T23:22:39.641000+00:00",
+      "checkedAtUtc": "2026-10-20T23:59:01.338972+00:00",
+      "guestUnixSeconds": 1792540741,
+      "earliestRawEventExpiresUtc": "2026-10-21T10:00:00+00:00",
+      "retentionMarginSeconds": 36058.661027908325,
+      "authenticatedUnits": 423,
+      "counts": {
+        "places": 4,
+        "routines": 1,
+        "day_exceptions": 1,
+        "location_events": 40,
+        "context_events": 129,
+        "context_confirmations": 1,
+        "hoodie_activities": 29,
+        "timeline_events": 165,
+        "memories": 4,
+        "daily_device_usage": 30,
+        "daily_app_usage": 1,
+        "daily_context_app_usage": 1,
+        "app_category_overrides": 1,
+        "phone_app_sessions": 1,
+        "daily_screen_hourly": 1,
+        "daily_context_usage": 1,
+        "daily_phone_timeline": 1,
+        "mobility_sessions": 2,
+        "mobility_segments": 1,
+        "diary_corrections": 1,
+        "learned_routine_slots": 0,
+        "transport_patterns": 1,
+        "transport_evidence": 1,
+        "effective_routine_versions": 4
+      },
+      "protocol": "B to C on identical candidate APKs. Natural date rollover allowed and additional rows reported; strict original comparator unchanged. No record filtering, timestamp changes, clock adjustment or old A preflight replacement."
+    }
+  },
+  "guard": {
+    "unitCases": 7,
+    "unitPassed": 7,
+    "realLinuxBootExit": 1,
+    "realWindowsBootExit": 1,
+    "actionlintPassed": true,
+    "bashSyntaxPassed": true,
+    "scope": "Fail before APK installation or test script on recorded ANR or Java/native fatal. No automatic retry, buffer clearing or process exclusion. Remote execution of amended bootstrap still required."
+  },
+  "nativeExportDefectStillOpen": "HVR-NATIVE-API35-001",
+  "releaseApproved": false
+}

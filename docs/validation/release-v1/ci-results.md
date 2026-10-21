@@ -141,3 +141,13 @@ A concorrência preserva a execução Android já iniciada: commits novos aguard
 ## Primeira execução do bootstrap próprio
 
 [39423287833](https://github.com/rafaelvalquer/Hoodie/actions/runs/39423287833), SHA `9ed89fe4`: unitários, lint e assemble passaram. O download oficial passou no checksum, mas a chamada `emulator -version` retornou 127 antes do boot; nenhum teste Android iniciou. O stderr estava em diretório temporário fora dos artefatos. [Diagnóstico e limites](ci-9ed-loader-setup.json). O instalador agora publica `ldd`/versão e imprime a falha, antes de compilar os APKs/R8. A causa do loader ainda precisa ser observada; não foi atribuída a uma biblioteca sem evidência.
+
+## Candidato `7d614b9f`: resultado integral
+
+Na [execução 39512162703](https://github.com/rafaelvalquer/Hoodie/actions/runs/39512162703), **1360 unitários/307 suítes passaram, sem falhas, erros ou ignorados**, incluindo as quatro regressões de propriedade da interação e os seis exportadores obrigatórios. Lint e assemble passaram. O primeiro comando local omitiu flags e ignorou seis exportadores; foi preservado e não foi aceito. [Auditoria dos unitários](ci-7d-unit-results.json).
+
+Os **42 instrumentados direcionados passaram**. A suíte completa executou **388: 374 aprovados, 14 falhos, zero ignorados**; os 208 casos fora da matriz visual passaram. Quatro falhas são pequenos deltas em Digital/Place Picker. Dez são do Diário após a integração da cidade: seis diferenças maiores de imagem e quatro timeouts com recomposição pendente. A matriz fornece o relógio fixo dos renderizadores anteriores, mas a cidade mantém seu próprio loop de frames; isso exige investigação antes de revisar referências. Não atribuir esses dez casos somente ao host. [Casos e digest do artefato](ci-7d-instrumentation-results.json).
+
+O controle separado com **o mesmo par antigo de APKs**, mesma ordem dos 180 casos e propriedades do Android conferidas, obteve 180/180 no Windows e 170/180 no Linux. Os dez PNGs Linux repetem os deltas da CI daquele binário. Isso comprova diferença de ambiente para aquele par, sem identificar o componente exato ou cobrir a cidade integrada depois. [Controle entre hosts](exact-golden-cross-host-results.json). Os 222 assets originais, tolerância zero e todos os casos permanecem intactos.
+
+O bootstrap passa a examinar o buffer de crash antes de iniciar o roteiro Android: o R8 QA já tinha fatal Java e SIGSEGV do SystemServer no boot, antes da instalação. Sete testes do parser passaram e os logs reais Linux/Windows reprovam como esperado. Bash e actionlint passaram. A execução remota do novo gate e a CI integral continuam necessárias. [Evidência e limites](r8-7d-boot-failures.json).

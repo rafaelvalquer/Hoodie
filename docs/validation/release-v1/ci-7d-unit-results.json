@@ -1,0 +1,42 @@
+{
+  "commit": "7d614b9f4c5ecf40863d2efcbf8688903d283b25",
+  "appSourceTree": "2c6f0bcad0e2fde4c8cb0b06b8c2851d829ea5d0",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39512162703",
+  "unitJobId": 118935574430,
+  "artifactId": 12305274621,
+  "artifactSha256": "1385314ae02356888e85df7ce9b8d15701466c87247a7798f58a44f156e5d4b1",
+  "suites": 307,
+  "tests": 1360,
+  "passed": 1360,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "verifiedByActualCasesAndDeclaredTotals": true,
+  "interactionRegressionCases": [
+    "real reaction still announces its start after an older idle bitmap arrives",
+    "idle bitmap already rendering cannot finish a request received later",
+    "old request cannot acknowledge its replacement even with the same response object",
+    "matching idle frame still completes an unstarted expired or cancelled reaction"
+  ],
+  "requiredVisualExporters": [
+    "com.hoodie.app.pixel.FrontSeatedVisualReviewTest#exportsOfficeAndRestaurantFrontSeatedCandidatesWhenRequested",
+    "com.hoodie.app.pixel.OfficeVisualReviewTest#exportOfficeLiveReviewCandidatesWhenRequested",
+    "com.hoodie.app.pixel.ShoppingVisualReviewTest#exportShoppingReviewCandidatesWhenRequested",
+    "com.hoodie.app.pixel.restaurant.RestaurantLiveSceneReviewExportTest#exporta cenas completas candidatas sem promover goldens",
+    "com.hoodie.app.pixel.review.NpcVisualReviewExportTest#exportCandidateMatrixWhenExplicitlyRequested",
+    "com.hoodie.app.pixel.transport.TransportThumbnailExportTest#exportFramingThumbnails"
+  ],
+  "ciLintJobId": 118935574592,
+  "ciLintPassed": true,
+  "localFirstDirectRun": {
+    "tests": 1360,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 6,
+    "approved": false,
+    "reason": "Direct local command omitted the mandatory exporter flags; this run was not accepted.",
+    "preservedJUnitArchiveSha256": "bdd5565eb4e7e035d0f3a74b93eb3b372ebc07ba264445f7342e1e472e6f1455"
+  },
+  "fullCiApproved": false,
+  "scope": "Official full unit suite and lint only. Assemble, instrumentation, R8/runtime and release acceptance remain separate gates."
+}

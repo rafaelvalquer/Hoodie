@@ -10,6 +10,8 @@ on:
       - '.github/scripts/r8-qa-*'
       - '.github/scripts/install-qa-emulator.sh'
       - '.github/scripts/run-qa-emulator.sh'
+      - '.github/scripts/verify-emulator-boot.py'
+      - '.github/scripts/verify-emulator-window.py'
       - '.github/scripts/release-runtime-smoke.sh'
       - '.github/scripts/verify-native-16kb.*'
       - 'tools/android_ui.py'
