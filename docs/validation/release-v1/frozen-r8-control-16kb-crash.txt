@@ -1,0 +1,32 @@
+--------- beginning of crash
+10-21 10:18:47.848  1534  1613 F libc    : Fatal signal 6 (SIGABRT), code -6 (SI_TKILL) in tid 1613 (Profile Saver), pid 1534 (hbox:interactor)
+10-21 10:18:48.101  5079  5079 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-21 10:18:48.101  5079  5079 F DEBUG   : Build fingerprint: 'google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys'
+10-21 10:18:48.101  5079  5079 F DEBUG   : Revision: '0'
+10-21 10:18:48.101  5079  5079 F DEBUG   : ABI: 'x86_64'
+10-21 10:18:48.101  5079  5079 F DEBUG   : Timestamp: 2026-10-21 10:18:47.899052178+0000
+10-21 10:18:48.101  5079  5079 F DEBUG   : Process uptime: 83s
+10-21 10:18:48.101  5079  5079 F DEBUG   : Page size: 16384 bytes
+10-21 10:18:48.101  5079  5079 F DEBUG   : Cmdline: com.google.android.googlequicksearchbox:interactor
+10-21 10:18:48.101  5079  5079 F DEBUG   : pid: 1534, tid: 1613, name: Profile Saver  >>> com.google.android.googlequicksearchbox:interactor <<<
+10-21 10:18:48.101  5079  5079 F DEBUG   : uid: 10144
+10-21 10:18:48.101  5079  5079 F DEBUG   : signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------
+10-21 10:18:48.101  5079  5079 F DEBUG   : Abort message: 'Check failed: copied_methods_start <= methods->size() (copied_methods_start=2, methods->size()=0) java.lang.Class<com.google.android.libraries.search.assistant.invocation.m.d.h>'
+10-21 10:18:48.101  5079  5079 F DEBUG   :     rax 0000000000000000  rbx 000078813c440018  rcx 000078848d4ccb90  rdx 0000000000000006
+10-21 10:18:48.101  5079  5079 F DEBUG   :     r8  000078836a228060  r9  000078836a228060  r10 000078813c440020  r11 0000000000000217
+10-21 10:18:48.101  5079  5079 F DEBUG   :     r12 000000005a000000  r13 00007881c7485c34  r14 00000000000005fe  r15 000000000000064d
+10-21 10:18:48.101  5079  5079 F DEBUG   :     rdi 00000000000005fe  rsi 000000000000064d
+10-21 10:18:48.101  5079  5079 F DEBUG   :     rbp 000000000000006e  rsp 000078813c440010  rip 000078848d4ccb90
+10-21 10:18:48.101  5079  5079 F DEBUG   : 11 total frames
+10-21 10:18:48.101  5079  5079 F DEBUG   : backtrace:
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #00 pc 000000000005cb90  /apex/com.android.runtime/lib64/bionic/libc.so (abort+192) (BuildId: eb58b4d427279994f00c0e1818477e4f)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #01 pc 000000000096dd41  /apex/com.android.art/lib64/libart.so (art::Runtime::Abort(char const*)+1537) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #02 pc 0000000000015eea  /apex/com.android.art/lib64/libbase.so (android::base::SetAborter(std::__1::function<void (char const*)>&&)::$_0::__invoke(char const*)+58) (BuildId: 2d7df6e607a8928501c5363a393a3a89)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #03 pc 000000000001540c  /apex/com.android.art/lib64/libbase.so (android::base::LogMessage::~LogMessage()+492) (BuildId: 2d7df6e607a8928501c5363a393a3a89)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #04 pc 00000000007438ff  /apex/com.android.art/lib64/libart.so (void art::ProfileSaver::GetClassesAndMethodsHelper::CollectInternal<false>(art::ObjPtr<art::mirror::ClassLoader>)::'lambda'(art::ObjPtr<art::mirror::Class>)::operator()(art::ObjPtr<art::mirror::Class>) const+1247) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #05 pc 0000000000743233  /apex/com.android.art/lib64/libart.so (void art::ProfileSaver::GetClassesAndMethodsHelper::CollectInternal<false>(art::ObjPtr<art::mirror::ClassLoader>)+707) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #06 pc 000000000073aaf9  /apex/com.android.art/lib64/libart.so (art::ProfileSaver::FetchAndCacheResolvedClassesAndMethods(bool)+1625) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #07 pc 000000000073d16e  /apex/com.android.art/lib64/libart.so (art::ProfileSaver::ProcessProfilingInfo(bool, bool, unsigned short*)+222) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #08 pc 0000000000740823  /apex/com.android.art/lib64/libart.so (art::ProfileSaver::RunProfileSaverThread(void*)+3235) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #09 pc 000000000006d62a  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+58) (BuildId: eb58b4d427279994f00c0e1818477e4f)
+10-21 10:18:48.101  5079  5079 F DEBUG   :       #10 pc 0000000000060348  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+56) (BuildId: eb58b4d427279994f00c0e1818477e4f)

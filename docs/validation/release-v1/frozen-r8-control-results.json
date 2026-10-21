@@ -1,0 +1,109 @@
+{
+  "runId": 39583228180,
+  "workflowCommit": "f2bc991e4bec8e44eebdce21006807a513e2104d",
+  "sourceCommit": "2875f7817f5f3b4f026ef1d09f705bd4a16f5c7c",
+  "apkSha256": "c28975b55805f9123a4b8014e45eb73fe464c43c8cd9516c9467f777c55c8025",
+  "controls": [
+    {
+      "label": "4kb",
+      "artifactId": 12339186223,
+      "artifactSha256": "c6a0fc55a686b7c256fbbbd411528f4732ef8244cd7cc68781b846f098f21d8d",
+      "jobConclusion": "success",
+      "accessibility": {
+        "passed": true,
+        "package": "com.hoodie.app.homologacao",
+        "snapshots": 69,
+        "evidenceFormatVersion": 2,
+        "retainedXmlFiles": 69,
+        "settingsSnapshots": 30,
+        "backupSnapshots": 30,
+        "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance"
+      },
+      "processIds": [
+        "2855",
+        "3151"
+      ],
+      "launchStates": [
+        "COLD",
+        "COLD"
+      ],
+      "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+      "libartSha256": "cf1c0b8e7fe7b9200a89bf30a076f44509c9a21fe18d7b33c63a48f673746cd1",
+      "libandroidRuntimeSha256": "5560ae9083b9a81e8ee74c22a005e302a1a505e969e650e644fe34d692a5848e",
+      "crashProcesses": [],
+      "witnessHashes": {
+        "runtime/art-sha256.txt": "e324e64bb10037d590d3a95aaac63e913973a0ab4d96f6bbf183b4cbcd82fd2d",
+        "runtime/android-runtime-sha256.txt": "52c57d91a981a6875b503569b1a20aa98bd5c3c72730c40816f8da979cfface0",
+        "runtime/exit-info.txt": "14b4b2f87593a31b7a533f3a450dab1ba144aa9f4f4f18fde63c15c18baa722f",
+        "runtime/final-anr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "runtime/final-crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "runtime/accessibility/result.json": "409c4dde29bd7da84da920417ea24aae026ab93f163f162546ac90c4aef93d90",
+        "runtime/accessibility/observations.json": "370c6c3ea299b1b04ecb3c22f6bfa9eedfe0f4f16d5f76895f18c33356d5d2a2",
+        "runtime/launch-1.txt": "a99a711ed24cc79f6d573f1629b9f6f164c5a0957502e6a5a1c40a901dc3d637",
+        "runtime/launch-2.txt": "81d5c66bb59009411ade9667e2ddbc2976dc568727dbfb733341f374b38e885b",
+        "runtime/properties.txt": "52164da16198c5c113abdd57dd5a63ea9df96b4d35f9ac3df11baa48f6060322",
+        "emulator/emulator-image.properties": "809a6f5103c048607257f03f18e22dd740137e9009c99d4a496de846b6ee3412",
+        "host-cpu.txt": "4cad0e2b030174d05900104b6b352565eb27bdd97b427ff2e37da28dbe4b8c6a"
+      },
+      "hoodieExitInfo": "ACTIVITY MANAGER PROCESS EXIT INFO (dumpsys activity exit-info)\nLast Timestamp of Persistence Into Persistent Storage: 1970-01-01 00:00:00.000\n  package: com.hoodie.app.homologacao\n    Historical Process Exit for uid=10209\n        ApplicationExitInfo #0:\n          timestamp=2026-10-21 10:16:49.640 pid=2855 realUid=10209 packageUid=10209 definingUid=10209 user=0\n          process=com.hoodie.app.homologacao reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0\n          importance=100 pss=0.00 rss=0.00 description=stop com.hoodie.app.homologacao due to from pid 3089 state=empty trace=null\n"
+    },
+    {
+      "label": "16kb",
+      "artifactId": 12338102796,
+      "artifactSha256": "17a07a2249ca00d44beecffcde5dd872052936b7072b7398735c501896984c6f",
+      "jobConclusion": "failure",
+      "accessibility": {
+        "passed": true,
+        "package": "com.hoodie.app.homologacao",
+        "snapshots": 68,
+        "evidenceFormatVersion": 2,
+        "retainedXmlFiles": 68,
+        "settingsSnapshots": 30,
+        "backupSnapshots": 30,
+        "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance"
+      },
+      "processIds": [
+        "2843",
+        "3106"
+      ],
+      "launchStates": [
+        "COLD",
+        "COLD"
+      ],
+      "fingerprint": "google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+      "libartSha256": "6ac4d052d0cf6f7d69ff817444f610afa25e583bb032d2a0e310346c0f8b7133",
+      "libandroidRuntimeSha256": "5560ae9083b9a81e8ee74c22a005e302a1a505e969e650e644fe34d692a5848e",
+      "crashProcesses": [
+        "com.google.android.googlequicksearchbox:interactor"
+      ],
+      "witnessHashes": {
+        "runtime/art-sha256.txt": "89970c0f8d2b1af2a2c0895264653f8d274e0013351595022bf15455de719a94",
+        "runtime/android-runtime-sha256.txt": "52c57d91a981a6875b503569b1a20aa98bd5c3c72730c40816f8da979cfface0",
+        "runtime/exit-info.txt": "162ffe306fcb83880ac5406f1a68af6db05500aa3afdead4917c8abd6a0b7be0",
+        "runtime/final-anr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "runtime/final-crashes.txt": "196f4996c5a79ce2bdc1e0d6fbee0d40ac94f2e3eb33557152026825c916cd86",
+        "runtime/accessibility/result.json": "7a7b77789938726ebde7251bdc53137fe06e13aa08ae1a7960e7239448caed98",
+        "runtime/accessibility/observations.json": "fd0243e7c33c8347b70a4336ae5d119a9233408ac87c45e488ad1aec8f51d017",
+        "runtime/launch-1.txt": "94727a273144a6ce2afeec53a93268a6c41193b0fcaa409a8648e7ec91921a0e",
+        "runtime/launch-2.txt": "92d3aef5fc7f63afda756c9bf2188dea595b8608741899b1746b33c16e516032",
+        "runtime/properties.txt": "c3307ba25c975e25cf74a238264633932886f6c3706058347fd0c4c360bfbd9b",
+        "emulator/emulator-image.properties": "ed5a16eb74b8bc0e58c938eb9d3159a986855e3aebbd53f79a3273962630f663",
+        "host-cpu.txt": "3cc35ca3807f9d41155b1e5a1afbd76ae08fbd9f63e34607b3a3a1121e743b0b"
+      },
+      "hoodieExitInfo": "ACTIVITY MANAGER PROCESS EXIT INFO (dumpsys activity exit-info)\nLast Timestamp of Persistence Into Persistent Storage: 1970-01-01 00:00:00.000\n  package: com.hoodie.app.homologacao\n    Historical Process Exit for uid=10207\n        ApplicationExitInfo #0:\n          timestamp=2026-10-21 10:17:40.941 pid=2843 realUid=10207 packageUid=10207 definingUid=10207 user=0\n          process=com.hoodie.app.homologacao reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0\n          importance=100 pss=0.00 rss=0.00 description=stop com.hoodie.app.homologacao due to from pid 3049 state=empty trace=null\n",
+      "retainedCrashWitnessSha256": "196f4996c5a79ce2bdc1e0d6fbee0d40ac94f2e3eb33557152026825c916cd86"
+    }
+  ],
+  "interpretation": {
+    "homeCrashNotReproducedInTheseObservations": true,
+    "previousHoodieNativeDefectsClosed": false,
+    "global16kbJobPassed": false,
+    "bootFailureMessageMisleading": true,
+    "actualFailure": "Runtime health check after successful accessibility sequence; Google Assistant Profile Saver SIGABRT",
+    "libartDiffers": true,
+    "libandroidRuntimeIdentical": true,
+    "pageSizeIsolatedAsCause": false,
+    "releaseApproved": false,
+    "limits": "Frozen old APK. No backup/export concurrency, current candidate, physical device, upgrade or release acceptance. One observation per image is not a stability proof."
+  }
+}

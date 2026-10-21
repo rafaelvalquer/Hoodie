@@ -1,0 +1,371 @@
+{
+  "runId": 39581823962,
+  "workflowCommit": "351ca3a8fa12741bdfb31d71cbe6ea3ac1d0e751",
+  "sourceTree": "5188f6983ceb14bd2d09132f6b43d2b8ae75511a",
+  "captureArtifacts": [
+    {
+      "id": 12338840355,
+      "sha256": "769419b0299e73347b9763d8e974e451b1e20c14d82cc8aae5498ca6eb5f3150"
+    },
+    {
+      "id": 12338770257,
+      "sha256": "0b43845598cb0bb1dbc4cfa233e1b95022f379c553d497d2b91f989e75ceceab"
+    }
+  ],
+  "cpuA": [
+    "Vendor ID:                               AuthenticAMD",
+    "Model name:                              AMD EPYC 9V74 80-Core Processor",
+    "CPU family:                              25"
+  ],
+  "cpuB": [
+    "Vendor ID:                               AuthenticAMD",
+    "Model name:                              AMD EPYC 7763 64-Core Processor",
+    "CPU family:                              25"
+  ],
+  "decodedIdenticalImages": 222,
+  "casesPerCapture": 180,
+  "differencesFromOriginalReferences": [
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "pixels": 64216,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_full_360x640_f100_map.png",
+      "pixels": 175300,
+      "maxChannelDelta": 242
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "pixels": 37918,
+      "maxChannelDelta": 217
+    },
+    {
+      "file": "diary_full_360x640_f130_map.png",
+      "pixels": 172917,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_full_360x800_f100.png",
+      "pixels": 2090,
+      "maxChannelDelta": 184
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "pixels": 105600,
+      "maxChannelDelta": 242
+    },
+    {
+      "file": "diary_full_360x800_f100_map.png",
+      "pixels": 204340,
+      "maxChannelDelta": 242
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "pixels": 88962,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_full_360x800_f130_map.png",
+      "pixels": 210674,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_full_411x891_f100.png",
+      "pixels": 34388,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "pixels": 152250,
+      "maxChannelDelta": 242
+    },
+    {
+      "file": "diary_full_411x891_f100_map.png",
+      "pixels": 261945,
+      "maxChannelDelta": 242
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "pixels": 139345,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_full_411x891_f130_map.png",
+      "pixels": 260298,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_normal_360x640_f100.png",
+      "pixels": 4790,
+      "maxChannelDelta": 196
+    },
+    {
+      "file": "diary_normal_360x800_f100.png",
+      "pixels": 53890,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_normal_411x891_f100.png",
+      "pixels": 97603,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "diary_normal_411x891_f130.png",
+      "pixels": 69105,
+      "maxChannelDelta": 240
+    },
+    {
+      "file": "digital_full_411x891_f100.png",
+      "pixels": 3,
+      "maxChannelDelta": 1
+    },
+    {
+      "file": "digital_full_411x891_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1
+    },
+    {
+      "file": "digital_full_411x891_f130.png",
+      "pixels": 3,
+      "maxChannelDelta": 1
+    },
+    {
+      "file": "digital_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1
+    },
+    {
+      "file": "place_picker_full_411x891_f100_bottom.png",
+      "pixels": 1,
+      "maxChannelDelta": 1
+    },
+    {
+      "file": "place_picker_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1
+    }
+  ],
+  "diaryVisualReview": [
+    {
+      "file": "diary_empty_360x640_f100.png",
+      "sha256": "03030140ce6e0b7a647198f1b068b170ad19eb1deccd93c6d906a08021781625",
+      "inspected": true
+    },
+    {
+      "file": "diary_empty_360x640_f130.png",
+      "sha256": "4f67ab7108aaa10d59c6fe92d0092e4dcfa7ed322b70dc19cd31e3450fe17ca5",
+      "inspected": true
+    },
+    {
+      "file": "diary_empty_360x800_f100.png",
+      "sha256": "c9254ac86cf262a2159226dbba79f3fb876f876ebad7439739a2186753ba93cb",
+      "inspected": true
+    },
+    {
+      "file": "diary_empty_360x800_f130.png",
+      "sha256": "5747314bb8df765d50a380b189b625412ad370fc9319692301d4c1f44a06f69e",
+      "inspected": true
+    },
+    {
+      "file": "diary_empty_411x891_f100.png",
+      "sha256": "3c7383fadcadb329c82791d26139f80863b3f973da8702292b858e607e8391f7",
+      "inspected": true
+    },
+    {
+      "file": "diary_empty_411x891_f130.png",
+      "sha256": "72dd7dd92b70f62ceebad231810d6777517efb281e21bef9ee0b43081fd52ac5",
+      "inspected": true
+    },
+    {
+      "file": "diary_error_360x640_f100.png",
+      "sha256": "db1d3a7a757810a777c58b2dee26d07aa5d4d1afe51f16b95e92ff9564da2249",
+      "inspected": true
+    },
+    {
+      "file": "diary_error_360x640_f130.png",
+      "sha256": "442e608840217d2ca432b9ddd616bd0390efee7b1075bd5fe15bf37c03a0db4b",
+      "inspected": true
+    },
+    {
+      "file": "diary_error_360x800_f100.png",
+      "sha256": "a5bf60d301f3f2159b3fc3f08518455e06c183a7a802885a97b0d1a8e95330f9",
+      "inspected": true
+    },
+    {
+      "file": "diary_error_360x800_f130.png",
+      "sha256": "0677570730073798b17ee5b61a77cf6c4976fcac6638372598497c116dbfd5aa",
+      "inspected": true
+    },
+    {
+      "file": "diary_error_411x891_f100.png",
+      "sha256": "137e59aac0e7958ae826021069125b18d0e48e63b67a248af99862af967bfcaa",
+      "inspected": true
+    },
+    {
+      "file": "diary_error_411x891_f130.png",
+      "sha256": "d821552f36f403144c6ed3ebc82cb7aa308a9bb718adbd97b5285beb67fd5248",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x640_f100.png",
+      "sha256": "6fb1f17c768cd2116513158cb7c9211a5f6af6f5411666a4bb7638fc5821f528",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "sha256": "798107acaac0ea842c09142852f4ab3d572b7c90749da728e8d81d8ccfe74217",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x640_f100_map.png",
+      "sha256": "338ab7f1429b7b46a2de47c0b4ac5cd704d86a826056f087a9efce3e7f3ce87f",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x640_f130.png",
+      "sha256": "eead5ed011babb204196ccd1d682fb6ce42540c498a287c04c15282cdd603908",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "sha256": "92e929ebbac43e0118ebffa60c2f63b24c0ea0ee194e89063bfe0eb43bcf82ca",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x640_f130_map.png",
+      "sha256": "4668d8d39650edbf7bc4a6896bfb2c2978cce03d5a0bfdd26cfe6318fba86ebb",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x800_f100.png",
+      "sha256": "11167b706f4236b3271c9b3b320c33c03f0ee44794372ab0b77a4299eeb77d0a",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "sha256": "5ea68b83443ab991e667d599840618caf8ca6b6d19ff45355eae4393fdfa2583",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x800_f100_map.png",
+      "sha256": "1e4f72cac8d66662d89384b2b7760dc9ba29769615da478bea168e8ff751234f",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x800_f130.png",
+      "sha256": "3a8f336b59135dc33b8b21e2d4a1bdc24e420e8fa34b3201605647acb4712038",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "sha256": "6b6cc44afd91279fd3ea7baa9b8ac38d18685dc51fcca0b9ac8c1e66ad8f849c",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_360x800_f130_map.png",
+      "sha256": "5aade1ccf06184e724fef47ba2f3cd8854aaff50d6081f0d7d3656f487ba9d90",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_411x891_f100.png",
+      "sha256": "d582106971815baa7896935f67ee5cb61491ff475cd1864c03e65e467d346d27",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "sha256": "edc5ed0d63247aa21ae8ed999d779d744662b97129cb34c274583059eef61bfb",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_411x891_f100_map.png",
+      "sha256": "a118813329e30193cb5d8997b3dd66b640ea58c73f83b38ed1af4680dcca3d1d",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_411x891_f130.png",
+      "sha256": "3ab41b57e893d6b6ecb3e1f8464a112f65514788c5e198fa881bedd9a977f7fb",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "sha256": "5fc8372059eb920982a7922d69b86b3db04918bd3d0f910f454f77a2101c8d73",
+      "inspected": true
+    },
+    {
+      "file": "diary_full_411x891_f130_map.png",
+      "sha256": "46cb5c0ef2144a745b1ef593e046c3b2a26552d313213a8b51b2908ca2dc0742",
+      "inspected": true
+    },
+    {
+      "file": "diary_loading_360x640_f100.png",
+      "sha256": "af9e10ac01e3cda1e7c3d8194bbee78bf601e4a857ca459904f47fb585d7153c",
+      "inspected": true
+    },
+    {
+      "file": "diary_loading_360x640_f130.png",
+      "sha256": "56c1ca36f9a0d96f4867402b12b6b94874747e1c8825be929833867c3ff5717e",
+      "inspected": true
+    },
+    {
+      "file": "diary_loading_360x800_f100.png",
+      "sha256": "8f128eece60c0a67520928f61275ee96c7111f1432081da3a5f030078ae35218",
+      "inspected": true
+    },
+    {
+      "file": "diary_loading_360x800_f130.png",
+      "sha256": "7b5e3b163d59f4ddfe4c3bddbc1caab4688f2969bac5d17c52d2f6b078ef5d5f",
+      "inspected": true
+    },
+    {
+      "file": "diary_loading_411x891_f100.png",
+      "sha256": "7260f7bfb6178c245eacb5502ac6a6d762f06536d8f3294c52423ae0f1568707",
+      "inspected": true
+    },
+    {
+      "file": "diary_loading_411x891_f130.png",
+      "sha256": "5db4b0f5fb0dbfa698114cd0347b3ec9bc5f56ffc38d14b0b29002cb53c372ac",
+      "inspected": true
+    },
+    {
+      "file": "diary_normal_360x640_f100.png",
+      "sha256": "9e3678b24ec77287ee77d5b04de55cc6ac6659418f9f853b6ba1f7bac234381f",
+      "inspected": true
+    },
+    {
+      "file": "diary_normal_360x640_f130.png",
+      "sha256": "9560dc6f7a55163c706f88a76f422869fa0e823aef4ac5edf2042ac4f722da2f",
+      "inspected": true
+    },
+    {
+      "file": "diary_normal_360x800_f100.png",
+      "sha256": "81e1a29588504e60e203687689722327bc6ca70043cc13c54bf916f5de72e675",
+      "inspected": true
+    },
+    {
+      "file": "diary_normal_360x800_f130.png",
+      "sha256": "de9a86c1dcb14ae89561c341019c682aba7df7519f9f1784e710c6a1c450a0d6",
+      "inspected": true
+    },
+    {
+      "file": "diary_normal_411x891_f100.png",
+      "sha256": "9042905d012f79270cb681744dd03fc1d7b1280d7bbf6f8289a4f3199cde299e",
+      "inspected": true
+    },
+    {
+      "file": "diary_normal_411x891_f130.png",
+      "sha256": "ab571ba59861b17aaaf277bfa4353e845eab59891e33faa6c68e59ab9114284d",
+      "inspected": true
+    }
+  ],
+  "findings": [
+    "Camera control overlays HUD text at narrow widths. Header layout correction required before accepting new City references.",
+    "18 Diary images differ from original references after City integration; six Digital/PlacePicker captures differ by 1-3 pixels with max channel delta 1.",
+    "Two independent AMD CPU models produced identical decoded images. This does not identify the cause of older cross-OS differences or establish stability for all hosts."
+  ],
+  "acceptedNewReferences": 0,
+  "baselinesChanged": false,
+  "comparisonToleranceChanged": false,
+  "recordModeIsQualityGate": false,
+  "releaseApproved": false
+}

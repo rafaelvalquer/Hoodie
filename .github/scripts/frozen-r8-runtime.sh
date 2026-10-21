@@ -53,7 +53,7 @@ for opening in 1 2; do
 done
 python3 .github/scripts/r8-qa-accessibility.py --serial "$ANDROID_SERIAL" --output "$out/accessibility"
 capture
-python3 .github/scripts/verify-emulator-boot.py "$out/final-anr.txt" "$out/final-crashes.txt"
+python3 .github/scripts/verify-emulator-boot.py "$out/final-anr.txt" "$out/final-crashes.txt" --phase runtime
 export FROZEN_R8_REPORT_DIR="$out"
 python3 - <<'PY'
 import json, os, pathlib, re

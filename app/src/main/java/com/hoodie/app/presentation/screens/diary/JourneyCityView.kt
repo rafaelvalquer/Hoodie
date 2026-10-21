@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -205,12 +206,18 @@ fun JourneyCityView(
             drawImage(image, srcOffset = IntOffset.Zero, srcSize = IntSize(viewW, viewH), dstSize = IntSize(viewW * scale, viewH * scale), filterQuality = FilterQuality.None)
         }
 
-        CityHud(hoodie, plan.stays, replay, zone, Modifier.align(Alignment.TopStart).padding(8.dp))
+        Row(
+            Modifier.align(Alignment.TopStart).fillMaxWidth().padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            CityHud(hoodie, plan.stays, replay, zone, Modifier.weight(1f).testTag("journey_city_hud"))
+            CityChip(
+                if (mode == CityCameraMode.FOLLOW) stringResource(R.string.city_overview) else stringResource(R.string.city_follow),
+                Modifier.testTag("journey_city_mode"),
+            ) { mode = if (mode == CityCameraMode.FOLLOW) CityCameraMode.OVERVIEW else CityCameraMode.FOLLOW; selectedSlot = null }
+        }
         cardStay?.let { CityPlaceCard(it, zone, Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp)) }
-        CityChip(
-            if (mode == CityCameraMode.FOLLOW) stringResource(R.string.city_overview) else stringResource(R.string.city_follow),
-            Modifier.align(Alignment.TopEnd).padding(8.dp).testTag("journey_city_mode"),
-        ) { mode = if (mode == CityCameraMode.FOLLOW) CityCameraMode.OVERVIEW else CityCameraMode.FOLLOW; selectedSlot = null }
     }
 }
 
@@ -245,7 +252,7 @@ private fun CityHud(h: CityHoodieState, stays: List<CityStay>, replay: ReplayUiS
         }
         Box(Modifier.background(Color(0xB812142A), RoundedCornerShape(5.dp)).padding(horizontal = 7.dp, vertical = 2.dp)) {
             Text(next?.let { stringResource(R.string.city_hud_next, it.placeName, formatClock(it.arrivalAt, zone)) } ?: stringResource(R.string.city_hud_end),
-                style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, maxLines = 1)
+                style = MaterialTheme.typography.labelSmall, color = HoodieColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

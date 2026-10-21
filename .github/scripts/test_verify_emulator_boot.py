@@ -37,6 +37,22 @@ class BootGateTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'fatal native'):
             gate.verify('', 'D status: ready\n' * 20000 + '10-20 23:07:28.267 1424 2495 F libc: Fatal signal 11 (SIGSEGV)\n')
 
+    def test_runtime_failures_do_not_claim_tests_were_never_started(self):
+        for events, crashes in [
+            ('I am_anr: [0,1234,com.google.android.gms]', ''),
+            ('', 'E AndroidRuntime: FATAL EXCEPTION: main'),
+            ('', 'F libc: Fatal signal 6 (SIGABRT) in pid 1534 (hbox:interactor)'),
+        ]:
+            with self.subTest(events=events, crashes=crashes):
+                with self.assertRaisesRegex(ValueError, 'during runtime observation') as result:
+                    gate.verify(events, crashes, phase='runtime')
+                self.assertNotIn('no tests started', str(result.exception))
+                self.assertNotIn('during boot', str(result.exception))
+
+    def test_unknown_phase_cannot_bypass_failure_checks(self):
+        with self.assertRaisesRegex(ValueError, 'Unknown observation phase'):
+            gate.verify('', '', phase='ignored')
+
 
 if __name__ == '__main__':
     unittest.main()

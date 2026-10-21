@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.captureToImage
@@ -18,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.hoodie.app.core.model.PlaceType
 import com.hoodie.app.domain.diary.model.JourneyMapData
@@ -32,6 +35,7 @@ import com.hoodie.app.presentation.theme.HoodieTheme
 import java.time.ZoneId
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -75,5 +79,38 @@ class JourneyCityRenderTest {
     private fun pixels(): IntArray {
         val map = rule.onNodeWithTag("journey_city").captureToImage().toPixelMap()
         return IntArray(map.width * map.height) { i -> map[i % map.width, i / map.width].toArgb() }
+    }
+
+    @Test(timeout = 60_000)
+    fun enlargedTextKeepsCityStatusBesideCameraControlOnNarrowScreens() {
+        val start = 1_790_914_800_000L
+        val node = JourneyNode("home", 0, 1L, "Casa com nome comprido para testar o cabeçalho", PlaceType.HOME,
+            start, null, 3_600_000L, null, null)
+        val scene = CityScene.build(requireNotNull(CityPlan.build(
+            JourneyMapData(listOf(node), emptyList(), start, start + 3_600_000L))))
+        rule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalPixelRenderFrame provides PixelRenderFrame(),
+                LocalDensity provides Density(density.density, fontScale = 1.3f),
+            ) {
+                HoodieTheme {
+                    JourneyCityView(scene, ReplayUiState(currentTimestamp = start), ZoneId.of("UTC"), {}, Modifier.width(320.dp))
+                }
+            }
+        }
+        rule.waitForIdle()
+        fun checkBounds() {
+            val hud = rule.onNodeWithTag("journey_city_hud").fetchSemanticsNode().boundsInRoot
+            val mode = rule.onNodeWithTag("journey_city_mode").fetchSemanticsNode().boundsInRoot
+            val city = rule.onNodeWithTag("journey_city").fetchSemanticsNode().boundsInRoot
+            assertTrue("Status must retain usable width", hud.width > 0)
+            assertTrue("Camera control must not cover city status", hud.right < mode.left)
+            assertTrue("Camera control must remain inside the city", mode.right <= city.right)
+        }
+        checkBounds()
+        rule.onNodeWithTag("journey_city_mode").performTouchInput { click() }
+        rule.waitForIdle()
+        checkBounds()
     }
 }
