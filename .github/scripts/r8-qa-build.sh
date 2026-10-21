@@ -12,7 +12,7 @@ private_dir=$(mktemp -d "$RUNNER_TEMP/hoodie-qa-signing.XXXXXX")
 signing_metadata="$private_dir/signing.json"
 password_file="$private_dir/password"
 trap 'rm -f -- "$signing_metadata" "$password_file"; rmdir -- "$private_dir"' EXIT
-./gradlew :app:bundleHomologacao :app:writeQaSigningMetadata \
+./gradlew :app:bundleHomologacao :app:writeQaSigningMetadata :app:assembleDebug :app:assembleDebugAndroidTest \
   --init-script .github/scripts/r8-qa-signing.init.gradle \
   -PqaSigningMetadata="$signing_metadata" -PHOODIE_VERSION_CODE=7 \
   --no-configuration-cache --no-parallel --max-workers=2

@@ -12,3 +12,4 @@ trap 'adb logcat -d -v threadtime > "$output/logcat.txt"; adb exec-out screencap
 test "$(adb shell getconf PAGE_SIZE | tr -d '\r')" = 16384
 ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.package=com.hoodie.app.database,com.hoodie.app.backup
+python3 .github/scripts/verify-junit.py app/build/outputs/androidTest-results

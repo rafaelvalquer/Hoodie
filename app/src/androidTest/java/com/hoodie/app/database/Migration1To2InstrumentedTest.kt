@@ -4,6 +4,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.hoodie.app.core.database.HoodieDatabase
+import com.hoodie.app.core.database.HOODIE_DATABASE_VERSION
 import com.hoodie.app.core.database.migrations.Migration1To2
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -33,12 +34,12 @@ class Migration1To2InstrumentedTest {
         }
     }
 
-    @Test fun allHistoricalVersionsReach11OnDevice() {
-        for (version in 1..10) {
+    @Test fun allHistoricalVersionsReachCurrentSchemaOnDevice() {
+        for (version in 1 until HOODIE_DATABASE_VERSION) {
             val name = "migration-chain-$version-instrumented.db"
             helper.createDatabase(name, version).close()
-            helper.runMigrationsAndValidate(name, 11, true, *com.hoodie.app.core.database.migrations.ALL_MIGRATIONS).use { db ->
-                assertEquals(11, db.version)
+            helper.runMigrationsAndValidate(name, HOODIE_DATABASE_VERSION, true, *com.hoodie.app.core.database.migrations.ALL_MIGRATIONS).use { db ->
+                assertEquals(HOODIE_DATABASE_VERSION, db.version)
             }
         }
     }

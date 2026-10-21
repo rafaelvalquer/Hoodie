@@ -26,6 +26,17 @@ python3 .github/scripts/r8-qa-backup.py --serial "$serial" --output "$out/backup
 "$HOODIE_BACKUP_PYTHON" .github/scripts/verify-synthetic-backup.py \
   "$out/backup-fixture/Hoodie_R8_fixture_reexport.hoodiebackup" \
   --output "$out/backup-fixture/independent-authentication.json"
+# Distinct debug package: database tests complement the derived R8 APK's UI
+# journey. They do not replace it or claim to test R8 migration bytecode.
+# Check and preserve this segment before UTP can clear buffers for debug tests.
+capture
+if grep -E 'UnsatisfiedLinkError|Fatal signal|FATAL EXCEPTION|am_anr[[:space:]]*:' "$out/final-logcat.txt"; then
+  echo '::error::R8 journey recorded a fatal error or ANR; database tests not started.'
+  exit 1
+fi
+cp "$out/final-logcat.txt" "$out/r8-journey-logcat.txt"
+cp "$out/final-crashes.txt" "$out/r8-journey-crashes.txt"
+bash .github/scripts/r8-qa-database.sh
 capture
 if grep -E 'UnsatisfiedLinkError|Fatal signal|FATAL EXCEPTION|am_anr[[:space:]]*:' "$out/final-logcat.txt"; then
   echo '::error::Runtime recorded a fatal error or ANR; no runtime approval.'

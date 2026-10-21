@@ -1,0 +1,79 @@
+10-21 15:13:56.156  3859  4272 I TestRunner: started: screenMatchesReviewedBaseline[diary_error_360x640_f130](com.hoodie.app.ui.golden.ScreenGoldenMatrixTest)
+10-21 15:13:56.166  3859  4272 D IdlingRegistry: Registering idling resources: [androidx.compose.ui.test.EspressoLink@a40117f]
+10-21 15:13:56.197  3859  4272 W Settings: Setting always_finish_activities has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+10-21 15:13:56.251   910  1002 E OpenGLRenderer: Unable to match the desired swap behavior.
+10-21 15:13:56.428  4931  4931 I Choreographer: Skipped 101 frames!  The application may be doing too much work on its main thread.
+10-21 15:13:56.549  3859  3859 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@300502 in: PRE_ON_CREATE
+10-21 15:13:56.549  3859  3859 V ActivityScenario: Activity lifecycle changed event received but ignored because the reported transition was not ON_CREATE while the last known transition was PRE_ON_CREATE
+10-21 15:13:56.566  3859  3859 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@300502 in: CREATED
+10-21 15:13:56.567  3859  3859 V ActivityScenario: Update currentActivityStage to CREATED, currentActivity=androidx.activity.ComponentActivity@300502
+10-21 15:13:56.572  3859  3859 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@300502 in: STARTED
+10-21 15:13:56.573  3859  3859 V ActivityScenario: Update currentActivityStage to STARTED, currentActivity=androidx.activity.ComponentActivity@300502
+10-21 15:13:56.575  3859  3859 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@300502 in: RESUMED
+10-21 15:13:56.576  3859  3859 V ActivityScenario: Update currentActivityStage to RESUMED, currentActivity=androidx.activity.ComponentActivity@300502
+10-21 15:13:56.589   910   964 W Looper  : Slow dispatch took 34ms wmshell.main h=android.os.Handler c=com.android.wm.shell.transition.DefaultTransitionHandler$$ExternalSyntheticLambda0@c0a844f m=0
+10-21 15:13:56.857  3859  4857 E OpenGLRenderer: Unable to match the desired swap behavior.
+10-21 15:13:56.859  4931  5778 I OpenGLRenderer: Davey! duration=1739ms; Flags=1, FrameTimelineVsyncId=64374, IntendedVsync=375254752280, Vsync=375254752280, InputEventId=0, HandleInputStart=375263529571, AnimationStart=375263534352, PerformTraversalsStart=375263540306, DrawStart=376564905649, FrameDeadline=375271418946, FrameInterval=375263504721, FrameStartTime=16666666, SyncQueued=376565622035, SyncStart=376677419803, IssueDrawCommandsStart=376677494172, SwapBuffers=376946345756, FrameCompleted=377105580999, DequeueBufferDuration=4634, QueueBufferDuration=1090291, GpuCompleted=377105580999, SwapBuffersCompleted=376976108703, DisplayPresentTime=0, CommandSubmissionCompleted=376946345756, 
+10-21 15:13:57.386  3859  3859 I Choreographer: Skipped 43 frames!  The application may be doing too much work on its main thread.
+10-21 15:13:57.629  3859  4857 E OpenGLRenderer: Unable to match the desired swap behavior.
+10-21 15:13:57.999  3859  3859 D AutofillManager: Fill dialog is enabled:false, hints=[password, passwordAuto, creditCardNumber, creditCardSecurityCode, creditCardExpirationDate]
+10-21 15:13:58.613   910  1381 I OpenGLRenderer: Davey! duration=1145ms; Flags=0, FrameTimelineVsyncId=64912, IntendedVsync=377421418860, Vsync=377421418860, InputEventId=0, HandleInputStart=377422796869, AnimationStart=377422797677, PerformTraversalsStart=377423003046, DrawStart=377423083210, FrameDeadline=377438085526, FrameInterval=377422790112, FrameStartTime=16666666, SyncQueued=377423107098, SyncStart=377695858041, IssueDrawCommandsStart=377707169099, SwapBuffers=378322830225, FrameCompleted=378840035972, DequeueBufferDuration=3586, QueueBufferDuration=648937, GpuCompleted=378840035972, SwapBuffersCompleted=378538624980, DisplayPresentTime=0, CommandSubmissionCompleted=378322830225, 
+10-21 15:13:58.620  3859  3895 I OpenGLRenderer: Davey! duration=962ms; Flags=0, FrameTimelineVsyncId=65028, IntendedVsync=378204752162, Vsync=378521418816, InputEventId=0, HandleInputStart=378542760424, AnimationStart=378542764737, PerformTraversalsStart=378544068774, DrawStart=378544314693, FrameDeadline=378588085480, FrameInterval=378537383795, FrameStartTime=16666666, SyncQueued=378544569279, SyncStart=378544623264, IssueDrawCommandsStart=378544866015, SwapBuffers=378545030436, FrameCompleted=379167618150, DequeueBufferDuration=322332583, QueueBufferDuration=540681, GpuCompleted=379167618150, SwapBuffersCompleted=379164376563, DisplayPresentTime=0, CommandSubmissionCompleted=378545030436, 
+10-21 15:13:58.917   544  4898 E OpenGLRenderer: Unable to match the desired swap behavior.
+10-21 15:13:59.496   544   565 W Looper  : Slow dispatch took 692ms android.ui h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@bf9129f m=0
+10-21 15:13:59.497   544   565 W Looper  : Slow delivery took 709ms android.ui h=android.view.ViewRootImpl$ViewRootHandler c=null m=17
+10-21 15:13:59.500   544   565 I Choreographer: Skipped 41 frames!  The application may be doing too much work on its main thread.
+10-21 15:13:59.516  3859  3895 I OpenGLRenderer: Davey! duration=725ms; Flags=0, FrameTimelineVsyncId=65058, IntendedVsync=378554752148, Vsync=378621418812, InputEventId=0, HandleInputStart=378622404903, AnimationStart=378622408395, PerformTraversalsStart=378622411677, DrawStart=378694881393, FrameDeadline=379188085456, FrameInterval=378622381408, FrameStartTime=16666666, SyncQueued=378709064177, SyncStart=379164408344, IssueDrawCommandsStart=379175225629, SwapBuffers=379441255113, FrameCompleted=379735614811, DequeueBufferDuration=5565, QueueBufferDuration=436680, GpuCompleted=379735614811, SwapBuffersCompleted=379443797029, DisplayPresentTime=0, CommandSubmissionCompleted=379441255113, 
+10-21 15:13:59.541   544  4898 W OpenGLRenderer: Incorrectly called buildLayer on View: RelativeLayout, destroying layer...
+10-21 15:14:00.591   544  2110 I OpenGLRenderer: Davey! duration=1425ms; Flags=0, FrameTimelineVsyncId=65252, IntendedVsync=379371418782, Vsync=380054752088, InputEventId=0, HandleInputStart=380055417778, AnimationStart=380055418516, PerformTraversalsStart=380070149631, DrawStart=380094625927, FrameDeadline=380088085420, FrameInterval=380054858854, FrameStartTime=16666666, SyncQueued=380094874887, SyncStart=380095218323, IssueDrawCommandsStart=380095606191, SwapBuffers=380434964184, FrameCompleted=380797388238, DequeueBufferDuration=7553, QueueBufferDuration=740654, GpuCompleted=380797388238, SwapBuffersCompleted=380443629295, DisplayPresentTime=0, CommandSubmissionCompleted=380434964184, 
+10-21 15:14:00.595   544   565 W Looper  : Drained
+10-21 15:14:00.600   910  1000 W Looper  : Slow dispatch took 2561ms SysUiBg h=android.os.Handler c=com.android.systemui.shared.navigationbar.RegionSamplingHelper$$ExternalSyntheticLambda2@f2b54be m=0
+10-21 15:14:00.637  3859  3859 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@300502 in: PAUSED
+10-21 15:14:00.638  3859  3859 V ActivityScenario: Update currentActivityStage to PAUSED, currentActivity=androidx.activity.ComponentActivity@300502
+10-21 15:14:00.647   910   964 W Looper  : Slow delivery took 33ms wmshell.main h=android.os.Handler c=android.window.TaskOrganizer$1$$ExternalSyntheticLambda3@a8b3d96 m=0
+10-21 15:14:00.660   910   964 W Looper  : Drained
+10-21 15:14:00.857   910  1002 E OpenGLRenderer: Unable to match the desired swap behavior.
+10-21 15:14:01.171   910   986 I Choreographer: Skipped 31 frames!  The application may be doing too much work on its main thread.
+10-21 15:14:01.174  4931  4953 W OpenGLRenderer: Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+10-21 15:14:01.194  4931  4953 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+10-21 15:14:01.744  4931  4961 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[InstrumentationActivityInvoker$EmptyActivity]#68) as ready
+10-21 15:14:01.745  4931  4961 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[InstrumentationActivityInvoker$EmptyActivity]#69) as ready
+10-21 15:14:01.906   544   565 W Looper  : Slow dispatch took 361ms android.ui h=com.android.server.wm.ImmersiveModeConfirmation$H c=null m=2
+10-21 15:14:01.908   544   565 W Looper  : Slow delivery took 368ms android.ui h=com.android.server.wm.DisplayPolicy$PolicyHandler c=com.android.server.wm.DisplayPolicy$$ExternalSyntheticLambda8@d476ae m=0
+10-21 15:14:01.911  4931  4953 E OpenGLRenderer: Unable to match the desired swap behavior.
+10-21 15:14:01.920  3859  3859 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@300502 in: STOPPED
+10-21 15:14:01.920  3859  3859 V ActivityScenario: Update currentActivityStage to STOPPED, currentActivity=androidx.activity.ComponentActivity@300502
+10-21 15:14:01.974  3859  3859 D LifecycleMonitor: Lifecycle status change: androidx.activity.ComponentActivity@300502 in: DESTROYED
+10-21 15:14:01.977   544   565 W Looper  : Drained
+10-21 15:14:02.117  3859  3859 V ActivityScenario: Update currentActivityStage to DESTROYED, currentActivity=null
+10-21 15:14:02.121  3859  3859 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@3341a26
+10-21 15:14:02.320  4931  4931 I Choreographer: Skipped 95 frames!  The application may be doing too much work on its main thread.
+10-21 15:14:02.342  3859  4272 D IdlingRegistry: Unregistering idling resources: [androidx.compose.ui.test.EspressoLink@a40117f]
+10-21 15:14:02.349  3859  4272 E TestRunner: failed: screenMatchesReviewedBaseline[diary_error_360x640_f130](com.hoodie.app.ui.golden.ScreenGoldenMatrixTest)
+10-21 15:14:02.360  3859  4272 E TestRunner: ----- begin exception -----
+10-21 15:14:02.360  3859  4272 E TestRunner: java.lang.AssertionError: Failed waiting for PixelCopy!
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt.generateBitmapFromPixelCopy(WindowCapture.android.kt:157)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt.generateBitmap(WindowCapture.android.kt:135)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt.access$generateBitmap(WindowCapture.android.kt:1)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1$1.invoke(WindowCapture.android.kt:51)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1$1.invoke(WindowCapture.android.kt:47)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt.withDrawingEnabled(WindowCapture.android.kt:89)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt.access$withDrawingEnabled(WindowCapture.android.kt:1)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1.invoke(WindowCapture.android.kt:47)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1.invoke(WindowCapture.android.kt:45)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt.runWithRetryWhenNoData(WindowCapture.android.kt:64)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.android.WindowCapture_androidKt.captureRegionToImage(WindowCapture.android.kt:45)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at androidx.compose.ui.test.AndroidImageHelpers_androidKt.captureToImage(AndroidImageHelpers.android.kt:101)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at com.hoodie.app.ui.golden.ScreenGoldenCapture.verify(ScreenGoldenCapture.kt:22)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at com.hoodie.app.ui.golden.ScreenGoldenMatrixTest.screenMatchesReviewedBaseline(ScreenGoldenMatrixTest.kt:118)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at java.lang.reflect.Method.invoke(Native Method)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+10-21 15:14:02.360  3859  4272 E TestRunner: 	at java.lang.Thread.run(Thread.java:1012)
+10-21 15:14:02.360  3859  4272 E TestRunner: ----- end exception -----
+10-21 15:14:02.370  3859  4272 I TestRunner: finished: screenMatchesReviewedBaseline[diary_error_360x640_f130](com.hoodie.app.ui.golden.ScreenGoldenMatrixTest)

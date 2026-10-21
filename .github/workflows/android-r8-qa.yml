@@ -19,6 +19,8 @@ on:
       - '.github/requirements-backup-qa.txt'
       - 'tools/android_ui.py'
       - 'app/src/main/**'
+      - 'app/src/androidTest/java/com/hoodie/app/database/**'
+      - 'app/schemas/**'
       - 'app/build.gradle.kts'
       - 'app/proguard-rules.pro'
       - 'gradle/**'
@@ -92,7 +94,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: APK derivado, acessibilidade e backup em 16 KB
+      - name: APK derivado, backup e testes de banco em 16 KB
         run: bash .github/scripts/run-qa-emulator.sh "$R8_QA_API" google_apis_ps16k .github/scripts/r8-qa-runtime.sh
       - name: Evidências de desenvolvimento, sem chave privada
         if: always()
@@ -104,3 +106,5 @@ jobs:
             app/build/outputs/bundle/homologacao/*.aab
             app/build/outputs/mapping/homologacao/mapping.txt
             app/build/reports/r8-qa/
+            app/build/outputs/androidTest-results/
+            app/build/reports/androidTests/

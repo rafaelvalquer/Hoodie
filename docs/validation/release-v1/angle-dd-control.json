@@ -1,0 +1,74 @@
+{
+  "runId": 39628430086,
+  "driverCommit": "dd1e01e232971fea512eac836112540279f7a330",
+  "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "captures": [
+    {
+      "label": "a",
+      "artifactId": 12359985313,
+      "artifactSha256": "ca0ef3d0b42f937435c838094299419ce3993ac613c3fb979fc27f5b4b0388b4",
+      "cpu": [
+        "Vendor ID:                               AuthenticAMD",
+        "Model name:                              AMD EPYC 9V74 80-Core Processor"
+      ],
+      "renderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))",
+      "cases": 180,
+      "images": 222,
+      "health": {
+        "recordingCompleted": true,
+        "androidFailures": [],
+        "captureErrors": [],
+        "cleanupErrors": [],
+        "releaseApproved": false,
+        "scope": "Recording health only; partial evidence cannot approve cases, baselines or release."
+      }
+    },
+    {
+      "label": "b",
+      "artifactId": 12358637476,
+      "artifactSha256": "370a23bc5c43a8a111879c2e2558ff3a56911605872a0235c2a753bcc9fe7c47",
+      "cpu": [
+        "Vendor ID:                               AuthenticAMD",
+        "Model name:                              AMD EPYC 9V74 80-Core Processor"
+      ],
+      "renderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))",
+      "cases": 180,
+      "images": 222,
+      "health": {
+        "recordingCompleted": true,
+        "androidFailures": [],
+        "captureErrors": [],
+        "cleanupErrors": [],
+        "releaseApproved": false,
+        "scope": "Recording health only; partial evidence cannot approve cases, baselines or release."
+      }
+    }
+  ],
+  "comparisons": {
+    "crossHost": {
+      "differentImages": 0,
+      "pixels": 0,
+      "differences": []
+    },
+    "aVsPreviousAmdAngle": {
+      "differentImages": 0,
+      "pixels": 0,
+      "differences": []
+    },
+    "bVsPreviousAmdAngle": {
+      "differentImages": 0,
+      "pixels": 0,
+      "differences": []
+    }
+  },
+  "allComparedImagesOpaque": true,
+  "pixelCopyDefectClosed": false,
+  "failedCollectorPathRuntimeVerified": false,
+  "baselinesChanged": false,
+  "mandatoryRendererChanged": false,
+  "releaseApproved": false,
+  "scope": "Two complete recording-only captures with corrected collector. Original Intel PixelCopy timeout remains open; successful runs cannot prove its cause or fix. Cross-host precision and reference changes need their own review; no mandatory quality/release approval.",
+  "intelCaptureCompleted": false,
+  "successfulCollectorPathRuntimeVerified": true,
+  "crossVendorStabilityApproved": false
+}

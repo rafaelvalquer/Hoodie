@@ -1,0 +1,42 @@
+{
+  "runId": 39622678506,
+  "jobId": 119299944490,
+  "artifactSha256": "295797bb816298e218de93453c974ea5e4ff3d0fd0269a4f812d73cd3e4d197f",
+  "logcatSha256": "b3c5b105f978032c647b9dc0be6e129b00a3e26e87926ba02f50e7b9aa91fe4c",
+  "case": "screenMatchesReviewedBaseline[diary_error_360x640_f130]",
+  "source": {
+    "version": "androidx.compose.ui:ui-test-android:1.8.0",
+    "url": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-test-android/1.8.0/ui-test-android-1.8.0-sources.jar",
+    "archiveSha256": "61cd0d46ac0ec8f18cef97ab43ce7d7c000e177c4dfe75eaf35f2c735ad75df3",
+    "entry": "androidMain/androidx/compose/ui/test/android/WindowCapture.android.kt",
+    "entrySha256": "02a528919486b9f26b5a56d31c189b76069762d16327ad5b29d2d586264139be",
+    "callbackHandler": "Main looper",
+    "callbackHandlerLine": 153,
+    "waitSeconds": 1,
+    "awaitLine": 156,
+    "assertionLine": 157,
+    "testApkSha256": "5620a465bdfb5b9d6d1f87221d1267e012ff764c1ad0e114ba944322b60a03d4",
+    "testApkVersionMetadata": {
+      "META-INF/androidx.compose.ui_ui-test-junit4.version": "1.8.0",
+      "META-INF/androidx.compose.ui_ui-test.version": "1.8.0"
+    }
+  },
+  "timeline": {
+    "file": "angle-intel-pixelcopy-timeline.txt",
+    "sha256": "235cd87fb96cae01e1eb0756676e32e9b8ce3f3d4dd1e94305d2ea5480cd78ad",
+    "selectedLines": 79,
+    "first": "10-21 15:13:56.156",
+    "last": "10-21 15:14:02.370",
+    "filter": "Exact failing case start to finish; app PID 3859 plus renderer/frame/Looper/SurfaceSync/PixelCopy rows, in original order. Other original lines remain in artifact."
+  },
+  "findings": [
+    "Observed assertion matches source line 157 and means callback latch was not signaled within the one-second wait.",
+    "Source schedules callback on main looper; the logs do not timestamp the PixelCopy request or callback itself.",
+    "App and system report delayed frames and slow dispatch during the case. Temporal overlap does not identify the component delaying the PixelCopy callback."
+  ],
+  "rootCauseProven": false,
+  "pixelCopyDefectClosed": false,
+  "timeoutsChanged": false,
+  "baselinesChanged": false,
+  "releaseApproved": false
+}
