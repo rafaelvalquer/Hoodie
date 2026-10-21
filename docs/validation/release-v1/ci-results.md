@@ -2,7 +2,11 @@
 
 `58889c0b`: 1.360 casos JVM/307 suites aprovados, sem erros ou ignorados; quatro casos de interação com os sprites de produção inicializados e stderr vazio. Lint e build do app/testes Android aprovados; suíte instrumentada ainda em execução. [Evidência auditada](ci-588-unit-build-results.json).
 
+`fd19a3d9`: 42 direcionados aprovados e 391 casos completos, com 387 aprovados, quatro falhas visuais e nenhum ignorado. Todos os 211 casos fora da matriz visual e as duas regressões da cidade passaram. Os quatro PNGs reais foram comparados com as referências extraídas do próprio APK de teste, confirmando delta máximo de um nível por canal; a CI permaneceu reprovada. [JUnit, APKs e pixels](ci-fd-instrumentation-results.json).
+
 O conjunto de referências atual coincide parcialmente com cada captura do controle original: 210 imagens iguais nos dois hosts, seis exclusivas do AMD e seis exclusivas do Intel. Nenhuma das duas capturas completas coincide com as 222 referências. A auditoria preserva os pixels e a comparação exata; não escolhe referências conforme a CPU nem aprova uma regravação. [Coerência e hashes das fontes](golden-reference-coherence.json). O renderer alternativo ainda exige evidência completa entre fornecedores e revisão visual.
+
+O [controle entre fornecedores](portable-renderer-review.md) agora valida programaticamente APKs, driver, todos os casos/imagens, saúde e pixels decodificados antes de considerar a comparação completa. Dois hosts do mesmo fornecedor continuam inconclusivos. Quinze testes locais passaram; o par real AMD/AMD já preservado foi corretamente recusado como prova de portabilidade. Nenhuma referência ou configuração da CI obrigatória foi alterada.
 
 CI do WIP `6288349b`: unitários reprovados nos três casos da nova regressão de apresentação; lint aprovado e assemble/instrumentação não iniciados por dependência. O log informa 1360 testes executados, mas esse total ainda não foi conferido individualmente no JUnit remoto. A correção posterior exige a identidade exata da solicitação capturada antes de renderizar o bitmap. A mesma regressão local passou de **quatro casos com três falhas para quatro aprovados**, sem erros ou ignorados; relatórios e hashes foram preservados. [Evidência e limites](presentation-race-regression.json). A suíte completa e a CI do código corrigido continuam necessárias.
 

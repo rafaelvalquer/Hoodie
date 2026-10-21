@@ -9,6 +9,9 @@ on:
       - '.github/workflows/android-screen-review.yml'
       - '.github/scripts/capture-screen-review.py'
       - '.github/scripts/screen-review-runtime.sh'
+      - '.github/scripts/compare-screen-review.py'
+      - '.github/scripts/test_compare_screen_review.py'
+      - '.github/requirements-screen-review.txt'
 
 permissions:
   contents: read
@@ -19,7 +22,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  comparator-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar leitor PNG fixado para os testes
+        run: |
+          python -m pip install --only-binary=:all: --require-hashes -r .github/requirements-screen-review.txt
+      - name: Recusar evidência incompleta, mesmo fornecedor e diferenças de um canal
+        run: python .github/scripts/test_compare_screen_review.py
+
   capture:
+    needs: comparator-tests
     strategy:
       fail-fast: false
       matrix:
@@ -89,4 +109,41 @@ jobs:
         with:
           name: frozen-screen-review-${{ matrix.label }}-${{ github.sha }}
           path: app/build/reports/screen-review/
+          if-no-files-found: error
+
+  compare-hosts:
+    needs: [comparator-tests, capture]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar leitor PNG fixado
+        run: |
+          python -m pip install --only-binary=:all: --require-hashes -r .github/requirements-screen-review.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-screen-review-capture-a-${{ github.sha }}
+          path: review-first
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-screen-review-capture-b-${{ github.sha }}
+          path: review-second
+      - name: Comparar os 222 quadros e exigir fornecedores diferentes
+        if: always()
+        run: |
+          python .github/scripts/compare-screen-review.py \
+            --first review-first --second review-second --driver-commit "$GITHUB_SHA" \
+            --output app/build/reports/screen-review-comparison/result.json
+      - name: Preservar comparação ou motivo da inconclusão
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-review-comparison-${{ github.sha }}
+          path: app/build/reports/screen-review-comparison/
           if-no-files-found: error

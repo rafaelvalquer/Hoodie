@@ -1,0 +1,31 @@
+{
+  "sourceRunId": 39628430086,
+  "sourceDriverCommit": "dd1e01e232971fea512eac836112540279f7a330",
+  "comparatorSha256": "8adc1bbc0a4b8e1d9bb6fbb0b252dfa3521a68e0c1063bb3d17c9eb3cb54dd59",
+  "sourceArtifactDigests": [
+    "ca0ef3d0b42f937435c838094299419ce3993ac613c3fb979fc27f5b4b0388b4",
+    "370a23bc5c43a8a111879c2e2558ff3a56911605872a0235c2a753bcc9fe7c47"
+  ],
+  "conclusion": "inconclusive_same_cpu_vendor",
+  "hosts": [
+    {
+      "vendor": "AuthenticAMD",
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "renderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))"
+    },
+    {
+      "vendor": "AuthenticAMD",
+      "model": "AMD EPYC 9V74 80-Core Processor",
+      "renderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))"
+    }
+  ],
+  "casesPerHost": 180,
+  "imagesPerHost": 222,
+  "decodedPixelsIdentical": true,
+  "exitCode": 1,
+  "completeComparisonSha256": "f2c1d483371b8979f8f59abe93ec7a9ea54560b62f23ae99b1fff80515ef8159",
+  "crossVendorComparisonPassed": false,
+  "qualityGateApproved": false,
+  "baselineApproval": false,
+  "releaseApproved": false
+}
