@@ -67,6 +67,8 @@ jobs:
         run: python3 .github/scripts/test_r8_qa_evidence.py
       - name: Restringir restauração R8 ao AVD descartável
         run: python3 .github/scripts/test_r8_qa_backup.py
+      - name: Restringir atualização entre APKs ao AVD novo e sem dados
+        run: python3 .github/scripts/test_r8_upgrade_guard.py
 
       - name: Diagnóstico de foco e ANR do emulador
         run: python3 .github/scripts/test_verify_emulator_window.py

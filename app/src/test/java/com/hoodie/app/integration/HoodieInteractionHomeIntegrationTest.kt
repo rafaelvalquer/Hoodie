@@ -1,5 +1,6 @@
 package com.hoodie.app.integration
 
+import android.app.Application
 import androidx.lifecycle.viewModelScope
 import androidx.room.InvalidationTracker
 import com.hoodie.app.core.debug.HomeVisualDiagnostics
@@ -34,7 +35,7 @@ import kotlin.random.Random
 
 /** Real Home ViewModel and Room graph; gestures must not invalidate any persisted table. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [35], application = Application::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class HoodieInteractionHomeIntegrationTest {
     @Before fun setupDispatcher() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
@@ -100,7 +101,14 @@ class HoodieInteractionHomeIntegrationTest {
                 home.onHoodieGesture(InteractionGesture.TAP, frame)
                 val request = received.await()?.request
                 if (enabled) {
-                    assertNotNull(request)
+                    assertNotNull(
+                        "No interaction response: initialVisual=${ui.visual}; currentVisual=${home.state.value.visual}; " +
+                            "frameVisual=${frame.interactionVisual}; context=${home.state.value.context?.id}; " +
+                            "loading=${home.state.value.loading}; error=${home.state.value.error}; " +
+                            "transitioning=${frame.interactionTransitioning}; busy=${frame.interactionBusy}; " +
+                            "animation=${frame.occupancy.animation ?: frame.animation}",
+                        request,
+                    )
                     assertTrue(home.interactionAllowed(request!!, frame))
                     assertEquals(canonical.type, request.context!!.userContext)
                     assertEquals(frame.occupancy.animation, request.context.animation)

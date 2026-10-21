@@ -1,0 +1,129 @@
+{
+  "runId": 39636234184,
+  "commit": "d250200bd4a56ce899c36f2c186b74d74cb3319f",
+  "matrixConclusion": "failure",
+  "observations": [
+    {
+      "api": 35,
+      "artifactId": 12362615874,
+      "artifactSha256": "1dbdbbb5181a9c8c06ec68ab981ef9d00b348b76a5f6ea1dcf5b726d1694d1d4",
+      "build": {
+        "commit": "d250200bd4a56ce899c36f2c186b74d74cb3319f",
+        "appSourceTree": "083af6a76aef317bef631aedf43c11db85d80162",
+        "versionCode": 7,
+        "scope": "Development signing; no upload key, Play submission, physical or production approval",
+        "aabSha256": "b0b3c1712cda9fb7ebb6a7b978519922fd05274adde597ab97093142f8041ba1",
+        "apkSha256": "dcee23d9bb37db5b8e7865e39cf8f87c0d9eb70cd78d31c6c25f968110434774",
+        "mappingSha256": "4751e83b2707e44367edeca9b4ec6f9cd008c90314e72c854baec3651f59bfc5",
+        "certificateSha256": "722218cbdf7c8f6a0523350c504cd1d4d4c7257d5005e7673f3e505ca019f476",
+        "apkDexSha256": {
+          "classes.dex": "a15f475375e1996fce688ee10558f4d4a5015b2cb1d97a35d2907a926bbc6bd3"
+        },
+        "apkNativeSha256": {
+          "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+          "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+          "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+          "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+          "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+          "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+          "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+          "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+          "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+          "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+          "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+        },
+        "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+        "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+        "runtimeVerified": false,
+        "fullBackupJourneyApproved": false
+      },
+      "jobConclusion": "failure",
+      "retainedDebugApks": {
+        "outputs/apk/debug/app-debug.apk": "7095b248bcc0a8d85530108dc8388ef438b147341172090f4f660eefa988edc9",
+        "outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ffb0cbe58329ec736280f254deb755bcf92d54dab65869e98caf2c813d9b90ab"
+      },
+      "launchOutputSha256": [
+        "b863491e071b08c8a45c1c6ad263f43dd782f9eceb0a067cd985c11388e202bc",
+        "24a89a27f8c1d0dbfa707ff4cf86c1c4ab2d0ca78d8c041e265c330a083a3b52"
+      ],
+      "crashBufferSha256": "ba7a560cc0c5597010be935dc01a820af0b1b5a92dc12c0242fe9221fc540381",
+      "onboardingDriverStarted": false,
+      "databaseTestsExecuted": false,
+      "releaseApproved": false,
+      "failedStage": "Startup health gate before accessibility/backup",
+      "observedProcess": "com.google.android.gms.persistent",
+      "signal": "SIGSEGV",
+      "address": "0x10",
+      "witness": {
+        "file": "r8-d250-api35-crash.txt",
+        "sha256": "ba7a560cc0c5597010be935dc01a820af0b1b5a92dc12c0242fe9221fc540381",
+        "artifactSha256": "ba7a560cc0c5597010be935dc01a820af0b1b5a92dc12c0242fe9221fc540381",
+        "normalization": "CRLF to LF only"
+      }
+    },
+    {
+      "api": 36,
+      "artifactId": 12362381370,
+      "artifactSha256": "72c561b5f6c9d384b1f51faa2e12f3ae9df186bbe0fa14b504d31d3d0027bb0d",
+      "build": {
+        "commit": "d250200bd4a56ce899c36f2c186b74d74cb3319f",
+        "appSourceTree": "083af6a76aef317bef631aedf43c11db85d80162",
+        "versionCode": 7,
+        "scope": "Development signing; no upload key, Play submission, physical or production approval",
+        "aabSha256": "38a3287faa1a5e731dcb22a831264a4a3c5bf1d1514ebab8a332036297eb24bd",
+        "apkSha256": "163dc85b08055d6b790e7b38010673f1abe21bc00bd379657707e3dcb40240f5",
+        "mappingSha256": "4751e83b2707e44367edeca9b4ec6f9cd008c90314e72c854baec3651f59bfc5",
+        "certificateSha256": "c3e180128546ff38b9cb6288f7e147a45fe90a3410700d8994cee0ef89066d9e",
+        "apkDexSha256": {
+          "classes.dex": "a15f475375e1996fce688ee10558f4d4a5015b2cb1d97a35d2907a926bbc6bd3"
+        },
+        "apkNativeSha256": {
+          "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+          "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+          "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+          "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+          "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+          "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+          "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+          "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+          "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+          "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+          "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+        },
+        "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+        "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+        "runtimeVerified": false,
+        "fullBackupJourneyApproved": false
+      },
+      "jobConclusion": "failure",
+      "retainedDebugApks": {
+        "outputs/apk/debug/app-debug.apk": "797777696acea77db940d6ebc546d905e756670b13fac707f1b9826a89b667a0",
+        "outputs/apk/androidTest/debug/app-debug-androidTest.apk": "e182886624bb19029c5dd4d6273ccb6110cf3fd2233c36b70d4d99142f67ed32"
+      },
+      "launchOutputSha256": [
+        "f89d58f7ff95505f1e8bea38ca6c192b81a38a7aabf5c99347276b9efdd337fd",
+        "d83bdd8b1f5dc50be1864adcc7032b1aadaed20daa92bbc0b27f7f79600ae5e5"
+      ],
+      "crashBufferSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "onboardingDriverStarted": false,
+      "databaseTestsExecuted": false,
+      "releaseApproved": false,
+      "failedStage": "Startup classification: first opening UNKNOWN and missing TotalTime",
+      "eventualFocusedWindowVerified": true,
+      "emptyFinalCrashBuffer": true,
+      "knownNativeCrashCauseProven": false,
+      "secondColdOpeningDoesNotApproveFirst": true,
+      "witness": {
+        "file": "r8-d250-api36-launch-1.txt",
+        "sha256": "f89d58f7ff95505f1e8bea38ca6c192b81a38a7aabf5c99347276b9efdd337fd",
+        "artifactSha256": "f89d58f7ff95505f1e8bea38ca6c192b81a38a7aabf5c99347276b9efdd337fd",
+        "normalization": "CRLF to LF only"
+      }
+    }
+  ],
+  "splashReadinessCorrectionExercised": false,
+  "nativeDefectsClosed": false,
+  "releaseApproved": false
+}

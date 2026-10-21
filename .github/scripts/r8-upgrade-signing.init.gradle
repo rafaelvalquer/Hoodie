@@ -1,0 +1,30 @@
+import groovy.json.JsonOutput
+
+// Disposable CI only: change signing, never application code or R8 settings.
+allprojects { project ->
+    project.plugins.withId('com.android.application') {
+        project.extensions.getByName('androidComponents').finalizeDsl({ android ->
+            if (System.getenv('GITHUB_ACTIONS') != 'true' ||
+                    ['HOODIE_UPLOAD_STORE_FILE', 'HOODIE_UPLOAD_STORE_PASSWORD', 'HOODIE_UPLOAD_KEY_ALIAS', 'HOODIE_UPLOAD_KEY_PASSWORD'].any { System.getenv(it) }) {
+                throw new GradleException('Upgrade QA requires disposable CI without upload credentials.')
+            }
+            def release = android.buildTypes.getByName('release')
+            if (!release.minifyEnabled || !release.shrinkResources) {
+                throw new GradleException('Upgrade QA must retain release minification and resource shrinking.')
+            }
+            release.signingConfig = android.signingConfigs.getByName('debug')
+        } as org.gradle.api.Action)
+        project.tasks.register('writeUpgradeSigningMetadata') {
+            mustRunAfter('bundleRelease')
+            doLast {
+                def signing = project.extensions.getByName('android').buildTypes.getByName('release').signingConfig
+                if (signing.name != 'debug' || !'androiddebugkey'.equalsIgnoreCase(signing.keyAlias) ||
+                        signing.storePassword != 'android' || signing.keyPassword != 'android' || !signing.storeFile.isFile()) {
+                    throw new GradleException('Only the standard local development certificate is allowed.')
+                }
+                new File(project.providers.gradleProperty('upgradeSigningMetadata').get()).setText(
+                    JsonOutput.toJson([storeFile: signing.storeFile.absolutePath]), 'UTF-8')
+            }
+        }
+    }
+}

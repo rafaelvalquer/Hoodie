@@ -1,0 +1,85 @@
+{
+  "runId": 39628429936,
+  "commit": "dd1e01e232971fea512eac836112540279f7a330",
+  "artifactId": 12360979773,
+  "artifactSha256": "4901b4cbe1fbeac8a8a9790c42cf2fc060d6dfa3b3706c026aa473482daa0045",
+  "full": {
+    "tests": 390,
+    "passed": 384,
+    "failed": 6,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x640_f100_bottom changed 3 pixels; first differences: [(218,404) ff333145->ff323145, (218,449) ff333145->ff323145, (217,450) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x640_f130_bottom changed 3 pixels; first differences: [(228,353) ff333145->ff323145, (228,398) ff333145->ff323145, (227,399) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x800_f100_bottom changed 3 pixels; first differences: [(218,564) ff333145->ff323145, (218,609) ff333145->ff323145, (217,610) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x800_f130_bottom changed 3 pixels; first differences: [(228,513) ff333145->ff323145, (228,558) ff333145->ff323145, (227,559) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_411x891_f100_bottom changed 3 pixels; first differences: [(243,655) ff333145->ff323145, (243,700) ff333145->ff323145, (242,701) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_411x891_f130_bottom changed 3 pixels; first differences: [(253,630) ff333145->ff323145, (253,675) ff333145->ff323145, (252,676) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      }
+    ]
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "nonGolden": {
+    "tests": 210,
+    "passed": 210,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "cityRegressions": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "apkPair": {
+    "commit": "dd1e01e232971fea512eac836112540279f7a330",
+    "appSourceTree": "cf46927f500887f4ec6b28d4debbe74303ee2886",
+    "scope": "Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.",
+    "apks": {
+      "app": {
+        "path": "app/build/outputs/apk/debug/app-debug.apk",
+        "bytes": 26102669,
+        "sha256": "6c358657e99a8fac71106dc8f81c5ba150696dda401a34edac14368813b8eb4c"
+      },
+      "instrumentation": {
+        "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+        "bytes": 6076806,
+        "sha256": "8dc7b979cf9af4960842e0a100aaaec9046cbb27cde7e3277d53ecd96b01f05d"
+      }
+    }
+  },
+  "duplicateJUnitVerifiedAndCountedOnce": true,
+  "qualityGateApproved": false,
+  "scope": "Full suite after the reviewed City reference update. Six Diary pixel-comparison failures, audited on this exact run; prior CPU-dependent differences remain open. All 210 non-golden cases and both City regressions passed. No current experimental-backend or release approval."
+}

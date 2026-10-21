@@ -1,0 +1,120 @@
+name: R8 prior-schema APK upgrade QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-r8-upgrade-qa.yml'
+      - '.github/scripts/r8-upgrade-*'
+      - '.github/scripts/test_r8_upgrade_guard.py'
+      - '.github/scripts/run-qa-emulator.sh'
+      - '.github/scripts/install-qa-emulator.sh'
+      - '.github/scripts/verify-native-16kb.*'
+      - 'tools/android_ui.py'
+      - 'app/src/main/**'
+      - 'app/build.gradle.kts'
+      - 'app/proguard-rules.pro'
+      - 'gradle/**'
+      - 'gradle.properties'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r8-prior-schema-upgrade-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-pair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: e44c17889a1430e77a78d1854e3924f28afbe85a
+          path: qa-baseline
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Verificar guardas do teste de atualização
+        run: python3 .github/scripts/test_r8_upgrade_guard.py
+      - name: Preparar ferramentas oficiais
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'build-tools;36.0.0'
+          curl --fail --location --retry 3 https://github.com/google/bundletool/releases/download/1.18.2/bundletool-all-1.18.2.jar -o "$RUNNER_TEMP/bundletool.jar"
+          printf '%s  %s\n' '378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584' "$RUNNER_TEMP/bundletool.jar" | sha256sum --check -
+          echo "BUNDLETOOL_JAR=$RUNNER_TEMP/bundletool.jar" >> "$GITHUB_ENV"
+      - name: Compilar AABs R8 histórico e atual com certificado de desenvolvimento
+        run: bash .github/scripts/r8-upgrade-build.sh
+      - name: Preservar binários e proveniência sem chave privada
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8-upgrade-pair-${{ github.sha }}
+          if-no-files-found: error
+          path: app/build/reports/r8-upgrade-qa/
+
+  upgrade-runtime:
+    needs: build-pair
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api: 35
+            revision: 5
+          - api: 36
+            revision: 7
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      R8_UPGRADE_API: ${{ matrix.api }}
+      R8_UPGRADE_IMAGE_REVISION: ${{ matrix.revision }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: r8-upgrade-pair-${{ github.sha }}
+          path: app/build/reports/r8-upgrade-qa/
+      - name: Instalar emulador oficial fixado
+        run: bash .github/scripts/install-qa-emulator.sh app/build/reports/r8-upgrade-qa/emulator-install
+      - name: Preparar imagem 16 KB fixada
+        run: |
+          set -euo pipefail
+          case "$R8_UPGRADE_API:$R8_UPGRADE_IMAGE_REVISION" in 35:5|36:7) ;; *) exit 1 ;; esac
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;23.0'
+          test ! -e "$ANDROID_HOME/cmdline-tools/preinstalled"
+          mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
+          ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
+          out=app/build/reports/r8-upgrade-qa/runtime
+          mkdir "$out"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "system-images;android-$R8_UPGRADE_API;google_apis_ps16k;x86_64" > "$out/sdk-image.log" 2>&1
+          image="$ANDROID_HOME/system-images/android-$R8_UPGRADE_API/google_apis_ps16k/x86_64"
+          cp "$image/source.properties" "$out/system-image-source.properties"
+          cp "$image/package.xml" "$out/system-image-package.xml"
+          grep -Eq "^Pkg.Revision[[:space:]]*=[[:space:]]*$R8_UPGRADE_IMAGE_REVISION[[:space:]]*$" "$image/source.properties"
+          lscpu > "$out/host-cpu.txt"
+          free -m > "$out/host-memory.txt"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Criar dados na versão antiga e atualizar sem apagar dados
+        run: bash .github/scripts/run-qa-emulator.sh "$R8_UPGRADE_API" google_apis_ps16k .github/scripts/r8-upgrade-runtime.sh
+      - name: Preservar resultados da atualização
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8-upgrade-runtime-api${{ matrix.api }}-${{ github.sha }}
+          path: app/build/reports/r8-upgrade-qa/
+          if-no-files-found: error

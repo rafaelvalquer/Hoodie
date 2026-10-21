@@ -1,0 +1,6 @@
+Starting: Intent { cmp=com.hoodie.app.homologacao/com.hoodie.app.MainActivity }
+Status: ok
+LaunchState: UNKNOWN (0)
+Activity: com.hoodie.app.homologacao/com.hoodie.app.MainActivity
+WaitTime: 1388
+Complete

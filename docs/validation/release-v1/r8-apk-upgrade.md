@@ -1,0 +1,15 @@
+# Atualização real entre APKs R8 derivados de AABs
+
+Estado: automação preparada; compilação dos dois pacotes e execução Android ainda pendentes. Não é aprovação de release.
+
+O [workflow](../../../.github/workflows/android-r8-upgrade-qa.yml) compila o release histórico `e44c17889a1430e77a78d1854e3924f28afbe85a` (schema 11) e o release do commit que acionou a execução (schema 12). A variante `homologacao` não existia nessa versão histórica, portanto ambos usam o ID original `com.hoodie.app`. A instalação só é permitida em um AVD novo da CI, com esse pacote e seu pacote de teste ausentes.
+
+O init script altera somente a configuração de assinatura para o certificado padrão de desenvolvimento; exige minificação e resource shrinking e rejeita credenciais de upload. Os códigos 6/7 são identificadores de QA, não versões distribuídas pela Play. O código de aplicação dos dois checkouts permanece intacto. O backup público do release atual continua desabilitado. Não se usa a chave de upload nem se produz aprovação de distribuição.
+
+Os dois AABs são validados e suas assinaturas conferidas; bundletool fixado gera APKs universais. Certificados iguais, hashes, DEX, bibliotecas, mapping, ID, códigos e versões de schema das fontes são registrados. O validador de ELF/ZIP/RELRO examina ambos os AABs/APKs antes do teste. Um único par de binários alimenta os jobs API35/revisão5 e API36/revisão7, ambos com página 16384 obrigatória.
+
+O cenário usa somente a interface para configurar o nome `Migracao`, cadastrar uma Casa com coordenadas sintéticas, marcá-la como favorita e confirmar raio de 150 m. Reabre a versão antiga, instala o APK novo com `adb install -r` e exige UID e primeira data de instalação preservados. Verifica nome, lugar, favorito e raio; cadastra um Trabalho novo e exige um único resultado de cada lugar na busca. Uma nova abertura precisa preservar o perfil e ambos os lugares, inclusive o favorito/raio original. Não desinstala, limpa dados, copia banco/Keystore ou muda relógio/JIT. XMLs, janelas, lançamentos, pacote instalado e logs são retidos, inclusive na falha. As aberturas continuam exigindo COLD/WARM e processo novo; UNKNOWN não é aceito. Force-stop verifica reabertura, sem homologar entrega de geofences ou remoção dos recentes.
+
+Dez testes locais das guardas passaram: ambos os AVDs aceitos, recusa de AVD alheio, SDK incorreto, página 4 KB, app/teste preexistentes, execução local, contagem de resultados sem confundir o campo de busca com um registro e rejeição/retenção de abertura UNKNOWN. Sintaxe Bash/Python e actionlint foram conferidos. O init Gradle e o fluxo de UI ainda precisam executar na CI; nenhuma instalação local foi feita.
+
+Esse teste observa um conjunto específico de dados pela UI. Não inspeciona diretamente a versão ou todas as linhas/relações do banco, nem confirma todos os campos das coordenadas. Não substitui a matriz completa de backup, interrupções, atualização assinada por upload/Play, uso prolongado ou aparelhos físicos. Os testes instrumentados de migração cifrada e a comparação estrita de histórico continuam com seus próprios critérios e evidências.

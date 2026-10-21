@@ -1,0 +1,35 @@
+{
+  "runId": 39636234153,
+  "commit": "d250200bd4a56ce899c36f2c186b74d74cb3319f",
+  "jobId": 119353671241,
+  "artifactId": 12364795839,
+  "artifactSha256": "0970257de5151f75a06f9a03a9e498962fdd4a2bad1c600c68098ee33f5a3b60",
+  "sourceTestSha256": "9a4bd4736a01ccd9aa0adf90d3ae5abf7bca8dcf1592a24537c9158154c35944",
+  "suites": 307,
+  "tests": 1360,
+  "passed": 1359,
+  "failed": 1,
+  "skipped": 0,
+  "failure": {
+    "className": "com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest",
+    "name": "enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables",
+    "message": "Expected interaction request was null",
+    "stack": "java.lang.AssertionError\n\tat org.junit.Assert.fail(Assert.java:87)\n\tat org.junit.Assert.assertTrue(Assert.java:42)\n\tat org.junit.Assert.assertNotNull(Assert.java:713)\n\tat org.junit.Assert.assertNotNull(Assert.java:723)\n\tat com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest$verify$1.invokeSuspend(HoodieInteractionHomeIntegrationTest.kt:103)\n\tat kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)\n\tat kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)\n\tat kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)\n\tat kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:94)\n\tat kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)\n\tat kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)\n\tat kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)\n\tat kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source)\n\tat com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest.verify(HoodieInteractionHomeIntegrationTest.kt:48)\n\tat com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest.verify$default(HoodieInteractionHomeIntegrationTest.kt:48)\n\tat com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest.enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables(HoodieInteractionHomeIntegrationTest.kt:43)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:569)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)\n\tat org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)\n\tat org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)\n\tat org.robolectric.RobolectricTestRunner$HelperTestRunner$1.evaluate(RobolectricTestRunner.java:542)\n\tat org.robolectric.internal.SandboxTestRunner.lambda$executeInSandbox$4(SandboxTestRunner.java:429)\n\tat org.robolectric.internal.SandboxTestRunner.runInSandbox(SandboxTestRunner.java:455)\n\tat org.robolectric.internal.SandboxTestRunner.executeInSandbox(SandboxTestRunner.java:420)\n\tat org.robolectric.internal.SandboxTestRunner$5.evaluate(SandboxTestRunner.java:405)\n\tat org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)\n\tat org.robolectric.internal.SandboxTestRunner.access$000(SandboxTestRunner.java:64)\n\tat org.robolectric.internal.SandboxTestRunner$4.evaluate(SandboxTestRunner.java:294)\n\tat org.robolectric.internal.SandboxTestRunner$2.evaluate(SandboxTestRunner.java:260)\n\tat org.robolectric.internal.SandboxTestRunner$3.lambda$evaluate$0(SandboxTestRunner.java:280)\n\tat org.robolectric.internal.bytecode.Sandbox.lambda$runOnMainThreadWithClassLoader$1(Sandbox.java:112)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n\tSuppressed: org.robolectric.android.internal.AndroidTestEnvironment$UnExecutedRunnablesException: Main looper has queued unexecuted runnables. This might be the cause of the test failure. You might need a shadowOf(Looper.getMainLooper()).idle() call.\n"
+  },
+  "productionStartupKeyStoreExceptions": 4,
+  "causalLinkToMissingResponseProven": false,
+  "hostChange": "Explicit Application host for the already manually supplied Room/engine/ViewModel graph; actual Android startup remains covered by device tests.",
+  "diagnosticMessageAdded": true,
+  "existingAssertionAndTimingBudgetsUnchanged": true,
+  "correctionExecutionVerified": false,
+  "witness": {
+    "file": "ci-d250-interaction-failure.xml",
+    "sha256": "6aa286826eb4b46297519b1d312f095ccdd15b18b1ce60ce6acfae80c42fa56b",
+    "artifactEntry": "test-results/testDebugUnitTest/TEST-com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest.xml",
+    "artifactSha256": "6aa286826eb4b46297519b1d312f095ccdd15b18b1ce60ce6acfae80c42fa56b",
+    "normalization": "CRLF to LF only"
+  },
+  "dependentAssembleAndInstrumentation": "skipped because the mandatory unit gate failed; not approved",
+  "qualityGateApproved": false,
+  "releaseApproved": false
+}
