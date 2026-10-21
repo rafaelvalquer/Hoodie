@@ -29,6 +29,7 @@ def verify_environment(ui):
     assert ui.run('emu', 'avd', 'name').decode().splitlines()[0].strip() == f'Hoodie_QA_API{api}'
     assert ui.run('shell', 'getprop', 'ro.build.version.sdk').decode().strip() == api
     assert ui.run('shell', 'getconf', 'PAGE_SIZE').strip() == b'16384'
+    assert ui.run('shell', 'am', 'get-current-user').strip() == b'0', 'Expected owner user 0'
     packages = set(ui.run('shell', 'pm', 'list', 'packages').decode().splitlines())
     assert 'package:'+PACKAGE not in packages, 'Existing app data must not be replaced'
     assert 'package:'+PACKAGE+'.test' not in packages, 'Existing test installation'
@@ -147,13 +148,27 @@ def package_details(ui, out, stage, expected):
     raw = ui.run('shell', 'dumpsys', 'package', PACKAGE)
     (out/(stage+'-package.txt')).write_bytes(raw)
     text = raw.decode()
-    version = int(re.search(r'\bversionCode=(\d+)\b', text)[1])
-    uid = int(re.search(r'\buserId=(\d+)\b', text)[1])
-    first_install = re.search(r'\bfirstInstallTime=([^\r\n]+)', text)[1].strip()
+    assert len(re.findall(r'^\s*Package \['+re.escape(PACKAGE)+r'\]', text, re.M)) == 1, 'Expected one package metadata section'
+    versions = re.findall(r'^\s*versionCode=(\d+)\b', text, re.M)
+    dates = re.findall(r'^\s*firstInstallTime=([^\r\n]+)', text, re.M)
+    assert len(versions) == 1 and len(dates) == 1, 'Missing or ambiguous version/first-install metadata'
+    version, first_install = int(versions[0]), dates[0].strip()
+    assert first_install, 'Missing first-install time'
+    # Modern dumpsys calls the package-level identifier appId, not userId.
+    # Read the actual per-user UID instead of treating an appId as a UID.
+    uid_raw = ui.run('shell', 'pm', 'list', 'packages', '--user', '0', '-U', PACKAGE)
+    (out/(stage+'-uid.txt')).write_bytes(uid_raw)
+    uid_match = re.fullmatch(r'package:'+re.escape(PACKAGE)+r' uid:([1-9]\d*)', uid_raw.decode().strip())
+    assert uid_match, 'Missing or ambiguous installed package UID'
+    uid = int(uid_match[1])
     assert version == expected['versionCode']
-    installed = ui.run('shell', 'pm', 'path', PACKAGE).decode().strip()
+    installed_raw = ui.run('shell', 'pm', 'path', PACKAGE)
+    (out/(stage+'-installed-path.txt')).write_bytes(installed_raw)
+    installed = installed_raw.decode().strip()
     assert installed.startswith('package:') and len(installed.splitlines()) == 1
-    digest = ui.run('shell', 'sha256sum', installed.removeprefix('package:')).decode().split()[0]
+    digest_raw = ui.run('shell', 'sha256sum', installed.removeprefix('package:'))
+    (out/(stage+'-installed-sha256.txt')).write_bytes(digest_raw)
+    digest = digest_raw.decode().split()[0]
     assert digest == expected['apkSha256'], 'Installed APK identity mismatch'
     return dict(uid=uid, versionCode=version, firstInstallTime=first_install, apkSha256=digest)
 
@@ -245,8 +260,8 @@ def main():
             bothPlacesPreservedAfterReopen=True,
             historicalSchemaVersionFromSource=11,currentSchemaVersionFromSource=12,
             observedDatabaseSchemaReadDirectly=False,snapshots=len(flow.observations))
-    except (OSError, ValueError, AssertionError, subprocess.SubprocessError) as error:
-        report['error'] = str(error)
+    except Exception as error:
+        report['error'] = f'{type(error).__name__}: {error}'
         raise
     finally:
         (args.output/'result.json').write_text(json.dumps(report, indent=2)+'\n')

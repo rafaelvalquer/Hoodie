@@ -1,0 +1,201 @@
+{
+  "runId": 39684660397,
+  "commit": "d64a354700104845661a4fff15c563ae2b1b82b0",
+  "observations": [
+    {
+      "api": 35,
+      "jobId": 119519654161,
+      "artifactId": 12386566849,
+      "artifactSha256": "549a1e3e19fe104cc27043ccaf87afb8a0521f0566a1762ea1ee79d40c7421fb",
+      "failedStage": "Baseline installed; metadata parser expected userId but dumpsys exposes appId; no first app launch or upgrade",
+      "bootGatePassed": true,
+      "pageSize": 16384,
+      "finalCrashBuffersEmpty": true,
+      "observedAppId": 10207,
+      "actualPerUserUidRead": false,
+      "installedApkHashRead": false,
+      "baselineLaunchExecuted": false,
+      "upgradeExecuted": false,
+      "buildPair": {
+        "baseline": {
+          "commit": "e44c17889a1430e77a78d1854e3924f28afbe85a",
+          "mainSourceTree": "dcbcfcdde93bad50771df35a4ca902d64ba427d4",
+          "package": "com.hoodie.app",
+          "versionCode": 6,
+          "schemaVersionFromSource": 11,
+          "apkSha256": "7aea2301b9ca4c8c62af3e95a62495d1d932d76eba33bd1bb6faf8272d28f662",
+          "aabSha256": "00756df41e155248e1b98e9f833d74fb680716cde42d5808211ffcd860d8a7cb",
+          "mappingSha256": "8f3e9f42a7bf8f6dfe7b541d4680623667a8861506b1591f9363bbbb68dfac22",
+          "certificateSha256": "2f04e8ca5c5beab964e35f51f8d60ca7939304ac351b6db1dd7fb6e708552f6c",
+          "stringsSha256": "83b26818a24d0f3b116a7bbf75a175e8dcf476deb21b22f6c4cdb2ccf2ae6dee",
+          "apkDexSha256": {
+            "classes.dex": "352f77d756ddccaadd3e20f513127cf6e0198d3f271cf7ad1fccaf8cd5dce8ab"
+          },
+          "apkNativeSha256": {
+            "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+            "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+            "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+            "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+            "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+            "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+            "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+            "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+            "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+            "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+            "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+            "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+          },
+          "developmentSigningOnly": true,
+          "releaseApproved": false
+        },
+        "current": {
+          "commit": "d64a354700104845661a4fff15c563ae2b1b82b0",
+          "mainSourceTree": "b37c17f71b9ac152b1eef99abd6fe2504dea89c4",
+          "package": "com.hoodie.app",
+          "versionCode": 7,
+          "schemaVersionFromSource": 12,
+          "apkSha256": "d7d389c9a112c3027671101e6c085d491dbb4e1b591db068eb7fbfc452873f98",
+          "aabSha256": "3fc8e38c5b040da9de3ca13c9a7562ae8a57e32695559b73210f9259998ab438",
+          "mappingSha256": "48022335f083ab04be75a3576f3dd8cb4438d391d7fbf98a2b5d69a21ca5031e",
+          "certificateSha256": "2f04e8ca5c5beab964e35f51f8d60ca7939304ac351b6db1dd7fb6e708552f6c",
+          "stringsSha256": "44ca2b84b497fe33f21d4019d232ae53938ea4705e7d561156b610c2975a2e27",
+          "apkDexSha256": {
+            "classes.dex": "b77c614400997e093e59d7906804c0055e411e30f33731517cf5b541330c4501"
+          },
+          "apkNativeSha256": {
+            "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+            "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+            "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+            "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+            "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+            "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+            "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+            "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+            "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+            "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+            "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+            "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+          },
+          "developmentSigningOnly": true,
+          "releaseApproved": false
+        },
+        "runtimeVerified": false,
+        "releaseApproved": false,
+        "scope": "Two unmodified release codebases with R8, development signing and QA version codes 6/7. APKs derived from AABs; no upload key or Play approval."
+      },
+      "metadataWitness": {
+        "file": ".github/scripts/fixtures/upgrade-api35-package.txt",
+        "sha256": "ca3e3c47f976fa2ca7793d7fbb3cd727ca8b565b3d704e43ca3f987d4c819cd5",
+        "artifactEntry": "runtime/scenario/baseline-package.txt",
+        "artifactSha256": "ca3e3c47f976fa2ca7793d7fbb3cd727ca8b565b3d704e43ca3f987d4c819cd5",
+        "normalization": "CRLF to LF only"
+      },
+      "failureWitness": {
+        "file": "r8-upgrade-d64-api35-error.txt",
+        "sha256": "9009404dcc551fbd8db363e133b7ccedaa88b61bcdabc3a06c2f9d84732651c7"
+      },
+      "runtimeApproved": false
+    },
+    {
+      "api": 36,
+      "jobId": 119519654247,
+      "artifactId": 12385937281,
+      "artifactSha256": "072df9f1845a4af3969d9b19db6eb7a5ceb92924c76a86e4265c7fe9b2bb7b9c",
+      "failedStage": "Baseline installed; metadata parser expected userId but dumpsys exposes appId; no first app launch or upgrade",
+      "bootGatePassed": true,
+      "pageSize": 16384,
+      "finalCrashBuffersEmpty": true,
+      "observedAppId": 10213,
+      "actualPerUserUidRead": false,
+      "installedApkHashRead": false,
+      "baselineLaunchExecuted": false,
+      "upgradeExecuted": false,
+      "buildPair": {
+        "baseline": {
+          "commit": "e44c17889a1430e77a78d1854e3924f28afbe85a",
+          "mainSourceTree": "dcbcfcdde93bad50771df35a4ca902d64ba427d4",
+          "package": "com.hoodie.app",
+          "versionCode": 6,
+          "schemaVersionFromSource": 11,
+          "apkSha256": "7aea2301b9ca4c8c62af3e95a62495d1d932d76eba33bd1bb6faf8272d28f662",
+          "aabSha256": "00756df41e155248e1b98e9f833d74fb680716cde42d5808211ffcd860d8a7cb",
+          "mappingSha256": "8f3e9f42a7bf8f6dfe7b541d4680623667a8861506b1591f9363bbbb68dfac22",
+          "certificateSha256": "2f04e8ca5c5beab964e35f51f8d60ca7939304ac351b6db1dd7fb6e708552f6c",
+          "stringsSha256": "83b26818a24d0f3b116a7bbf75a175e8dcf476deb21b22f6c4cdb2ccf2ae6dee",
+          "apkDexSha256": {
+            "classes.dex": "352f77d756ddccaadd3e20f513127cf6e0198d3f271cf7ad1fccaf8cd5dce8ab"
+          },
+          "apkNativeSha256": {
+            "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+            "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+            "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+            "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+            "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+            "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+            "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+            "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+            "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+            "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+            "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+            "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+          },
+          "developmentSigningOnly": true,
+          "releaseApproved": false
+        },
+        "current": {
+          "commit": "d64a354700104845661a4fff15c563ae2b1b82b0",
+          "mainSourceTree": "b37c17f71b9ac152b1eef99abd6fe2504dea89c4",
+          "package": "com.hoodie.app",
+          "versionCode": 7,
+          "schemaVersionFromSource": 12,
+          "apkSha256": "d7d389c9a112c3027671101e6c085d491dbb4e1b591db068eb7fbfc452873f98",
+          "aabSha256": "3fc8e38c5b040da9de3ca13c9a7562ae8a57e32695559b73210f9259998ab438",
+          "mappingSha256": "48022335f083ab04be75a3576f3dd8cb4438d391d7fbf98a2b5d69a21ca5031e",
+          "certificateSha256": "2f04e8ca5c5beab964e35f51f8d60ca7939304ac351b6db1dd7fb6e708552f6c",
+          "stringsSha256": "44ca2b84b497fe33f21d4019d232ae53938ea4705e7d561156b610c2975a2e27",
+          "apkDexSha256": {
+            "classes.dex": "b77c614400997e093e59d7906804c0055e411e30f33731517cf5b541330c4501"
+          },
+          "apkNativeSha256": {
+            "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+            "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+            "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+            "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+            "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+            "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+            "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+            "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+            "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+            "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+            "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+            "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+          },
+          "developmentSigningOnly": true,
+          "releaseApproved": false
+        },
+        "runtimeVerified": false,
+        "releaseApproved": false,
+        "scope": "Two unmodified release codebases with R8, development signing and QA version codes 6/7. APKs derived from AABs; no upload key or Play approval."
+      },
+      "metadataWitness": {
+        "file": ".github/scripts/fixtures/upgrade-api36-package.txt",
+        "sha256": "0154f9e5856e357a59a6f451ba93564f046b7cabb5962e527043dd0b165ec0f0",
+        "artifactEntry": "runtime/scenario/baseline-package.txt",
+        "artifactSha256": "0154f9e5856e357a59a6f451ba93564f046b7cabb5962e527043dd0b165ec0f0",
+        "normalization": "CRLF to LF only"
+      },
+      "failureWitness": {
+        "file": "r8-upgrade-d64-api36-error.txt",
+        "sha256": "378ad19ed77719de8c172bc227b5157f5a85a9447bc1a8e2b81e4df27ef9e0d1"
+      },
+      "runtimeApproved": false
+    }
+  ],
+  "installerDirectoryCorrectionVerifiedOnBothApis": true,
+  "correction": "Read actual UID via pm list packages --user 0 -U, keep version/firstInstallTime/hash equality requirements and raw command outputs; require owner user before installation.",
+  "uidCommandSource": "https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android15-release/services/core/java/com/android/server/pm/PackageManagerShellCommand.java",
+  "localGuardCasesPassed": 19,
+  "localFixtures": "Real dumpsys metadata, synthetic PackageManager UID responses in hermetic tests; actual UID command still requires CI execution.",
+  "metadataCorrectionRuntimeVerified": false,
+  "releaseApproved": false
+}

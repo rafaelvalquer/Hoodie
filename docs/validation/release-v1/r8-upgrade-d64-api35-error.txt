@@ -1,0 +1,18 @@
+2026-10-21T22:22:53.6985175Z Traceback (most recent call last):
+2026-10-21T22:22:53.7044215Z   File "/home/runner/work/Hoodie/Hoodie/.github/scripts/r8-upgrade-ui.py", line 256, in <module>
+2026-10-21T22:22:53.7087385Z     main()
+2026-10-21T22:22:53.7114524Z     ~~~~^^
+2026-10-21T22:22:53.7172566Z   File "/home/runner/work/Hoodie/Hoodie/.github/scripts/r8-upgrade-ui.py", line 195, in main
+2026-10-21T22:22:53.7175862Z     before = package_details(ui, args.output, 'baseline', pair['baseline'])
+2026-10-21T22:22:53.7235796Z   File "/home/runner/work/Hoodie/Hoodie/.github/scripts/r8-upgrade-ui.py", line 151, in package_details
+2026-10-21T22:22:53.7244513Z     uid = int(re.search(r'\buserId=(\d+)\b', text)[1])
+2026-10-21T22:22:53.7245083Z               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^
+2026-10-21T22:22:53.7245700Z TypeError: 'NoneType' object is not subscriptable
+2026-10-21T22:22:57.4255997Z ##[error]Process completed with exit code 1.
+2026-10-21T22:22:57.4312496Z ##[group]Run actions/upload-artifact@v4
+2026-10-21T22:22:57.4312670Z with:
+2026-10-21T22:22:57.4312860Z   name: r8-upgrade-runtime-api35-d64a354700104845661a4fff15c563ae2b1b82b0
+2026-10-21T22:22:57.4313093Z   path: app/build/reports/r8-upgrade-qa/
+2026-10-21T22:22:57.4313256Z   if-no-files-found: error
+2026-10-21T22:22:57.4313404Z   compression-level: 6
+2026-10-21T22:22:57.4313544Z   overwrite: false

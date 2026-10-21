@@ -13,11 +13,12 @@ spec.loader.exec_module(upgrade)
 
 
 class ReadOnlyUi:
-    def __init__(self, *, api='36', page='16384', avd='Hoodie_QA_API36', packages=''):
+    def __init__(self, *, api='36', page='16384', avd='Hoodie_QA_API36', packages='', user='0'):
         self.values = {
             ('emu', 'avd', 'name'): (avd+'\nOK\n').encode(),
             ('shell', 'getprop', 'ro.build.version.sdk'): api.encode(),
             ('shell', 'getconf', 'PAGE_SIZE'): page.encode(),
+            ('shell', 'am', 'get-current-user'): user.encode(),
             ('shell', 'pm', 'list', 'packages'): packages.encode(),
         }
 
@@ -52,6 +53,10 @@ class UpgradeOwnershipTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'Existing app data'):
             self.verify(packages='package:com.hoodie.app\n')
 
+    def test_secondary_android_user_is_rejected_before_installation(self):
+        with self.assertRaisesRegex(AssertionError, 'Expected owner user 0'):
+            self.verify(user='10')
+
     def test_existing_test_package_is_rejected(self):
         with self.assertRaisesRegex(AssertionError, 'Existing test'):
             self.verify(packages='package:com.hoodie.app.test\n')
@@ -79,6 +84,59 @@ class UpgradeOwnershipTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'unexpected launch state'):
             upgrade.launch(UnknownLaunchUi(), output, 'unknown')
         self.assertEqual(raw, (output/'unknown-launch.txt').read_bytes())
+
+
+class PackageMetadataTest(unittest.TestCase):
+    def exercise(self, api=35, *, transform=lambda b: b, uid=b'package:com.hoodie.app uid:10207\n', digest='a'*64):
+        raw = transform((Path(__file__).parent/'fixtures'/f'upgrade-api{api}-package.txt').read_bytes())
+        class PackageUi:
+            def run(self, *command):
+                values = {
+                    ('shell','dumpsys','package',upgrade.PACKAGE): raw,
+                    ('shell','pm','list','packages','--user','0','-U',upgrade.PACKAGE): uid,
+                    ('shell','pm','path',upgrade.PACKAGE): b'package:/data/app/synthetic/base.apk\n',
+                    ('shell','sha256sum','/data/app/synthetic/base.apk'): (digest+'  /data/app/synthetic/base.apk\n').encode(),
+                }
+                if command not in values: raise AssertionError('Unexpected command: '+repr(command))
+                return values[command]
+        base = upgrade.ROOT/'app/build/reports/r8-upgrade-guard-tests'
+        base.mkdir(parents=True,exist_ok=True)
+        output = Path(tempfile.mkdtemp(dir=base))
+        try:
+            return upgrade.package_details(PackageUi(),output,'baseline',dict(versionCode=6,apkSha256='a'*64))
+        finally:
+            self.assertEqual(raw,(output/'baseline-package.txt').read_bytes())
+
+    def test_real_api35_appid_metadata_uses_the_explicit_package_uid(self):
+        result = self.exercise()
+        self.assertEqual(10207,result['uid'])
+        self.assertEqual('2026-10-21 22:22:50',result['firstInstallTime'])
+
+    def test_real_api36_appid_metadata_uses_the_explicit_package_uid(self):
+        result = self.exercise(36,uid=b'package:com.hoodie.app uid:10213\n')
+        self.assertEqual(10213,result['uid'])
+        self.assertEqual('2026-10-21 22:23:51',result['firstInstallTime'])
+
+    def test_missing_uid_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'package UID'): self.exercise(uid=b'package:com.hoodie.app\n')
+
+    def test_another_package_uid_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'package UID'): self.exercise(uid=b'package:com.hoodie.app.test uid:10207\n')
+
+    def test_multiple_package_uids_are_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'package UID'):
+            self.exercise(uid=b'package:com.hoodie.app uid:10207\npackage:com.hoodie.app.test uid:10208\n')
+
+    def test_missing_first_install_time_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'first-install'):
+            self.exercise(transform=lambda b:b.replace(b'firstInstallTime=',b'changedField='))
+
+    def test_duplicate_version_metadata_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'ambiguous'):
+            self.exercise(transform=lambda b:b+b'\nversionCode=6\n')
+
+    def test_wrong_installed_apk_still_fails(self):
+        with self.assertRaisesRegex(AssertionError,'APK identity mismatch'): self.exercise(digest='b'*64)
 
 
 if __name__ == '__main__': unittest.main()
