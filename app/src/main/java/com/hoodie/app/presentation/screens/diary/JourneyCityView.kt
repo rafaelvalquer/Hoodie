@@ -58,6 +58,7 @@ import com.hoodie.app.pixel.diary.city.CityAmbient
 import com.hoodie.app.pixel.diary.city.CityRenderer
 import com.hoodie.app.pixel.diary.city.CityScene
 import com.hoodie.app.pixel.renderer.PixelBuffer
+import com.hoodie.app.presentation.components.LocalPixelRenderFrame
 import com.hoodie.app.presentation.theme.HoodieColors
 import java.time.Instant
 import java.time.ZoneId
@@ -84,6 +85,7 @@ fun JourneyCityView(
     val replayState by rememberUpdatedState(replay)
     val context = androidx.compose.ui.platform.LocalContext.current
     val reduceMotion = remember { isReduceMotion(context) }
+    val fixedFrame = LocalPixelRenderFrame.current
     val ambient = remember(scene) { CityAmbient() }
     val renderer = remember { CityRenderer() }
     var mode by remember(scene) { mutableStateOf(CityCameraMode.FOLLOW) }
@@ -108,7 +110,45 @@ fun JourneyCityView(
         val cam = remember(scene, viewW, viewH) { floatArrayOf(hoodie.x, hoodie.y - 10) }
         val lifecycle = LocalLifecycleOwner.current.lifecycle
 
-        LaunchedEffect(scene, viewW, viewH, lifecycle) {
+        LaunchedEffect(scene, viewW, viewH, lifecycle, fixedFrame,
+            replay.takeIf { fixedFrame != null }, mode.takeIf { fixedFrame != null },
+            selectedSlot.takeIf { fixedFrame != null }) {
+            if (fixedFrame != null) {
+                // Preview/capture uses the same renderer and ambient simulation, but
+                // owns no frame-clock coroutine. Rebuild from the seeded initial state
+                // so recomposition, scrolling and camera toggles cannot advance time.
+                val r = replayState
+                val ts = r.currentTimestamp ?: plan.startAt
+                val h = plan.hoodieAt(ts, r.speed.minutesPerSecond)
+                val previewAmbient = CityAmbient()
+                val camera = floatArrayOf(h.x, h.y - 10)
+                val (tx, ty) = target(mode, selectedSlot, h, r.state == ReplayState.PLAYING)
+                var elapsed = 0L
+                while (elapsed < fixedFrame.animationMillis) {
+                    val stepMs = minOf(33L, fixedFrame.animationMillis - elapsed)
+                    elapsed += stepMs
+                    val step = stepMs / 1_000f
+                    previewAmbient.update(step, elapsed / 1_000f, if (h.inside != null) -999f else h.x, if (h.inside != null) -999f else h.y)
+                    previewAmbient.updateSmoke(step, scene.buildings)
+                    val k = if (reduceMotion) 1f else 1f - exp(-step * if (h.walking) 3.2f else 2.2f)
+                    camera[0] += (tx - camera[0]) * k; camera[1] += (ty - camera[1]) * k
+                }
+                val seconds = fixedFrame.animationMillis / 1_000f
+                if (mode == CityCameraMode.OVERVIEW) {
+                    renderer.renderOverview(buffer, scene, h, ts, seconds)
+                } else {
+                    camera[0] = camera[0].coerceIn(viewW / 2f, CityTown.WW - viewW / 2f)
+                    camera[1] = camera[1].coerceIn(viewH / 2f, CityTown.WH - viewH / 2f)
+                    val minute = Instant.ofEpochMilli(ts).atZone(zone).let { it.hour * 60 + it.minute }
+                    renderer.render(buffer, scene, previewAmbient, h,
+                        (camera[0] - viewW / 2f).roundToInt(), (camera[1] - viewH / 2f).roundToInt(),
+                        seconds, minute, selectedSlot, reduceMotion)
+                }
+                hoodie = h
+                bitmap.setPixels(buffer.pixels, 0, viewW, 0, 0, viewW, viewH)
+                frame++
+                return@LaunchedEffect
+            }
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 var last = 0L; var acc = 0f; var seconds = 0f; var lastStay: CityStay? = null
                 while (true) {

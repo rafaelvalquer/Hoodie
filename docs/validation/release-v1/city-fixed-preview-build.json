@@ -1,0 +1,47 @@
+{
+  "sourceIdentity": {
+    "parent": "461625659a0a311d7883ae2fde93f2ca3cdbb517",
+    "productionSourceSha256": "8192f798b227a7e72a5a7686062010e4469b228f9c61aa73c9e3a8f893b93dbb",
+    "testSourceSha256": "58312cb5f81bfb7e26274f7f999a23f1c18987d0f7187d31dcd0ab31c3fc69ba",
+    "liveRendererBlockUnchanged": true,
+    "liveRendererCanonicalSha256": "a33d368f071f33e911a3d4563e2818032c12f5066026ea2c1ded3315b16c02ed",
+    "original222ReferencesChanged": false,
+    "scope": "Static source identity only; Android regression and full gates still required"
+  },
+  "localBuild": {
+    "passed": true,
+    "tasks": [
+      ":app:assembleDebug",
+      ":app:assembleDebugAndroidTest",
+      ":app:lintDebug"
+    ],
+    "duration": "15m 12s",
+    "logSha256": "8fdc85554692d397256f9437ae45f230aec76c65ba74114af7a612eb57c6ae6a",
+    "lintXmlSha256": "fe85bdab9b89d99caa48fe6d6618d88458465f8201ad565dde7b77bf82e8a9b5",
+    "lintErrors": 0,
+    "lintWarnings": 89
+  },
+  "compiledApks": {
+    "app": {
+      "sha256": "50d755c8464039fd8b337c9bf8ffb4ac626d37d7968532dfd1c40b3a0559176e",
+      "bytes": 26103057
+    },
+    "test": {
+      "sha256": "ca3ee58e020e886ad922c785d355ccf00e3f3fc83505469700a61986bf9abd5e",
+      "bytes": 6131170
+    }
+  },
+  "localAndroidExecutionStarted": false,
+  "localAndroidRegressionApproved": false,
+  "localSetupExit": 1,
+  "localSetupReason": "Preexisting emulator-5554 identified read-only as Pixel_8. Owned AVD was not started, no APK installed, no user emulator changed.",
+  "expectedRegression": "Fixed preview can scroll with autoAdvance, stays pixel-identical when Compose clock advances, and still repaints on overview tap.",
+  "fullCiRequired": true,
+  "releaseApproved": false,
+  "scope": "Compilation/lint and unchanged live-renderer/source/reference hashes only. The new Android regression and visual matrix must run in CI; old Diary images intentionally remain unchanged pending deterministic review.",
+  "stagedSourceSha256": {
+    "app/src/main/java/com/hoodie/app/presentation/screens/diary/JourneyCityView.kt": "5ffde5dc1af8fc1234705ececb22d18993f3aca576a2fbcdef6e6f6f627b1a89",
+    "app/src/androidTest/java/com/hoodie/app/ui/JourneyCityRenderTest.kt": "58312cb5f81bfb7e26274f7f999a23f1c18987d0f7187d31dcd0ab31c3fc69ba"
+  },
+  "sourceHashConvention": "sourceIdentity records raw Windows build-input bytes; stagedSourceSha256 records Git blobs. Only CRLF/LF normalization differs and was checked explicitly."
+}
