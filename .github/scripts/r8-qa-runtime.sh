@@ -21,6 +21,7 @@ if grep -E 'am_anr[[:space:]]*:' "$out/preflight-anr-events.txt"; then
 fi
 serial=$(adb get-serialno | tr -d '\r')
 python3 .github/scripts/r8-qa-accessibility.py --serial "$serial" --output "$out/accessibility"
+python3 .github/scripts/r8-qa-backup.py --serial "$serial" --output "$out/backup-fixture"
 capture
 if grep -E 'UnsatisfiedLinkError|Fatal signal|FATAL EXCEPTION|am_anr[[:space:]]*:' "$out/final-logcat.txt"; then
   echo '::error::Runtime recorded a fatal error or ANR; no runtime approval.'

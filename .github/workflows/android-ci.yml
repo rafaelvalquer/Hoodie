@@ -61,6 +61,8 @@ jobs:
 
       - name: Preservar cada leitura de acessibilidade R8
         run: python3 .github/scripts/test_r8_qa_evidence.py
+      - name: Restringir restauração R8 ao AVD descartável
+        run: python3 .github/scripts/test_r8_qa_backup.py
 
       - name: Diagnóstico de foco e ANR do emulador
         run: python3 .github/scripts/test_verify_emulator_window.py
