@@ -1,0 +1,255 @@
+{
+  "runId": 39682471115,
+  "jobId": 119508133985,
+  "artifactId": 12386175248,
+  "artifactSha256": "341cc4a9d062da4f64f9b93f381b8e66a78ed8e6061673fc274c808cf1baa8f7",
+  "build": {
+    "commit": "fd19a3d9713dc26a1c1470c43ba568be1b2e5e1a",
+    "appSourceTree": "90a71e6079c4cbfabb290abaa167df393f965e17",
+    "versionCode": 7,
+    "scope": "Development signing; no upload key, Play submission, physical or production approval",
+    "aabSha256": "5e3c90d1d3824455f2beb205ed7d6a3c79cb209bdff6eb1b613eeb300d3029c7",
+    "apkSha256": "d103df6449c4f04ed61595e75be44153813232108e8106f68774163b7de69bb1",
+    "mappingSha256": "4751e83b2707e44367edeca9b4ec6f9cd008c90314e72c854baec3651f59bfc5",
+    "certificateSha256": "12abf768534d6dd52c5c1ad55558c9418169b17e81ea8288f479f799ec0f533b",
+    "apkDexSha256": {
+      "classes.dex": "a15f475375e1996fce688ee10558f4d4a5015b2cb1d97a35d2907a926bbc6bd3"
+    },
+    "apkNativeSha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+      "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+      "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+      "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+      "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+      "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+      "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+      "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+      "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+    },
+    "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+    "runtimeVerified": false,
+    "fullBackupJourneyApproved": false
+  },
+  "api": 36,
+  "pageSize": 16384,
+  "jobConclusion": "success",
+  "matrixConclusion": "failure",
+  "launches": {
+    "pageSize": 16384,
+    "derivedApkProcessRestart": true,
+    "derivedApkColdLaunch": true,
+    "processIds": [
+      2873,
+      3128
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "COLD"
+    ],
+    "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+  },
+  "accessibility": {
+    "passed": true,
+    "package": "com.hoodie.app.homologacao",
+    "snapshots": 69,
+    "evidenceFormatVersion": 2,
+    "retainedXmlFiles": 69,
+    "settingsSnapshots": 30,
+    "backupSnapshots": 30,
+    "scope": "Accessibility node creation on unchanged screens; no export/restore or production acceptance"
+  },
+  "backup": {
+    "passed": true,
+    "sourceFixtureSha256": "c0d7739652d6b5e1a8e1c6df1b7cf592342db6d334c6c1b6d16fa016b43e20a7",
+    "apkSha256": "d103df6449c4f04ed61595e75be44153813232108e8106f68774163b7de69bb1",
+    "api": 36,
+    "pageSize": 16384,
+    "processIds": [
+      "3128",
+      "7511",
+      "7625"
+    ],
+    "fixtureRestored": true,
+    "reopenedAfterRestore": true,
+    "exportSuccessObserved": true,
+    "accessibilitySnapshotsDuringExport": 1,
+    "reexportSha256": "dcb97f5656995cf7cbed6c2ccd60b726ad4c7b9f38e4e93d8f09d88eb7f509bf",
+    "reexportBytes": 6638,
+    "reexportAuthenticatedByAppUi": true,
+    "independentlyAuthenticated": false,
+    "snapshots": 34,
+    "releaseApproved": false,
+    "scope": "Permanent one-place fixture restored/reopened/exported via UI and SAF on R8. Minimal diagnostic, not full-history/cross-device/physical/interruption/provider acceptance or closure of HVR-NATIVE-API35-001."
+  },
+  "independentAuthentication": {
+    "passed": true,
+    "sha256": "dcb97f5656995cf7cbed6c2ccd60b726ad4c7b9f38e4e93d8f09d88eb7f509bf",
+    "bytes": 6638,
+    "formatVersion": 1,
+    "iterations": 600000,
+    "authenticatedUnits": 9,
+    "authenticatedTerminator": true,
+    "counts": {
+      "places": 1,
+      "routines": 0,
+      "day_exceptions": 0,
+      "location_events": 0,
+      "context_events": 1,
+      "context_confirmations": 0,
+      "hoodie_activities": 0,
+      "timeline_events": 2,
+      "memories": 0,
+      "daily_device_usage": 0,
+      "daily_app_usage": 0,
+      "daily_context_app_usage": 0,
+      "app_category_overrides": 0,
+      "phone_app_sessions": 0,
+      "daily_screen_hourly": 0,
+      "daily_context_usage": 0,
+      "daily_phone_timeline": 0,
+      "mobility_sessions": 0,
+      "mobility_segments": 0,
+      "diary_corrections": 0,
+      "learned_routine_slots": 0,
+      "transport_patterns": 0,
+      "transport_evidence": 0,
+      "effective_routine_versions": 3
+    },
+    "includeDigital": true,
+    "rowSchemaValidated": false,
+    "releaseApproved": false,
+    "scope": "Independent AES-GCM/EOF, envelope/order and manifest-count audit with public synthetic phrase. No row-field/relationship, duplicate, migration, UI or physical-device acceptance."
+  },
+  "independentAuthenticationRecheckedLocally": true,
+  "strictComparator": {
+    "scriptSha256": "b886932197e96d68abe208c7f8135316a9b0cb2831eff17049e4a1cae053a522",
+    "exitCode": 1,
+    "passed": false,
+    "stdout": "{\n  \"places\": {\n    \"sourceRows\": 1,\n    \"targetRows\": 1,\n    \"missingOrChangedRows\": 1\n  }\n}\n",
+    "scope": "Original strict canonical comparator still fails the permanent fixture numeric representation. No normalization or full-history acceptance."
+  },
+  "staticAlignmentPassed": true,
+  "staticLibraryCounts": [
+    12,
+    12
+  ],
+  "databaseTests": {
+    "commit": "fd19a3d9713dc26a1c1470c43ba568be1b2e5e1a",
+    "appSourceTree": "90a71e6079c4cbfabb290abaa167df393f965e17",
+    "api": 36,
+    "pageSize": 16384,
+    "r8ApkUnchanged": true,
+    "r8ApkSha256": "d103df6449c4f04ed61595e75be44153813232108e8106f68774163b7de69bb1",
+    "debugApkSha256": "7f84f5690ca59872ba109ffb881930f038cf141144a2dbd193f81de11579fce3",
+    "testApkSha256": "d4903a145b8d8f29661e581dbf6f04c87339144511976f3fef67093d5aa68710",
+    "tests": 13,
+    "failures": 0,
+    "skipped": 0,
+    "releaseApproved": false,
+    "scope": "Debug SQLCipher/database migration tests on the same 16KB AVD after the derived R8 APK UI/SAF journey. Does not prove R8 migration, prior-version APK upgrade, full history or physical-device acceptance."
+  },
+  "junitCases": [
+    {
+      "className": "com.hoodie.app.database.Migration1To2InstrumentedTest",
+      "name": "migration10To11PreservesTripsCorrectionsAndManualConfiguration",
+      "seconds": "0.268"
+    },
+    {
+      "className": "com.hoodie.app.database.Migration1To2InstrumentedTest",
+      "name": "allHistoricalVersionsReachCurrentSchemaOnDevice",
+      "seconds": "0.967"
+    },
+    {
+      "className": "com.hoodie.app.database.Migration1To2InstrumentedTest",
+      "name": "timelineAntigaSobreviveEGanhaOrigem",
+      "seconds": "0.028"
+    },
+    {
+      "className": "com.hoodie.app.database.EncryptedDatabaseTest",
+      "name": "ctSec002_upgradeDeTextoPuroParaCifradoSemPerderDados",
+      "seconds": "2.989"
+    },
+    {
+      "className": "com.hoodie.app.database.EncryptedDatabaseTest",
+      "name": "senhaIrrecuperavelNaoAbreNemRegeneraSenha",
+      "seconds": "0.557"
+    },
+    {
+      "className": "com.hoodie.app.database.EncryptedDatabaseTest",
+      "name": "senhaErradaNaoAbre",
+      "seconds": "1.082"
+    },
+    {
+      "className": "com.hoodie.app.database.EncryptedDatabaseTest",
+      "name": "ctSec003_reaberturaComNovaInstanciaUsaAMesmaSenha",
+      "seconds": "1.078"
+    },
+    {
+      "className": "com.hoodie.app.database.EncryptedDatabaseTest",
+      "name": "ctSec001_instalacaoNovaJaNasceCifrada",
+      "seconds": "0.558"
+    },
+    {
+      "className": "com.hoodie.app.database.EncryptedDatabaseTest",
+      "name": "encryptedSchema11PreservesRelatedHistoryThroughMigrationAndReopen",
+      "seconds": "2.89"
+    },
+    {
+      "className": "com.hoodie.app.database.EncryptedDatabaseTest",
+      "name": "ctSec004_deleteRemoveBancoESenha",
+      "seconds": "0.579"
+    },
+    {
+      "className": "com.hoodie.app.database.SqlCipherRuntimeTest",
+      "name": "digitalV5HistorySurvivesEncryptedReopen",
+      "seconds": "1.084"
+    },
+    {
+      "className": "com.hoodie.app.database.SqlCipherRuntimeTest",
+      "name": "sqlCipherNativeLibraryLoads",
+      "seconds": "0.0"
+    },
+    {
+      "className": "com.hoodie.app.database.SqlCipherRuntimeTest",
+      "name": "encryptedPlaceCanBeInsertedReadAndReopened",
+      "seconds": "1.074"
+    }
+  ],
+  "junitDuplicateVerifiedAndCountedOnce": true,
+  "retainedDebugTestApks": true,
+  "retainedDebugApkHashes": {
+    "outputs/apk/debug/app-debug.apk": "7f84f5690ca59872ba109ffb881930f038cf141144a2dbd193f81de11579fce3",
+    "outputs/apk/androidTest/debug/app-debug-androidTest.apk": "d4903a145b8d8f29661e581dbf6f04c87339144511976f3fef67093d5aa68710"
+  },
+  "debugBinaryScope": "Both debug APKs are retained and their bytes match CI result hashes. These 13 cases exercise debug database code, not the R8 update path.",
+  "witnesses": [
+    {
+      "file": "r8-fd-api36-database-junit.xml",
+      "sha256": "dcbcfcb11920b0802b488a349689dd4823e469b08cc986b69f1d382b69e003c5",
+      "artifactEntry": "reports/r8-qa/runtime/database-tests/results/connected/debug/TEST-emulator-5554 - 16-_app-.xml",
+      "artifactSha256": "c58142cb464746cfda43450f522a5ae4d0186a6376d698b803bd4620df14d9c7",
+      "normalization": "CRLF to LF only; original bytes remain in the verified ZIP."
+    },
+    {
+      "file": "r8-fd-api36-restored-home.xml",
+      "sha256": "3acea6703a4094f1134eb59d29036b2646cfedf426062ceca731558d207c11d3",
+      "artifactEntry": "reports/r8-qa/runtime/backup-fixture/013-restored-home.xml",
+      "artifactSha256": "3acea6703a4094f1134eb59d29036b2646cfedf426062ceca731558d207c11d3",
+      "normalization": "CRLF to LF only; original bytes remain in the verified ZIP."
+    }
+  ],
+  "checkedLogHashes": {
+    "runtime/r8-journey-logcat.txt": "1164da026ae1a8a64d3db3c5ef1967fe81a1df9016d8c89054d7651ce6d86329",
+    "runtime/final-logcat.txt": "c492ca0ebb3ef321267c4993faaf110c45cfa903992c7ff6498b8eb604b8e41a",
+    "runtime/database-tests/logcat.txt": "63a2f818508789069859033bf93f75a024902aea6240a7923ef9768f0aa29731",
+    "runtime/final-crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "emulator/emulator-final-crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "nativeDefectsClosed": false,
+  "releaseApproved": false,
+  "scope": "Derived R8 APK minimal fixture UI/SAF plus 13 separate debug SQLCipher/database tests on API36/16KB, including encrypted v11-to-current migration and reopen. API35 failed at the SystemUI boot health gate before installation. Not R8 APK upgrade, full history, physical devices or upload signing acceptance."
+}
