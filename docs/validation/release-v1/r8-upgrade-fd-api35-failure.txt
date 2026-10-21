@@ -1,0 +1,10 @@
+2026-10-21T22:07:32.0569022Z ##[group]Run bash .github/scripts/install-qa-emulator.sh app/build/reports/r8-upgrade-qa/emulator-install
+2026-10-21T22:07:32.0569896Z [36;1mbash .github/scripts/install-qa-emulator.sh app/build/reports/r8-upgrade-qa/emulator-install[0m
+2026-10-21T22:07:32.0739768Z shell: /usr/bin/bash -e {0}
+2026-10-21T22:07:32.0740136Z env:
+2026-10-21T22:07:32.0740399Z   R8_UPGRADE_API: 35
+2026-10-21T22:07:32.0740705Z   R8_UPGRADE_IMAGE_REVISION: 5
+2026-10-21T22:07:32.0741030Z ##[endgroup]
+2026-10-21T22:07:32.0861865Z Unsupported emulator evidence directory
+2026-10-21T22:07:32.0878141Z ##[error]Process completed with exit code 1.
+2026-10-21T22:07:32.0972157Z ##[group]Run actions/upload-artifact@v4

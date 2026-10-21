@@ -44,7 +44,9 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - name: Verificar guardas do teste de atualização
-        run: python3 .github/scripts/test_r8_upgrade_guard.py
+        run: |
+          python3 .github/scripts/test_r8_upgrade_guard.py
+          bash .github/scripts/test-install-qa-emulator.sh
       - name: Preparar ferramentas oficiais
         run: |
           set -euo pipefail
