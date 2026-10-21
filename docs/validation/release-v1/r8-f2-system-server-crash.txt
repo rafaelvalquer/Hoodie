@@ -1,0 +1,47 @@
+--------- beginning of crash
+10-21 10:24:57.799   568  1910 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x10 in tid 1910 (binder:568_1C), pid 568 (system_server)
+10-21 10:24:59.004  4485  4485 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-21 10:24:59.004  4485  4485 F DEBUG   : Build fingerprint: 'google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys'
+10-21 10:24:59.004  4485  4485 F DEBUG   : Revision: '0'
+10-21 10:24:59.004  4485  4485 F DEBUG   : ABI: 'x86_64'
+10-21 10:24:59.004  4485  4485 F DEBUG   : Timestamp: 2026-10-21 10:24:58.331081997+0000
+10-21 10:24:59.004  4485  4485 F DEBUG   : Process uptime: 42s
+10-21 10:24:59.004  4485  4485 F DEBUG   : Page size: 16384 bytes
+10-21 10:24:59.004  4485  4485 F DEBUG   : Cmdline: system_server
+10-21 10:24:59.004  4485  4485 F DEBUG   : pid: 568, tid: 1910, name: binder:568_1C  >>> system_server <<<
+10-21 10:24:59.004  4485  4485 F DEBUG   : uid: 1000
+10-21 10:24:59.004  4485  4485 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000010
+10-21 10:24:59.004  4485  4485 F DEBUG   : Cause: null pointer dereference
+10-21 10:24:59.004  4485  4485 F DEBUG   :     rax 0000000000000000  rbx 00000000ffffffbd  rcx 0000000000000020  rdx 0000000000000008
+10-21 10:24:59.004  4485  4485 F DEBUG   :     r8  0000000000000020  r9  0000000000000020  r10 8000000200007898  r11 00007bee2eaf95f8
+10-21 10:24:59.004  4485  4485 F DEBUG   :     r12 0000000000000020  r13 00007c0abc445950  r14 00007beabc4461b0  r15 0000000000000000
+10-21 10:24:59.004  4485  4485 F DEBUG   :     rdi 00007beabc4461b0  rsi 00007bee420ad4f4
+10-21 10:24:59.004  4485  4485 F DEBUG   :     rbp 0000000000000008  rsp 00007bea288f75f0  rip 00007beb7fa951c4
+10-21 10:24:59.004  4485  4485 F DEBUG   : 26 total frames
+10-21 10:24:59.004  4485  4485 F DEBUG   : backtrace:
+10-21 10:24:59.004  4485  4485 F DEBUG   :       #00 pc 00000000008551c4  /apex/com.android.art/lib64/libart.so (art::mirror::Class::FindClassMethod(art::ObjPtr<art::mirror::DexCache>, unsigned int, art::PointerSize)+3876) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.004  4485  4485 F DEBUG   :       #01 pc 00000000005b1638  /apex/com.android.art/lib64/libart.so (art::ClassLinker::FindResolvedMethod(art::ObjPtr<art::mirror::Class>, art::ObjPtr<art::mirror::DexCache>, art::ObjPtr<art::mirror::ClassLoader>, unsigned int)+72) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.004  4485  4485 F DEBUG   :       #02 pc 0000000000328bc9  /apex/com.android.art/lib64/libart.so (art::ArtMethod* art::ClassLinker::ResolveMethod<(art::ClassLinker::ResolveMode)1>(unsigned int, art::Handle<art::mirror::DexCache>, art::Handle<art::mirror::ClassLoader>, art::ArtMethod*, art::InvokeType)+793) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #03 pc 00000000006ea42b  /apex/com.android.art/lib64/libart.so (art::ArtMethod* art::ClassLinker::ResolveMethod<(art::ClassLinker::ResolveMode)1>(art::Thread*, unsigned int, art::ArtMethod*, art::InvokeType)+379) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #04 pc 0000000000a7988b  /apex/com.android.art/lib64/libart.so (artQuickResolutionTrampoline+1435) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #05 pc 000000000022b44c  /apex/com.android.art/lib64/libart.so (art_quick_resolution_trampoline+140) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #06 pc 00000000002e35e4  /system/framework/oat/x86_64/apex@com.android.wifi@javalib@service-wifi.jar@classes.odex (com.android.server.wifi.WifiApConfigStore.getDefaultApConfiguration+148) (BuildId: bb6e326334e7d466dbee726db97b0e609cfb181f)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #07 pc 00000000002e5fd5  /system/framework/oat/x86_64/apex@com.android.wifi@javalib@service-wifi.jar@classes.odex (com.android.server.wifi.WifiApConfigStore.getApConfiguration+133) (BuildId: bb6e326334e7d466dbee726db97b0e609cfb181f)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #08 pc 000000000044f827  /system/framework/oat/x86_64/apex@com.android.wifi@javalib@service-wifi.jar@classes.odex (com.android.server.wifi.WifiServiceImpl.getWifiApConfiguration+487) (BuildId: bb6e326334e7d466dbee726db97b0e609cfb181f)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #09 pc 000000000020a01d  /apex/com.android.art/lib64/libart.so (nterp_helper+5805) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #10 pc 0000000000046e6c  /apex/com.android.wifi/javalib/framework-wifi.jar (android.net.wifi.IWifiManager$Stub.onTransact+4560)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #11 pc 00000000005d2103  /system/framework/x86_64/boot-framework.oat (android.os.Binder.execTransactInternal+867) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 10:24:59.005  4485  4485 F DEBUG   :       #12 pc 00000000005d1beb  /system/framework/x86_64/boot-framework.oat (android.os.Binder.execTransact+379) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 10:24:59.006  4485  4485 F DEBUG   :       #13 pc 0000000000212154  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+756) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.006  4485  4485 F DEBUG   :       #14 pc 0000000000563fd5  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+181) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.006  4485  4485 F DEBUG   :       #15 pc 00000000009653f8  /apex/com.android.art/lib64/libart.so (art::JValue art::InvokeVirtualOrInterfaceWithVarArgs<_jmethodID*>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, _jmethodID*, __va_list_tag*)+584) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.006  4485  4485 F DEBUG   :       #16 pc 00000000007870c2  /apex/com.android.art/lib64/libart.so (art::JNI<false>::CallBooleanMethodV(_JNIEnv*, _jobject*, _jmethodID*, __va_list_tag*)+642) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 10:24:59.006  4485  4485 F DEBUG   :       #17 pc 00000000000e0544  /system/lib64/libandroid_runtime.so (_JNIEnv::CallBooleanMethod(_jobject*, _jmethodID*, ...)+164) (BuildId: 74e467b22a4c3107eac51948743c9977)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #18 pc 0000000000193ed7  /system/lib64/libandroid_runtime.so (JavaBBinder::onTransact(unsigned int, android::Parcel const&, android::Parcel*, unsigned int)+167) (BuildId: 74e467b22a4c3107eac51948743c9977)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #19 pc 0000000000059486  /system/lib64/libbinder.so (android::IPCThreadState::executeCommand(int)+1526) (BuildId: 9787e923a8c93596d3c1f09a7fc9023a)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #20 pc 0000000000058131  /system/lib64/libbinder.so (android::IPCThreadState::joinThreadPool(bool)+929) (BuildId: 9787e923a8c93596d3c1f09a7fc9023a)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #21 pc 0000000000070437  /system/lib64/libbinder.so (android::PoolThread::threadLoop()+23) (BuildId: 9787e923a8c93596d3c1f09a7fc9023a)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #22 pc 0000000000016936  /system/lib64/libutils.so (android::Thread::_threadLoop(void*)+166) (BuildId: f128755c26519c61f5cd218576eff285)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #23 pc 00000000000f3352  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::javaThreadShell(void*)+146) (BuildId: 74e467b22a4c3107eac51948743c9977)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #24 pc 000000000006d62a  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+58) (BuildId: eb58b4d427279994f00c0e1818477e4f)
+10-21 10:24:59.011  4485  4485 F DEBUG   :       #25 pc 0000000000060348  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+56) (BuildId: eb58b4d427279994f00c0e1818477e4f)

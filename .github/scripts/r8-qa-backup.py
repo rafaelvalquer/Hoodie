@@ -102,6 +102,15 @@ class Flow:
         return root
 
 
+def verify_disposable_emulator(ui):
+    api = os.environ.get('R8_QA_API', '35')
+    assert api in ('35', '36'), 'Unsupported QA API'
+    assert ui.run('emu', 'avd', 'name').decode().splitlines()[0].strip() == f'Hoodie_QA_API{api}'
+    assert ui.run('shell', 'getprop', 'ro.build.version.sdk').decode().strip() == api
+    assert ui.run('shell', 'getconf', 'PAGE_SIZE').strip() == b'16384'
+    return int(api)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--serial', required=True)
@@ -115,8 +124,7 @@ def main():
     fixture = ROOT/'app/src/androidTest/assets/backup-v1-minimal.hoodiebackup'
     assert hashlib.sha256(fixture.read_bytes()).hexdigest() == FIXTURE_SHA
     ui = AndroidUi(args.serial)
-    assert ui.run('emu', 'avd', 'name').decode().splitlines()[0].strip() == 'Hoodie_QA_API35'
-    assert ui.run('shell', 'getconf', 'PAGE_SIZE').strip() == b'16384'
+    api = verify_disposable_emulator(ui)
     build = json.loads((ROOT/'app/build/reports/r8-qa/build.json').read_text(encoding='utf-8'))
     installed = ui.run('shell', 'pm', 'path', PACKAGE).decode().strip()
     assert installed.startswith('package:') and len(installed.splitlines()) == 1
@@ -180,7 +188,7 @@ def main():
     assert blob[:8] == b'HOODIEB1' and struct.unpack('>II', blob[8:16]) == (1, 600000)
     flow.validate(filename, original=False)  # Authenticate via UI without activating again.
     report = dict(passed=True,sourceFixtureSha256=FIXTURE_SHA,apkSha256=installed_hash,
-        pageSize=16384,processIds=[before_pid,restored_pid,reopened_pid],
+        api=api,pageSize=16384,processIds=[before_pid,restored_pid,reopened_pid],
         fixtureRestored=True,reopenedAfterRestore=True,exportSuccessObserved=True,
         accessibilitySnapshotsDuringExport=busy,reexportSha256=digest,reexportBytes=len(blob),
         reexportAuthenticatedByAppUi=True,independentlyAuthenticated=False,

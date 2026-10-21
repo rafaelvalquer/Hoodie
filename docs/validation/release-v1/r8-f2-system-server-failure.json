@@ -1,0 +1,66 @@
+{
+  "runId": 39583228138,
+  "commit": "f2bc991e4bec8e44eebdce21006807a513e2104d",
+  "artifactId": 12339302170,
+  "artifactSha256": "264a9edd8202e3cf6aef95e5adcea91777a853746af17e609536a6b49370183c",
+  "apkSha256": "88523be52efe64914e75f971b9f140d35765f03b6b8cf5ce60953caedb761c18",
+  "jobConclusion": "failure",
+  "bootHealthPassed": true,
+  "launches": {
+    "pageSize": 16384,
+    "derivedApkProcessRestart": true,
+    "derivedApkColdLaunch": true,
+    "processIds": [
+      2753,
+      2957
+    ],
+    "androidLaunchStates": [
+      "COLD",
+      "COLD"
+    ],
+    "databaseMigrationAndBackupCoverage": "separate instrumented suite; full release journey requires homologation"
+  },
+  "completedAccessibilityObservations": [
+    {
+      "stage": "welcome",
+      "pid": 2957,
+      "nodes": 21,
+      "xml": "001-welcome.xml",
+      "window": "001-welcome-window.txt"
+    },
+    {
+      "stage": "before-name",
+      "pid": 2957,
+      "nodes": 21,
+      "xml": "002-before-name.xml",
+      "window": "002-before-name-window.txt"
+    },
+    {
+      "stage": "name",
+      "pid": 2957,
+      "nodes": 14,
+      "xml": "003-name.xml",
+      "window": "003-name-window.txt"
+    },
+    {
+      "stage": "before-tracking",
+      "pid": 2957,
+      "nodes": 14,
+      "xml": "004-before-tracking.xml",
+      "window": "004-before-tracking-window.txt"
+    }
+  ],
+  "retainedXmlFiles": 4,
+  "backupStarted": false,
+  "crashProcess": "system_server",
+  "signal": "SIGSEGV",
+  "faultAddress": "0x10",
+  "observedAt": "2026-10-21T10:24:57.799Z",
+  "firstNativeFrame": "art::mirror::Class::FindClassMethod",
+  "observedSystemCall": "WifiApConfigStore.getDefaultApConfiguration",
+  "accessibilityDumpExitCode": 137,
+  "fullCrashBufferSha256": "967218863fdaeef2c2bbee9be94c2fe66fb450d69ab6c65df306b0d82e2c60ae",
+  "crashExcerptSha256": "198c83976fed14f96df638de885af515bcbe24541804fc0f19583a7fd6214df6",
+  "releaseApproved": false,
+  "limits": "System-server fatal preceded the uiautomator error. No proof of common cause with Hoodie native crashes, no backup execution and no acceptance from successful static/build stages."
+}

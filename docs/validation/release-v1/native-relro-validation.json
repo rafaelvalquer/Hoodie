@@ -1,0 +1,964 @@
+{
+  "sourceRunId": 39583228138,
+  "sourceCommit": "f2bc991e4bec8e44eebdce21006807a513e2104d",
+  "appSourceTree": "5188f6983ceb14bd2d09132f6b43d2b8ae75511a",
+  "artifactId": 12339302170,
+  "artifactSha256": "264a9edd8202e3cf6aef95e5adcea91777a853746af17e609536a6b49370183c",
+  "tests": [
+    {
+      "file": "test_verify_native_16kb.py",
+      "returnCode": 0,
+      "output": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.034s\n\nOK\n"
+    },
+    {
+      "file": "test_r8_qa_backup.py",
+      "returnCode": 0,
+      "output": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.036s\n\nOK\n"
+    }
+  ],
+  "llvmReadelfRelroRecordsMatched": 12,
+  "priorLoadAndZipChecksUnchanged": true,
+  "regression": {
+    "previousCheckerCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+    "previousCheckerSha256": "a8cb5bb15b2e5b8e3f6cee2a0f75dbac1cc584a2a5f75d01ed4a25f97fdf280a",
+    "previousAcceptedUnsafeWritableRange": true,
+    "updatedCheckerRejectedSameBytes": true,
+    "error": "RELRO protects writable LOAD bytes outside RELRO: address=921600, end=925696, page_size=16384",
+    "safeDedicatedLoadAccepted": true
+  },
+  "nativeResults": {
+    "static_alignment_passed": true,
+    "runtime_verified": false,
+    "archives": [
+      {
+        "artifact": "app-homologacao.aab",
+        "sha256": "c4946658d4b10ef4528358c12427f3cb3db931da1a746a8a166335b7a345dbe9",
+        "libraries": [
+          {
+            "path": "base/lib/arm64-v8a/libandroidx.graphics.path.so",
+            "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 7232,
+                "flags": 5
+              },
+              {
+                "offset": 7232,
+                "address": 23616,
+                "alignment": 16384,
+                "memory_size": 912,
+                "flags": 6
+              },
+              {
+                "offset": 8144,
+                "address": 40912,
+                "alignment": 16384,
+                "memory_size": 16,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 23616,
+                "memory_size": 960,
+                "end": 24576,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/arm64-v8a/libdatastore_shared_counter.so",
+            "sha256": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 4544,
+                "flags": 5
+              },
+              {
+                "offset": 4544,
+                "address": 20928,
+                "alignment": 16384,
+                "memory_size": 616,
+                "flags": 6
+              },
+              {
+                "offset": 5160,
+                "address": 37928,
+                "alignment": 16384,
+                "memory_size": 1,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 20928,
+                "memory_size": 3648,
+                "end": 24576,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/arm64-v8a/libsqlcipher.so",
+            "sha256": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2058928,
+                "flags": 5
+              },
+              {
+                "offset": 2058928,
+                "address": 2075312,
+                "alignment": 16384,
+                "memory_size": 25384,
+                "flags": 6
+              },
+              {
+                "offset": 2084312,
+                "address": 2117080,
+                "alignment": 16384,
+                "memory_size": 52409,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 2075312,
+                "memory_size": 38224,
+                "end": 2113536,
+                "protected_start": 2064384,
+                "protected_end": 2113536
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/armeabi-v7a/libandroidx.graphics.path.so",
+            "sha256": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 5312,
+                "flags": 5
+              },
+              {
+                "offset": 5312,
+                "address": 21696,
+                "alignment": 16384,
+                "memory_size": 460,
+                "flags": 6
+              },
+              {
+                "offset": 5772,
+                "address": 38540,
+                "alignment": 16384,
+                "memory_size": 8,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 21696,
+                "memory_size": 2880,
+                "end": 24576,
+                "protected_start": 20480,
+                "protected_end": 24576
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/armeabi-v7a/libdatastore_shared_counter.so",
+            "sha256": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2704,
+                "flags": 5
+              },
+              {
+                "offset": 2704,
+                "address": 19088,
+                "alignment": 16384,
+                "memory_size": 280,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 19088,
+                "memory_size": 1392,
+                "end": 20480,
+                "protected_start": 16384,
+                "protected_end": 20480
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/armeabi-v7a/libsqlcipher.so",
+            "sha256": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 1023568,
+                "flags": 5
+              },
+              {
+                "offset": 1023568,
+                "address": 1039952,
+                "alignment": 16384,
+                "memory_size": 14204,
+                "flags": 6
+              },
+              {
+                "offset": 1037776,
+                "address": 1070544,
+                "alignment": 16384,
+                "memory_size": 35200,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 1039952,
+                "memory_size": 25008,
+                "end": 1064960,
+                "protected_start": 1036288,
+                "protected_end": 1064960
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/x86/libandroidx.graphics.path.so",
+            "sha256": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 7456,
+                "flags": 5
+              },
+              {
+                "offset": 7456,
+                "address": 23840,
+                "alignment": 16384,
+                "memory_size": 456,
+                "flags": 6
+              },
+              {
+                "offset": 7912,
+                "address": 40680,
+                "alignment": 16384,
+                "memory_size": 8,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 23840,
+                "memory_size": 736,
+                "end": 24576,
+                "protected_start": 20480,
+                "protected_end": 24576
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/x86/libdatastore_shared_counter.so",
+            "sha256": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 3600,
+                "flags": 5
+              },
+              {
+                "offset": 3600,
+                "address": 19984,
+                "alignment": 16384,
+                "memory_size": 276,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 19984,
+                "memory_size": 496,
+                "end": 20480,
+                "protected_start": 16384,
+                "protected_end": 20480
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/x86/libsqlcipher.so",
+            "sha256": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2221840,
+                "flags": 5
+              },
+              {
+                "offset": 2221840,
+                "address": 2238224,
+                "alignment": 16384,
+                "memory_size": 13768,
+                "flags": 6
+              },
+              {
+                "offset": 2235608,
+                "address": 2268376,
+                "alignment": 16384,
+                "memory_size": 36232,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 2238224,
+                "memory_size": 22768,
+                "end": 2260992,
+                "protected_start": 2236416,
+                "protected_end": 2260992
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/x86_64/libandroidx.graphics.path.so",
+            "sha256": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 7872,
+                "flags": 5
+              },
+              {
+                "offset": 7872,
+                "address": 24256,
+                "alignment": 16384,
+                "memory_size": 936,
+                "flags": 6
+              },
+              {
+                "offset": 8808,
+                "address": 41576,
+                "alignment": 16384,
+                "memory_size": 16,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 24256,
+                "memory_size": 4416,
+                "end": 28672,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/x86_64/libdatastore_shared_counter.so",
+            "sha256": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 3872,
+                "flags": 5
+              },
+              {
+                "offset": 3872,
+                "address": 20256,
+                "alignment": 16384,
+                "memory_size": 552,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 20256,
+                "memory_size": 4320,
+                "end": 24576,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": null,
+            "compressed": true
+          },
+          {
+            "path": "base/lib/x86_64/libsqlcipher.so",
+            "sha256": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2190112,
+                "flags": 5
+              },
+              {
+                "offset": 2190112,
+                "address": 2206496,
+                "alignment": 16384,
+                "memory_size": 25400,
+                "flags": 6
+              },
+              {
+                "offset": 2215520,
+                "address": 2248288,
+                "alignment": 16384,
+                "memory_size": 52460,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 2206496,
+                "memory_size": 38112,
+                "end": 2244608,
+                "protected_start": 2195456,
+                "protected_end": 2244608
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": null,
+            "compressed": true
+          }
+        ]
+      },
+      {
+        "artifact": "homologacao-from-aab.apk",
+        "sha256": "88523be52efe64914e75f971b9f140d35765f03b6b8cf5ce60953caedb761c18",
+        "libraries": [
+          {
+            "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+            "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 7232,
+                "flags": 5
+              },
+              {
+                "offset": 7232,
+                "address": 23616,
+                "alignment": 16384,
+                "memory_size": 912,
+                "flags": 6
+              },
+              {
+                "offset": 8144,
+                "address": 40912,
+                "alignment": 16384,
+                "memory_size": 16,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 23616,
+                "memory_size": 960,
+                "end": 24576,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": 2932736,
+            "compressed": false
+          },
+          {
+            "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+            "sha256": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 4544,
+                "flags": 5
+              },
+              {
+                "offset": 4544,
+                "address": 20928,
+                "alignment": 16384,
+                "memory_size": 616,
+                "flags": 6
+              },
+              {
+                "offset": 5160,
+                "address": 37928,
+                "alignment": 16384,
+                "memory_size": 1,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 20928,
+                "memory_size": 3648,
+                "end": 24576,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": 2949120,
+            "compressed": false
+          },
+          {
+            "path": "lib/arm64-v8a/libsqlcipher.so",
+            "sha256": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2058928,
+                "flags": 5
+              },
+              {
+                "offset": 2058928,
+                "address": 2075312,
+                "alignment": 16384,
+                "memory_size": 25384,
+                "flags": 6
+              },
+              {
+                "offset": 2084312,
+                "address": 2117080,
+                "alignment": 16384,
+                "memory_size": 52409,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 2075312,
+                "memory_size": 38224,
+                "end": 2113536,
+                "protected_start": 2064384,
+                "protected_end": 2113536
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": 2965504,
+            "compressed": false
+          },
+          {
+            "path": "lib/armeabi-v7a/libandroidx.graphics.path.so",
+            "sha256": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 5312,
+                "flags": 5
+              },
+              {
+                "offset": 5312,
+                "address": 21696,
+                "alignment": 16384,
+                "memory_size": 460,
+                "flags": 6
+              },
+              {
+                "offset": 5772,
+                "address": 38540,
+                "alignment": 16384,
+                "memory_size": 8,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 21696,
+                "memory_size": 2880,
+                "end": 24576,
+                "protected_start": 20480,
+                "protected_end": 24576
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": 5079040,
+            "compressed": false
+          },
+          {
+            "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+            "sha256": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2704,
+                "flags": 5
+              },
+              {
+                "offset": 2704,
+                "address": 19088,
+                "alignment": 16384,
+                "memory_size": 280,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 19088,
+                "memory_size": 1392,
+                "end": 20480,
+                "protected_start": 16384,
+                "protected_end": 20480
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": 5095424,
+            "compressed": false
+          },
+          {
+            "path": "lib/armeabi-v7a/libsqlcipher.so",
+            "sha256": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 1023568,
+                "flags": 5
+              },
+              {
+                "offset": 1023568,
+                "address": 1039952,
+                "alignment": 16384,
+                "memory_size": 14204,
+                "flags": 6
+              },
+              {
+                "offset": 1037776,
+                "address": 1070544,
+                "alignment": 16384,
+                "memory_size": 35200,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 1039952,
+                "memory_size": 25008,
+                "end": 1064960,
+                "protected_start": 1036288,
+                "protected_end": 1064960
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": 5111808,
+            "compressed": false
+          },
+          {
+            "path": "lib/x86/libandroidx.graphics.path.so",
+            "sha256": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 7456,
+                "flags": 5
+              },
+              {
+                "offset": 7456,
+                "address": 23840,
+                "alignment": 16384,
+                "memory_size": 456,
+                "flags": 6
+              },
+              {
+                "offset": 7912,
+                "address": 40680,
+                "alignment": 16384,
+                "memory_size": 8,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 23840,
+                "memory_size": 736,
+                "end": 24576,
+                "protected_start": 20480,
+                "protected_end": 24576
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": 6160384,
+            "compressed": false
+          },
+          {
+            "path": "lib/x86/libdatastore_shared_counter.so",
+            "sha256": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 3600,
+                "flags": 5
+              },
+              {
+                "offset": 3600,
+                "address": 19984,
+                "alignment": 16384,
+                "memory_size": 276,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 19984,
+                "memory_size": 496,
+                "end": 20480,
+                "protected_start": 16384,
+                "protected_end": 20480
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": 6176768,
+            "compressed": false
+          },
+          {
+            "path": "lib/x86/libsqlcipher.so",
+            "sha256": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2221840,
+                "flags": 5
+              },
+              {
+                "offset": 2221840,
+                "address": 2238224,
+                "alignment": 16384,
+                "memory_size": 13768,
+                "flags": 6
+              },
+              {
+                "offset": 2235608,
+                "address": 2268376,
+                "alignment": 16384,
+                "memory_size": 36232,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 2238224,
+                "memory_size": 22768,
+                "end": 2260992,
+                "protected_start": 2236416,
+                "protected_end": 2260992
+              }
+            ],
+            "relro_page_size": 4096,
+            "zip_offset": 6193152,
+            "compressed": false
+          },
+          {
+            "path": "lib/x86_64/libandroidx.graphics.path.so",
+            "sha256": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 7872,
+                "flags": 5
+              },
+              {
+                "offset": 7872,
+                "address": 24256,
+                "alignment": 16384,
+                "memory_size": 936,
+                "flags": 6
+              },
+              {
+                "offset": 8808,
+                "address": 41576,
+                "alignment": 16384,
+                "memory_size": 16,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 24256,
+                "memory_size": 4416,
+                "end": 28672,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": 8454144,
+            "compressed": false
+          },
+          {
+            "path": "lib/x86_64/libdatastore_shared_counter.so",
+            "sha256": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 3872,
+                "flags": 5
+              },
+              {
+                "offset": 3872,
+                "address": 20256,
+                "alignment": 16384,
+                "memory_size": 552,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 20256,
+                "memory_size": 4320,
+                "end": 24576,
+                "protected_start": 16384,
+                "protected_end": 32768
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": 8470528,
+            "compressed": false
+          },
+          {
+            "path": "lib/x86_64/libsqlcipher.so",
+            "sha256": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561",
+            "load_segments": [
+              {
+                "offset": 0,
+                "address": 0,
+                "alignment": 16384,
+                "memory_size": 2190112,
+                "flags": 5
+              },
+              {
+                "offset": 2190112,
+                "address": 2206496,
+                "alignment": 16384,
+                "memory_size": 25400,
+                "flags": 6
+              },
+              {
+                "offset": 2215520,
+                "address": 2248288,
+                "alignment": 16384,
+                "memory_size": 52460,
+                "flags": 6
+              }
+            ],
+            "relro_segments": [
+              {
+                "address": 2206496,
+                "memory_size": 38112,
+                "end": 2244608,
+                "protected_start": 2195456,
+                "protected_end": 2244608
+              }
+            ],
+            "relro_page_size": 16384,
+            "zip_offset": 8486912,
+            "compressed": false
+          }
+        ]
+      }
+    ]
+  },
+  "additional16kbImage": {
+    "package": "system-images;android-36;google_apis_ps16k;x86_64",
+    "revision": 7,
+    "url": "x86_64-ps16k-36_r07.zip",
+    "sha1": "dd783282e84bf475a02eba6777c79fc5695e1583",
+    "bytes": 1849428145,
+    "catalogUrl": "https://dl.google.com/android/repository/sys-img/google_apis/sys-img2-3.xml",
+    "catalogSha256": "ad71946ba2d002f86d9ece1121b74aec494b420aa6b8fdac83fa5ce52b51dcb4",
+    "runtimeExecuted": false,
+    "scope": "Official package availability only; no claim of emulator health or app compatibility"
+  },
+  "releaseApproved": false,
+  "sources": [
+    "https://developer.android.com/guide/practices/page-sizes",
+    "https://android.googlesource.com/platform/bionic/+/refs/heads/main/linker/linker_phdr.cpp",
+    "https://android.googlesource.com/platform/ndk/+/ndk-r28-release/docs/BuildSystemMaintainers.md"
+  ],
+  "notes": [
+    "RELRO protection is rounded to actual ABI page boundaries. Dedicated LOAD padding is safe only when the protected range contains no writable LOAD bytes outside the RELRO regions.",
+    "Initial synthetic-only end-modulo rule rejected safe padding in AndroidX; it was not committed. Final checks agree with Bionic rounding and all 12 original llvm-readelf records.",
+    "14 native tests and seven backup-device guard tests passed. Initial temp-file test attempt hit sandbox TEMP permissions; the full suite ran using workspace TEMP, without skipping tests.",
+    "These are static results for an older preserved APK. The current candidate, matrix runtime, SQLCipher migration, export/restore, physical tests and upload signing remain unapproved."
+  ]
+}

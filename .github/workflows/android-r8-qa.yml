@@ -33,8 +33,19 @@ concurrency:
 
 jobs:
   development-runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api: 35
+            revision: 5
+          - api: 36
+            revision: 7
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      R8_QA_API: ${{ matrix.api }}
+      R8_QA_IMAGE_REVISION: ${{ matrix.revision }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,20 +70,21 @@ jobs:
         run: bash .github/scripts/install-qa-emulator.sh app/build/reports/r8-qa/emulator-install
       - name: AAB R8 de homologação com certificado de desenvolvimento
         run: bash .github/scripts/r8-qa-build.sh
-      - name: Preparar catálogo e imagem API 35 de 16 KB
+      - name: Preparar imagem de 16 KB na revisão fixada
         run: |
           set -euo pipefail
+          case "$R8_QA_API:$R8_QA_IMAGE_REVISION" in 35:5|36:7) ;; *) exit 1 ;; esac
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;23.0'
           test ! -e "$ANDROID_HOME/cmdline-tools/preinstalled"
           mv "$ANDROID_HOME/cmdline-tools/latest" "$ANDROID_HOME/cmdline-tools/preinstalled"
           ln -s "$ANDROID_HOME/cmdline-tools/23.0" "$ANDROID_HOME/cmdline-tools/latest"
           out=app/build/reports/r8-qa
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'system-images;android-35;google_apis_ps16k;x86_64' > "$out/sdk-image.log" 2>&1
-          image="$ANDROID_HOME/system-images/android-35/google_apis_ps16k/x86_64"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "system-images;android-$R8_QA_API;google_apis_ps16k;x86_64" > "$out/sdk-image.log" 2>&1
+          image="$ANDROID_HOME/system-images/android-$R8_QA_API/google_apis_ps16k/x86_64"
           test -s "$image/system.img"
           cp "$image/source.properties" "$out/system-image-source.properties"
           cp "$image/package.xml" "$out/system-image-package.xml"
-          grep -Eq '^Pkg.Revision[[:space:]]*=[[:space:]]*5[[:space:]]*$' "$image/source.properties"
+          grep -Eq "^Pkg.Revision[[:space:]]*=[[:space:]]*$R8_QA_IMAGE_REVISION[[:space:]]*$" "$image/source.properties"
           nproc > "$out/host-cpu-count.txt"
           free -m > "$out/host-memory.txt"
       - name: Enable KVM
@@ -81,12 +93,12 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: APK derivado, acessibilidade e backup em 16 KB
-        run: bash .github/scripts/run-qa-emulator.sh 35 google_apis_ps16k .github/scripts/r8-qa-runtime.sh
+        run: bash .github/scripts/run-qa-emulator.sh "$R8_QA_API" google_apis_ps16k .github/scripts/r8-qa-runtime.sh
       - name: Evidências de desenvolvimento, sem chave privada
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: development-r8-qa-${{ github.sha }}
+          name: development-r8-qa-api${{ matrix.api }}-${{ github.sha }}
           if-no-files-found: error
           path: |
             app/build/outputs/bundle/homologacao/*.aab

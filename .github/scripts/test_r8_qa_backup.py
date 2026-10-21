@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import xml.etree.ElementTree as ET
 
 spec = importlib.util.spec_from_file_location('r8_backup', Path(__file__).with_name('r8-qa-backup.py'))
@@ -14,6 +14,31 @@ qa = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(qa)
 
 class BackupDiagnosticTest(unittest.TestCase):
+    def test_supported_api_requires_matching_owned_avd_sdk_and_16kb(self):
+        for api in ('35', '36'):
+            with self.subTest(api=api), patch.dict(os.environ, {'R8_QA_API': api}):
+                ui = Mock()
+                ui.run.side_effect = [f'Hoodie_QA_API{api}\nOK\n'.encode(), api.encode(), b'16384\n']
+                self.assertEqual(int(api), qa.verify_disposable_emulator(ui))
+                self.assertEqual([
+                    ('emu', 'avd', 'name'),
+                    ('shell', 'getprop', 'ro.build.version.sdk'),
+                    ('shell', 'getconf', 'PAGE_SIZE'),
+                ], [c.args for c in ui.run.call_args_list])
+
+    def test_sdk_mismatch_or_4kb_page_is_rejected(self):
+        for responses in ([b'Hoodie_QA_API36\n', b'35\n'], [b'Hoodie_QA_API36\n', b'36\n', b'4096\n']):
+            with self.subTest(responses=responses), patch.dict(os.environ, {'R8_QA_API': '36'}):
+                ui = Mock()
+                ui.run.side_effect = responses
+                with self.assertRaises(AssertionError): qa.verify_disposable_emulator(ui)
+
+    def test_unsupported_api_never_reads_a_device(self):
+        with patch.dict(os.environ, {'R8_QA_API': '37'}):
+            ui = Mock()
+            with self.assertRaisesRegex(AssertionError, 'Unsupported QA API'): qa.verify_disposable_emulator(ui)
+            ui.run.assert_not_called()
+
     def folder(self):
         base=qa.ROOT/'app/build/reports/r8-backup-driver-tests'
         base.mkdir(parents=True, exist_ok=True)
