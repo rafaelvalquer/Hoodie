@@ -1,0 +1,75 @@
+{
+  "runId": 39597094125,
+  "commit": "c6c4526c14ab95e5485e4ea9bd0aed75e3d578c1",
+  "artifactId": 12347811750,
+  "artifactSha256": "ef8d4ecf5c54b07f71618b7a600fc55cc4537e635e550d0305691daf7cb8595c",
+  "full": {
+    "tests": 390,
+    "passed": 386,
+    "failed": 4,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f100 changed 3 pixels; first differences: [(242,520) ff5f8a85->ff5f8b85, (242,521) ff5f8a85->ff5f8b85, (242,522) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f130 changed 3 pixels; first differences: [(242,589) ff5f8a85->ff5f8b85, (242,590) ff5f8a85->ff5f8b85, (242,591) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f100_bottom changed 1 pixels; first differences: [(59,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f130_bottom changed 3 pixels; first differences: [(71,657) ff586d9a->ff586c9a, (66,662) ff596f9d->ff596f9c, (67,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      }
+    ]
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "nonGolden": {
+    "tests": 210,
+    "passed": 210,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "cityRegressions": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "apkPair": {
+    "commit": "c6c4526c14ab95e5485e4ea9bd0aed75e3d578c1",
+    "appSourceTree": "cf46927f500887f4ec6b28d4debbe74303ee2886",
+    "scope": "Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.",
+    "apks": {
+      "app": {
+        "path": "app/build/outputs/apk/debug/app-debug.apk",
+        "bytes": 26102669,
+        "sha256": "f2b1adc0c65745cbda11e6e2cd9af2b371226723c0f2b9a8db421b5418f20cfb"
+      },
+      "instrumentation": {
+        "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+        "bytes": 6076806,
+        "sha256": "84d2f9981e9e2b548a872bca61ac66564c8e6a7960601c5332dbbf6d0281ea72"
+      }
+    }
+  },
+  "duplicateJUnitVerifiedAndCountedOnce": true,
+  "qualityGateApproved": false,
+  "scope": "Full suite after the reviewed City reference update. Four remaining Digital/PlacePicker pixel-comparison failures. All 210 non-golden cases and both City regressions passed. No current experimental-backend or release approval."
+}

@@ -1,0 +1,679 @@
+{
+  "runId": 39597094034,
+  "driverCommit": "c6c4526c14ab95e5485e4ea9bd0aed75e3d578c1",
+  "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "observations": [
+    {
+      "label": "a",
+      "artifactId": 12345335606,
+      "artifactSha256": "174d3f49347c8f999adfe3a5b59d3db420a555ddd017ec054f07e6213bf6b4ad",
+      "requestedGpu": "swiftshader",
+      "effectiveRenderer": "GLES: Google (Google Inc.), Android Emulator OpenGL ES Translator (Google SwiftShader), OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)",
+      "cases": 180,
+      "images": 222,
+      "recordingHealthPassed": true,
+      "sameVendorLegacyCapture": "screen-fixed-b",
+      "decodedIdenticalImagesToLegacy": 222,
+      "cpu": [
+        "Vendor ID:                               GenuineIntel",
+        "Model name:                              INTEL(R) XEON(R) PLATINUM 8573C",
+        "CPU family:                              6"
+      ]
+    },
+    {
+      "label": "b",
+      "artifactId": 12344622452,
+      "artifactSha256": "c03a6d5578e5189006100bbb4f056a322dbb5a34d88a6bc0f5f816d3ac5f1380",
+      "requestedGpu": "swiftshader",
+      "effectiveRenderer": "GLES: Google (Google Inc.), Android Emulator OpenGL ES Translator (Google SwiftShader), OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)",
+      "cases": 180,
+      "images": 222,
+      "recordingHealthPassed": true,
+      "sameVendorLegacyCapture": "screen-fixed-a",
+      "decodedIdenticalImagesToLegacy": 222,
+      "cpu": [
+        "Vendor ID:                               AuthenticAMD",
+        "Model name:                              AMD EPYC 7763 64-Core Processor",
+        "CPU family:                              25"
+      ]
+    }
+  ],
+  "crossHostDifferences": [
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 218,
+          "y": 404,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 218,
+          "y": 449,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 217,
+          "y": 450,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 228,
+          "y": 353,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 228,
+          "y": 398,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 227,
+          "y": 399,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 218,
+          "y": 564,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 218,
+          "y": 609,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 217,
+          "y": 610,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 228,
+          "y": 513,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 228,
+          "y": 558,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 227,
+          "y": 559,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 243,
+          "y": 655,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 243,
+          "y": 700,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 701,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 253,
+          "y": 630,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 253,
+          "y": 675,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 252,
+          "y": 676,
+          "first": [
+            50,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            51,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f100.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 520,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 521,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 522,
+          "first": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            116,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 458,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 459,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 460,
+          "first": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            116,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f130.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 589,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 590,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 591,
+          "first": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            116,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 395,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 396,
+          "first": [
+            95,
+            138,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            139,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 397,
+          "first": [
+            63,
+            115,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            116,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "place_picker_full_411x891_f100_bottom.png",
+      "pixels": 1,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 59,
+          "y": 668,
+          "first": [
+            127,
+            159,
+            220,
+            255
+          ],
+          "second": [
+            127,
+            159,
+            219,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "place_picker_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 71,
+          "y": 657,
+          "first": [
+            88,
+            109,
+            154,
+            255
+          ],
+          "second": [
+            88,
+            108,
+            154,
+            255
+          ]
+        },
+        {
+          "x": 66,
+          "y": 662,
+          "first": [
+            89,
+            111,
+            157,
+            255
+          ],
+          "second": [
+            89,
+            111,
+            156,
+            255
+          ]
+        },
+        {
+          "x": 67,
+          "y": 668,
+          "first": [
+            127,
+            159,
+            220,
+            255
+          ],
+          "second": [
+            127,
+            159,
+            219,
+            255
+          ]
+        }
+      ]
+    }
+  ],
+  "effectiveBackendChanged": false,
+  "sameVendorLegacyPixelsPreserved": true,
+  "renderingDeltasFixed": false,
+  "baselinesChanged": false,
+  "qualityGateApproved": false,
+  "releaseApproved": false,
+  "nextObservation": "Explicit swangle with effective GLES ANGLE verification before APK installation; retain original source/APKs, all cases, and health guards.",
+  "limits": "Changing the requested mode to swiftshader did not replace the observed GLES renderer. Both CPU vendors reproduce the 34-pixel pattern. No precise CPU instruction, driver component or common native-crash cause is established."
+}

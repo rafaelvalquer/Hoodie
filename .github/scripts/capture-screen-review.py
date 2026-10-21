@@ -62,6 +62,15 @@ def verify_runner(raw):
     return starts
 
 
+def verify_renderer(snapshot, requested):
+    descriptions = re.findall(r'^GLES: .+$', snapshot, re.M)
+    if len(descriptions) != 1:
+        raise ValueError('Missing or ambiguous GLES renderer description')
+    if requested == 'swangle' and 'ANGLE' not in descriptions[0]:
+        raise ValueError('Requested ANGLE backend did not expose an ANGLE renderer')
+    return descriptions[0]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--pair-root', type=Path, required=True)
@@ -98,6 +107,8 @@ def main():
         packages = set(adb('shell','pm','list','packages').stdout.decode().splitlines())
         if any('package:'+p in packages for p in PACKAGES):raise ValueError('Existing app/test data must not be replaced')
         capture()
+        report['rendererDescription'] = verify_renderer(
+            (args.output/'surfaceflinger.txt').read_text(encoding='utf-8', errors='replace'), report['requestedGpu'])
         for package,path in zip(PACKAGES,paths):
             adb('install','-t',str(path.resolve()),timeout=120)
             owned.append(package)

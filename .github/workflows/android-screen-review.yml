@@ -1,4 +1,4 @@
-name: Current SwiftShader frozen APK review
+name: Frozen APK ANGLE renderer review
 
 # Records candidates only. Mandatory Android CI still compares every baseline.
 on:
@@ -77,7 +77,7 @@ jobs:
         env:
           REVIEW_PAIR_ROOT: ${{ runner.temp }}/screen-review-pair
           REVIEW_CAPTURE_LABEL: ${{ matrix.label }}
-          QA_REVIEW_GPU: swiftshader
+          QA_REVIEW_GPU: swangle
         run: |
           mkdir -p app/build/reports/screen-review
           lscpu > app/build/reports/screen-review/host-cpu.txt

@@ -18,6 +18,20 @@ def raw_results(status=0):
     return '\n'.join(lines+['INSTRUMENTATION_CODE: -1',''])
 
 class ScreenReviewEvidenceTest(unittest.TestCase):
+    def test_effective_angle_renderer_is_recorded(self):
+        line='GLES: Google, Android Emulator Translator (ANGLE (Google, Vulkan SwiftShader)), OpenGL ES 3.1'
+        self.assertEqual(line,review.verify_renderer('Display\n'+line+'\n','swangle'))
+
+    def test_requesting_angle_does_not_accept_the_legacy_renderer(self):
+        line='GLES: Google, Android Emulator Translator (Google SwiftShader), OpenGL ES 3.0 SwiftShader 4.0.0.1'
+        with self.assertRaisesRegex(ValueError,'did not expose an ANGLE'):review.verify_renderer(line,'swangle')
+        self.assertEqual(line,review.verify_renderer(line,'swiftshader'))
+
+    def test_missing_or_ambiguous_effective_renderer_is_rejected(self):
+        for snapshot in ('', 'GLES: ANGLE\nGLES: legacy\n'):
+            with self.subTest(snapshot=snapshot),self.assertRaisesRegex(ValueError,'ambiguous GLES'):
+                review.verify_renderer(snapshot,'swangle')
+
     def test_complete_case_and_image_inventory(self):
         self.assertEqual(222,len(review.expected_images()))
         self.assertEqual(42,sum(n.startswith('diary_') for n in review.expected_images()))

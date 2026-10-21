@@ -22,7 +22,7 @@ gpu=swiftshader_indirect
 if [[ -n "${QA_REVIEW_GPU:-}" ]]; then
   # Backend experiment only; mandatory CI/release configurations stay intact.
   test "$test_script" = .github/scripts/screen-review-runtime.sh
-  test "$QA_REVIEW_GPU" = swiftshader
+  test "$QA_REVIEW_GPU" = swangle
   gpu=$QA_REVIEW_GPU
 fi
 mkdir -p "$out"
