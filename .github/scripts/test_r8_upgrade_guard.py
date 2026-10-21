@@ -194,4 +194,82 @@ class LaunchComponentTest(unittest.TestCase):
             self.exercise(transform=lambda b:b.replace(b'TotalTime:',b'ChangedField:'))
 
 
+class KeyboardReadinessTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        folder=Path(__file__).parent/'fixtures'
+        cls.visible=(folder/'upgrade-api35-keyboard-visible.txt').read_bytes()
+        cls.hidden=(folder/'upgrade-api36-keyboard-hidden.txt').read_bytes()
+
+    def flow(self, windows):
+        events=[]
+        class Ui:
+            def run(self, *command):
+                if command != ('shell','input','keyevent','4'):
+                    raise AssertionError('Unexpected command: '+repr(command))
+                events.append('back')
+            def tap_node(self, node):
+                events.append('tap')
+        class Flow(upgrade.Flow):
+            def __init__(self):
+                super().__init__(Ui(),Path('.'))
+                self.windows=iter(windows)
+            def snapshot(self, stage):
+                self.window=next(self.windows)
+                events.append('snapshot:'+stage)
+                return ET.fromstring('<hierarchy><node class="android.widget.TextView" text="Marcar como favorito" bounds="[111,2014][631,2054]" enabled="true"/></hierarchy>')
+        return Flow(),events
+
+    def test_real_api35_visible_ime_is_detected(self):
+        self.assertTrue(upgrade.ime_visible(self.visible))
+
+    def test_real_api36_hidden_ime_is_detected(self):
+        self.assertFalse(upgrade.ime_visible(self.hidden))
+
+    def test_legacy_input_method_flags_do_not_substitute_for_window_evidence(self):
+        with self.assertRaisesRegex(AssertionError,'insets evidence'):
+            upgrade.ime_visible(b'mInputShown=false\n')
+
+    def test_one_hidden_source_does_not_override_another_visible_source(self):
+        import re
+        raw=re.sub(rb'(type=ime[^\r\n]*\bvisible=)true',rb'\1false',self.visible,count=1)
+        self.assertNotEqual(raw,self.visible)
+        self.assertTrue(upgrade.ime_visible(raw))
+
+    def test_malformed_ime_visibility_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'IME visibility'):
+            upgrade.ime_visible(self.visible.replace(b'visible=true',b'visibility=true'))
+
+    def test_hide_keyboard_sends_back_once_then_observes_hidden_state(self):
+        flow,events=self.flow([self.visible,self.hidden])
+        flow.hide_keyboard('typing')
+        self.assertEqual(1,events.count('back'))
+        self.assertFalse(upgrade.ime_visible(flow.window))
+
+    def test_already_hidden_keyboard_does_not_receive_back(self):
+        flow,events=self.flow([self.hidden])
+        flow.hide_keyboard('typing')
+        self.assertNotIn('back',events)
+
+    def test_button_is_tapped_once_only_after_ime_hide_and_fresh_target_snapshot(self):
+        flow,events=self.flow([self.visible,self.visible,self.hidden,self.hidden])
+        flow.tap('Marcar como favorito','favorite')
+        self.assertEqual(1,events.count('back'))
+        self.assertEqual(1,events.count('tap'))
+        self.assertLess(events.index('back'),events.index('tap'))
+        self.assertEqual('snapshot:favorite-after-keyboard',events[-2])
+
+    def test_reopened_keyboard_blocks_the_target_tap(self):
+        flow,events=self.flow([self.visible,self.visible,self.hidden,self.visible])
+        with self.assertRaisesRegex(AssertionError,'IME reopened'):
+            flow.tap('Marcar como favorito','favorite')
+        self.assertNotIn('tap',events)
+
+    def test_unobstructed_button_does_not_receive_a_back_action(self):
+        flow,events=self.flow([self.hidden])
+        flow.tap('Marcar como favorito','favorite')
+        self.assertEqual(1,events.count('tap'))
+        self.assertNotIn('back',events)
+
+
 if __name__ == '__main__': unittest.main()

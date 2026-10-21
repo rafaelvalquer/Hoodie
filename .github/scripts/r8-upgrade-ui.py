@@ -57,6 +57,15 @@ def bounds(node):
     return values if len(values) == 4 and values[2] > values[0] and values[3] > values[1] else None
 
 
+def ime_visible(window):
+    text = window.decode(errors='replace')
+    assert 'InsetsState' in text, 'Missing window insets evidence'
+    sources = re.findall(r'\bInsetsSource\b[^\r\n]*\btype=ime\b[^\r\n]*', text)
+    states = [re.findall(r'\bvisible=(true|false)\b', source) for source in sources]
+    assert all(len(state) == 1 for state in states), 'Missing or ambiguous IME visibility'
+    return any(state[0] == 'true' for state in states)
+
+
 class Flow:
     def __init__(self, ui, out):
         self.ui, self.out, self.observations = ui, out, []
@@ -72,6 +81,7 @@ class Flow:
         assert {n.get('package') for n in root.iter('node')} == {PACKAGE}, 'Unexpected UI owner'
         focus = re.findall(r'^\s*mCurrentFocus=(.*)$', window.decode(errors='replace'), re.M)
         assert focus and all(f' {PACKAGE}/' in value for value in focus), 'Unexpected focused window'
+        self.window = window
         return root
 
     @staticmethod
@@ -113,11 +123,20 @@ class Flow:
         raise AssertionError('Target not visible: '+stage)
 
     def tap(self, label, stage):
-        self.ui.tap_node(self.visible(stage, lambda root: self.find(root, label)))
+        select = lambda root: self.find(root, label)
+        node = self.visible(stage, select)
+        if ime_visible(self.window):
+            self.hide_keyboard(stage+'-keyboard')
+            # Closing the IME can move the target. Read its current bounds again.
+            node = self.visible(stage+'-after-keyboard', select)
+        assert not ime_visible(self.window), 'IME reopened before target tap'
+        self.ui.tap_node(node)
 
-    def hide_keyboard(self):
-        if 'mInputShown=true' in self.ui.run('shell', 'dumpsys', 'input_method').decode():
+    def hide_keyboard(self, stage):
+        self.snapshot(stage+'-state')
+        if ime_visible(self.window):
             self.ui.run('shell', 'input', 'keyevent', '4')
+            self.wait(stage+'-hidden', lambda _: not ime_visible(self.window))
 
     def enter(self, label, value, stage):
         assert value in (PROFILE, PLACE, NEW_PLACE, '-23.0,-46.0', '-23.1,-46.1')
@@ -131,7 +150,7 @@ class Flow:
             self.ui.run('shell', 'input', 'text', value)
         else:
             self.ui.input_ascii(value)
-        self.hide_keyboard()
+        self.hide_keyboard(stage+'-keyboard')
 
     def add_place(self, name, coordinates, stage, work=False):
         self.tap('Adicionar lugar', stage+'-add')
