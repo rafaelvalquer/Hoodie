@@ -12,6 +12,7 @@ test_script=$3
 case "$api:$target:$test_script" in
   34:google_apis:.github/scripts/connected-tests.sh) out=app/build/instrumentation-evidence ;;
   34:google_apis:.github/scripts/exact-golden-control.sh) out=app/build/reports/exact-golden-control/emulator ;;
+  34:google_apis:.github/scripts/screen-review-runtime.sh) out=app/build/reports/screen-review/emulator ;;
   35:google_apis_ps16k:.github/scripts/r8-qa-runtime.sh) out=app/build/reports/r8-qa/emulator ;;
   35:google_apis_ps16k:.github/scripts/native-runtime-ci.sh) out=app/build/reports/native-runtime/emulator ;;
   *) echo 'Unsupported QA emulator configuration' >&2; exit 1 ;;

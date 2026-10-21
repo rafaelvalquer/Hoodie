@@ -60,6 +60,8 @@ jobs:
 
       - name: Integridade do diagnóstico com APKs preservados
         run: python3 .github/scripts/test_diagnose_exact_apk_pair.py
+      - name: Integridade da captura de candidatos visuais
+        run: python3 .github/scripts/test_capture_screen_review.py
 
       - name: Preservar cada leitura de acessibilidade R8
         run: python3 .github/scripts/test_r8_qa_evidence.py
