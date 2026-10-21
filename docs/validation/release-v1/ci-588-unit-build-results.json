@@ -1,0 +1,31 @@
+{
+  "commit": "58889c0b03c68624a23e3f069222770d892362f3",
+  "runId": 39687580393,
+  "jobId": 119525440930,
+  "artifactId": 12387645117,
+  "artifactSha256": "490e61622f28c70461198f3fcd0b2ad83b2cc5895a855d89c63aa4dbae41a67d",
+  "suites": 307,
+  "tests": 1360,
+  "passed": 1360,
+  "failed": 0,
+  "skipped": 0,
+  "interactionCases": 4,
+  "interactionStandardErrorEmpty": true,
+  "productionSpriteInitializationRestored": true,
+  "sourceTestSha256": "e269a686d408d75c0216f69f2dcbd5c4ddaa2d95cac56def30e7f3e8165136f9",
+  "lintConclusion": "success",
+  "assembleConclusion": "success",
+  "androidTestCompilationPassed": true,
+  "lowSpaceAndroidCasesExecuted": false,
+  "originalMissingResponseCauseProven": false,
+  "fullCiApproved": false,
+  "releaseApproved": false,
+  "witness": {
+    "file": "ci-588-interaction-junit.xml",
+    "sha256": "3da7de8b474a0c787628bf28e78afe2220cd43ba454b2b4dd125debbef383c4b",
+    "artifactEntry": "test-results/testDebugUnitTest/TEST-com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest.xml",
+    "artifactSha256": "3da7de8b474a0c787628bf28e78afe2220cd43ba454b2b4dd125debbef383c4b",
+    "normalization": "CRLF to LF only"
+  },
+  "scope": "All JVM cases and compilation of app/instrumentation APKs; four interaction cases use production sprite initialization. Android execution, full CI and production approval remain separate."
+}

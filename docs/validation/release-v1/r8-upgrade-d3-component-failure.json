@@ -1,0 +1,80 @@
+{
+  "runId": 39686837429,
+  "commit": "d3d1cb886e90904b2260551e774d5fa67a95fae1",
+  "observations": [
+    {
+      "api": 35,
+      "jobId": 119526922854,
+      "artifactId": 12387456828,
+      "artifactSha256": "965e1922d2c5e63ddd0f0ff48a9da4e289ba522254fb7ce8e9ad02d383db3c99",
+      "pageSize": 16384,
+      "uidReaderCorrectionRuntimeVerified": true,
+      "installedBaselineApkSha256": "f32606a58e50f141d1f08e217e2da4fc6364cc01032001059c6956fd83d05cce",
+      "installedBaselineHashMatches": true,
+      "uid": 10207,
+      "androidLaunchState": "COLD",
+      "androidTotalTimeMs": 4136,
+      "failedStage": "Activity parser rejected equivalent relative component com.hoodie.app/.MainActivity",
+      "firstOnboardingSnapshotExecuted": false,
+      "upgradeExecuted": false,
+      "witnesses": [
+        {
+          "file": ".github/scripts/fixtures/upgrade-api35-uid.txt",
+          "sha256": "1dab865a75613a19a3e3ba354dd652b598aed059b826c409dfa834c91c008a5b",
+          "artifactEntry": "runtime/scenario/baseline-uid.txt",
+          "artifactSha256": "1dab865a75613a19a3e3ba354dd652b598aed059b826c409dfa834c91c008a5b",
+          "normalization": "CRLF to LF only"
+        },
+        {
+          "file": ".github/scripts/fixtures/upgrade-api35-launch.txt",
+          "sha256": "157a920993ec629e22c83a04503bb2cea624e300f6b390ccbd2acacf72a1cdff",
+          "artifactEntry": "runtime/scenario/baseline-launch.txt",
+          "artifactSha256": "157a920993ec629e22c83a04503bb2cea624e300f6b390ccbd2acacf72a1cdff",
+          "normalization": "CRLF to LF only"
+        }
+      ],
+      "finalCrashBufferSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "finalCrashBufferEmpty": true,
+      "runtimeApproved": false
+    },
+    {
+      "api": 36,
+      "jobId": 119526922819,
+      "artifactId": 12387491687,
+      "artifactSha256": "af4631a2ac424afb288354d51184016f7f9814e51222f8aa6ae224c96235d999",
+      "pageSize": 16384,
+      "uidReaderCorrectionRuntimeVerified": true,
+      "installedBaselineApkSha256": "f32606a58e50f141d1f08e217e2da4fc6364cc01032001059c6956fd83d05cce",
+      "installedBaselineHashMatches": true,
+      "uid": 10213,
+      "androidLaunchState": "COLD",
+      "androidTotalTimeMs": 2828,
+      "failedStage": "Activity parser rejected equivalent relative component com.hoodie.app/.MainActivity",
+      "firstOnboardingSnapshotExecuted": false,
+      "upgradeExecuted": false,
+      "witnesses": [
+        {
+          "file": ".github/scripts/fixtures/upgrade-api36-uid.txt",
+          "sha256": "802c0fa3f59686019f5c7eda2f6118824a78cd98af6a1d72e7f69efa30b1ce54",
+          "artifactEntry": "runtime/scenario/baseline-uid.txt",
+          "artifactSha256": "802c0fa3f59686019f5c7eda2f6118824a78cd98af6a1d72e7f69efa30b1ce54",
+          "normalization": "CRLF to LF only"
+        },
+        {
+          "file": ".github/scripts/fixtures/upgrade-api36-launch.txt",
+          "sha256": "8f411390ce8d4cc6fffc19a891a85560e6899e9c9f33d95a114439430b695001",
+          "artifactEntry": "runtime/scenario/baseline-launch.txt",
+          "artifactSha256": "8f411390ce8d4cc6fffc19a891a85560e6899e9c9f33d95a114439430b695001",
+          "normalization": "CRLF to LF only"
+        }
+      ],
+      "finalCrashBufferSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "finalCrashBufferEmpty": true,
+      "runtimeApproved": false
+    }
+  ],
+  "correction": "Accept exactly one of the two equivalent ComponentName representations for the same package/MainActivity; reject other packages/classes and duplicate lines. Keep COLD/WARM, Status ok, launch time and process checks.",
+  "localGuardCasesPassed": 28,
+  "activityParserCorrectionRuntimeVerified": false,
+  "releaseApproved": false
+}

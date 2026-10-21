@@ -1,0 +1,466 @@
+{
+  "referenceTree": "c07c53337b989dfa44d29b318bac2d7b93ded5f1",
+  "referenceRevision": "d5839121",
+  "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "captureRunId": 39594235736,
+  "sources": [
+    {
+      "label": "a",
+      "artifactId": 12343566517,
+      "artifactSha256": "74ed920268c6d83aa91ff85eabc02ff15b3a97f347b8019743f11467ce4f8f1b",
+      "cpu": [
+        "Vendor ID:                               AuthenticAMD",
+        "Model name:                              AMD EPYC 9V45 96-Core Processor",
+        "CPU family:                              26"
+      ]
+    },
+    {
+      "label": "b",
+      "artifactId": 12343836945,
+      "artifactSha256": "af869d65d4d168a4b0bb5689787c22bbcbfd324713d7ee8e6206857d87a5d254",
+      "cpu": [
+        "Vendor ID:                               GenuineIntel",
+        "Model name:                              Intel(R) Xeon(R) 6973P-C",
+        "CPU family:                              6"
+      ]
+    }
+  ],
+  "totalImages": 222,
+  "matchesBoth": 210,
+  "matchesOnlyAMD": 6,
+  "matchesOnlyIntel": 6,
+  "matchesNeither": 0,
+  "groups": {
+    "both": [
+      "diary_empty_360x640_f100.png",
+      "diary_empty_360x640_f130.png",
+      "diary_empty_360x800_f100.png",
+      "diary_empty_360x800_f130.png",
+      "diary_empty_411x891_f100.png",
+      "diary_empty_411x891_f130.png",
+      "diary_error_360x640_f100.png",
+      "diary_error_360x640_f130.png",
+      "diary_error_360x800_f100.png",
+      "diary_error_360x800_f130.png",
+      "diary_error_411x891_f100.png",
+      "diary_error_411x891_f130.png",
+      "diary_full_360x640_f100.png",
+      "diary_full_360x640_f100_map.png",
+      "diary_full_360x640_f130.png",
+      "diary_full_360x640_f130_map.png",
+      "diary_full_360x800_f100.png",
+      "diary_full_360x800_f100_map.png",
+      "diary_full_360x800_f130.png",
+      "diary_full_360x800_f130_map.png",
+      "diary_full_411x891_f100.png",
+      "diary_full_411x891_f100_map.png",
+      "diary_full_411x891_f130.png",
+      "diary_full_411x891_f130_map.png",
+      "diary_loading_360x640_f100.png",
+      "diary_loading_360x640_f130.png",
+      "diary_loading_360x800_f100.png",
+      "diary_loading_360x800_f130.png",
+      "diary_loading_411x891_f100.png",
+      "diary_loading_411x891_f130.png",
+      "diary_normal_360x640_f100.png",
+      "diary_normal_360x640_f130.png",
+      "diary_normal_360x800_f100.png",
+      "diary_normal_360x800_f130.png",
+      "diary_normal_411x891_f100.png",
+      "diary_normal_411x891_f130.png",
+      "digital_empty_360x640_f100.png",
+      "digital_empty_360x640_f130.png",
+      "digital_empty_360x800_f100.png",
+      "digital_empty_360x800_f130.png",
+      "digital_empty_411x891_f100.png",
+      "digital_empty_411x891_f130.png",
+      "digital_error_360x640_f100.png",
+      "digital_error_360x640_f130.png",
+      "digital_error_360x800_f100.png",
+      "digital_error_360x800_f130.png",
+      "digital_error_411x891_f100.png",
+      "digital_error_411x891_f130.png",
+      "digital_full_360x640_f100.png",
+      "digital_full_360x640_f100_bottom.png",
+      "digital_full_360x640_f130.png",
+      "digital_full_360x640_f130_bottom.png",
+      "digital_full_360x800_f100.png",
+      "digital_full_360x800_f100_bottom.png",
+      "digital_full_360x800_f130.png",
+      "digital_full_360x800_f130_bottom.png",
+      "digital_loading_360x640_f100.png",
+      "digital_loading_360x640_f130.png",
+      "digital_loading_360x800_f100.png",
+      "digital_loading_360x800_f130.png",
+      "digital_loading_411x891_f100.png",
+      "digital_loading_411x891_f130.png",
+      "digital_normal_360x640_f100.png",
+      "digital_normal_360x640_f130.png",
+      "digital_normal_360x800_f100.png",
+      "digital_normal_360x800_f130.png",
+      "digital_normal_411x891_f100.png",
+      "digital_normal_411x891_f130.png",
+      "home_empty_360x640_f100.png",
+      "home_empty_360x640_f130.png",
+      "home_empty_360x800_f100.png",
+      "home_empty_360x800_f130.png",
+      "home_empty_411x891_f100.png",
+      "home_empty_411x891_f130.png",
+      "home_error_360x640_f100.png",
+      "home_error_360x640_f130.png",
+      "home_error_360x800_f100.png",
+      "home_error_360x800_f130.png",
+      "home_error_411x891_f100.png",
+      "home_error_411x891_f130.png",
+      "home_full_360x640_f100.png",
+      "home_full_360x640_f100_bottom.png",
+      "home_full_360x640_f130.png",
+      "home_full_360x640_f130_bottom.png",
+      "home_full_360x800_f100.png",
+      "home_full_360x800_f100_bottom.png",
+      "home_full_360x800_f130.png",
+      "home_full_360x800_f130_bottom.png",
+      "home_full_411x891_f100.png",
+      "home_full_411x891_f100_bottom.png",
+      "home_full_411x891_f130.png",
+      "home_full_411x891_f130_bottom.png",
+      "home_loading_360x640_f100.png",
+      "home_loading_360x640_f130.png",
+      "home_loading_360x800_f100.png",
+      "home_loading_360x800_f130.png",
+      "home_loading_411x891_f100.png",
+      "home_loading_411x891_f130.png",
+      "home_normal_360x640_f100.png",
+      "home_normal_360x640_f130.png",
+      "home_normal_360x800_f100.png",
+      "home_normal_360x800_f130.png",
+      "home_normal_411x891_f100.png",
+      "home_normal_411x891_f130.png",
+      "onboarding_empty_360x640_f100.png",
+      "onboarding_empty_360x640_f130.png",
+      "onboarding_empty_360x800_f100.png",
+      "onboarding_empty_360x800_f130.png",
+      "onboarding_empty_411x891_f100.png",
+      "onboarding_empty_411x891_f130.png",
+      "onboarding_error_360x640_f100.png",
+      "onboarding_error_360x640_f130.png",
+      "onboarding_error_360x800_f100.png",
+      "onboarding_error_360x800_f130.png",
+      "onboarding_error_411x891_f100.png",
+      "onboarding_error_411x891_f130.png",
+      "onboarding_full_360x640_f100.png",
+      "onboarding_full_360x640_f100_bottom.png",
+      "onboarding_full_360x640_f130.png",
+      "onboarding_full_360x640_f130_bottom.png",
+      "onboarding_full_360x800_f100.png",
+      "onboarding_full_360x800_f100_bottom.png",
+      "onboarding_full_360x800_f130.png",
+      "onboarding_full_360x800_f130_bottom.png",
+      "onboarding_full_411x891_f100.png",
+      "onboarding_full_411x891_f100_bottom.png",
+      "onboarding_full_411x891_f130.png",
+      "onboarding_full_411x891_f130_bottom.png",
+      "onboarding_loading_360x640_f100.png",
+      "onboarding_loading_360x640_f130.png",
+      "onboarding_loading_360x800_f100.png",
+      "onboarding_loading_360x800_f130.png",
+      "onboarding_loading_411x891_f100.png",
+      "onboarding_loading_411x891_f130.png",
+      "onboarding_normal_360x640_f100.png",
+      "onboarding_normal_360x640_f130.png",
+      "onboarding_normal_360x800_f100.png",
+      "onboarding_normal_360x800_f130.png",
+      "onboarding_normal_411x891_f100.png",
+      "onboarding_normal_411x891_f130.png",
+      "place_picker_empty_360x640_f100.png",
+      "place_picker_empty_360x640_f130.png",
+      "place_picker_empty_360x800_f100.png",
+      "place_picker_empty_360x800_f130.png",
+      "place_picker_empty_411x891_f100.png",
+      "place_picker_empty_411x891_f130.png",
+      "place_picker_error_360x640_f100.png",
+      "place_picker_error_360x640_f130.png",
+      "place_picker_error_360x800_f100.png",
+      "place_picker_error_360x800_f130.png",
+      "place_picker_error_411x891_f100.png",
+      "place_picker_error_411x891_f130.png",
+      "place_picker_full_360x640_f100.png",
+      "place_picker_full_360x640_f100_bottom.png",
+      "place_picker_full_360x640_f130.png",
+      "place_picker_full_360x640_f130_bottom.png",
+      "place_picker_full_360x800_f100.png",
+      "place_picker_full_360x800_f100_bottom.png",
+      "place_picker_full_360x800_f130.png",
+      "place_picker_full_360x800_f130_bottom.png",
+      "place_picker_full_411x891_f100.png",
+      "place_picker_full_411x891_f130.png",
+      "place_picker_loading_360x640_f100.png",
+      "place_picker_loading_360x640_f130.png",
+      "place_picker_loading_360x800_f100.png",
+      "place_picker_loading_360x800_f130.png",
+      "place_picker_loading_411x891_f100.png",
+      "place_picker_loading_411x891_f130.png",
+      "place_picker_normal_360x640_f100.png",
+      "place_picker_normal_360x640_f130.png",
+      "place_picker_normal_360x800_f100.png",
+      "place_picker_normal_360x800_f130.png",
+      "place_picker_normal_411x891_f100.png",
+      "place_picker_normal_411x891_f130.png",
+      "settings_empty_360x640_f100.png",
+      "settings_empty_360x640_f130.png",
+      "settings_empty_360x800_f100.png",
+      "settings_empty_360x800_f130.png",
+      "settings_empty_411x891_f100.png",
+      "settings_empty_411x891_f130.png",
+      "settings_error_360x640_f100.png",
+      "settings_error_360x640_f130.png",
+      "settings_error_360x800_f100.png",
+      "settings_error_360x800_f130.png",
+      "settings_error_411x891_f100.png",
+      "settings_error_411x891_f130.png",
+      "settings_full_360x640_f100.png",
+      "settings_full_360x640_f100_bottom.png",
+      "settings_full_360x640_f130.png",
+      "settings_full_360x640_f130_bottom.png",
+      "settings_full_360x800_f100.png",
+      "settings_full_360x800_f100_bottom.png",
+      "settings_full_360x800_f130.png",
+      "settings_full_360x800_f130_bottom.png",
+      "settings_full_411x891_f100.png",
+      "settings_full_411x891_f100_bottom.png",
+      "settings_full_411x891_f130.png",
+      "settings_full_411x891_f130_bottom.png",
+      "settings_loading_360x640_f100.png",
+      "settings_loading_360x640_f130.png",
+      "settings_loading_360x800_f100.png",
+      "settings_loading_360x800_f130.png",
+      "settings_loading_411x891_f100.png",
+      "settings_loading_411x891_f130.png",
+      "settings_normal_360x640_f100.png",
+      "settings_normal_360x640_f130.png",
+      "settings_normal_360x800_f100.png",
+      "settings_normal_360x800_f130.png",
+      "settings_normal_411x891_f100.png",
+      "settings_normal_411x891_f130.png"
+    ],
+    "onlyA": [
+      "diary_full_360x640_f100_bottom.png",
+      "diary_full_360x640_f130_bottom.png",
+      "diary_full_360x800_f100_bottom.png",
+      "diary_full_360x800_f130_bottom.png",
+      "diary_full_411x891_f100_bottom.png",
+      "diary_full_411x891_f130_bottom.png"
+    ],
+    "onlyB": [
+      "digital_full_411x891_f100.png",
+      "digital_full_411x891_f100_bottom.png",
+      "digital_full_411x891_f130.png",
+      "digital_full_411x891_f130_bottom.png",
+      "place_picker_full_411x891_f100_bottom.png",
+      "place_picker_full_411x891_f130_bottom.png"
+    ],
+    "neither": []
+  },
+  "differences": [
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "referenceSha256": "798107acaac0ea842c09142852f4ab3d572b7c90749da728e8d81d8ccfe74217",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        },
+        {
+          "label": "b",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "referenceSha256": "92e929ebbac43e0118ebffa60c2f63b24c0ea0ee194e89063bfe0eb43bcf82ca",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        },
+        {
+          "label": "b",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "referenceSha256": "d4690d9068f86807cb153ebfee71067bac28c0330948a2f0e4da693357437c19",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        },
+        {
+          "label": "b",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "referenceSha256": "1aad823943a10fc0778af215bb466fedfdb9a3677653ffc58cdda04ecf9d34a3",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        },
+        {
+          "label": "b",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        }
+      ]
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "referenceSha256": "edc5ed0d63247aa21ae8ed999d779d744662b97129cb34c274583059eef61bfb",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        },
+        {
+          "label": "b",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        }
+      ]
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "referenceSha256": "d821b103ce10f016920d58d1f253db2992e0185a42d674851ef5058744c918b4",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        },
+        {
+          "label": "b",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f100.png",
+      "referenceSha256": "21f4a5394678e94b9f987080720bedf712bfc4bb60c3d5b20eabf45bf912b019",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        },
+        {
+          "label": "b",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f100_bottom.png",
+      "referenceSha256": "a5615dfb10f3c5903cc2d6f364d4b0a97c3c3a1b64b0e17d16a743ebf3d0d76d",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        },
+        {
+          "label": "b",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f130.png",
+      "referenceSha256": "a911e3005ad93a1ee30404a84745f04a518e769296e7be21a86f67ba623261f1",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        },
+        {
+          "label": "b",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f130_bottom.png",
+      "referenceSha256": "9d008808eea569760e9d098f896dc300d35499bbf4c82852e521a8e2c2571fb8",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        },
+        {
+          "label": "b",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        }
+      ]
+    },
+    {
+      "file": "place_picker_full_411x891_f100_bottom.png",
+      "referenceSha256": "6c94be2d4a2f088df0b7278dd0311c58f6369d03afc70f9db71f301252855a6c",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 1,
+          "maxChannelDelta": 1
+        },
+        {
+          "label": "b",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        }
+      ]
+    },
+    {
+      "file": "place_picker_full_411x891_f130_bottom.png",
+      "referenceSha256": "21b09aa8f4066b2bf0bfd3155a6f4bd9de30a8e487e7fe40c1a61210cdc934fd",
+      "comparisons": [
+        {
+          "label": "a",
+          "changedPixels": 3,
+          "maxChannelDelta": 1
+        },
+        {
+          "label": "b",
+          "changedPixels": 0,
+          "maxChannelDelta": 0
+        }
+      ]
+    }
+  ],
+  "matchesCompleteObservedAMDCapture": false,
+  "matchesCompleteObservedIntelCapture": false,
+  "inference": "The current reference set combines six AMD-specific Diary images with six Intel-specific Digital/Place Picker images. Neither complete observed capture matches all 222 references. This explains the alternating four-case/six-case failures without proving a specific CPU instruction or a universal result for other hosts.",
+  "baselinesChanged": false,
+  "toleranceChanged": false,
+  "masksAdded": false,
+  "qualityGateApproved": false,
+  "releaseApproved": false
+}

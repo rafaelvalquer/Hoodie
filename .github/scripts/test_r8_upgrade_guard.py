@@ -87,8 +87,10 @@ class UpgradeOwnershipTest(unittest.TestCase):
 
 
 class PackageMetadataTest(unittest.TestCase):
-    def exercise(self, api=35, *, transform=lambda b: b, uid=b'package:com.hoodie.app uid:10207\n', digest='a'*64):
+    def exercise(self, api=35, *, transform=lambda b: b, uid=None, digest='a'*64):
         raw = transform((Path(__file__).parent/'fixtures'/f'upgrade-api{api}-package.txt').read_bytes())
+        if uid is None:
+            uid = (Path(__file__).parent/'fixtures'/f'upgrade-api{api}-uid.txt').read_bytes()
         class PackageUi:
             def run(self, *command):
                 values = {
@@ -113,7 +115,7 @@ class PackageMetadataTest(unittest.TestCase):
         self.assertEqual('2026-10-21 22:22:50',result['firstInstallTime'])
 
     def test_real_api36_appid_metadata_uses_the_explicit_package_uid(self):
-        result = self.exercise(36,uid=b'package:com.hoodie.app uid:10213\n')
+        result = self.exercise(36)
         self.assertEqual(10213,result['uid'])
         self.assertEqual('2026-10-21 22:23:51',result['firstInstallTime'])
 
@@ -137,6 +139,59 @@ class PackageMetadataTest(unittest.TestCase):
 
     def test_wrong_installed_apk_still_fails(self):
         with self.assertRaisesRegex(AssertionError,'APK identity mismatch'): self.exercise(digest='b'*64)
+
+
+class LaunchComponentTest(unittest.TestCase):
+    def exercise(self, api=35, transform=lambda b:b):
+        raw = transform((Path(__file__).parent/'fixtures'/f'upgrade-api{api}-launch.txt').read_bytes())
+        class LaunchUi:
+            def run(self, *command):
+                values = {
+                    ('shell','am','force-stop',upgrade.PACKAGE): b'',
+                    ('shell',f'pidof {upgrade.PACKAGE} || [ $? -eq 1 ]'): b'',
+                    ('shell','am','start','-W','-n',upgrade.PACKAGE+'/com.hoodie.app.MainActivity'): raw,
+                    ('shell','pidof',upgrade.PACKAGE): b'1234\n',
+                }
+                if command not in values: raise AssertionError('Unexpected command: '+repr(command))
+                return values[command]
+        base = upgrade.ROOT/'app/build/reports/r8-upgrade-guard-tests'
+        base.mkdir(parents=True,exist_ok=True)
+        output = Path(tempfile.mkdtemp(dir=base))
+        try: return upgrade.launch(LaunchUi(),output,'baseline')
+        finally: self.assertEqual(raw,(output/'baseline-launch.txt').read_bytes())
+
+    def test_real_api35_relative_component_is_the_same_activity(self):
+        self.assertEqual('1234',self.exercise())
+
+    def test_real_api36_relative_component_is_the_same_activity(self):
+        self.assertEqual('1234',self.exercise(36))
+
+    def test_fully_qualified_component_is_accepted(self):
+        self.assertEqual('1234',self.exercise(transform=lambda b:b.replace(b'Activity: com.hoodie.app/.MainActivity',b'Activity: com.hoodie.app/com.hoodie.app.MainActivity')))
+
+    def test_another_activity_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'launched Activity'):
+            self.exercise(transform=lambda b:b.replace(b'Activity: com.hoodie.app/.MainActivity',b'Activity: com.hoodie.app/.OtherMainActivity'))
+
+    def test_another_package_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'launched Activity'):
+            self.exercise(transform=lambda b:b.replace(b'Activity: com.hoodie.app/.MainActivity',b'Activity: com.other/.MainActivity'))
+
+    def test_duplicate_activity_lines_are_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'ambiguous'):
+            self.exercise(transform=lambda b:b+b'Activity: com.hoodie.app/.MainActivity\n')
+
+    def test_missing_activity_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'launched Activity'):
+            self.exercise(transform=lambda b:b.replace(b'Activity:',b'ChangedField:'))
+
+    def test_hot_launch_is_still_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'launch state'):
+            self.exercise(transform=lambda b:b.replace(b'LaunchState: COLD',b'LaunchState: HOT'))
+
+    def test_missing_timing_is_still_rejected(self):
+        with self.assertRaisesRegex(AssertionError,'launch timing'):
+            self.exercise(transform=lambda b:b.replace(b'TotalTime:',b'ChangedField:'))
 
 
 if __name__ == '__main__': unittest.main()

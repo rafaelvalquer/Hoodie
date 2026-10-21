@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-21T22:39:00.334Z" hostname="runnervmdkmh8" time="1.768">
+  <properties/>
+  <testcase name="coordinatedHomeWithoutTouchRetainsReadOnlyCompatibility" classname="com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest" time="0.63"/>
+  <testcase name="disabledGateEmitsNoInteractionAndNeverWritesTables" classname="com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest" time="0.608"/>
+  <testcase name="enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables" classname="com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest" time="0.293"/>
+  <testcase name="coordinatedGestureAndPresentationNeverWriteTables" classname="com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest" time="0.237"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

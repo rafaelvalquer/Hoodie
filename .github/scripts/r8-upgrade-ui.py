@@ -182,7 +182,9 @@ def launch(ui, out, stage):
     (out/(stage+'-launch.txt')).write_bytes(raw)
     assert len(re.findall(rb'^Status: ok\s*$', raw, re.M)) == 1
     assert len(re.findall(rb'^LaunchState: (?:COLD|WARM)\s*$', raw, re.M)) == 1, 'Missing or unexpected launch state'
-    assert re.search(rb'^Activity: '+re.escape(PACKAGE.encode())+rb'/com\.hoodie\.app\.MainActivity\s*$', raw, re.M)
+    components = re.findall(rb'^Activity: ([^\r\n]+)', raw, re.M)
+    expected_components = {(PACKAGE+'/com.hoodie.app.MainActivity').encode(), (PACKAGE+'/.MainActivity').encode()}
+    assert len(components) == 1 and components[0].strip() in expected_components, 'Unexpected or ambiguous launched Activity'
     assert re.search(rb'^TotalTime: \d+\s*$', raw, re.M), 'Missing launch timing'
     pid = ui.run('shell', 'pidof', PACKAGE).decode().strip()
     (out/(stage+'-pid.txt')).write_text(pid+'\n')

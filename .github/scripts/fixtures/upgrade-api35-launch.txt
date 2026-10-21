@@ -1,0 +1,7 @@
+Starting: Intent { cmp=com.hoodie.app/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: com.hoodie.app/.MainActivity
+TotalTime: 4136
+WaitTime: 4170
+Complete

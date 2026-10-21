@@ -4,6 +4,8 @@ Estado: **pendente de homologação física**. Testes automatizados anteriores: 
 
 Cobertura adicional preparada em `BackupLowSpaceTest`, ainda sem execução Android: recusa antes de ler o arquivo/criar outra geração quando o espaço informado é insuficiente; perda de espaço durante uma importação autenticada de 128 lugares. Usa Room/SQLCipher e Keystore reais em diretórios exclusivos, simulando apenas `File.usableSpace`. Confere descarte do banco/chaves parciais, seleção da geração ativa e reabertura cifrada dos dados originais. Integra a suíte instrumentada completa; não preenche o cenário físico de disco cheio nem comprova falha real de escrita ENOSPC.
 
+A compilação dos dois casos passou na CI de `58889c0b`, junto dos 1.360 unitários e lint. A execução Android ainda precisa de resultado. [Escopo e evidência](ci-588-unit-build-results.json).
+
 Evidência automatizada recente: o APK derivado do AAB R8 de `a11cb02a` concluiu restauração/reabertura e exportação do fixture mínimo em API36/16384, com UI/SAF e autenticação independente. Foram preservados 34 XMLs, incluindo uma leitura durante a exportação. API35 reprovou e o comparador estrito original continua rejeitando diferenças de representação numérica do lugar. [Relatório completo](r8-a11-api36-backup-results.json). Não preencher as células físicas abaixo com esse resultado de emulador nem tratá-lo como homologação de histórico completo.
 
 Disponibilidade confirmada pelo responsável em 19/10/2026: aparelhos físicos para HML. Identificar modelos e versões Android antes de preencher a matriz; disponibilidade não representa execução ou aprovação. A consulta ADB desta retomada não encontrou aparelhos conectados.
