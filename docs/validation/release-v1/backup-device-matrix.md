@@ -2,6 +2,8 @@
 
 Estado: **pendente de homologação física**. Testes automatizados anteriores: [backup V1](../hoodie-backup-v1.md).
 
+Evidência automatizada recente: o APK derivado do AAB R8 de `a11cb02a` concluiu restauração/reabertura e exportação do fixture mínimo em API36/16384, com UI/SAF e autenticação independente. Foram preservados 34 XMLs, incluindo uma leitura durante a exportação. API35 reprovou e o comparador estrito original continua rejeitando diferenças de representação numérica do lugar. [Relatório completo](r8-a11-api36-backup-results.json). Não preencher as células físicas abaixo com esse resultado de emulador nem tratá-lo como homologação de histórico completo.
+
 Disponibilidade confirmada pelo responsável em 19/10/2026: aparelhos físicos para HML. Identificar modelos e versões Android antes de preencher a matriz; disponibilidade não representa execução ou aprovação. A consulta ADB desta retomada não encontrou aparelhos conectados.
 
 Atualização do responsável: nenhum aparelho disponível para conectar neste momento. Aguardar disponibilidade efetiva antes de iniciar a matriz física.

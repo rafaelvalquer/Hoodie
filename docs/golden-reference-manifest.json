@@ -100,14 +100,14 @@
       "file": "diary_full_360x640_f100_bottom.png",
       "width": 360,
       "height": 640,
-      "sha256": "d1785725ed47ccdcd713bfcaebedc97482f699263dbf23af9b44eeed1e599e10",
+      "sha256": "798107acaac0ea842c09142852f4ab3d572b7c90749da728e8d81d8ccfe74217",
       "review": "accepted"
     },
     {
       "file": "diary_full_360x640_f100_map.png",
       "width": 360,
       "height": 640,
-      "sha256": "f1df6f48115ae68c20ad6f122e571be4afaf0c53d5b9c27d871cb68902365cab",
+      "sha256": "861b2335c8e803cc47666439a306b981822a99b14bed30796d521f506525a8f7",
       "review": "accepted"
     },
     {
@@ -121,14 +121,14 @@
       "file": "diary_full_360x640_f130_bottom.png",
       "width": 360,
       "height": 640,
-      "sha256": "21e8b574229ffe8a3bc5775eca1775ceae79baceb7509f09031ef9d8c4ca5b10",
+      "sha256": "92e929ebbac43e0118ebffa60c2f63b24c0ea0ee194e89063bfe0eb43bcf82ca",
       "review": "accepted"
     },
     {
       "file": "diary_full_360x640_f130_map.png",
       "width": 360,
       "height": 640,
-      "sha256": "f569246f59dd914d11999bdd81a54c9476b2156075426de770c958f1ffd6ae2f",
+      "sha256": "c5f80bff24418c50a02f318f9bc47f2454064bfe82c4556c0ee2ccddd002f0a3",
       "review": "accepted"
     },
     {
@@ -142,35 +142,35 @@
       "file": "diary_full_360x800_f100_bottom.png",
       "width": 360,
       "height": 800,
-      "sha256": "95595df6ce8cf5454566a7166638a0da108d2330cc045ba0884b845a5856fb12",
+      "sha256": "d4690d9068f86807cb153ebfee71067bac28c0330948a2f0e4da693357437c19",
       "review": "accepted"
     },
     {
       "file": "diary_full_360x800_f100_map.png",
       "width": 360,
       "height": 800,
-      "sha256": "cdac56849b4726f8f2d22ee7dc2fc12f50fe339efb92aef749936b4706a4d654",
+      "sha256": "90018afb07cbc187e8bbf4fe1db15b00902f4c2ddc8b5b97c0d85e9afe0c8075",
       "review": "accepted"
     },
     {
       "file": "diary_full_360x800_f100.png",
       "width": 360,
       "height": 800,
-      "sha256": "add6d8ec2a089f9d23ece778098f85dbbc6c7fe61a4bad6b241d7ca0cb4d82a7",
+      "sha256": "11167b706f4236b3271c9b3b320c33c03f0ee44794372ab0b77a4299eeb77d0a",
       "review": "accepted"
     },
     {
       "file": "diary_full_360x800_f130_bottom.png",
       "width": 360,
       "height": 800,
-      "sha256": "1c1a7c735b5fab7a520bc39878fd970e1e54085ed42a95121fefa1d1a41554cd",
+      "sha256": "1aad823943a10fc0778af215bb466fedfdb9a3677653ffc58cdda04ecf9d34a3",
       "review": "accepted"
     },
     {
       "file": "diary_full_360x800_f130_map.png",
       "width": 360,
       "height": 800,
-      "sha256": "27db22a259fecbd1a4bb2914fdffebc787a9950fa1876b30e52eb6a80c0534e9",
+      "sha256": "1107fe82e2622c7abb115fc405fbb219f00e92a4243ef8d6ddefa6eb0b27706f",
       "review": "accepted"
     },
     {
@@ -184,35 +184,35 @@
       "file": "diary_full_411x891_f100_bottom.png",
       "width": 411,
       "height": 891,
-      "sha256": "701d36f83efe6eeb8e43b8eaed54ac950948f09f11298e5d4fe4050c5dea1ce1",
+      "sha256": "edc5ed0d63247aa21ae8ed999d779d744662b97129cb34c274583059eef61bfb",
       "review": "accepted"
     },
     {
       "file": "diary_full_411x891_f100_map.png",
       "width": 411,
       "height": 891,
-      "sha256": "f8e9b5ea71cd8021a9116a08e8306f9a7bebabfb2a69c9a7b0dc24e576582637",
+      "sha256": "a118813329e30193cb5d8997b3dd66b640ea58c73f83b38ed1af4680dcca3d1d",
       "review": "accepted"
     },
     {
       "file": "diary_full_411x891_f100.png",
       "width": 411,
       "height": 891,
-      "sha256": "b58b51413f97e32c018c62229f5f599ce9f68ff35bcf7aef19945607f65c6a45",
+      "sha256": "d582106971815baa7896935f67ee5cb61491ff475cd1864c03e65e467d346d27",
       "review": "accepted"
     },
     {
       "file": "diary_full_411x891_f130_bottom.png",
       "width": 411,
       "height": 891,
-      "sha256": "01bba4eb1476396b74ce45ca79709127419351504d1543d69de543bdb47a6ae3",
+      "sha256": "d821b103ce10f016920d58d1f253db2992e0185a42d674851ef5058744c918b4",
       "review": "accepted"
     },
     {
       "file": "diary_full_411x891_f130_map.png",
       "width": 411,
       "height": 891,
-      "sha256": "95901ddb05e342870a8024148f306f16cef445265cbfe71c06aeabd98d24f651",
+      "sha256": "80fad0b37626c13a0937e35ad271dfad41a01cd4fc674ac52cfeba4002eda169",
       "review": "accepted"
     },
     {
@@ -268,7 +268,7 @@
       "file": "diary_normal_360x640_f100.png",
       "width": 360,
       "height": 640,
-      "sha256": "464cb481d958a5852307e18ce85d830ca2a0fde61e6e4cf2f874b082ba12a585",
+      "sha256": "9e3678b24ec77287ee77d5b04de55cc6ac6659418f9f853b6ba1f7bac234381f",
       "review": "accepted"
     },
     {
@@ -282,7 +282,7 @@
       "file": "diary_normal_360x800_f100.png",
       "width": 360,
       "height": 800,
-      "sha256": "341ff61e50e5aa77b8ffa332e7f244e53c9e7e43bdab909a3fa2d03a1086ff11",
+      "sha256": "1c605626f1fa782611ffefb38ad2103e7026d9344fe6e2c2851295a3a7137b07",
       "review": "accepted"
     },
     {
@@ -296,14 +296,14 @@
       "file": "diary_normal_411x891_f100.png",
       "width": 411,
       "height": 891,
-      "sha256": "4931b290251ca177c27612b5aa94dde97847c52ecbff96556a80905cef81fc01",
+      "sha256": "9042905d012f79270cb681744dd03fc1d7b1280d7bbf6f8289a4f3199cde299e",
       "review": "accepted"
     },
     {
       "file": "diary_normal_411x891_f130.png",
       "width": 411,
       "height": 891,
-      "sha256": "3582ec4081c9e22a678b696f3475ff6b6d6fe50e14207e0f2208f833a751c8df",
+      "sha256": "b5d5103694627cd8962b0f0947bfdca266a5f15aa50d38f5518ce166735edfea",
       "review": "accepted"
     },
     {
@@ -1585,5 +1585,18 @@
     "checksumType": "sha1",
     "checksum": "e0f6c9a0691aa27bd597d0deb1bcfdc943ac8ca7",
     "source": "https://dl.google.com/android/repository/sys-img/google_apis/sys-img2-3.xml"
-  }
+  },
+  "incrementalReviews": [
+    {
+      "reviewedAt": "2026-10-21T11:55:06Z",
+      "screen": "diary",
+      "updatedImages": 18,
+      "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+      "captureRunId": 39594235736,
+      "referenceSource": "capture-a",
+      "evidence": "docs/validation/release-v1/city-reference-review.json",
+      "comparisonAfterUpdate": "pending",
+      "note": "Original top-level capture/comparison metadata is historical; this entry records the reviewed City revision. Known CPU rendering differences remain unapproved."
+    }
+  ]
 }

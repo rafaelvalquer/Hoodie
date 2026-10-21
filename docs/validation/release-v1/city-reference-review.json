@@ -1,0 +1,945 @@
+{
+  "reviewedAt": "2026-10-21T11:55:06Z",
+  "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "sourceTreeBeforeReferenceUpdate": "377e31042687d57e8272544c6c4c62f31f49b27f",
+  "captureRunId": 39594235736,
+  "artifacts": [
+    {
+      "id": 12343566517,
+      "sha256": "74ed920268c6d83aa91ff85eabc02ff15b3a97f347b8019743f11467ce4f8f1b"
+    },
+    {
+      "id": 12343836945,
+      "sha256": "af869d65d4d168a4b0bb5689787c22bbcbfd324713d7ee8e6206857d87a5d254"
+    }
+  ],
+  "cpuA": [
+    "Vendor ID:                               AuthenticAMD",
+    "Model name:                              AMD EPYC 9V45 96-Core Processor",
+    "CPU family:                              26"
+  ],
+  "cpuB": [
+    "Vendor ID:                               GenuineIntel",
+    "Model name:                              Intel(R) Xeon(R) 6973P-C",
+    "CPU family:                              6"
+  ],
+  "decodedIdenticalImages": 210,
+  "crossHostDifferences": [
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 218,
+          "y": 404,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 218,
+          "y": 449,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 217,
+          "y": 450,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 228,
+          "y": 353,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 228,
+          "y": 398,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 227,
+          "y": 399,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 218,
+          "y": 564,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 218,
+          "y": 609,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 217,
+          "y": 610,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 228,
+          "y": 513,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 228,
+          "y": 558,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 227,
+          "y": 559,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 243,
+          "y": 655,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 243,
+          "y": 700,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 701,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 253,
+          "y": 630,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 253,
+          "y": 675,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        },
+        {
+          "x": 252,
+          "y": 676,
+          "first": [
+            51,
+            49,
+            69,
+            255
+          ],
+          "second": [
+            50,
+            49,
+            69,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f100.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 520,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 521,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 522,
+          "first": [
+            63,
+            116,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            115,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f100_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 458,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 459,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 460,
+          "first": [
+            63,
+            116,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            115,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f130.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 589,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 590,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 591,
+          "first": [
+            63,
+            116,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            115,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "digital_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 242,
+          "y": 395,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 396,
+          "first": [
+            95,
+            139,
+            133,
+            255
+          ],
+          "second": [
+            95,
+            138,
+            133,
+            255
+          ]
+        },
+        {
+          "x": 242,
+          "y": 397,
+          "first": [
+            63,
+            116,
+            109,
+            255
+          ],
+          "second": [
+            63,
+            115,
+            109,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "place_picker_full_411x891_f100_bottom.png",
+      "pixels": 1,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 59,
+          "y": 668,
+          "first": [
+            127,
+            159,
+            219,
+            255
+          ],
+          "second": [
+            127,
+            159,
+            220,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "file": "place_picker_full_411x891_f130_bottom.png",
+      "pixels": 3,
+      "maxChannelDelta": 1,
+      "first": [
+        {
+          "x": 71,
+          "y": 657,
+          "first": [
+            88,
+            108,
+            154,
+            255
+          ],
+          "second": [
+            88,
+            109,
+            154,
+            255
+          ]
+        },
+        {
+          "x": 66,
+          "y": 662,
+          "first": [
+            89,
+            111,
+            156,
+            255
+          ],
+          "second": [
+            89,
+            111,
+            157,
+            255
+          ]
+        },
+        {
+          "x": 67,
+          "y": 668,
+          "first": [
+            127,
+            159,
+            219,
+            255
+          ],
+          "second": [
+            127,
+            159,
+            220,
+            255
+          ]
+        }
+      ]
+    }
+  ],
+  "inspectedDiaryImages": [
+    {
+      "file": "diary_empty_360x640_f100.png",
+      "sha256": "03030140ce6e0b7a647198f1b068b170ad19eb1deccd93c6d906a08021781625"
+    },
+    {
+      "file": "diary_empty_360x640_f130.png",
+      "sha256": "4f67ab7108aaa10d59c6fe92d0092e4dcfa7ed322b70dc19cd31e3450fe17ca5"
+    },
+    {
+      "file": "diary_empty_360x800_f100.png",
+      "sha256": "c9254ac86cf262a2159226dbba79f3fb876f876ebad7439739a2186753ba93cb"
+    },
+    {
+      "file": "diary_empty_360x800_f130.png",
+      "sha256": "5747314bb8df765d50a380b189b625412ad370fc9319692301d4c1f44a06f69e"
+    },
+    {
+      "file": "diary_empty_411x891_f100.png",
+      "sha256": "3c7383fadcadb329c82791d26139f80863b3f973da8702292b858e607e8391f7"
+    },
+    {
+      "file": "diary_empty_411x891_f130.png",
+      "sha256": "72dd7dd92b70f62ceebad231810d6777517efb281e21bef9ee0b43081fd52ac5"
+    },
+    {
+      "file": "diary_error_360x640_f100.png",
+      "sha256": "db1d3a7a757810a777c58b2dee26d07aa5d4d1afe51f16b95e92ff9564da2249"
+    },
+    {
+      "file": "diary_error_360x640_f130.png",
+      "sha256": "442e608840217d2ca432b9ddd616bd0390efee7b1075bd5fe15bf37c03a0db4b"
+    },
+    {
+      "file": "diary_error_360x800_f100.png",
+      "sha256": "a5bf60d301f3f2159b3fc3f08518455e06c183a7a802885a97b0d1a8e95330f9"
+    },
+    {
+      "file": "diary_error_360x800_f130.png",
+      "sha256": "0677570730073798b17ee5b61a77cf6c4976fcac6638372598497c116dbfd5aa"
+    },
+    {
+      "file": "diary_error_411x891_f100.png",
+      "sha256": "137e59aac0e7958ae826021069125b18d0e48e63b67a248af99862af967bfcaa"
+    },
+    {
+      "file": "diary_error_411x891_f130.png",
+      "sha256": "d821552f36f403144c6ed3ebc82cb7aa308a9bb718adbd97b5285beb67fd5248"
+    },
+    {
+      "file": "diary_full_360x640_f100.png",
+      "sha256": "6fb1f17c768cd2116513158cb7c9211a5f6af6f5411666a4bb7638fc5821f528"
+    },
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "sha256": "798107acaac0ea842c09142852f4ab3d572b7c90749da728e8d81d8ccfe74217"
+    },
+    {
+      "file": "diary_full_360x640_f100_map.png",
+      "sha256": "861b2335c8e803cc47666439a306b981822a99b14bed30796d521f506525a8f7"
+    },
+    {
+      "file": "diary_full_360x640_f130.png",
+      "sha256": "eead5ed011babb204196ccd1d682fb6ce42540c498a287c04c15282cdd603908"
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "sha256": "92e929ebbac43e0118ebffa60c2f63b24c0ea0ee194e89063bfe0eb43bcf82ca"
+    },
+    {
+      "file": "diary_full_360x640_f130_map.png",
+      "sha256": "c5f80bff24418c50a02f318f9bc47f2454064bfe82c4556c0ee2ccddd002f0a3"
+    },
+    {
+      "file": "diary_full_360x800_f100.png",
+      "sha256": "11167b706f4236b3271c9b3b320c33c03f0ee44794372ab0b77a4299eeb77d0a"
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "sha256": "d4690d9068f86807cb153ebfee71067bac28c0330948a2f0e4da693357437c19"
+    },
+    {
+      "file": "diary_full_360x800_f100_map.png",
+      "sha256": "90018afb07cbc187e8bbf4fe1db15b00902f4c2ddc8b5b97c0d85e9afe0c8075"
+    },
+    {
+      "file": "diary_full_360x800_f130.png",
+      "sha256": "3a8f336b59135dc33b8b21e2d4a1bdc24e420e8fa34b3201605647acb4712038"
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "sha256": "1aad823943a10fc0778af215bb466fedfdb9a3677653ffc58cdda04ecf9d34a3"
+    },
+    {
+      "file": "diary_full_360x800_f130_map.png",
+      "sha256": "1107fe82e2622c7abb115fc405fbb219f00e92a4243ef8d6ddefa6eb0b27706f"
+    },
+    {
+      "file": "diary_full_411x891_f100.png",
+      "sha256": "d582106971815baa7896935f67ee5cb61491ff475cd1864c03e65e467d346d27"
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "sha256": "edc5ed0d63247aa21ae8ed999d779d744662b97129cb34c274583059eef61bfb"
+    },
+    {
+      "file": "diary_full_411x891_f100_map.png",
+      "sha256": "a118813329e30193cb5d8997b3dd66b640ea58c73f83b38ed1af4680dcca3d1d"
+    },
+    {
+      "file": "diary_full_411x891_f130.png",
+      "sha256": "3ab41b57e893d6b6ecb3e1f8464a112f65514788c5e198fa881bedd9a977f7fb"
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "sha256": "d821b103ce10f016920d58d1f253db2992e0185a42d674851ef5058744c918b4"
+    },
+    {
+      "file": "diary_full_411x891_f130_map.png",
+      "sha256": "80fad0b37626c13a0937e35ad271dfad41a01cd4fc674ac52cfeba4002eda169"
+    },
+    {
+      "file": "diary_loading_360x640_f100.png",
+      "sha256": "af9e10ac01e3cda1e7c3d8194bbee78bf601e4a857ca459904f47fb585d7153c"
+    },
+    {
+      "file": "diary_loading_360x640_f130.png",
+      "sha256": "56c1ca36f9a0d96f4867402b12b6b94874747e1c8825be929833867c3ff5717e"
+    },
+    {
+      "file": "diary_loading_360x800_f100.png",
+      "sha256": "8f128eece60c0a67520928f61275ee96c7111f1432081da3a5f030078ae35218"
+    },
+    {
+      "file": "diary_loading_360x800_f130.png",
+      "sha256": "7b5e3b163d59f4ddfe4c3bddbc1caab4688f2969bac5d17c52d2f6b078ef5d5f"
+    },
+    {
+      "file": "diary_loading_411x891_f100.png",
+      "sha256": "7260f7bfb6178c245eacb5502ac6a6d762f06536d8f3294c52423ae0f1568707"
+    },
+    {
+      "file": "diary_loading_411x891_f130.png",
+      "sha256": "5db4b0f5fb0dbfa698114cd0347b3ec9bc5f56ffc38d14b0b29002cb53c372ac"
+    },
+    {
+      "file": "diary_normal_360x640_f100.png",
+      "sha256": "9e3678b24ec77287ee77d5b04de55cc6ac6659418f9f853b6ba1f7bac234381f"
+    },
+    {
+      "file": "diary_normal_360x640_f130.png",
+      "sha256": "9560dc6f7a55163c706f88a76f422869fa0e823aef4ac5edf2042ac4f722da2f"
+    },
+    {
+      "file": "diary_normal_360x800_f100.png",
+      "sha256": "1c605626f1fa782611ffefb38ad2103e7026d9344fe6e2c2851295a3a7137b07"
+    },
+    {
+      "file": "diary_normal_360x800_f130.png",
+      "sha256": "de9a86c1dcb14ae89561c341019c682aba7df7519f9f1784e710c6a1c450a0d6"
+    },
+    {
+      "file": "diary_normal_411x891_f100.png",
+      "sha256": "9042905d012f79270cb681744dd03fc1d7b1280d7bbf6f8289a4f3199cde299e"
+    },
+    {
+      "file": "diary_normal_411x891_f130.png",
+      "sha256": "b5d5103694627cd8962b0f0947bfdca266a5f15aa50d38f5518ce166735edfea"
+    }
+  ],
+  "acceptedReferenceRevisions": [
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "previousSha256": "d1785725ed47ccdcd713bfcaebedc97482f699263dbf23af9b44eeed1e599e10",
+      "sha256": "798107acaac0ea842c09142852f4ab3d572b7c90749da728e8d81d8ccfe74217",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x640_f100_map.png",
+      "previousSha256": "f1df6f48115ae68c20ad6f122e571be4afaf0c53d5b9c27d871cb68902365cab",
+      "sha256": "861b2335c8e803cc47666439a306b981822a99b14bed30796d521f506525a8f7",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "previousSha256": "21e8b574229ffe8a3bc5775eca1775ceae79baceb7509f09031ef9d8c4ca5b10",
+      "sha256": "92e929ebbac43e0118ebffa60c2f63b24c0ea0ee194e89063bfe0eb43bcf82ca",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x640_f130_map.png",
+      "previousSha256": "f569246f59dd914d11999bdd81a54c9476b2156075426de770c958f1ffd6ae2f",
+      "sha256": "c5f80bff24418c50a02f318f9bc47f2454064bfe82c4556c0ee2ccddd002f0a3",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x800_f100.png",
+      "previousSha256": "add6d8ec2a089f9d23ece778098f85dbbc6c7fe61a4bad6b241d7ca0cb4d82a7",
+      "sha256": "11167b706f4236b3271c9b3b320c33c03f0ee44794372ab0b77a4299eeb77d0a",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "previousSha256": "95595df6ce8cf5454566a7166638a0da108d2330cc045ba0884b845a5856fb12",
+      "sha256": "d4690d9068f86807cb153ebfee71067bac28c0330948a2f0e4da693357437c19",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x800_f100_map.png",
+      "previousSha256": "cdac56849b4726f8f2d22ee7dc2fc12f50fe339efb92aef749936b4706a4d654",
+      "sha256": "90018afb07cbc187e8bbf4fe1db15b00902f4c2ddc8b5b97c0d85e9afe0c8075",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "previousSha256": "1c1a7c735b5fab7a520bc39878fd970e1e54085ed42a95121fefa1d1a41554cd",
+      "sha256": "1aad823943a10fc0778af215bb466fedfdb9a3677653ffc58cdda04ecf9d34a3",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_360x800_f130_map.png",
+      "previousSha256": "27db22a259fecbd1a4bb2914fdffebc787a9950fa1876b30e52eb6a80c0534e9",
+      "sha256": "1107fe82e2622c7abb115fc405fbb219f00e92a4243ef8d6ddefa6eb0b27706f",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_411x891_f100.png",
+      "previousSha256": "b58b51413f97e32c018c62229f5f599ce9f68ff35bcf7aef19945607f65c6a45",
+      "sha256": "d582106971815baa7896935f67ee5cb61491ff475cd1864c03e65e467d346d27",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "previousSha256": "701d36f83efe6eeb8e43b8eaed54ac950948f09f11298e5d4fe4050c5dea1ce1",
+      "sha256": "edc5ed0d63247aa21ae8ed999d779d744662b97129cb34c274583059eef61bfb",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_411x891_f100_map.png",
+      "previousSha256": "f8e9b5ea71cd8021a9116a08e8306f9a7bebabfb2a69c9a7b0dc24e576582637",
+      "sha256": "a118813329e30193cb5d8997b3dd66b640ea58c73f83b38ed1af4680dcca3d1d",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "previousSha256": "01bba4eb1476396b74ce45ca79709127419351504d1543d69de543bdb47a6ae3",
+      "sha256": "d821b103ce10f016920d58d1f253db2992e0185a42d674851ef5058744c918b4",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_full_411x891_f130_map.png",
+      "previousSha256": "95901ddb05e342870a8024148f306f16cef445265cbfe71c06aeabd98d24f651",
+      "sha256": "80fad0b37626c13a0937e35ad271dfad41a01cd4fc674ac52cfeba4002eda169",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_normal_360x640_f100.png",
+      "previousSha256": "464cb481d958a5852307e18ce85d830ca2a0fde61e6e4cf2f874b082ba12a585",
+      "sha256": "9e3678b24ec77287ee77d5b04de55cc6ac6659418f9f853b6ba1f7bac234381f",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_normal_360x800_f100.png",
+      "previousSha256": "341ff61e50e5aa77b8ffa332e7f244e53c9e7e43bdab909a3fa2d03a1086ff11",
+      "sha256": "1c605626f1fa782611ffefb38ad2103e7026d9344fe6e2c2851295a3a7137b07",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_normal_411x891_f100.png",
+      "previousSha256": "4931b290251ca177c27612b5aa94dde97847c52ecbff96556a80905cef81fc01",
+      "sha256": "9042905d012f79270cb681744dd03fc1d7b1280d7bbf6f8289a4f3199cde299e",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    },
+    {
+      "file": "diary_normal_411x891_f130.png",
+      "previousSha256": "3582ec4081c9e22a678b696f3475ff6b6d6fe50e14207e0f2208f833a751c8df",
+      "sha256": "b5d5103694627cd8962b0f0947bfdca266a5f15aa50d38f5518ce166735edfea",
+      "rationale": "Reviewed integrated City scene and non-overlapping HUD/camera header. Ellipsis at enlarged font is intentional; full timeline content remains visible."
+    }
+  ],
+  "referenceSource": "capture-a",
+  "unchangedReferences": 204,
+  "comparatorModified": false,
+  "toleranceModified": false,
+  "requiredCasesRemoved": false,
+  "qualityGateApproved": false,
+  "releaseApproved": false,
+  "limits": "18 references update the intentionally integrated City UI after actual visual review and passing layout regression. No CPU-specific reference selection, masks, tolerances or other-screen changes. Known cross-host one-channel deltas remain and may fail exact CI. Recording-mode success is not quality approval. A complete comparison run is required after these asset changes."
+}
