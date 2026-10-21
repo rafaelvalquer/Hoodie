@@ -1,6 +1,10 @@
 """Candidate recording cannot hide missing, skipped or failing test cases."""
 import importlib.util
+import hashlib
+import json
 from pathlib import Path
+import subprocess
+import tempfile
 import unittest
 
 spec=importlib.util.spec_from_file_location('review',Path(__file__).with_name('capture-screen-review.py'))
@@ -18,6 +22,66 @@ def raw_results(status=0):
     return '\n'.join(lines+['INSTRUMENTATION_CODE: -1',''])
 
 class ScreenReviewEvidenceTest(unittest.TestCase):
+    def folder(self):
+        parent=Path(__file__).resolve().parents[2]/'app/build/reports/screen-review-parser-tests'
+        parent.mkdir(parents=True,exist_ok=True)
+        return Path(tempfile.mkdtemp(dir=parent))
+
+    def finalize(self, report, owned, *, pull_fails=False, existing=False):
+        output=self.folder();events=[];blob=b'partial diagnostic image bytes'
+        if existing:
+            (output/'partial-images').mkdir()
+            (output/'partial-images/previous.png').write_bytes(b'preserve')
+        def capture():
+            events.append('capture')
+            (output/'crashes.txt').write_bytes(b'')
+            (output/'anr.txt').write_bytes(b'')
+        def adb(*args,**kwargs):
+            events.append(args[0])
+            if args[0]=='pull':
+                if pull_fails:raise subprocess.SubprocessError('pull failed')
+                (Path(args[2])/'partial.png').write_bytes(blob)
+        health=review.finish_capture(report,output,owned,adb,capture)
+        return output,events,blob,health
+
+    def test_failed_recording_keeps_partial_bytes_before_uninstall_and_writes_health(self):
+        report=dict(completed=False,instrumentationStarted=True,error='PixelCopy failed')
+        out,events,blob,health=self.finalize(report,list(review.PACKAGES))
+        self.assertEqual(['capture','pull','uninstall','uninstall'],events)
+        self.assertEqual(blob,(out/'partial-images/partial.png').read_bytes())
+        self.assertEqual(hashlib.sha256(blob).hexdigest(),report['partialImages'][0]['sha256'])
+        self.assertFalse(report['partialImages'][0]['metadataMatchesExpectedViewport'])
+        self.assertEqual('PixelCopy failed',json.loads((out/'result.json').read_text())['error'])
+        self.assertFalse(health['recordingCompleted'])
+        self.assertFalse(json.loads((out/'health.json').read_text())['releaseApproved'])
+
+    def test_failed_pull_is_retained_as_failure_and_still_cleans_owned_packages(self):
+        report=dict(completed=False,instrumentationStarted=True)
+        out,events,_,health=self.finalize(report,list(review.PACKAGES),pull_fails=True)
+        self.assertEqual(['capture','pull','uninstall','uninstall'],events)
+        self.assertTrue(health['captureErrors'])
+        self.assertFalse(health['recordingCompleted'])
+        self.assertTrue((out/'health.json').is_file())
+
+    def test_unknown_package_ownership_never_pulls_or_uninstalls(self):
+        report=dict(completed=False,instrumentationStarted=True)
+        _,events,_,health=self.finalize(report,[])
+        self.assertEqual(['capture'],events)
+        self.assertFalse(health['recordingCompleted'])
+
+    def test_existing_partial_evidence_is_not_overwritten(self):
+        report=dict(completed=False,instrumentationStarted=True)
+        out,events,_,health=self.finalize(report,list(review.PACKAGES),existing=True)
+        self.assertNotIn('pull',events)
+        self.assertEqual(b'preserve',(out/'partial-images/previous.png').read_bytes())
+        self.assertTrue(health['captureErrors'])
+
+    def test_complete_recording_is_not_pulled_again_during_cleanup(self):
+        _,events,_,health=self.finalize(dict(completed=True,instrumentationStarted=True),list(review.PACKAGES))
+        self.assertEqual(['capture','uninstall','uninstall'],events)
+        self.assertTrue(health['recordingCompleted'])
+        self.assertFalse(health['releaseApproved'])
+
     def test_effective_angle_renderer_is_recorded(self):
         line='GLES: Google, Android Emulator Translator (ANGLE (Google, Vulkan SwiftShader)), OpenGL ES 3.1'
         self.assertEqual(line,review.verify_renderer('Display\n'+line+'\n','swangle'))

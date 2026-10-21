@@ -8,12 +8,18 @@ Em 20/10/2026, a main recebeu merges de família/NPCs, corações de carinho e c
 
 Depois, a main recebeu a consolidação de visitas e a Jornada como cidade pixel art. Essas integrações foram preservadas. A árvore do commit `6288349b` difere da árvore `a1395fad` dos APKs R8 anteriores; a correção posterior da apresentação de interações também exige validação dos novos artefatos. [Regressão de identidade do frame](presentation-race-regression.json).
 
+Última suíte integral auditada: `c6c4526c`, com 42 direcionados aprovados e 390 casos completos — 386 aprovados, quatro comparações visuais falhas, nenhum ignorado. Todos os 210 testes fora da matriz visual e as duas regressões da cidade passaram. [JUnit e identidades dos APKs](ci-c6-results.json). As 18 referências da cidade foram atualizadas após revisão das 42 capturas do Diário; a comparação continua exata e as diferenças de um nível de cor entre hosts permanecem abertas. [Revisão visual](city-reference-review.json), [controle de renderer](swiftshader-mode-control.json). O experimento ANGLE e os commits posteriores precisam de seus próprios resultados; não transferir a eles a aprovação parcial deste run.
+
+O APK R8 derivado do AAB de `75da3655` concluiu restauração/reabertura/exportação do fixture mínimo em API36/16384, com autenticação independente das nove unidades do arquivo, repetindo o roteiro observado em `a11cb02a`. API35 falhou no mesmo workflow, e a comparação estrita da representação numérica do fixture continua falha. [Runtime atual e limites](r8-75-api36-backup-results.json). A validação estática agora inclui proteção RELRO, além dos checks de LOAD e ZIP: [14 testes e bibliotecas verificadas](native-relro-validation.json). Esses resultados não aprovam histórico completo, migração, dois aparelhos físicos ou distribuição assinada pela chave de upload.
+
+O controle ANGLE confirmou o renderer nos dois hosts, mas só a captura AMD concluiu os 180 casos/222 imagens. A Intel falhou em PixelCopy e o coletor anterior não preservou PNGs parciais nem health.json. A falha e a perda de evidência foram registradas; o coletor foi corrigido e passou em 14 testes, ainda sem validação Android dessa correção. [Captura concluída](angle-first-capture.json), [falha preservada](angle-intel-failure.json). Estabilidade do backend e aprovação visual permanecem abertas.
+
 | Entrega | Evidência exigida | Estado |
 |---|---|---|
-| RELEASE-01 | Unitários, lint, build e suíte instrumentada completa no mesmo SHA; CI verde | Em validação |
-| RELEASE-02 | Matriz funcional + aparelhos A/B com Keystores diferentes + interrupções reais | Variante de homologação; testes físicos pendentes |
+| RELEASE-01 | Unitários, lint, build e suíte instrumentada completa no mesmo SHA; CI verde | Quatro falhas visuais no último run auditado; gate aberto |
+| RELEASE-02 | Matriz funcional + aparelhos A/B com Keystores diferentes + interrupções reais | Backup mínimo R8/16KB observado; histórico completo e matriz física pendentes |
 | RELEASE-03 | AAB assinado, certificado, APKs derivados testados, aceitação Play | Pipeline preparada; chave e conta Play ausentes |
-| RELEASE-04 | ELF de todas as ABIs, ZIP do APK derivado e runtime 16384 | Em validação |
+| RELEASE-04 | ELF de todas as ABIs, ZIP do APK derivado e runtime 16384 | Estática e runtime mínimo API36 observados; falhas API35 e gate completo abertos |
 | RELEASE-05 | Política pública, suporte e declarações aceitas | Contato confirmado; Console pendente |
 | RELEASE-06 | Sete dias reais em Samsung, Motorola e AOSP, comparação de bateria | Sem aparelhos disponíveis no momento; campanha pendente |
 | RELEASE-07 | Beta externo e critérios aplicáveis da conta | Pendente de conta, participantes e tempo real |

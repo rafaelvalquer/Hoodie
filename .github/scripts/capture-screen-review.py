@@ -71,6 +71,45 @@ def verify_renderer(snapshot, requested):
     return descriptions[0]
 
 
+def retain_partial_images(adb, output):
+    destination = output/'partial-images'
+    destination.mkdir(exist_ok=False)
+    adb('pull','/sdcard/Android/data/com.hoodie.app/files/goldens/screens',str(destination),timeout=120)
+    inventory = []
+    expected = expected_images()
+    for path in sorted(destination.rglob('*.png')):
+        blob = path.read_bytes()
+        dimensions = list(struct.unpack('>II',blob[16:24])) if len(blob) >= 24 and blob[:8] == b'\x89PNG\r\n\x1a\n' else None
+        inventory.append(dict(file=path.relative_to(output).as_posix(),sha256=hashlib.sha256(blob).hexdigest(),
+            bytes=len(blob),dimensions=dimensions,metadataMatchesExpectedViewport=dimensions is not None and tuple(dimensions)==expected.get(path.name)))
+    return inventory
+
+
+def finish_capture(report, output, owned, adb, capture):
+    capture()
+    # Preserve available recording evidence before uninstall removes app files.
+    # Partial PNGs never substitute for the mandatory complete case inventory.
+    if not report['completed'] and report.get('instrumentationStarted') and PACKAGES[0] in owned:
+        try:report['partialImages'] = retain_partial_images(adb, output)
+        except (OSError, ValueError, subprocess.SubprocessError) as e:
+            report.setdefault('captureErrors',[]).append('Partial image retention: '+str(e))
+    for package in reversed(owned):
+        try:adb('uninstall',package,timeout=60)
+        except (OSError, subprocess.SubprocessError) as e:report.setdefault('cleanupErrors',[]).append(type(e).__name__)
+    failures = []
+    for filename,pattern in [('crashes.txt',rb'Fatal signal|FATAL EXCEPTION'),('anr.txt',rb'am_anr\s*:')]:
+        try:
+            if re.search(pattern,(output/filename).read_bytes()):failures.append(filename)
+        except OSError as e:report.setdefault('captureErrors',[]).append(filename+': '+str(e))
+    health = dict(recordingCompleted=report['completed'],androidFailures=failures,
+        captureErrors=report.get('captureErrors',[]),cleanupErrors=report.get('cleanupErrors',[]),releaseApproved=False,
+        scope='Recording health only; partial evidence cannot approve cases, baselines or release.')
+    (output/'result.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
+    with (output/'health.json').open('x',encoding='utf-8') as f:
+        f.write(json.dumps(health,indent=2)+'\n')
+    return health
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--pair-root', type=Path, required=True)
@@ -87,8 +126,13 @@ def main():
                              ('logcat',('logcat','-d','-v','threadtime')),('crashes',('logcat','-d','-b','crash')),
                              ('anr',('logcat','-d','-b','events','-v','threadtime','-s','am_anr')),
                              ('window',('shell','dumpsys','window','displays'))]:
-            try:(args.output/(file+'.txt')).write_bytes(adb(*command,check=False).stdout)
-            except subprocess.SubprocessError as e:report.setdefault('captureErrors',[]).append(type(e).__name__)
+            try:
+                result = adb(*command,check=False)
+                (args.output/(file+'.txt')).write_bytes(result.stdout)
+                if result.returncode:
+                    (args.output/(file+'.stderr.txt')).write_bytes(result.stderr)
+                    report.setdefault('captureErrors',[]).append(f'{file}: adb exit {result.returncode}')
+            except (OSError, subprocess.SubprocessError) as e:report.setdefault('captureErrors',[]).append(type(e).__name__)
     paths = (args.pair_root/'outputs/apk/debug/app-debug.apk',
              args.pair_root/'outputs/apk/androidTest/debug/app-debug-androidTest.apk')
     report = dict(sourceCommit=SOURCE,sourceTree=SOURCE_TREE,apkSha256=list(HASHES),
@@ -113,6 +157,7 @@ def main():
             adb('install','-t',str(path.resolve()),timeout=120)
             owned.append(package)
         raw = args.output/'instrumentation.txt'
+        report['instrumentationStarted'] = True
         with raw.open('xb') as stream:
             result = subprocess.run(['adb','-s',serial,'shell','am','instrument','-w','-r',
                 '-e','class',CLASS,'-e','recordGoldens','true',
@@ -134,22 +179,8 @@ def main():
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         report['error'] = str(error)
     finally:
-        capture()
-        # These packages were proven absent and installed by this invocation only.
-        for package in reversed(owned):
-            try:adb('uninstall',package,timeout=60)
-            except subprocess.SubprocessError as e:report.setdefault('cleanupErrors',[]).append(type(e).__name__)
-        (args.output/'result.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
-    if not report['completed']:raise SystemExit(1)
-    failures = []
-    for filename,pattern in [('crashes.txt',rb'Fatal signal|FATAL EXCEPTION'),('anr.txt',rb'am_anr\s*:')]:
-        if re.search(pattern,(args.output/filename).read_bytes()):failures.append(filename)
-    health = dict(androidFailures=failures,captureErrors=report.get('captureErrors',[]),
-                  cleanupErrors=report.get('cleanupErrors',[]),releaseApproved=False,
-                  scope='Recording health only; no baseline comparison or approval.')
-    with (args.output/'health.json').open('x',encoding='utf-8') as f:
-        f.write(json.dumps(health,indent=2)+'\n')
-    if failures or health['captureErrors'] or health['cleanupErrors']:
+        health = finish_capture(report,args.output,owned,adb,capture)
+    if not report['completed'] or health['androidFailures'] or health['captureErrors'] or health['cleanupErrors']:
         raise SystemExit('Android/evidence failure recorded; no review-run approval')
     print('180 cases/222 candidate images captured; no baseline or quality approval.')
 

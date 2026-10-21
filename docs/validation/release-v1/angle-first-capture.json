@@ -1,0 +1,48 @@
+{
+  "runId": 39622678506,
+  "capture": "capture-b",
+  "artifactId": 12356367230,
+  "artifactSha256": "2babbe5980402500fc80ee09f3ff483f952fb2174dea1a753fa611049d246530",
+  "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "driverCommit": "75da3655983445e2d3353bf45d1f53f5c017e701",
+  "apkSha256": [
+    "c52c0cc8784d0fc68b3b9e5010c722a15aa5d105e178d6bf7b3952ea99eb5e27",
+    "5620a465bdfb5b9d6d1f87221d1267e012ff764c1ad0e114ba944322b60a03d4"
+  ],
+  "requestedGpu": "swangle",
+  "effectiveRenderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))",
+  "recordingCases": 180,
+  "verifiedImages": 222,
+  "health": {
+    "androidFailures": [],
+    "captureErrors": [],
+    "cleanupErrors": [],
+    "releaseApproved": false,
+    "scope": "Recording health only; no baseline comparison or approval."
+  },
+  "resultFileSha256": "d6b35d6b3dec15882d24203370013eb12e08f7cda845e1bbff1978eddbc8b38d",
+  "healthFileSha256": "d16febd4d0d8d1f8ff83397ba7190735f060403d41478f7bfbd4f4652835aeee",
+  "cpu": [
+    "Vendor ID:                               AuthenticAMD",
+    "Model name:                              AMD EPYC 9V45 96-Core Processor"
+  ],
+  "comparisons": {
+    "legacyAmd": {
+      "differentImages": 162,
+      "differentPixels": 15969,
+      "maxChannelDelta": 1
+    },
+    "reviewedReferences": {
+      "differentImages": 162,
+      "differentPixels": 15971,
+      "maxChannelDelta": 1
+    }
+  },
+  "alphaVerifiedOpaqueForAllComparedImages": true,
+  "otherCaptureNotYetAudited": true,
+  "baselinesChanged": false,
+  "mandatoryBackendChanged": false,
+  "qualityGateApproved": false,
+  "releaseApproved": false,
+  "limits": "Only one completed ANGLE capture audited. Backend 5 is effective, but 162 images differ numerically from the legacy renderer. No stability/cross-host or current-candidate approval; second capture must be audited before considering an environment change. No new references accepted."
+}

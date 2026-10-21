@@ -1,0 +1,26 @@
+INSTRUMENTATION_RESULT: stream=
+
+Time: 1,151.018
+There was 1 failure:
+1) screenMatchesReviewedBaseline[diary_error_360x640_f130](com.hoodie.app.ui.golden.ScreenGoldenMatrixTest)
+java.lang.AssertionError: Failed waiting for PixelCopy!
+	at androidx.compose.ui.test.android.WindowCapture_androidKt.generateBitmapFromPixelCopy(WindowCapture.android.kt:157)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt.generateBitmap(WindowCapture.android.kt:135)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt.access$generateBitmap(WindowCapture.android.kt:1)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1$1.invoke(WindowCapture.android.kt:51)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1$1.invoke(WindowCapture.android.kt:47)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt.withDrawingEnabled(WindowCapture.android.kt:89)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt.access$withDrawingEnabled(WindowCapture.android.kt:1)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1.invoke(WindowCapture.android.kt:47)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt$captureRegionToImage$1.invoke(WindowCapture.android.kt:45)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt.runWithRetryWhenNoData(WindowCapture.android.kt:64)
+	at androidx.compose.ui.test.android.WindowCapture_androidKt.captureRegionToImage(WindowCapture.android.kt:45)
+	at androidx.compose.ui.test.AndroidImageHelpers_androidKt.captureToImage(AndroidImageHelpers.android.kt:101)
+	at com.hoodie.app.ui.golden.ScreenGoldenCapture.verify(ScreenGoldenCapture.kt:22)
+	at com.hoodie.app.ui.golden.ScreenGoldenMatrixTest.screenMatchesReviewedBaseline(ScreenGoldenMatrixTest.kt:118)
+
+FAILURES!!!
+Tests run: 180,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

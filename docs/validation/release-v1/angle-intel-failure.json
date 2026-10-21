@@ -1,0 +1,48 @@
+{
+  "runId": 39622678506,
+  "jobId": 119299944490,
+  "artifactId": 12356936709,
+  "artifactSha256": "295797bb816298e218de93453c974ea5e4ff3d0fd0269a4f812d73cd3e4d197f",
+  "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "driverCommit": "75da3655983445e2d3353bf45d1f53f5c017e701",
+  "requestedGpu": "swangle",
+  "effectiveRenderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))",
+  "cpu": [
+    "Vendor ID:                               GenuineIntel",
+    "Model name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz"
+  ],
+  "caseStarts": 180,
+  "casePasses": 179,
+  "caseFailures": [
+    {
+      "code": -2,
+      "name": "screenMatchesReviewedBaseline[diary_error_360x640_f130]",
+      "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest"
+    }
+  ],
+  "skippedCases": 0,
+  "recordingCompleted": false,
+  "runnerTimeSeconds": 1151.018,
+  "runnerOutputSha256": "a2bf52071f46411f3e1750a81426ec02cca3185bae9b90e591bbf47d7618753e",
+  "retainedSummarySha256": "3a7e61ae499032e686743051387def12b7dce2368a1dcb09ab1645dd59e0a3dc",
+  "retainedCandidatePngs": 0,
+  "availablePartialImageCountNotVerified": true,
+  "healthReportMissing": true,
+  "androidCrashBuffers": {
+    "crashes.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fatalOrAnrRecorded": false
+    },
+    "anr.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fatalOrAnrRecorded": false
+    }
+  },
+  "evidenceCollectorDefect": "Runner verification raised before pulling available candidate PNGs, and an early failure exit omitted health.json. Cleanup already removed owned packages; missing evidence cannot be recovered from this run.",
+  "correctedCollectorRuntimeVerified": false,
+  "pixelCopyDefectClosed": false,
+  "backendStabilityApproved": false,
+  "baselinesChanged": false,
+  "releaseApproved": false,
+  "scope": "One successful AMD ANGLE capture and one failed Intel capture. Do not transfer AMD recording success to this host, reconstruct missing images, or approve the backend. New collector retains partial evidence before owned-package cleanup and always records incomplete health, without changing failed-case or PixelCopy acceptance."
+}
