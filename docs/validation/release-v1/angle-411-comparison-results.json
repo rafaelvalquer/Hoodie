@@ -1,0 +1,51 @@
+{
+  "runId": 39691860048,
+  "driverCommit": "41162abb34be3b270f4934b22437559dab0038b0",
+  "artifactId": 12389392904,
+  "artifactSha256": "9eddfba40d665597254f91de37fe4c77d2a1a031b115ab33a8c4e57f6b0d8309",
+  "resultSha256": "6b8257548ce827f0b4ce069df12c8020fdd2b8d16ae28088f584e5747f48cdd1",
+  "result": {
+    "conclusion": "inconclusive_same_cpu_vendor",
+    "crossVendorComparisonPassed": false,
+    "driverCommit": "41162abb34be3b270f4934b22437559dab0038b0",
+    "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+    "sourceTree": "377e31042687d57e8272544c6c4c62f31f49b27f",
+    "apkSha256": [
+      "c52c0cc8784d0fc68b3b9e5010c722a15aa5d105e178d6bf7b3952ea99eb5e27",
+      "5620a465bdfb5b9d6d1f87221d1267e012ff764c1ad0e114ba944322b60a03d4"
+    ],
+    "hosts": [
+      {
+        "vendor": "AuthenticAMD",
+        "model": "AMD EPYC 7763 64-Core Processor",
+        "renderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))"
+      },
+      {
+        "vendor": "AuthenticAMD",
+        "model": "AMD EPYC 7763 64-Core Processor",
+        "renderer": "GLES: Google (Google Inc. (Google)), Android Emulator OpenGL ES Translator (ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)), OpenGL ES 3.1 (OpenGL ES 3.1.0 (ANGLE 2.1.17841 git hash: 5fa2e61da947))"
+      }
+    ],
+    "casesPerHost": 180,
+    "imagesPerHost": 222,
+    "decodedPixelsIdentical": true,
+    "changedImages": 0,
+    "qualityGateApproved": false,
+    "baselineApproval": false,
+    "releaseApproved": false,
+    "scope": "Exact decoded PNG comparison of complete healthy frozen APK recordings. Same-vendor hosts are inconclusive. No visual-design, current-source, baseline or release approval; no automatic retries."
+  },
+  "captureArtifacts": [
+    {
+      "id": 12389263245,
+      "sha256": "36f5f359d1a23d9701d1c4077f13ff5bc486cd3acf3ed3518ddd520e3b4a2e0f"
+    },
+    {
+      "id": 12389647077,
+      "sha256": "581710cea1e78ae8412482efd3d93a3b4023b2949e013f53b93374c4fbbb906d"
+    }
+  ],
+  "localCaptureReaudit": false,
+  "releaseApproved": false,
+  "scope": "Result ZIP and all 222 comparison entries checked locally. Capture counts, health and pixels reported by the CI comparator; raw capture ZIPs not reaudited locally here. Same-vendor inconclusion preserved; no Intel stability, baseline or mandatory CI approval."
+}

@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite tests="2" failures="2" errors="0" skipped="0"><testcase name="spaceLostDuringImportDiscardsThePartialGenerationAndPreservesTheActiveDatabase" classname="com.hoodie.app.backup.BackupLowSpaceTest" time="7.33">
+    <failure>android.database.sqlite.SQLiteException: no such column: id (code 1): , while compiling: SELECT id, title FROM memories
+at net.zetetic.database.sqlcipher.SQLiteConnection.nativePrepareStatement(Native Method)
+at net.zetetic.database.sqlcipher.SQLiteConnection.acquirePreparedStatement(SQLiteConnection.java:973)
+at net.zetetic.database.sqlcipher.SQLiteConnection.prepare(SQLiteConnection.java:537)
+at net.zetetic.database.sqlcipher.SQLiteSession.prepare(SQLiteSession.java:593)
+at net.zetetic.database.sqlcipher.SQLiteProgram.&lt;init&gt;(SQLiteProgram.java:65)
+at net.zetetic.database.sqlcipher.SQLiteQuery.&lt;init&gt;(SQLiteQuery.java:48)
+at net.zetetic.database.sqlcipher.SQLiteDirectCursorDriver.query(SQLiteDirectCursorDriver.java:68)
+at net.zetetic.database.sqlcipher.SQLiteDatabase.rawQuery(SQLiteDatabase.java:1557)
+at net.zetetic.database.sqlcipher.SQLiteDatabase.query(SQLiteDatabase.java:1158)
+at com.hoodie.app.backup.BackupLowSpaceTest.exercise(BackupLowSpaceTest.kt:104)
+at com.hoodie.app.backup.BackupLowSpaceTest.spaceLostDuringImportDiscardsThePartialGenerationAndPreservesTheActiveDatabase(BackupLowSpaceTest.kt:40)
+</failure>
+  </testcase>
+  <testcase name="insufficientSpaceRejectsImportBeforeReadingOrAllocatingAnotherGeneration" classname="com.hoodie.app.backup.BackupLowSpaceTest" time="1.087">
+    <failure>android.database.sqlite.SQLiteException: no such column: id (code 1): , while compiling: SELECT id, title FROM memories
+at net.zetetic.database.sqlcipher.SQLiteConnection.nativePrepareStatement(Native Method)
+at net.zetetic.database.sqlcipher.SQLiteConnection.acquirePreparedStatement(SQLiteConnection.java:973)
+at net.zetetic.database.sqlcipher.SQLiteConnection.prepare(SQLiteConnection.java:537)
+at net.zetetic.database.sqlcipher.SQLiteSession.prepare(SQLiteSession.java:593)
+at net.zetetic.database.sqlcipher.SQLiteProgram.&lt;init&gt;(SQLiteProgram.java:65)
+at net.zetetic.database.sqlcipher.SQLiteQuery.&lt;init&gt;(SQLiteQuery.java:48)
+at net.zetetic.database.sqlcipher.SQLiteDirectCursorDriver.query(SQLiteDirectCursorDriver.java:68)
+at net.zetetic.database.sqlcipher.SQLiteDatabase.rawQuery(SQLiteDatabase.java:1557)
+at net.zetetic.database.sqlcipher.SQLiteDatabase.query(SQLiteDatabase.java:1158)
+at com.hoodie.app.backup.BackupLowSpaceTest.exercise(BackupLowSpaceTest.kt:104)
+at com.hoodie.app.backup.BackupLowSpaceTest.insufficientSpaceRejectsImportBeforeReadingOrAllocatingAnotherGeneration(BackupLowSpaceTest.kt:27)
+</failure>
+  </testcase>
+  </testsuite>

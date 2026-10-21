@@ -90,7 +90,7 @@ class BackupLowSpaceTest {
         val staging = BackupStagingManager(context)
         val old = staging.create()
         try {
-            old.database.openHelper.writableDatabase.execSQL("INSERT INTO memories VALUES ('original','','Preserved',?)", arrayOf(System.currentTimeMillis()))
+            old.database.openHelper.writableDatabase.execSQL("INSERT INTO memories (`key`, emoji, title, unlockedAt) VALUES ('original','','Preserved',?)", arrayOf(System.currentTimeMillis()))
             BackupRestoreRecovery(context.noBackupFilesDir).activate(old.generation)
             action(context, staging, old)
             assertEquals(old.generation, StorageGeneration.current(context))
@@ -101,7 +101,7 @@ class BackupLowSpaceTest {
             val reopened = Room.databaseBuilder(context, HoodieDatabase::class.java, old.generation.databaseName)
                 .openHelperFactory(SupportOpenHelperFactory(passphrase.copyOf())).build()
             try {
-                reopened.openHelper.readableDatabase.query("SELECT id, title FROM memories").use {
+                reopened.openHelper.readableDatabase.query("SELECT `key`, title FROM memories").use {
                     assertTrue(it.moveToFirst())
                     assertEquals("original", it.getString(0))
                     assertEquals("Preserved", it.getString(1))
