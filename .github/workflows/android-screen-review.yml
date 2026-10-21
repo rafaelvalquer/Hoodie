@@ -1,4 +1,4 @@
-name: Frozen APK screen review candidates
+name: Current SwiftShader frozen APK review
 
 # Records candidates only. Mandatory Android CI still compares every baseline.
 on:
@@ -34,6 +34,20 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Preservar driver e selecionar as fontes exatas dos APKs
+        run: |
+          set -euo pipefail
+          driver="$RUNNER_TEMP/hoodie-screen-review-driver"
+          mkdir "$driver"
+          cp -R .github/scripts "$driver/"
+          git rev-parse HEAD > "$driver/driver-commit.txt"
+          git fetch --no-tags --depth=1 https://github.com/rafaelvalquer/Hoodie.git 67bd2d7b5925b087c7beb3dd4418ce308a5752ec
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = 67bd2d7b5925b087c7beb3dd4418ce308a5752ec
+          cp -R "$driver/scripts/." .github/scripts/
+          mkdir -p app/build/reports/screen-review
+          cp "$driver/driver-commit.txt" app/build/reports/screen-review/
+          sha256sum .github/scripts/capture-screen-review.py .github/scripts/run-qa-emulator.sh > app/build/reports/screen-review/driver-sha256.txt
       - name: Recuperar o mesmo par de APKs preservado
         uses: actions/download-artifact@v4
         with:
@@ -63,6 +77,7 @@ jobs:
         env:
           REVIEW_PAIR_ROOT: ${{ runner.temp }}/screen-review-pair
           REVIEW_CAPTURE_LABEL: ${{ matrix.label }}
+          QA_REVIEW_GPU: swiftshader
         run: |
           mkdir -p app/build/reports/screen-review
           lscpu > app/build/reports/screen-review/host-cpu.txt

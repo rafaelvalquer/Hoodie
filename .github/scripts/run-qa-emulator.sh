@@ -18,7 +18,15 @@ case "$api:$target:$test_script" in
   35:google_apis:.github/scripts/frozen-r8-runtime.sh|35:google_apis_ps16k:.github/scripts/frozen-r8-runtime.sh) out=app/build/reports/frozen-r8-control/emulator ;;
   *) echo 'Unsupported QA emulator configuration' >&2; exit 1 ;;
 esac
+gpu=swiftshader_indirect
+if [[ -n "${QA_REVIEW_GPU:-}" ]]; then
+  # Backend experiment only; mandatory CI/release configurations stay intact.
+  test "$test_script" = .github/scripts/screen-review-runtime.sh
+  test "$QA_REVIEW_GPU" = swiftshader
+  gpu=$QA_REVIEW_GPU
+fi
 mkdir -p "$out"
+printf '%s\n' "$gpu" > "$out/requested-gpu.txt"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
 export ANDROID_AVD_HOME="$RUNNER_TEMP/hoodie-avd-$api"
@@ -47,7 +55,7 @@ cp "$QA_AVD_CONFIG" "$out/emulator-config.ini"
 cp "$image/source.properties" "$out/emulator-image.properties"
 "$HOODIE_EMULATOR_BIN" -no-window -version > "$out/emulator-version.txt" 2>&1
 setsid "$HOODIE_EMULATOR_BIN" -avd "$avd_name" -sysdir "$image" -port 5554 \
-  -no-window -gpu swiftshader_indirect -memory 4096 -cores 4 -accel on \
+  -no-window -gpu "$gpu" -memory 4096 -cores 4 -accel on \
   -no-snapshot -noaudio -no-boot-anim > "$out/emulator-stdout.txt" 2> "$out/emulator-stderr.txt" &
 emulator_pid=$!
 cleanup() {

@@ -83,6 +83,7 @@ def main():
     paths = (args.pair_root/'outputs/apk/debug/app-debug.apk',
              args.pair_root/'outputs/apk/androidTest/debug/app-debug-androidTest.apk')
     report = dict(sourceCommit=SOURCE,sourceTree=SOURCE_TREE,apkSha256=list(HASHES),
+        driverCommit=os.environ.get('GITHUB_SHA'),requestedGpu=os.environ.get('QA_REVIEW_GPU', 'swiftshader_indirect'),
         recordingOnly=True,comparisonPerformed=False,releaseApproved=False,completed=False)
     owned = []
     try:
