@@ -11,10 +11,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
-concurrency:
-  group: android-ci-${{ github.ref }}
-  # Preserve the running evidence; newer commits wait for their own full run.
-  cancel-in-progress: false
+# Quality/build can validate newer commits while an older device suite runs.
+# The instrumentation job below serializes emulator work without cancelling a running suite.
 
 jobs:
   unit-tests:
@@ -149,8 +147,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Assemble debug
-        run: ./gradlew :app:assembleDebug
+      - name: Assemble debug and instrumentation APKs
+        run: ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
       - name: Sprites finais dentro do APK
         run: |
           unzip -l app/build/outputs/apk/debug/app-debug.apk > "$RUNNER_TEMP/apk-entries.txt"
@@ -168,6 +166,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: assemble
     timeout-minutes: 60
+    concurrency:
+      group: android-instrumentation-${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

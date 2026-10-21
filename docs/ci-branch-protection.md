@@ -13,8 +13,10 @@ lint ───────┘
 |---|---|
 | `unit-tests` | qualquer teste JVM vermelho (inclui `ShippedSheetsValidationTest`, `VersionConsistencyTest`, segurança do banco) e `TODO`/`FIXME`/`NotImplementedError` no código principal |
 | `lint` | erros de lint |
-| `assemble` | APK não compila ou sprites finais (`hoodie_walk/idle/sleep/work`) ausentes do APK |
+| `assemble` | APK do app ou de instrumentação não compila, ou sprites finais (`hoodie_walk/idle/sleep/work`) ausentes do APK |
 | `instrumentation` | testes no emulador (banco cifrado real, migrações, Keystore) |
+
+A fila por branch fica no job `instrumentation`, com `cancel-in-progress: false`: uma suíte em execução preserva sua evidência. Jobs de qualidade/build de commits mais novos podem executar enquanto ela termina. O GitHub pode substituir um job de instrumentação ainda pendente pelo candidato mais recente; isso não o transforma em aprovação. A pipeline de release continua exigindo Android CI concluída com sucesso no SHA exato do candidato. O job Android compila e identifica seus próprios APKs antes de iniciar o AVD e executa os testes direcionados e a suíte completa; os APKs adicionais compilados no estágio `assemble` antecipam erros de compilação, sem transferir resultados entre jobs ou commits.
 
 ## Ativar a proteção (feito pelo dono do repositório)
 
