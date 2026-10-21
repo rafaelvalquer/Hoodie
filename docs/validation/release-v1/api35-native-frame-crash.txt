@@ -1,0 +1,53 @@
+--------- beginning of crash
+10-21 00:33:32.637  3126  3126 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 3126 (app.homologacao), pid 3126 (app.homologacao)
+10-21 00:33:33.000  5072  5072 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-21 00:33:33.000  5072  5072 F DEBUG   : Build fingerprint: 'google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys'
+10-21 00:33:33.000  5072  5072 F DEBUG   : Revision: '0'
+10-21 00:33:33.000  5072  5072 F DEBUG   : ABI: 'x86_64'
+10-21 00:33:33.000  5072  5072 F DEBUG   : Timestamp: 2026-10-21 00:33:32.757534985+0000
+10-21 00:33:33.000  5072  5072 F DEBUG   : Process uptime: 18s
+10-21 00:33:33.000  5072  5072 F DEBUG   : Page size: 16384 bytes
+10-21 00:33:33.000  5072  5072 F DEBUG   : Cmdline: com.hoodie.app.homologacao
+10-21 00:33:33.000  5072  5072 F DEBUG   : pid: 3126, tid: 3126, name: app.homologacao  >>> com.hoodie.app.homologacao <<<
+10-21 00:33:33.000  5072  5072 F DEBUG   : uid: 10207
+10-21 00:33:33.000  5072  5072 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000
+10-21 00:33:33.000  5072  5072 F DEBUG   : Cause: null pointer dereference
+10-21 00:33:33.000  5072  5072 F DEBUG   :     rax 00007df3a609a7d8  rbx 0000000000000010  rcx 0000000000000027  rdx 00007df3a609a990
+10-21 00:33:33.000  5072  5072 F DEBUG   :     r8  0000000000000000  r9  000000000000000c  r10 0000000070aa4d38  r11 000000000000000a
+10-21 00:33:33.000  5072  5072 F DEBUG   :     r12 00007df3627a86c4  r13 00007ffb0ffbaff4  r14 00007df46f000800  r15 00007ffb0ffbafb0
+10-21 00:33:33.000  5072  5072 F DEBUG   :     rdi 00007df3a60c7db8  rsi 00000000142dbf20
+10-21 00:33:33.000  5072  5072 F DEBUG   :     rbp 0000000000000001  rsp 00007ffb0ffbaf78  rip 0000000000000000
+10-21 00:33:33.000  5072  5072 F DEBUG   : 32 total frames
+10-21 00:33:33.000  5072  5072 F DEBUG   : backtrace:
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #00 pc 0000000000000000  <unknown>
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #01 pc 000000000020a621  /apex/com.android.art/lib64/libart.so (nterp_helper+7345) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #02 pc 000000000037c6c4  /data/app/~~bbC6Rrmrk7KrpfFHhw4xFg==/com.hoodie.app.homologacao-df_4j6jCW6YnildUPcnOGg==/oat/x86_64/base.vdex (p9.k0.f+96)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #03 pc 000000000020921c  /apex/com.android.art/lib64/libart.so (nterp_helper+2220) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #04 pc 0000000000378c7a  /data/app/~~bbC6Rrmrk7KrpfFHhw4xFg==/com.hoodie.app.homologacao-df_4j6jCW6YnildUPcnOGg==/oat/x86_64/base.vdex (p9.a0.b+46)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #05 pc 000000000020a565  /apex/com.android.art/lib64/libart.so (nterp_helper+7157) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #06 pc 000000000037a80a  /data/app/~~bbC6Rrmrk7KrpfFHhw4xFg==/com.hoodie.app.homologacao-df_4j6jCW6YnildUPcnOGg==/oat/x86_64/base.vdex (p9.k0.g+518)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #07 pc 000000000020921c  /apex/com.android.art/lib64/libart.so (nterp_helper+2220) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #08 pc 0000000000379152  /data/app/~~bbC6Rrmrk7KrpfFHhw4xFg==/com.hoodie.app.homologacao-df_4j6jCW6YnildUPcnOGg==/oat/x86_64/base.vdex (p9.b0.t+1046)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #09 pc 000000000003059e  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (ab.a.j+222)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #10 pc 00000000000096dd  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (tb.f0.run+1149)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #11 pc 000000000003026c  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (u1.u0.p+236)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #12 pc 000000000003a9b6  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (u1.t0.run+86)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #13 pc 000000000052bb4f  /system/framework/x86_64/boot-framework.oat (android.os.Handler.dispatchMessage+79) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #14 pc 000000000052ed9e  /system/framework/x86_64/boot-framework.oat (android.os.Looper.loopOnce+942) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #15 pc 000000000052e93b  /system/framework/x86_64/boot-framework.oat (android.os.Looper.loop+235) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #16 pc 000000000030a33c  /system/framework/x86_64/boot-framework.oat (android.app.ActivityThread.main+1500) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #17 pc 00000000002124b6  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #18 pc 0000000000564004  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+228) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #19 pc 0000000000963b6a  /apex/com.android.art/lib64/libart.so (_jobject* art::InvokeMethod<(art::PointerSize)8>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, _jobject*, _jobject*, unsigned long)+2218) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #20 pc 00000000008bf637  /apex/com.android.art/lib64/libart.so (art::Method_invoke(_JNIEnv*, _jobject*, _jobject*, _jobjectArray*) (.__uniq.165753521025965369065708152063621506277)+39) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #21 pc 00000000000a672f  /system/framework/x86_64/boot.oat (art_jni_trampoline+127) (BuildId: 68b5d9df423be4ebd4a6c38087fc90e635afb135)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #22 pc 0000000000810405  /system/framework/x86_64/boot-framework.oat (com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run+117) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #23 pc 00000000008196f0  /system/framework/x86_64/boot-framework.oat (com.android.internal.os.ZygoteInit.main+2704) (BuildId: bc047a67a4076b80992fbdfabdfba12acbd1924a)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #24 pc 00000000002124b6  /apex/com.android.art/lib64/libart.so (art_quick_invoke_static_stub+806) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #25 pc 0000000000564004  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+228) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #26 pc 00000000009646a6  /apex/com.android.art/lib64/libart.so (art::JValue art::InvokeWithVarArgs<_jmethodID*>(art::ScopedObjectAccessAlreadyRunnable const&, _jobject*, _jmethodID*, __va_list_tag*)+518) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #27 pc 000000000081641a  /apex/com.android.art/lib64/libart.so (art::JNI<true>::CallStaticVoidMethodV(_JNIEnv*, _jclass*, _jmethodID*, __va_list_tag*)+586) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #28 pc 00000000000dcf68  /system/lib64/libandroid_runtime.so (_JNIEnv::CallStaticVoidMethod(_jclass*, _jmethodID*, ...)+136) (BuildId: 74e467b22a4c3107eac51948743c9977)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #29 pc 00000000000f2fb0  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+928) (BuildId: 74e467b22a4c3107eac51948743c9977)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #30 pc 0000000000004706  /system/bin/app_process64 (main+1638) (BuildId: 2919fb70658f9ff2e805cbbbdd33a33b)
+10-21 00:33:33.000  5072  5072 F DEBUG   :       #31 pc 0000000000057c82  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+114) (BuildId: eb58b4d427279994f00c0e1818477e4f)

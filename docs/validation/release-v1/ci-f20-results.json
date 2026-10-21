@@ -1,0 +1,120 @@
+{
+  "commit": "f20cef3355d3bfd5f6309c0cd4ecf543c2b6811d",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39521916887",
+  "instrumentationArtifactId": 12315206989,
+  "instrumentationArtifactSha256": "4031a233213b5c13bdd919e7f951f858f0cf314c47da879226d1d147c158ef74",
+  "unitArtifactId": 12313241920,
+  "unitArtifactSha256": "157cda97b44ea7316b7cf1c04bf1c9e8bcb6255804341d866bb6b4c3c2958e9a",
+  "unitSuites": 307,
+  "unit": {
+    "tests": 1360,
+    "passed": 1360,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "full": {
+    "tests": 389,
+    "passed": 375,
+    "failed": 14,
+    "skipped": 0,
+    "failures": [
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_normal_360x640_f100]",
+        "diagnostic": "java.lang.AssertionError: diary_normal_360x640_f100 changed 4790 pixels; first differences: [(33,624) ff26294a->ff415c4e, (34,624) ff26294a->ff588557, (35,624) ff26294a->ff659c5e, (36,624) ff26294a->ff679f5f, (37,624) ff26294a->ff679f5f, (38,624) ff26294a->ff679f5f, (39,624) ff26294a->ff679f5f, (40,624) ff26294a->ff679f5f, (41,624) ff26294a->ff679f5f, (42,624) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_normal_360x800_f100]",
+        "diagnostic": "java.lang.AssertionError: diary_normal_360x800_f100 changed 53890 pixels; first differences: [(33,624) ff26294a->ff415c4e, (34,624) ff26294a->ff588557, (35,624) ff26294a->ff659c5e, (36,624) ff26294a->ff679f5f, (37,624) ff26294a->ff679f5f, (38,624) ff26294a->ff679f5f, (39,624) ff26294a->ff679f5f, (40,624) ff26294a->ff679f5f, (41,624) ff26294a->ff679f5f, (42,624) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_normal_411x891_f100]",
+        "diagnostic": "java.lang.AssertionError: diary_normal_411x891_f100 changed 97603 pixels; first differences: [(33,624) ff26294a->ff536b55, (34,624) ff26294a->ff77a063, (35,624) ff26294a->ff8bbc6d, (36,624) ff26294a->ff8ec06e, (37,624) ff26294a->ff8ec06e, (38,624) ff26294a->ff8ec06e, (39,624) ff26294a->ff8ec06e, (40,624) ff26294a->ff8ec06e, (41,624) ff26294a->ff8ec06e, (42,624) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_normal_411x891_f130]",
+        "diagnostic": "java.lang.AssertionError: diary_normal_411x891_f130 changed 69105 pixels; first differences: [(33,698) ff26294a->ff536b55, (34,698) ff26294a->ff77a063, (35,698) ff26294a->ff8bbc6d, (36,698) ff26294a->ff8ec06e, (37,698) ff26294a->ff8ec06e, (38,698) ff26294a->ff8ec06e, (39,698) ff26294a->ff8ec06e, (40,698) ff26294a->ff8ec06e, (41,698) ff26294a->ff8ec06e, (42,698) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+        "diagnostic": "java.lang.AssertionError: diary_full_360x640_f100_map changed 175300 pixels; first differences: [(18,0) ff33375e->ff0f1124, (19,0) ff33375e->ff0f1124, (20,0) ff33375e->ff0f1124, (21,0) ff33375e->ff0f1124, (22,0) ff33375e->ff0f1124, (23,0) ff33375e->ff0f1124, (24,0) ff33375e->ff0f1124, (25,0) ff33375e->ff0f1124, (26,0) ff33375e->ff0f1124, (27,0) ff33375e->ff0f1124]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+        "diagnostic": "java.lang.AssertionError: diary_full_360x640_f130_map changed 172917 pixels; first differences: [(18,0) ff33375e->ff26294a, (19,0) ff33375e->ff26294a, (20,0) ff33375e->ff26294a, (21,0) ff33375e->ff26294a, (22,0) ff33375e->ff26294a, (23,0) ff33375e->ff26294a, (24,0) ff33375e->ff26294a, (25,0) ff33375e->ff26294a, (26,0) ff33375e->ff26294a, (27,0) ff33375e->ff26294a]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+        "diagnostic": "java.lang.AssertionError: diary_full_360x800_f100 changed 2090 pixels; first differences: [(33,793) ff26294a->ff415c4e, (34,793) ff26294a->ff588557, (35,793) ff26294a->ff659c5e, (36,793) ff26294a->ff679f5f, (37,793) ff26294a->ff679f5f, (38,793) ff26294a->ff679f5f, (39,793) ff26294a->ff679f5f, (40,793) ff26294a->ff679f5f, (41,793) ff26294a->ff679f5f, (42,793) ff26294a->ff679f5f]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+        "diagnostic": "java.lang.AssertionError: diary_full_360x800_f130_map changed 210674 pixels; first differences: [(31,0) ffc1c5dc->ff33375e, (32,0) ffe9edff->ff33375e, (33,0) ffa9adc7->ff33375e, (36,0) ffd9ddf0->ff33375e, (37,0) ffe9edff->ff33375e, (38,0) ff9195b1->ff33375e, (39,0) ffcbcfe4->ff33375e, (40,0) ffe9edff->ff33375e, (41,0) ffe9edff->ff33375e, (42,0) ffe4e8fb->ff33375e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+        "diagnostic": "java.lang.AssertionError: diary_full_411x891_f100 changed 34388 pixels; first differences: [(33,793) ff26294a->ff536b55, (34,793) ff26294a->ff77a063, (35,793) ff26294a->ff8bbc6d, (36,793) ff26294a->ff8ec06e, (37,793) ff26294a->ff8ec06e, (38,793) ff26294a->ff8ec06e, (39,793) ff26294a->ff8ec06e, (40,793) ff26294a->ff8ec06e, (41,793) ff26294a->ff8ec06e, (42,793) ff26294a->ff8ec06e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+        "diagnostic": "java.lang.AssertionError: diary_full_411x891_f130_map changed 260298 pixels; first differences: [(16,0) ff1b1d33->ff0f1124, (17,0) ff1b1d33->ff0f1124, (18,0) ff1b1d33->ff33375e, (19,0) ff1b1d33->ff33375e, (20,0) ff1b1d33->ff33375e, (21,0) ff1b1d33->ff33375e, (22,0) ff1b1d33->ff33375e, (23,0) ff1b1d33->ff33375e, (24,0) ff1b1d33->ff33375e, (25,0) ff1b1d33->ff33375e]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+        "diagnostic": "java.lang.AssertionError: digital_full_411x891_f100 changed 3 pixels; first differences: [(242,520) ff5f8a85->ff5f8b85, (242,521) ff5f8a85->ff5f8b85, (242,522) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+        "diagnostic": "java.lang.AssertionError: digital_full_411x891_f130 changed 3 pixels; first differences: [(242,589) ff5f8a85->ff5f8b85, (242,590) ff5f8a85->ff5f8b85, (242,591) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+        "diagnostic": "java.lang.AssertionError: place_picker_full_411x891_f100_bottom changed 1 pixels; first differences: [(59,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "classname": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+        "diagnostic": "java.lang.AssertionError: place_picker_full_411x891_f130_bottom changed 3 pixels; first differences: [(71,657) ff586d9a->ff586c9a, (66,662) ff596f9d->ff596f9c, (67,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      }
+    ]
+  },
+  "cityRegression": {
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "requiredExportersActuallyExecuted": [
+    "com.hoodie.app.pixel.FrontSeatedVisualReviewTest#exportsOfficeAndRestaurantFrontSeatedCandidatesWhenRequested",
+    "com.hoodie.app.pixel.OfficeVisualReviewTest#exportOfficeLiveReviewCandidatesWhenRequested",
+    "com.hoodie.app.pixel.ShoppingVisualReviewTest#exportShoppingReviewCandidatesWhenRequested",
+    "com.hoodie.app.pixel.restaurant.RestaurantLiveSceneReviewExportTest#exporta cenas completas candidatas sem promover goldens",
+    "com.hoodie.app.pixel.review.NpcVisualReviewExportTest#exportCandidateMatrixWhenExplicitlyRequested",
+    "com.hoodie.app.pixel.transport.TransportThumbnailExportTest#exportFramingThumbnails"
+  ],
+  "composeIdleTimeoutsObserved": false,
+  "all209NonGoldenCasesPassed": true,
+  "qualityGateApproved": false,
+  "interpretation": "The new city fixed-frame scroll/pixel/overview regression passed. All 14 remaining failures are pixel comparisons: ten integrated Diary cases and four small Digital/PlacePicker deltas. No references, tolerances, cases or semantics were removed or relaxed. Full candidate quality remains unapproved."
+}

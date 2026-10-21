@@ -22,6 +22,10 @@ fi
 serial=$(adb get-serialno | tr -d '\r')
 python3 .github/scripts/r8-qa-accessibility.py --serial "$serial" --output "$out/accessibility"
 python3 .github/scripts/r8-qa-backup.py --serial "$serial" --output "$out/backup-fixture"
+: "${HOODIE_BACKUP_PYTHON:?Independent verifier runtime required}"
+"$HOODIE_BACKUP_PYTHON" .github/scripts/verify-synthetic-backup.py \
+  "$out/backup-fixture/Hoodie_R8_fixture_reexport.hoodiebackup" \
+  --output "$out/backup-fixture/independent-authentication.json"
 capture
 if grep -E 'UnsatisfiedLinkError|Fatal signal|FATAL EXCEPTION|am_anr[[:space:]]*:' "$out/final-logcat.txt"; then
   echo '::error::Runtime recorded a fatal error or ANR; no runtime approval.'

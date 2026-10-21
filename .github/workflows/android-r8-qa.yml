@@ -14,6 +14,9 @@ on:
       - '.github/scripts/verify-emulator-window.py'
       - '.github/scripts/release-runtime-smoke.sh'
       - '.github/scripts/verify-native-16kb.*'
+      - '.github/scripts/verify-synthetic-backup.py'
+      - '.github/scripts/test_synthetic_backup_auth.py'
+      - '.github/requirements-backup-qa.txt'
       - 'tools/android_ui.py'
       - 'app/src/main/**'
       - 'app/build.gradle.kts'
@@ -41,6 +44,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Preparar e testar leitor independente do backup
+        run: bash .github/scripts/r8-qa-python.sh app/build/reports/r8-qa/python-verifier
       - name: Preparar ferramentas oficiais
         run: |
           set -euo pipefail

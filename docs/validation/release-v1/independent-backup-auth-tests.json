@@ -1,0 +1,74 @@
+{
+  "tests": 8,
+  "passed": 8,
+  "failed": 0,
+  "skipped": 0,
+  "pinnedInstallPassed": true,
+  "installPlatform": "Windows x86_64 / Python 3.12",
+  "dependencies": [
+    {
+      "package": "cryptography",
+      "version": "50.0.2",
+      "url": "https://pypi.org/pypi/cryptography/50.0.2/json",
+      "wheels": 58
+    },
+    {
+      "package": "cffi",
+      "version": "2.1.1",
+      "url": "https://pypi.org/pypi/cffi/2.1.1/json",
+      "wheels": 99
+    },
+    {
+      "package": "pycparser",
+      "version": "3.11",
+      "url": "https://pypi.org/pypi/pycparser/3.11/json",
+      "wheels": 1
+    }
+  ],
+  "requirementsSha256": "0b213c3eab91922747679c765e0eea5e8168fe154855d551c59c234a0a2d3cb7",
+  "installLogSha256": "14078e38892ce96c129ddf814ed37f526ea703c61acfef8e210159a5dda240fe",
+  "testLogSha256": "bd857252419da9925b821ad65f6a1356242a9d3d7d2909100b0a01888f788227",
+  "fixtureSha256": "c0d7739652d6b5e1a8e1c6df1b7cf592342db6d334c6c1b6d16fa016b43e20a7",
+  "existingRealUiExport": {
+    "passed": true,
+    "sha256": "1e1a46b075c9e5d0da6e7f512433ea0b1eb727a56a3c98a5fe2a2c1e47be620c",
+    "bytes": 98657,
+    "formatVersion": 1,
+    "iterations": 600000,
+    "authenticatedUnits": 423,
+    "authenticatedTerminator": true,
+    "counts": {
+      "places": 4,
+      "routines": 1,
+      "day_exceptions": 1,
+      "location_events": 40,
+      "context_events": 129,
+      "context_confirmations": 1,
+      "hoodie_activities": 29,
+      "timeline_events": 165,
+      "memories": 4,
+      "daily_device_usage": 30,
+      "daily_app_usage": 1,
+      "daily_context_app_usage": 1,
+      "app_category_overrides": 1,
+      "phone_app_sessions": 1,
+      "daily_screen_hourly": 1,
+      "daily_context_usage": 1,
+      "daily_phone_timeline": 1,
+      "mobility_sessions": 2,
+      "mobility_segments": 1,
+      "diary_corrections": 1,
+      "learned_routine_slots": 0,
+      "transport_patterns": 1,
+      "transport_evidence": 1,
+      "effective_routine_versions": 4
+    },
+    "includeDigital": true,
+    "rowSchemaValidated": false,
+    "releaseApproved": false,
+    "scope": "Independent AES-GCM/EOF, envelope/order and manifest-count audit with public synthetic phrase. No row-field/relationship, duplicate, migration, UI or physical-device acceptance."
+  },
+  "linuxCiInstallVerified": false,
+  "androidReleaseGateApproved": false,
+  "initialTestHarnessFailure": "A new negative vector used a 17-byte salt and was correctly rejected as an invalid sequence before reaching its intended manifest-count assertion. Fixed only the new test vector to use a 16-byte salt; original fixture and verifier rejection criteria unchanged."
+}

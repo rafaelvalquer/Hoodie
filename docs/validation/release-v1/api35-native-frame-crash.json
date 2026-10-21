@@ -1,0 +1,117 @@
+{
+  "defect": "HVR-NATIVE-API35-002",
+  "status": "open",
+  "runUrl": "https://github.com/rafaelvalquer/Hoodie/actions/runs/39521350075",
+  "artifactId": 12311985399,
+  "artifactSha256": "c4171869a0414ddb2ef09660947e0343a41f925ab2397aa0a52548d1e9518db6",
+  "build": {
+    "commit": "2875f7817f5f3b4f026ef1d09f705bd4a16f5c7c",
+    "appSourceTree": "5188f6983ceb14bd2d09132f6b43d2b8ae75511a",
+    "versionCode": 7,
+    "scope": "Development signing; no upload key, Play submission, physical or production approval",
+    "aabSha256": "2657a104f10fbdb0f20cb44fc672bae1700fede890c4f16f9c06660440a1e5b8",
+    "apkSha256": "c28975b55805f9123a4b8014e45eb73fe464c43c8cd9516c9467f777c55c8025",
+    "mappingSha256": "38dec7d9779e156d0bd97b58c92e2c799fc15898eeb815b9d2f09316bd6067db",
+    "certificateSha256": "6eb743db7de1fc21e7b0de72e4750fe1aeefe358ec06b1a49145ba52b79b361d",
+    "apkDexSha256": {
+      "classes.dex": "baeda67a541ad20842f2db3245b529daba3fdbbcc54ef879b89e247f800d83e0"
+    },
+    "apkNativeSha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+      "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+      "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+      "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+      "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+      "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+      "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+      "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+      "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+    },
+    "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+    "runtimeVerified": false,
+    "fullBackupJourneyApproved": false
+  },
+  "pageSize": 16384,
+  "fingerprint": "google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+  "crash": {
+    "process": "com.hoodie.app.homologacao",
+    "pid": 3126,
+    "thread": "main",
+    "signal": "SIGSEGV",
+    "address": "0x0",
+    "observedAtUtc": "2026-10-21T00:33:32.637Z",
+    "exitInfoConfirmsNativeCrash": true,
+    "frames": [
+      "<unknown> pc 0x0",
+      "libart.so nterp_helper",
+      "p9.k0.f+96",
+      "p9.a0.b+46",
+      "p9.k0.g+518",
+      "p9.b0.t+1046"
+    ],
+    "mappedMethods": {
+      "p9.k0.f": "PixelViewsKt.HoodieSceneView$presented",
+      "p9.a0.b": "R8 synthetic Function0 callback for HoodieSceneView frame presentation",
+      "p9.k0.g": "PixelViewsKt.renderAndPresent",
+      "p9.b0.t": "HoodieSceneView frame coroutine invokeSuspend"
+    },
+    "sourceLineNotInferredFromNativeByteOffset": true,
+    "causeProven": false
+  },
+  "observations": [
+    {
+      "stage": "welcome",
+      "pid": 3126,
+      "nodes": 21,
+      "xml": "001-welcome.xml",
+      "window": "001-welcome-window.txt"
+    },
+    {
+      "stage": "before-name",
+      "pid": 3126,
+      "nodes": 21,
+      "xml": "002-before-name.xml",
+      "window": "002-before-name-window.txt"
+    },
+    {
+      "stage": "name",
+      "pid": 3126,
+      "nodes": 14,
+      "xml": "003-name.xml",
+      "window": "003-name-window.txt"
+    },
+    {
+      "stage": "before-tracking",
+      "pid": 3126,
+      "nodes": 14,
+      "xml": "004-before-tracking.xml",
+      "window": "004-before-tracking-window.txt"
+    },
+    {
+      "stage": "before-home",
+      "pid": 3126,
+      "nodes": 18,
+      "xml": "005-before-home.xml",
+      "window": "005-before-home-window.txt"
+    }
+  ],
+  "bootGatePassed": true,
+  "stage": "Entering Home after onboarding, before backup",
+  "backupJourneyStarted": false,
+  "crashLogSha256": "a7e873ee418552c5fdee78f6a33c0c29df79331989398251611b448ec07ace7d",
+  "exitInfoSha256": "fe537e96d78f28d48e3ab934071aba34b6ba48dd22a1149aef19290695cead9d",
+  "mappingSha256": "38dec7d9779e156d0bd97b58c92e2c799fc15898eeb815b9d2f09316bd6067db",
+  "releaseApproved": false,
+  "limitations": [
+    "Not attributed to SQLCipher, Compose, ART, emulator or recent preview changes without further evidence.",
+    "Different execution path from the earlier accessibility/export crash; common cause is unproven.",
+    "No JIT disabling, semantics removal, broad keep rules or crash filtering."
+  ],
+  "nextAction": "Compare the same APK across a controlled 4KB/16KB environment and preserve the exact frame-presentation bytecode/source mapping. Continue full quality and backup journeys on their exact candidates.",
+  "committedCrashWitnessSha256": "a7e873ee418552c5fdee78f6a33c0c29df79331989398251611b448ec07ace7d",
+  "witnessNormalization": "Committed crash witness normalizes CRLF to LF only; crashLogSha256 identifies raw original bytes in the authenticated artifact ZIP."
+}
