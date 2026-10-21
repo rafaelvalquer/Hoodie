@@ -1,0 +1,63 @@
+{
+  "commit": "fd19a3d9713dc26a1c1470c43ba568be1b2e5e1a",
+  "runId": 39682471115,
+  "jobId": 119508133713,
+  "artifactId": 12384573645,
+  "artifactSha256": "5fdc53a2715c70821df3f2ac02f6686f5a258f623997014385e79213a183dd89",
+  "api": 35,
+  "imageRevision": 5,
+  "build": {
+    "commit": "fd19a3d9713dc26a1c1470c43ba568be1b2e5e1a",
+    "appSourceTree": "90a71e6079c4cbfabb290abaa167df393f965e17",
+    "versionCode": 7,
+    "scope": "Development signing; no upload key, Play submission, physical or production approval",
+    "aabSha256": "7e9f149265d9a25f0a7e8568b89cb46f3997305a0a67049516fa65aa44977f54",
+    "apkSha256": "ec1376332065ce0fb00dcdfec1baeaad10e32b1c3ce4bc76ecd1a949b28494d3",
+    "mappingSha256": "4751e83b2707e44367edeca9b4ec6f9cd008c90314e72c854baec3651f59bfc5",
+    "certificateSha256": "9ec513a89e2ce119efce7c7a5e14041dbbbf4ba9a6fb2460e053ca988fb2dd66",
+    "apkDexSha256": {
+      "classes.dex": "a15f475375e1996fce688ee10558f4d4a5015b2cb1d97a35d2907a926bbc6bd3"
+    },
+    "apkNativeSha256": {
+      "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+      "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+      "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+      "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+      "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+      "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+      "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+      "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+      "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+      "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+      "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+    },
+    "resourcesArscSha256": "5bd07d8df03fe64da130d28816dbeec64b21cca3044a72ddc94f3777ee41aa12",
+    "javaVersion": "openjdk version \"17.0.20.1\" 2026-08-18\nOpenJDK Runtime Environment Temurin-17.0.20.1+1 (build 17.0.20.1+1)\nOpenJDK 64-Bit Server VM Temurin-17.0.20.1+1 (build 17.0.20.1+1, mixed mode, sharing)\n",
+    "runtimeVerified": false,
+    "fullBackupJourneyApproved": false
+  },
+  "retainedDebugApks": {
+    "outputs/apk/debug/app-debug.apk": "59834c41859c831518b7f01a038e7dbe5437ce990f97e304821eff9b187a7b44",
+    "outputs/apk/androidTest/debug/app-debug-androidTest.apk": "115d2705d100c90ba71efac8140f694d9941f5cefcee09aa3acc133299ac69e4"
+  },
+  "failedStage": "Emulator boot health gate before Hoodie installation",
+  "process": "com.android.systemui",
+  "pid": 987,
+  "nativeSignal": "SIGSEGV",
+  "nativeAddress": "0x40",
+  "javaFailure": "NoSuchFieldError: WrappedComposition.owner in SystemUIGoogle.apk",
+  "hoodieRuntimeStarted": false,
+  "databaseTestsExecuted": false,
+  "systemFailureRootCauseProven": false,
+  "witness": {
+    "file": "r8-fd-api35-boot-crash.txt",
+    "sha256": "6ffb33d742c0a30b8c361f9e57ebc63698c9ee57f80bdd5f13f262a64d9329b1",
+    "artifactEntry": "reports/r8-qa/emulator/emulator-boot-crashes.txt",
+    "artifactSha256": "6ffb33d742c0a30b8c361f9e57ebc63698c9ee57f80bdd5f13f262a64d9329b1",
+    "normalization": "CRLF to LF only"
+  },
+  "nativeDefectsClosed": false,
+  "runtimeApproved": false,
+  "releaseApproved": false
+}

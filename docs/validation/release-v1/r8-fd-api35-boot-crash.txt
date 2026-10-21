@@ -1,0 +1,24 @@
+--------- beginning of crash
+10-21 22:04:19.888   987   997 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x40 in tid 997 (Jit thread pool), pid 987 (ndroid.systemui)
+10-21 22:04:21.358   987   987 E AndroidRuntime: FATAL EXCEPTION: main
+10-21 22:04:21.358   987   987 E AndroidRuntime: Process: com.android.systemui, PID: 987
+10-21 22:04:21.358   987   987 E AndroidRuntime: java.lang.NoSuchFieldError: No instance field owner of type Landroidx/compose/ui/platform/AndroidComposeView; in class Landroidx/compose/ui/platform/WrappedComposition; or its superclasses (declaration of 'androidx.compose.ui.platform.WrappedComposition' appears in /system_ext/priv-app/SystemUIGoogle/SystemUIGoogle.apk)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at androidx.compose.ui.platform.WrappedComposition$setContent$1$1$1$1.invokeSuspend(go/retraceme e19e1a21f2fa0e77de400cae9821cbf6a9e10d1c445c225aa0ebd2b4ef1f9fe1:29)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(go/retraceme e19e1a21f2fa0e77de400cae9821cbf6a9e10d1c445c225aa0ebd2b4ef1f9fe1:8)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at kotlinx.coroutines.DispatchedTask.run(go/retraceme e19e1a21f2fa0e77de400cae9821cbf6a9e10d1c445c225aa0ebd2b4ef1f9fe1:110)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at androidx.compose.ui.platform.AndroidUiDispatcher.access$performTrampolineDispatch(go/retraceme e19e1a21f2fa0e77de400cae9821cbf6a9e10d1c445c225aa0ebd2b4ef1f9fe1:24)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at androidx.compose.ui.platform.AndroidUiDispatcher$dispatchCallback$1.doFrame(go/retraceme e19e1a21f2fa0e77de400cae9821cbf6a9e10d1c445c225aa0ebd2b4ef1f9fe1:10)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1404)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1415)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.view.Choreographer.doCallbacks(Choreographer.java:1015)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.view.Choreographer.doFrame(Choreographer.java:941)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:1389)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:959)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:317)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:8705)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+10-21 22:04:21.358   987   987 E AndroidRuntime: 	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [androidx.compose.ui.platform.MotionDurationScaleImpl@76fb41f, androidx.compose.runtime.BroadcastFrameClock@26b536c, StandaloneCoroutine{Cancelling}@ca59d35, AndroidUiDispatcher@46845ca]

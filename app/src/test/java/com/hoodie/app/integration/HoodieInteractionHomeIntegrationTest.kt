@@ -12,6 +12,7 @@ import com.hoodie.app.engine.interaction.*
 import com.hoodie.app.engine.officeRoutine
 import com.hoodie.app.integration.mobility.MobilityGraph
 import com.hoodie.app.pixel.animation.AnimationStateMachine
+import com.hoodie.app.pixel.sprite.AndroidSpriteSheets
 import com.hoodie.app.presentation.screens.home.HomeUiEvent
 import com.hoodie.app.presentation.screens.home.HomeViewModel
 import com.hoodie.app.presentation.screens.home.HomePresentationFeatures
@@ -35,9 +36,17 @@ import kotlin.random.Random
 
 /** Real Home ViewModel and Room graph; gestures must not invalidate any persisted table. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = Application::class)
+@Config(sdk = [35], application = HoodieInteractionHomeIntegrationTest.SpriteApplication::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class HoodieInteractionHomeIntegrationTest {
+    /** Keep production clip frames/timing without starting unrelated workers or Android Keystore. */
+    class SpriteApplication : Application() {
+        override fun onCreate() {
+            super.onCreate()
+            AndroidSpriteSheets.install(this)
+        }
+    }
+
     @Before fun setupDispatcher() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
     @After fun resetDispatcher() { Dispatchers.resetMain() }
 

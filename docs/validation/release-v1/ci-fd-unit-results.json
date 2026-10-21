@@ -1,0 +1,26 @@
+{
+  "commit": "fd19a3d9713dc26a1c1470c43ba568be1b2e5e1a",
+  "runId": 39682471113,
+  "jobId": 119508129893,
+  "artifactId": 12384278268,
+  "artifactSha256": "4b851aa475c9c0b9204731aa669bf66a3832bd956fbe329646eee77d4c708c4b",
+  "suites": 307,
+  "tests": 1360,
+  "passed": 1360,
+  "failed": 0,
+  "skipped": 0,
+  "interactionCases": 4,
+  "interactionStandardErrorEmpty": true,
+  "lintConclusion": "success",
+  "witness": {
+    "file": "ci-fd-interaction-junit.xml",
+    "sha256": "5863fe768033d80c50f478ceff085ba70f5d479ffd772271979bb919991402cd",
+    "artifactEntry": "test-results/testDebugUnitTest/TEST-com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest.xml",
+    "artifactSha256": "5863fe768033d80c50f478ceff085ba70f5d479ffd772271979bb919991402cd",
+    "normalization": "CRLF to LF only"
+  },
+  "fidelityLimit": "This run used plain Application and did not explicitly install AndroidSpriteSheets. Production frame/interrupt timing depends on the sprite provider. The subsequent SpriteApplication restores that initialization and requires its own CI result.",
+  "originalMissingResponseCauseProven": false,
+  "fullCiApproved": false,
+  "releaseApproved": false
+}
