@@ -1,0 +1,741 @@
+{
+  "runId": 39694977505,
+  "commit": "725c32102e1fa122de55d55e7497db89265da693",
+  "matrixConclusion": "failure",
+  "observations": [
+    {
+      "api": 35,
+      "jobId": 119554201868,
+      "jobConclusion": "failure",
+      "artifactId": 12390044702,
+      "artifactSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435",
+      "uiScenarioPassed": true,
+      "result": {
+        "passed": true,
+        "api": 35,
+        "pageSize": 16384,
+        "pair": {
+          "baseline": {
+            "commit": "e44c17889a1430e77a78d1854e3924f28afbe85a",
+            "mainSourceTree": "dcbcfcdde93bad50771df35a4ca902d64ba427d4",
+            "package": "com.hoodie.app",
+            "versionCode": 6,
+            "schemaVersionFromSource": 11,
+            "apkSha256": "a766aeeba1a7033e87ca38e311a441a192a9fd7f9bf6ed56aecc291bf29232c2",
+            "aabSha256": "5e79100a6703baceb79c9d7993ea016f943552d71209a80ae2fc748cdbcb786d",
+            "mappingSha256": "8f3e9f42a7bf8f6dfe7b541d4680623667a8861506b1591f9363bbbb68dfac22",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "83b26818a24d0f3b116a7bbf75a175e8dcf476deb21b22f6c4cdb2ccf2ae6dee",
+            "apkDexSha256": {
+              "classes.dex": "352f77d756ddccaadd3e20f513127cf6e0198d3f271cf7ad1fccaf8cd5dce8ab"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "current": {
+            "commit": "725c32102e1fa122de55d55e7497db89265da693",
+            "mainSourceTree": "b37c17f71b9ac152b1eef99abd6fe2504dea89c4",
+            "package": "com.hoodie.app",
+            "versionCode": 7,
+            "schemaVersionFromSource": 12,
+            "apkSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435",
+            "aabSha256": "13213fcfd456f8c29e28f74bd28d9ecfa5b128e638c4d115d338761192e2d5fb",
+            "mappingSha256": "48022335f083ab04be75a3576f3dd8cb4438d391d7fbf98a2b5d69a21ca5031e",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "44ca2b84b497fe33f21d4019d232ae53938ea4705e7d561156b610c2975a2e27",
+            "apkDexSha256": {
+              "classes.dex": "b77c614400997e093e59d7906804c0055e411e30f33731517cf5b541330c4501"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "runtimeVerified": false,
+          "releaseApproved": false,
+          "scope": "Two unmodified release codebases with R8, development signing and QA version codes 6/7. APKs derived from AABs; no upload key or Play approval."
+        },
+        "releaseApproved": false,
+        "scope": "UI-observed profile/place/favorite preservation across real derived R8 APK upgrade, then new place write. Not all-row/relationship, full-history, backup, physical-device, upload-key or Play acceptance.",
+        "before": {
+          "uid": 10207,
+          "versionCode": 6,
+          "firstInstallTime": "2026-10-21 23:54:41",
+          "apkSha256": "a766aeeba1a7033e87ca38e311a441a192a9fd7f9bf6ed56aecc291bf29232c2"
+        },
+        "after": {
+          "uid": 10207,
+          "versionCode": 7,
+          "firstInstallTime": "2026-10-21 23:54:41",
+          "apkSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435"
+        },
+        "uidPreserved": true,
+        "firstInstallTimePreserved": true,
+        "processIds": [
+          "2873",
+          "5308",
+          "5484",
+          "6434"
+        ],
+        "profilePreserved": true,
+        "placeAndFavoritePreserved": true,
+        "newPlaceWriteObserved": true,
+        "bothPlacesPreservedAfterReopen": true,
+        "historicalSchemaVersionFromSource": 11,
+        "currentSchemaVersionFromSource": 12,
+        "observedDatabaseSchemaReadDirectly": false,
+        "snapshots": 66
+      },
+      "binariesMatchBuildPair": true,
+      "binaryAudits": [
+        {
+          "label": "baseline",
+          "metadata": {
+            "commit": "e44c17889a1430e77a78d1854e3924f28afbe85a",
+            "mainSourceTree": "dcbcfcdde93bad50771df35a4ca902d64ba427d4",
+            "package": "com.hoodie.app",
+            "versionCode": 6,
+            "schemaVersionFromSource": 11,
+            "apkSha256": "a766aeeba1a7033e87ca38e311a441a192a9fd7f9bf6ed56aecc291bf29232c2",
+            "aabSha256": "5e79100a6703baceb79c9d7993ea016f943552d71209a80ae2fc748cdbcb786d",
+            "mappingSha256": "8f3e9f42a7bf8f6dfe7b541d4680623667a8861506b1591f9363bbbb68dfac22",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "83b26818a24d0f3b116a7bbf75a175e8dcf476deb21b22f6c4cdb2ccf2ae6dee",
+            "apkDexSha256": {
+              "classes.dex": "352f77d756ddccaadd3e20f513127cf6e0198d3f271cf7ad1fccaf8cd5dce8ab"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "aabCertificateIndependentlyBound": true,
+          "elfZipRelroRecheckedLocally": true,
+          "librariesPerArchive": 12
+        },
+        {
+          "label": "current",
+          "metadata": {
+            "commit": "725c32102e1fa122de55d55e7497db89265da693",
+            "mainSourceTree": "b37c17f71b9ac152b1eef99abd6fe2504dea89c4",
+            "package": "com.hoodie.app",
+            "versionCode": 7,
+            "schemaVersionFromSource": 12,
+            "apkSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435",
+            "aabSha256": "13213fcfd456f8c29e28f74bd28d9ecfa5b128e638c4d115d338761192e2d5fb",
+            "mappingSha256": "48022335f083ab04be75a3576f3dd8cb4438d391d7fbf98a2b5d69a21ca5031e",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "44ca2b84b497fe33f21d4019d232ae53938ea4705e7d561156b610c2975a2e27",
+            "apkDexSha256": {
+              "classes.dex": "b77c614400997e093e59d7906804c0055e411e30f33731517cf5b541330c4501"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "aabCertificateIndependentlyBound": true,
+          "elfZipRelroRecheckedLocally": true,
+          "librariesPerArchive": 12
+        }
+      ],
+      "installedHashesUidFirstInstallTimeRechecked": true,
+      "xmlAndFocusRecordsChecked": 66,
+      "androidLaunchStates": [
+        "COLD",
+        "COLD",
+        "COLD",
+        "COLD"
+      ],
+      "profilePlacesFavoriteRadiusRechecked": true,
+      "keyboardObservations": [
+        {
+          "stage": "baseline-name-keyboard-state",
+          "windowEntry": "runtime/scenario/004-baseline-name-keyboard-state-window.txt",
+          "windowSha256": "7225eae4f4a094f98a37e36f99a39a4ba25c85de9d5848dbf503c03240ca3bf9",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-name-keyboard-hidden",
+          "windowEntry": "runtime/scenario/005-baseline-name-keyboard-hidden-window.txt",
+          "windowSha256": "2dadba8832a7f38586d4b311db7c3e7c751d1731906461bbbf119fe0bd0b4736",
+          "imeVisible": false
+        },
+        {
+          "stage": "baseline-place-name-keyboard-state",
+          "windowEntry": "runtime/scenario/015-baseline-place-name-keyboard-state-window.txt",
+          "windowSha256": "de1d73d506087a9a871e3307d90a765cc3fafd391cf0525e42e25a2dfaf2f402",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-place-name-keyboard-hidden",
+          "windowEntry": "runtime/scenario/016-baseline-place-name-keyboard-hidden-window.txt",
+          "windowSha256": "4d9958bdfdb5602a02260b4d684cf34bfc6af54afe21a9df539a40a4766d1a3d",
+          "imeVisible": false
+        },
+        {
+          "stage": "baseline-place-coordinates-keyboard-state",
+          "windowEntry": "runtime/scenario/019-baseline-place-coordinates-keyboard-state-window.txt",
+          "windowSha256": "ca7c7cefd51c734775c74759740002c9b6ebe81f78b67430271c2a76261d2eca",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-place-coordinates-keyboard-hidden",
+          "windowEntry": "runtime/scenario/020-baseline-place-coordinates-keyboard-hidden-window.txt",
+          "windowSha256": "cb62ba637bae9a0d2c932919ad6e64901392663ab33bcc9b4cfc39b964a15198",
+          "imeVisible": false
+        },
+        {
+          "stage": "baseline-favorite",
+          "windowEntry": "runtime/scenario/023-baseline-favorite-window.txt",
+          "windowSha256": "1ad7fd576c82ea7bab3b16802ae6e33cd441381fa3796f7ff303a7a23d8cec81",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-favorite-keyboard-state",
+          "windowEntry": "runtime/scenario/024-baseline-favorite-keyboard-state-window.txt",
+          "windowSha256": "53a7d0512062842b40f0d708de3c9c50de8b74d8a17a7cd5cb9bf0a90ca29040",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-favorite-keyboard-hidden",
+          "windowEntry": "runtime/scenario/025-baseline-favorite-keyboard-hidden-window.txt",
+          "windowSha256": "4d78c5305ee20fc4150ea4c0f3468750dca7057084af0cd130a85a90058d92ee",
+          "imeVisible": false
+        },
+        {
+          "stage": "baseline-favorite-after-keyboard",
+          "windowEntry": "runtime/scenario/026-baseline-favorite-after-keyboard-window.txt",
+          "windowSha256": "16b9c628de461c20ae9b5217493746d77309f0df0a9563e5dd1891beec18b25d",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-place-name-keyboard-state",
+          "windowEntry": "runtime/scenario/039-current-place-name-keyboard-state-window.txt",
+          "windowSha256": "9d13ca28ec84a893313f565f3a3683ee1b404dec6036226d3790e0e6d521a0f1",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-place-name-keyboard-hidden",
+          "windowEntry": "runtime/scenario/040-current-place-name-keyboard-hidden-window.txt",
+          "windowSha256": "15cbfd14e9c0db190067a31dfe82c2aa1a68d2c7539808a528537c847469ecf4",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-place-coordinates-keyboard-state",
+          "windowEntry": "runtime/scenario/043-current-place-coordinates-keyboard-state-window.txt",
+          "windowSha256": "0bfc4b224ebfc4fccbe390776514091718bf8e419e075777652489ba0c9db437",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-place-coordinates-keyboard-hidden",
+          "windowEntry": "runtime/scenario/044-current-place-coordinates-keyboard-hidden-window.txt",
+          "windowSha256": "d5c6064231ae95bdda2de126b17085a344c8dcbcf3d01f245b8faab3e033fc6a",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-find-old-keyboard-state",
+          "windowEntry": "runtime/scenario/049-current-find-old-keyboard-state-window.txt",
+          "windowSha256": "0a2e1479ed54f5d091d9138e9a17658fe884136a95b74ad4fa83267f535c3709",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-find-old-keyboard-hidden",
+          "windowEntry": "runtime/scenario/050-current-find-old-keyboard-hidden-window.txt",
+          "windowSha256": "b6471bea848bc3e891f07d898d7b42fbe7ad6ab31cedba9ff4e82ce6faa180ee",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-find-new-keyboard-state",
+          "windowEntry": "runtime/scenario/053-current-find-new-keyboard-state-window.txt",
+          "windowSha256": "cd02e14840c7ae2996f6e4c338c5332ccbea5662fadff95e02f5990c0e8d517f",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-find-new-keyboard-hidden",
+          "windowEntry": "runtime/scenario/054-current-find-new-keyboard-hidden-window.txt",
+          "windowSha256": "2c1872d0716a07334012256856900a5f6985458439efd7d5baee52fff114c33b",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-reopened-find-old-keyboard-state",
+          "windowEntry": "runtime/scenario/060-current-reopened-find-old-keyboard-state-window.txt",
+          "windowSha256": "885e197f9a53979a57bf15881f678fb8ec43ee33f4069c1308e7e8f22c3f564e",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-reopened-find-old-keyboard-hidden",
+          "windowEntry": "runtime/scenario/061-current-reopened-find-old-keyboard-hidden-window.txt",
+          "windowSha256": "4f44b39a4f84429a94e3ff78f8910725ada398e393f556c4308c565b2671013f",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-reopened-find-new-keyboard-state",
+          "windowEntry": "runtime/scenario/064-current-reopened-find-new-keyboard-state-window.txt",
+          "windowSha256": "cfb53b52704c4b349fb51b94c4b3b2e9b63c46e849cc4174170ebe274691a689",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-reopened-find-new-keyboard-hidden",
+          "windowEntry": "runtime/scenario/065-current-reopened-find-new-keyboard-hidden-window.txt",
+          "windowSha256": "0686ece1ec18a1da0a9c873b05b9719345b9a97a253d0738e1608b7b4baefd79",
+          "imeVisible": false
+        }
+      ],
+      "imeCorrectionObservedAtFavorite": true,
+      "healthFileHashes": {
+        "runtime/final-logcat.txt": "38bc6dd9582e9d6c3d67631b1a9183e42eeacc55cdde9304c8e3f20997539373",
+        "runtime/final-crashes.txt": "ce661172aa4bb207803b46ff1cab94bcf8b68936bf943c737ee077b3a50702ed",
+        "emulator/emulator-final-logcat.txt": "f74e41fc75b5776152f0a397bb836cd46ffd3cea3a77e7c95dc35691906c7c9a",
+        "emulator/emulator-final-crashes.txt": "ce661172aa4bb207803b46ff1cab94bcf8b68936bf943c737ee077b3a50702ed"
+      },
+      "fatalProcessesInRuntimeCrashBuffer": [
+        "com.google.android.apps.wellbeing",
+        "com.google.android.apps.messaging"
+      ],
+      "globalHealthPassed": false,
+      "databaseSchemaReadDirectly": false,
+      "releaseApproved": false
+    },
+    {
+      "api": 36,
+      "jobId": 119554201862,
+      "jobConclusion": "success",
+      "artifactId": 12390522599,
+      "artifactSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435",
+      "uiScenarioPassed": true,
+      "result": {
+        "passed": true,
+        "api": 36,
+        "pageSize": 16384,
+        "pair": {
+          "baseline": {
+            "commit": "e44c17889a1430e77a78d1854e3924f28afbe85a",
+            "mainSourceTree": "dcbcfcdde93bad50771df35a4ca902d64ba427d4",
+            "package": "com.hoodie.app",
+            "versionCode": 6,
+            "schemaVersionFromSource": 11,
+            "apkSha256": "a766aeeba1a7033e87ca38e311a441a192a9fd7f9bf6ed56aecc291bf29232c2",
+            "aabSha256": "5e79100a6703baceb79c9d7993ea016f943552d71209a80ae2fc748cdbcb786d",
+            "mappingSha256": "8f3e9f42a7bf8f6dfe7b541d4680623667a8861506b1591f9363bbbb68dfac22",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "83b26818a24d0f3b116a7bbf75a175e8dcf476deb21b22f6c4cdb2ccf2ae6dee",
+            "apkDexSha256": {
+              "classes.dex": "352f77d756ddccaadd3e20f513127cf6e0198d3f271cf7ad1fccaf8cd5dce8ab"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "current": {
+            "commit": "725c32102e1fa122de55d55e7497db89265da693",
+            "mainSourceTree": "b37c17f71b9ac152b1eef99abd6fe2504dea89c4",
+            "package": "com.hoodie.app",
+            "versionCode": 7,
+            "schemaVersionFromSource": 12,
+            "apkSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435",
+            "aabSha256": "13213fcfd456f8c29e28f74bd28d9ecfa5b128e638c4d115d338761192e2d5fb",
+            "mappingSha256": "48022335f083ab04be75a3576f3dd8cb4438d391d7fbf98a2b5d69a21ca5031e",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "44ca2b84b497fe33f21d4019d232ae53938ea4705e7d561156b610c2975a2e27",
+            "apkDexSha256": {
+              "classes.dex": "b77c614400997e093e59d7906804c0055e411e30f33731517cf5b541330c4501"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "runtimeVerified": false,
+          "releaseApproved": false,
+          "scope": "Two unmodified release codebases with R8, development signing and QA version codes 6/7. APKs derived from AABs; no upload key or Play approval."
+        },
+        "releaseApproved": false,
+        "scope": "UI-observed profile/place/favorite preservation across real derived R8 APK upgrade, then new place write. Not all-row/relationship, full-history, backup, physical-device, upload-key or Play acceptance.",
+        "before": {
+          "uid": 10213,
+          "versionCode": 6,
+          "firstInstallTime": "2026-10-21 23:55:28",
+          "apkSha256": "a766aeeba1a7033e87ca38e311a441a192a9fd7f9bf6ed56aecc291bf29232c2"
+        },
+        "after": {
+          "uid": 10213,
+          "versionCode": 7,
+          "firstInstallTime": "2026-10-21 23:55:28",
+          "apkSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435"
+        },
+        "uidPreserved": true,
+        "firstInstallTimePreserved": true,
+        "processIds": [
+          "2937",
+          "5561",
+          "5825",
+          "6711"
+        ],
+        "profilePreserved": true,
+        "placeAndFavoritePreserved": true,
+        "newPlaceWriteObserved": true,
+        "bothPlacesPreservedAfterReopen": true,
+        "historicalSchemaVersionFromSource": 11,
+        "currentSchemaVersionFromSource": 12,
+        "observedDatabaseSchemaReadDirectly": false,
+        "snapshots": 64
+      },
+      "binariesMatchBuildPair": true,
+      "binaryAudits": [
+        {
+          "label": "baseline",
+          "metadata": {
+            "commit": "e44c17889a1430e77a78d1854e3924f28afbe85a",
+            "mainSourceTree": "dcbcfcdde93bad50771df35a4ca902d64ba427d4",
+            "package": "com.hoodie.app",
+            "versionCode": 6,
+            "schemaVersionFromSource": 11,
+            "apkSha256": "a766aeeba1a7033e87ca38e311a441a192a9fd7f9bf6ed56aecc291bf29232c2",
+            "aabSha256": "5e79100a6703baceb79c9d7993ea016f943552d71209a80ae2fc748cdbcb786d",
+            "mappingSha256": "8f3e9f42a7bf8f6dfe7b541d4680623667a8861506b1591f9363bbbb68dfac22",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "83b26818a24d0f3b116a7bbf75a175e8dcf476deb21b22f6c4cdb2ccf2ae6dee",
+            "apkDexSha256": {
+              "classes.dex": "352f77d756ddccaadd3e20f513127cf6e0198d3f271cf7ad1fccaf8cd5dce8ab"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "aabCertificateIndependentlyBound": true,
+          "elfZipRelroRecheckedLocally": true,
+          "librariesPerArchive": 12
+        },
+        {
+          "label": "current",
+          "metadata": {
+            "commit": "725c32102e1fa122de55d55e7497db89265da693",
+            "mainSourceTree": "b37c17f71b9ac152b1eef99abd6fe2504dea89c4",
+            "package": "com.hoodie.app",
+            "versionCode": 7,
+            "schemaVersionFromSource": 12,
+            "apkSha256": "bf7fa5d3d62d6500143d1ccde7ba9774701667ee9c71859183affb81569e4435",
+            "aabSha256": "13213fcfd456f8c29e28f74bd28d9ecfa5b128e638c4d115d338761192e2d5fb",
+            "mappingSha256": "48022335f083ab04be75a3576f3dd8cb4438d391d7fbf98a2b5d69a21ca5031e",
+            "certificateSha256": "ea7e41ca03f3cde81e007a6ae7c81a59474bfff83d94c8f22108b9a8f0481da3",
+            "stringsSha256": "44ca2b84b497fe33f21d4019d232ae53938ea4705e7d561156b610c2975a2e27",
+            "apkDexSha256": {
+              "classes.dex": "b77c614400997e093e59d7906804c0055e411e30f33731517cf5b541330c4501"
+            },
+            "apkNativeSha256": {
+              "lib/arm64-v8a/libandroidx.graphics.path.so": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+              "lib/arm64-v8a/libdatastore_shared_counter.so": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+              "lib/arm64-v8a/libsqlcipher.so": "32d4c1bb89a90b59a3d6be950bbc36c133f8762f627b333a3512205c8037a48b",
+              "lib/armeabi-v7a/libandroidx.graphics.path.so": "41399eba6fc2a60f6f14642375c1824f3cf25eb8fec7397d753730a3ceda3e2b",
+              "lib/armeabi-v7a/libdatastore_shared_counter.so": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc",
+              "lib/armeabi-v7a/libsqlcipher.so": "c2084efe2469e69ffafa09425800de4bf62fb34cb246b645ac7951294f3e28ba",
+              "lib/x86/libandroidx.graphics.path.so": "eb0570b41fd3bff25d8204a967c03bd7550719e768b791f680cc40cbe35f29af",
+              "lib/x86/libdatastore_shared_counter.so": "cd4a1649e2c8350703146f94a6ee2bf4c3c8c9f172159f805b61a4a2abdf0659",
+              "lib/x86/libsqlcipher.so": "d26f8ccde7bde6b743ab110874a322b7d8de29123b1675d0ec9508b931c9f7b1",
+              "lib/x86_64/libandroidx.graphics.path.so": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0",
+              "lib/x86_64/libdatastore_shared_counter.so": "fb6c9208988c49ae94943bc3236fa763ba584722e044fa4ea9a12d2941027105",
+              "lib/x86_64/libsqlcipher.so": "81b98e79ea7176482daf40497f34fc7eb701c661d13c09dada66a1a51e8d9561"
+            },
+            "developmentSigningOnly": true,
+            "releaseApproved": false
+          },
+          "aabCertificateIndependentlyBound": true,
+          "elfZipRelroRecheckedLocally": true,
+          "librariesPerArchive": 12
+        }
+      ],
+      "installedHashesUidFirstInstallTimeRechecked": true,
+      "xmlAndFocusRecordsChecked": 64,
+      "androidLaunchStates": [
+        "COLD",
+        "COLD",
+        "COLD",
+        "COLD"
+      ],
+      "profilePlacesFavoriteRadiusRechecked": true,
+      "keyboardObservations": [
+        {
+          "stage": "baseline-name-keyboard-state",
+          "windowEntry": "runtime/scenario/004-baseline-name-keyboard-state-window.txt",
+          "windowSha256": "1a6cd2b5b0426fdfb4170556aed4a8a890867194e935d6b2d3bd1bf384b595b6",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-name-keyboard-hidden",
+          "windowEntry": "runtime/scenario/005-baseline-name-keyboard-hidden-window.txt",
+          "windowSha256": "ddb7b4c94c6e26d6430c4d061fa61e3e7ad72bae47729f95491f3abd96fd621d",
+          "imeVisible": false
+        },
+        {
+          "stage": "baseline-place-name-keyboard-state",
+          "windowEntry": "runtime/scenario/016-baseline-place-name-keyboard-state-window.txt",
+          "windowSha256": "b797608ce68b19e147c2b89d51db83c4f2272ad02cbf8a5d2835ba4aec4a3cb8",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-place-name-keyboard-hidden",
+          "windowEntry": "runtime/scenario/017-baseline-place-name-keyboard-hidden-window.txt",
+          "windowSha256": "9658828139d4e728b20504d04a818788a4cd1d275fb4b62875e950f04ce017d3",
+          "imeVisible": false
+        },
+        {
+          "stage": "baseline-place-coordinates-keyboard-state",
+          "windowEntry": "runtime/scenario/020-baseline-place-coordinates-keyboard-state-window.txt",
+          "windowSha256": "e0a689b82f1bcd1acc6785f38dae3f9fcdbe33f8c5527430c5f0844928bd3b6a",
+          "imeVisible": true
+        },
+        {
+          "stage": "baseline-place-coordinates-keyboard-hidden",
+          "windowEntry": "runtime/scenario/021-baseline-place-coordinates-keyboard-hidden-window.txt",
+          "windowSha256": "bef6ecfff10c985d26364120c1944c44e6bc2008d25100e019d5308fab5cccaf",
+          "imeVisible": false
+        },
+        {
+          "stage": "baseline-favorite",
+          "windowEntry": "runtime/scenario/024-baseline-favorite-window.txt",
+          "windowSha256": "4f81509831cd3d5b6fc3bd956e11f8569c1cb42ad83a269ac5c476e852925c6a",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-place-name-keyboard-state",
+          "windowEntry": "runtime/scenario/037-current-place-name-keyboard-state-window.txt",
+          "windowSha256": "8fe1ec1ce8cf0a8806013ea3cd2a2d6374801ffd04b36bd2e0f656337975e575",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-place-name-keyboard-hidden",
+          "windowEntry": "runtime/scenario/038-current-place-name-keyboard-hidden-window.txt",
+          "windowSha256": "3ba30a2ce1e1a40116cf993bf2363a0e77ddf2c5af20379066c08c0e9a64217f",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-place-coordinates-keyboard-state",
+          "windowEntry": "runtime/scenario/041-current-place-coordinates-keyboard-state-window.txt",
+          "windowSha256": "14805bd44a3b0f477e89aa1351e8426c313139c085ffc52e9bd38ca5fe631fe2",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-place-coordinates-keyboard-hidden",
+          "windowEntry": "runtime/scenario/042-current-place-coordinates-keyboard-hidden-window.txt",
+          "windowSha256": "d2efa73c708ee7945c8734c9aa22ee6c04448d1d6124a6da0dd45b99efc947b8",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-find-old-keyboard-state",
+          "windowEntry": "runtime/scenario/047-current-find-old-keyboard-state-window.txt",
+          "windowSha256": "f3dc4f61cebe7582772f8f5bd01c8bb5492caf18feddcf26b7f68c1ed625b653",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-find-old-keyboard-hidden",
+          "windowEntry": "runtime/scenario/048-current-find-old-keyboard-hidden-window.txt",
+          "windowSha256": "a7c24f8ea13fdb52d134e7fbc857540333eefd7fe7ad481d98e52047dc7bd8dd",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-find-new-keyboard-state",
+          "windowEntry": "runtime/scenario/051-current-find-new-keyboard-state-window.txt",
+          "windowSha256": "be18fa499bc2e2d8a41c47d8b7bf82425f5d0e71413c874b304acf2db9da6eb5",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-find-new-keyboard-hidden",
+          "windowEntry": "runtime/scenario/052-current-find-new-keyboard-hidden-window.txt",
+          "windowSha256": "02311854013da781afda69c0e09208fab5e99fd64a3489b1855fea2a1ad261b1",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-reopened-find-old-keyboard-state",
+          "windowEntry": "runtime/scenario/058-current-reopened-find-old-keyboard-state-window.txt",
+          "windowSha256": "5f4d12e77025de6d68fdad6a9ca0b3cf665ad577e18d2ff9a4c86a38ec5c0086",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-reopened-find-old-keyboard-hidden",
+          "windowEntry": "runtime/scenario/059-current-reopened-find-old-keyboard-hidden-window.txt",
+          "windowSha256": "6847f36b961fc85ae065d28fd5aa553cfd82c29abf9ae9c3a0009280b06e49b7",
+          "imeVisible": false
+        },
+        {
+          "stage": "current-reopened-find-new-keyboard-state",
+          "windowEntry": "runtime/scenario/062-current-reopened-find-new-keyboard-state-window.txt",
+          "windowSha256": "e540361b8e3588647807e871f88cdf4706731fddc9be6f152339d82d415f6b98",
+          "imeVisible": true
+        },
+        {
+          "stage": "current-reopened-find-new-keyboard-hidden",
+          "windowEntry": "runtime/scenario/063-current-reopened-find-new-keyboard-hidden-window.txt",
+          "windowSha256": "52f133bacfa54388bff5d7c786fee40ccac28c268106dd5d2ed1449758369ddc",
+          "imeVisible": false
+        }
+      ],
+      "imeCorrectionObservedAtFavorite": false,
+      "healthFileHashes": {
+        "runtime/final-logcat.txt": "c0779d09ec761c88a3764936980a64537cd4af4b7394f81e52bc0588bb0b4076",
+        "runtime/final-crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "emulator/emulator-final-logcat.txt": "e658102fba33040dfe9c559ff8005031abea7a988670dae221ef08096f263f69",
+        "emulator/emulator-final-crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "fatalProcessesInRuntimeCrashBuffer": [],
+      "globalHealthPassed": true,
+      "databaseSchemaReadDirectly": false,
+      "releaseApproved": false
+    }
+  ],
+  "witnesses": [
+    {
+      "file": "r8-upgrade-725-api35-baseline-preserved-data.xml",
+      "sha256": "f7ffbad2e5e88ef17a922148d67b0a89cc5948457680ed612dc6078fe7f5cc6a",
+      "artifactEntry": "runtime/scenario/027-baseline-preserved-data.xml",
+      "artifactSha256": "f7ffbad2e5e88ef17a922148d67b0a89cc5948457680ed612dc6078fe7f5cc6a",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api35-current-preserved-data.xml",
+      "sha256": "f44919e07d66480a0206c23792c63ab3734e504a03098d17a4ebe2ad1c1e78ff",
+      "artifactEntry": "runtime/scenario/033-current-preserved-data.xml",
+      "artifactSha256": "f44919e07d66480a0206c23792c63ab3734e504a03098d17a4ebe2ad1c1e78ff",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api35-reopened-old.xml",
+      "sha256": "cb991ca59bdd35aa5544a1a3edb07778210a719985add61a9840b6940557bd28",
+      "artifactEntry": "runtime/scenario/062-current-reopened-record.xml",
+      "artifactSha256": "cb991ca59bdd35aa5544a1a3edb07778210a719985add61a9840b6940557bd28",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api35-reopened-new.xml",
+      "sha256": "231270678e54e1999090973cd24ee2c026a4817c3ed31e0331ee0449eaba5fe0",
+      "artifactEntry": "runtime/scenario/066-current-reopened-record.xml",
+      "artifactSha256": "231270678e54e1999090973cd24ee2c026a4817c3ed31e0331ee0449eaba5fe0",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api35-system-crashes.txt",
+      "sha256": "ce661172aa4bb207803b46ff1cab94bcf8b68936bf943c737ee077b3a50702ed",
+      "artifactEntry": "runtime/final-crashes.txt",
+      "artifactSha256": "ce661172aa4bb207803b46ff1cab94bcf8b68936bf943c737ee077b3a50702ed",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api36-baseline-preserved-data.xml",
+      "sha256": "c8b926159c04e10a3187c4cc52e5104de175319f8d6b7cdf4f84b29c02c31285",
+      "artifactEntry": "runtime/scenario/025-baseline-preserved-data.xml",
+      "artifactSha256": "c8b926159c04e10a3187c4cc52e5104de175319f8d6b7cdf4f84b29c02c31285",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api36-current-preserved-data.xml",
+      "sha256": "50ce968268e139561dae6244a327bae1ba6dadfef9d4b511616cd3efbed7e2bf",
+      "artifactEntry": "runtime/scenario/031-current-preserved-data.xml",
+      "artifactSha256": "50ce968268e139561dae6244a327bae1ba6dadfef9d4b511616cd3efbed7e2bf",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api36-reopened-old.xml",
+      "sha256": "9fba2abbe66aa4740af32320133ebae5ff9aa3ece7c2b0fe0b4ded66d8be4b35",
+      "artifactEntry": "runtime/scenario/060-current-reopened-record.xml",
+      "artifactSha256": "9fba2abbe66aa4740af32320133ebae5ff9aa3ece7c2b0fe0b4ded66d8be4b35",
+      "normalization": "CRLF to LF only"
+    },
+    {
+      "file": "r8-upgrade-725-api36-reopened-new.xml",
+      "sha256": "410cee296adc2420c1184d24fa9f7ee79d2b23684479dbc6b423abecca51cbc0",
+      "artifactEntry": "runtime/scenario/064-current-reopened-record.xml",
+      "artifactSha256": "410cee296adc2420c1184d24fa9f7ee79d2b23684479dbc6b423abecca51cbc0",
+      "normalization": "CRLF to LF only"
+    }
+  ],
+  "releaseApproved": false,
+  "scope": "Both R8 UI prior-schema upgrades and reopen/write subsets independently rechecked on 16KB AVDs. API35 IME correction exercised, but its global health gate failed on system-app native crashes. API36 passed. Development signing, source schema constants only; not full-history/all-row/physical/upload-key/Play acceptance, nor closure of previous Hoodie native defects."
+}

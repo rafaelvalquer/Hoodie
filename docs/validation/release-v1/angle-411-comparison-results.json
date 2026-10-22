@@ -45,7 +45,24 @@
       "sha256": "581710cea1e78ae8412482efd3d93a3b4023b2949e013f53b93374c4fbbb906d"
     }
   ],
-  "localCaptureReaudit": false,
+  "localCaptureReaudit": true,
   "releaseApproved": false,
-  "scope": "Result ZIP and all 222 comparison entries checked locally. Capture counts, health and pixels reported by the CI comparator; raw capture ZIPs not reaudited locally here. Same-vendor inconclusion preserved; no Intel stability, baseline or mandatory CI approval."
+  "scope": "Both raw capture ZIP hashes, all image hashes/dimensions/opacity, runner cases/order, raw health and renderer evidence rechecked locally using the retained comparator. Local and CI structured results identical. Same-vendor inconclusion remains; no Intel stability, baseline or release approval.",
+  "localReaudit": {
+    "runId": 39691860048,
+    "driverCommit": "41162abb34be3b270f4934b22437559dab0038b0",
+    "localReaudit": true,
+    "comparatorSha256": "8adc1bbc0a4b8e1d9bb6fbb0b252dfa3521a68e0c1063bb3d17c9eb3cb54dd59",
+    "localResultSha256": "c6aa6902392a2a78599bd80c95a8711ecb3709fd1550565059c1c0428daec420",
+    "ciResultSha256": "6b8257548ce827f0b4ce069df12c8020fdd2b8d16ae28088f584e5747f48cdd1",
+    "structuredResultsIdentical": true,
+    "captureArchiveHashes": [
+      "36f5f359d1a23d9701d1c4077f13ff5bc486cd3acf3ed3518ddd520e3b4a2e0f",
+      "581710cea1e78ae8412482efd3d93a3b4023b2949e013f53b93374c4fbbb906d"
+    ],
+    "casesPerHost": 180,
+    "imagesPerHost": 222,
+    "conclusion": "inconclusive_same_cpu_vendor",
+    "releaseApproved": false
+  }
 }

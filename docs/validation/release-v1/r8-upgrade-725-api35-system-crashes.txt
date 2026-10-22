@@ -1,0 +1,89 @@
+--------- beginning of crash
+10-21 23:55:00.776  1446  1535 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x20 in tid 1535 (BG Thread #3), pid 1446 (.apps.wellbeing)
+10-21 23:55:01.981  4130  4130 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-21 23:55:01.981  4130  4130 F DEBUG   : Build fingerprint: 'google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys'
+10-21 23:55:01.981  4130  4130 F DEBUG   : Revision: '0'
+10-21 23:55:01.981  4130  4130 F DEBUG   : ABI: 'x86_64'
+10-21 23:55:01.981  4130  4130 F DEBUG   : Timestamp: 2026-10-21 23:55:01.694668114+0000
+10-21 23:55:01.981  4130  4130 F DEBUG   : Process uptime: 28s
+10-21 23:55:01.981  4130  4130 F DEBUG   : Page size: 16384 bytes
+10-21 23:55:01.981  4130  4130 F DEBUG   : Cmdline: com.google.android.apps.wellbeing
+10-21 23:55:01.981  4130  4130 F DEBUG   : pid: 1446, tid: 1535, name: BG Thread #3  >>> com.google.android.apps.wellbeing <<<
+10-21 23:55:01.981  4130  4130 F DEBUG   : uid: 10133
+10-21 23:55:01.981  4130  4130 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000020
+10-21 23:55:01.981  4130  4130 F DEBUG   : Cause: null pointer dereference
+10-21 23:55:01.981  4130  4130 F DEBUG   :     rax 00000000708ebd10  rbx 0000000000000020  rcx 0000000000000000  rdx 00000000143c3360
+10-21 23:55:01.981  4130  4130 F DEBUG   :     r8  0000000046cbc4d9  r9  0000000000000020  r10 fffffffffffffffe  r11 00007c31ae424690
+10-21 23:55:01.981  4130  4130 F DEBUG   :     r12 00000000143c3360  r13 00007c316063fb78  r14 00007c31eabc4800  r15 00007c316063fb68
+10-21 23:55:01.981  4130  4130 F DEBUG   :     rdi 00007c31201b6318  rsi 00000000143e4148
+10-21 23:55:01.981  4130  4130 F DEBUG   :     rbp 00000000143e4148  rsp 00007c316063fac0  rip 0000000046cbc4f1
+10-21 23:55:01.981  4130  4130 F DEBUG   : 39 total frames
+10-21 23:55:01.981  4130  4130 F DEBUG   : backtrace:
+10-21 23:55:01.981  4130  4130 F DEBUG   :       #00 pc 000000000003c4f1  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (cex.apply+5889)
+10-21 23:55:01.981  4130  4130 F DEBUG   :       #01 pc 000000000020a5ca  /apex/com.android.art/lib64/libart.so (nterp_helper+7258) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #02 pc 000000000004af5e  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.stream.m.accept+86)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #03 pc 000000000020a565  /apex/com.android.art/lib64/libart.so (nterp_helper+7157) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #04 pc 000000000004af92  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.stream.m.accept+138)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #05 pc 000000000020a565  /apex/com.android.art/lib64/libart.so (nterp_helper+7157) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #06 pc 0000000000040d22  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.D.x+46)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #07 pc 00000000002089a8  /apex/com.android.art/lib64/libart.so (nterp_helper+56) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #08 pc 0000000000041dd2  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.U.forEachRemaining+46)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #09 pc 000000000020a621  /apex/com.android.art/lib64/libart.so (nterp_helper+7345) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #10 pc 0000000000049978  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.stream.b.c+40)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #11 pc 0000000000209808  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #12 pc 0000000000049732  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.stream.b.y+14)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #13 pc 0000000000209808  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #14 pc 000000000004cb08  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.stream.G.b+8)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #15 pc 000000000020a565  /apex/com.android.art/lib64/libart.so (nterp_helper+7157) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #16 pc 00000000000497f4  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.stream.b.f+68)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #17 pc 0000000000209808  /apex/com.android.art/lib64/libart.so (nterp_helper+3736) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #18 pc 0000000000051ed0  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (j$.util.stream.e1.collect+164)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #19 pc 000000000020a565  /apex/com.android.art/lib64/libart.so (nterp_helper+7157) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #20 pc 00000000002dbd5c  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (cer.a+316)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #21 pc 00000000000176fe  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (lfc.a+590)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #22 pc 000000000005597c  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (leo.e+156)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #23 pc 00000000000094a1  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (leq.run+609)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #24 pc 000000000020a5ca  /apex/com.android.art/lib64/libart.so (nterp_helper+7258) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #25 pc 00000000004bdee0  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (hur.run+12)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #26 pc 000000000020a565  /apex/com.android.art/lib64/libart.so (nterp_helper+7157) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #27 pc 000000000059b642  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (lcx.run+98)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #28 pc 000000000020a565  /apex/com.android.art/lib64/libart.so (nterp_helper+7157) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #29 pc 00000000004a5a3a  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (hld.run+898)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #30 pc 000000000015c3ba  /system/framework/x86_64/boot.oat (java.lang.Thread.run+74) (BuildId: 68b5d9df423be4ebd4a6c38087fc90e635afb135)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #31 pc 000000000020986d  /apex/com.android.art/lib64/libart.so (nterp_helper+3837) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #32 pc 00000000004c0416  /product/priv-app/WellbeingPrebuilt/WellbeingPrebuilt.apk (hwd.run+126)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #33 pc 0000000000212154  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+756) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #34 pc 0000000000563fd5  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+181) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #35 pc 00000000009b5243  /apex/com.android.art/lib64/libart.so (art::Thread::CreateCallback(void*)+1427) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #36 pc 00000000009b4ca5  /apex/com.android.art/lib64/libart.so (art::Thread::CreateCallbackWithUffdGc(void*)+5) (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #37 pc 000000000006d62a  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+58) (BuildId: eb58b4d427279994f00c0e1818477e4f)
+10-21 23:55:01.982  4130  4130 F DEBUG   :       #38 pc 0000000000060348  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+56) (BuildId: eb58b4d427279994f00c0e1818477e4f)
+10-21 23:55:30.081  3896  3918 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 3918 (Blocking Thread), pid 3896 (.apps.messaging)
+10-21 23:55:30.553  4823  4823 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+10-21 23:55:30.553  4823  4823 F DEBUG   : Build fingerprint: 'google/sdk_gphone16k_x86_64/emu64xa16k:15/AE3A.240806.043/12960925:userdebug/dev-keys'
+10-21 23:55:30.553  4823  4823 F DEBUG   : Revision: '0'
+10-21 23:55:30.553  4823  4823 F DEBUG   : ABI: 'x86_64'
+10-21 23:55:30.553  4823  4823 F DEBUG   : Timestamp: 2026-10-21 23:55:30.386825750+0000
+10-21 23:55:30.553  4823  4823 F DEBUG   : Process uptime: 33s
+10-21 23:55:30.553  4823  4823 F DEBUG   : Page size: 16384 bytes
+10-21 23:55:30.553  4823  4823 F DEBUG   : Cmdline: com.google.android.apps.messaging
+10-21 23:55:30.553  4823  4823 F DEBUG   : pid: 3896, tid: 3918, name: Blocking Thread  >>> com.google.android.apps.messaging <<<
+10-21 23:55:30.553  4823  4823 F DEBUG   : uid: 10143
+10-21 23:55:30.553  4823  4823 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000
+10-21 23:55:30.553  4823  4823 F DEBUG   : Cause: null pointer dereference
+10-21 23:55:30.553  4823  4823 F DEBUG   :     rax 00000000146bbca0  rbx 00000000146bbca0  rcx 00000000143c6ea8  rdx 00000000143c6ea8
+10-21 23:55:30.553  4823  4823 F DEBUG   :     r8  0000000000000000  r9  0000000000000000  r10 0000000070790d38  r11 00007c31ae4791d0
+10-21 23:55:30.553  4823  4823 F DEBUG   :     r12 00000000143c6ea8  r13 00000000143ceef8  r14 00000000144572a8  r15 0000000048f846a8
+10-21 23:55:30.553  4823  4823 F DEBUG   :     rdi 00007c31202af008  rsi 000000001401a040
+10-21 23:55:30.553  4823  4823 F DEBUG   :     rbp 000000001401a040  rsp 00007c31e59dbf88  rip 0000000000000000
+10-21 23:55:30.553  4823  4823 F DEBUG   : 9 total frames
+10-21 23:55:30.553  4823  4823 F DEBUG   : backtrace:
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #00 pc 0000000000000000  <unknown>
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #01 pc 00000000000d1696  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (cxxg.b+86)
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #02 pc 0000000000456caf  [anon:dalvik-main space]
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #03 pc 00000000000c48e9  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (cxrn.f+521)
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #04 pc 0000000000100107  [anon:stack_and_tls:3918]
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #05 pc 00000000000c7f84  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (cxrn.e+132)
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #06 pc 0000000000100107  [anon:stack_and_tls:3918]
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #07 pc 00000000000db6ad  [anon_shmem:dalvik-jit-code-cache] (offset 0x2000000) (cxly.e+493)
+10-21 23:55:30.553  4823  4823 F DEBUG   :       #08 pc 00000000002007ff  /apex/com.android.art/lib64/libart.so (BuildId: e4a3c6c284a8b17d09fd84d661cf181b)
