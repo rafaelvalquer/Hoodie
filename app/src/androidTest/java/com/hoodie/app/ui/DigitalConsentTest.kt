@@ -40,6 +40,11 @@ class DigitalConsentTest {
     private lateinit var settings: SettingsRepository
     private var originalMode = AppOpsManager.MODE_DEFAULT
     private var store = ViewModelStore()
+    private var lastViewModel: PhoneInsightsViewModel? = null
+    private var analysisRequestJob: Job? = null
+    private var requestedMode: Int? = null
+    private var observedMode: Int? = null
+    private var lastDigital: DigitalSettings? = null
     private val repository = object : DeviceUsageRepository {
         override suspend fun insightsFor(date: LocalDate): DailyPhoneInsights? = null
         override suspend fun loadDay(date: LocalDate): DailyPhoneInsights? = null
@@ -77,9 +82,11 @@ class DigitalConsentTest {
                 ) as T
             })[PhoneInsightsViewModel::class.java]
         }
+        lastViewModel = result
         return result
     }
     private fun setMode(mode: Int) {
+        requestedMode = mode
         val label = when (mode) {
             AppOpsManager.MODE_ALLOWED -> "allow"
             AppOpsManager.MODE_IGNORED -> "ignore"
@@ -92,7 +99,8 @@ class DigitalConsentTest {
         val ops = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         awaitStep("AppOp $label observed by the app") {
             @Suppress("DEPRECATION")
-            while (ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName) != mode) {
+            while (ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), context.packageName)
+                    .also { observedMode = it } != mode) {
                 delay(25)
             }
         }
@@ -101,16 +109,28 @@ class DigitalConsentTest {
         try {
             withTimeout(10_000) { block() }
         } catch (timeout: TimeoutCancellationException) {
-            throw AssertionError("Digital consent timed out at: $label", timeout)
+            val state = lastViewModel?.state?.value
+            val job = analysisRequestJob
+            // Read only values already observed by this test/StateFlow. No extra
+            // Binder call, settings IO, permission mutation or extended wait.
+            throw AssertionError("Digital consent timed out at: $label; " +
+                "AppOp requested=$requestedMode observed=$observedMode; " +
+                "permission=${state?.permission}; " +
+                "observed settings requested=${lastDigital?.analysisRequested} enabled=${lastDigital?.analysisEnabled}; " +
+                "ViewModel requested=${state?.settings?.analysisRequested} enabled=${state?.settings?.analysisEnabled}; " +
+                "action active=${job?.isActive} completed=${job?.isCompleted} cancelled=${job?.isCancelled}", timeout)
         }
     }
     private fun awaitDigital(label: String, predicate: (DigitalSettings) -> Boolean) = awaitStep(label) {
-        settings.settings.first { predicate(it.digital) }.digital
+        settings.settings.first { lastDigital = it.digital; predicate(it.digital) }.digital
     }
     private fun restart() {
         instrumentation.runOnMainSync { store.clear() }
         runBlocking { settingsJob.cancelAndJoin() }
         store = ViewModelStore()
+        lastViewModel = null
+        analysisRequestJob = null
+        lastDigital = null
         openSettings()
     }
 
@@ -125,7 +145,7 @@ class DigitalConsentTest {
     @Test fun explicitRequestAndGrantedReturnSurviveReopening() {
         setMode(AppOpsManager.MODE_IGNORED)
         var viewModel = vm()
-        instrumentation.runOnMainSync { viewModel.enableAnalysis() }
+        instrumentation.runOnMainSync { analysisRequestJob = viewModel.enableAnalysis() }
         assertEquals(PhoneInsightsUiEvent.OpenUsageSettings, awaitStep("OpenUsageSettings event after explicit request") { viewModel.events.first() })
         assertFalse(awaitDigital("request persisted before reopening") { it.analysisRequested }.analysisEnabled)
         restart()
@@ -142,7 +162,7 @@ class DigitalConsentTest {
     @Test fun deniedReturnAndCancelledRequestStayDisabled() {
         setMode(AppOpsManager.MODE_IGNORED)
         var viewModel = vm()
-        instrumentation.runOnMainSync { viewModel.enableAnalysis() }
+        instrumentation.runOnMainSync { analysisRequestJob = viewModel.enableAnalysis() }
         awaitDigital("request persisted before denied return") { it.analysisRequested }
         instrumentation.runOnMainSync { viewModel.onResume() }
         assertFalse(runBlocking { settings.current().digital.analysisEnabled })

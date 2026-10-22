@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite tests="3" failures="1" errors="0" skipped="0"><testcase name="permissionAloneNeverOptsIn" classname="com.hoodie.app.ui.DigitalConsentTest" time="0.132" />
+  <testcase name="deniedReturnAndCancelledRequestStayDisabled" classname="com.hoodie.app.ui.DigitalConsentTest" time="10.188">
+    <failure>java.lang.AssertionError: Digital consent timed out at: request persisted before denied return
+at com.hoodie.app.ui.DigitalConsentTest$awaitStep$1.invokeSuspend(DigitalConsentTest.kt:104)
+at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+at kotlinx.coroutines.internal.ScopeCoroutine.afterResume(Scopes.kt:35)
+at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:101)
+at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:46)
+at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:98)
+at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)
+at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:94)
+at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+at com.hoodie.app.ui.DigitalConsentTest.awaitStep(DigitalConsentTest.kt:100)
+at com.hoodie.app.ui.DigitalConsentTest.awaitDigital(DigitalConsentTest.kt:107)
+at com.hoodie.app.ui.DigitalConsentTest.deniedReturnAndCancelledRequestStayDisabled(DigitalConsentTest.kt:146)
+... 34 trimmed
+Caused by: kotlinx.coroutines.TimeoutCancellationException: Timed out waiting for 10000 ms
+at kotlinx.coroutines.TimeoutKt.TimeoutCancellationException(Timeout.kt:189)
+at kotlinx.coroutines.TimeoutCoroutine.run(Timeout.kt:157)
+at kotlinx.coroutines.EventLoopImplBase$DelayedRunnableTask.run(EventLoop.common.kt:505)
+at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)
+at kotlinx.coroutines.DefaultExecutor.run(DefaultExecutor.kt:105)
+at java.lang.Thread.run(Thread.java:1012)
+</failure>
+  </testcase>
+  <testcase name="explicitRequestAndGrantedReturnSurviveReopening" classname="com.hoodie.app.ui.DigitalConsentTest" time="0.049" />
+  </testsuite>

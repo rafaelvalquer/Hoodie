@@ -1,0 +1,173 @@
+{
+  "runId": 39698830168,
+  "commit": "5712b9668ad4fdca72d2f64177a28ebaa44aa0cd",
+  "artifactId": 12394516510,
+  "artifactSha256": "e36f3c9ffc0e0c8d4b6e86d12bc60b46b20e713f55a4a1b9b9316798bc0a2efd",
+  "full": {
+    "tests": 393,
+    "passed": 388,
+    "failed": 5,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "deniedReturnAndCancelledRequestStayDisabled",
+        "className": "com.hoodie.app.ui.DigitalConsentTest",
+        "message": "java.lang.AssertionError: Digital consent timed out at: request persisted before denied return"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f100 changed 3 pixels; first differences: [(242,520) ff5f8a85->ff5f8b85, (242,521) ff5f8a85->ff5f8b85, (242,522) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f130 changed 3 pixels; first differences: [(242,589) ff5f8a85->ff5f8b85, (242,590) ff5f8a85->ff5f8b85, (242,591) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f100_bottom changed 1 pixels; first differences: [(59,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f130_bottom changed 3 pixels; first differences: [(71,657) ff586d9a->ff586c9a, (66,662) ff596f9d->ff596f9c, (67,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      }
+    ]
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "nonGolden": {
+    "tests": 213,
+    "passed": 212,
+    "failed": 1,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "deniedReturnAndCancelledRequestStayDisabled",
+        "className": "com.hoodie.app.ui.DigitalConsentTest",
+        "message": "java.lang.AssertionError: Digital consent timed out at: request persisted before denied return"
+      }
+    ]
+  },
+  "cityRegressions": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "apkPair": {
+    "commit": "5712b9668ad4fdca72d2f64177a28ebaa44aa0cd",
+    "appSourceTree": "aaa47701020a7c4f4acc8ef4dfd9bca451c0d9ce",
+    "scope": "Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.",
+    "apks": {
+      "app": {
+        "path": "app/build/outputs/apk/debug/app-debug.apk",
+        "bytes": 26102669,
+        "sha256": "6b586678b200278c0dceb931e45355d4b43c0a84ba7d38e8ed67a9078cc99cbc"
+      },
+      "instrumentation": {
+        "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+        "bytes": 6088818,
+        "sha256": "45facd01e91fbb787322e0a36fb40646fdf2dfe7980b869a6b8f8cfe40c207cc"
+      }
+    }
+  },
+  "cpu": [
+    "Vendor ID:                               AuthenticAMD",
+    "Model name:                              AMD EPYC 7763 64-Core Processor"
+  ],
+  "pixelDifferences": [
+    {
+      "file": "digital_full_411x891_f100.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "21f4a5394678e94b9f987080720bedf712bfc4bb60c3d5b20eabf45bf912b019",
+      "actualSha256": "3fb5230f0ea628a3a0450f23e1d8bc38255b36ab71247e9f1c342d6ecb6bda08"
+    },
+    {
+      "file": "digital_full_411x891_f130.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "a911e3005ad93a1ee30404a84745f04a518e769296e7be21a86f67ba623261f1",
+      "actualSha256": "28af5d47c6e67fbf12c55ba8447e9fa1478ecb7f1e027b55a4111590a8ce8b0f"
+    },
+    {
+      "file": "place_picker_full_411x891_f100_bottom.png",
+      "changedPixels": 1,
+      "maxChannelDelta": 1,
+      "referenceSha256": "6c94be2d4a2f088df0b7278dd0311c58f6369d03afc70f9db71f301252855a6c",
+      "actualSha256": "68fa62e584abb75e12f3ae7bc8d7e8132ae98a13f5f0058f8f2ac12c89ff7155"
+    },
+    {
+      "file": "place_picker_full_411x891_f130_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "21b09aa8f4066b2bf0bfd3155a6f4bd9de30a8e487e7fe40c1a61210cdc934fd",
+      "actualSha256": "64ed6c7b5a50cff1e6f8f16915ca17056001f461cf197d8a86960de295620873"
+    }
+  ],
+  "lowSpace": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "digitalConsent": {
+    "tests": 3,
+    "passed": 2,
+    "failed": 1,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "deniedReturnAndCancelledRequestStayDisabled",
+        "className": "com.hoodie.app.ui.DigitalConsentTest",
+        "message": "java.lang.AssertionError: Digital consent timed out at: request persisted before denied return"
+      }
+    ]
+  },
+  "healthLogHashes": {
+    "instrumentation-evidence/targeted/logcat.txt": "a6cbced0eee46db2e9f23ab51ed1671f0c7abc6c2874c76d6a7473910a17b388",
+    "instrumentation-evidence/targeted/anr-events.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instrumentation-evidence/targeted/crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instrumentation-evidence/full/logcat.txt": "ee6c5c3ba8fe2bfc5979baf7a81d8fae467a700aeadd56939c959c5a3b483ece",
+    "instrumentation-evidence/full/anr-events.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instrumentation-evidence/full/crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "phaseHealthRecheckedLocally": true,
+  "duplicateJUnitVerifiedAndCountedOnce": true,
+  "qualityGateApproved": false,
+  "releaseApproved": false,
+  "scope": "Full API34 suite: 393 unique cases, 388 passed, five failed, zero skipped. Both real SQLCipher/Keystore low-space simulations passed, one digital-consent request timeout and four exact visual failures remain. Preflight/targeted/full/post-cleanup crash buffers checked locally. No real disk ENOSPC, physical-device, full-CI or release approval.",
+  "digitalConsentFailureLog": {
+    "file": "ci-571-digital-consent-logcat.txt",
+    "sha256": "c3c031d7cb2a1d301edaf32a1b62e4dbd243a873b18474a3e7c1b878e60048e0",
+    "artifactEntry": "outputs/androidTest-results/connected/debug/emulator-5554 - 14/logcat-com.hoodie.app.ui.DigitalConsentTest-deniedReturnAndCancelledRequestStayDisabled.txt",
+    "artifactSha256": "c3c031d7cb2a1d301edaf32a1b62e4dbd243a873b18474a3e7c1b878e60048e0",
+    "normalization": "CRLF to LF only"
+  },
+  "digitalConsentCauseProven": false,
+  "diagnosticChangeScope": "Test timeout now reports previously observed AppOp, settings flags, ViewModel permission and request Job state. Same assertions, 10000ms deadline, permission mutations and source clock; not a proven fix or retry-to-green approval.",
+  "selectedJUnitWitnesses": [
+    {
+      "file": "ci-571-low-space-junit.xml",
+      "sha256": "59f085a7fdfdf1c1f4ccfcc3b5a6039b3bfd56d0671dcd33136aa906298d7c30",
+      "sourceArtifactEntry": "instrumentation-evidence/full/results/connected/debug/TEST-emulator-5554 - 14-_app-.xml",
+      "transformation": "Selected original testcase elements, reserialized with subset suite counts; original complete JUnit retained in the verified ZIP."
+    },
+    {
+      "file": "ci-571-digital-consent-junit.xml",
+      "sha256": "37147e38ad7f6be88cfe03939e5973549b610abc78cf2903d33021e89913f858",
+      "sourceArtifactEntry": "instrumentation-evidence/full/results/connected/debug/TEST-emulator-5554 - 14-_app-.xml",
+      "transformation": "Selected original testcase elements, reserialized with subset suite counts; original complete JUnit retained in the verified ZIP."
+    }
+  ]
+}

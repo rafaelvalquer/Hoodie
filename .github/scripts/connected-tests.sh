@@ -47,7 +47,7 @@ if ! python3 .github/scripts/verify-emulator-boot.py "$evidence/preflight-anr-ev
   exit 1
 fi
 adb logcat -c
-suspects='com.hoodie.app.pixel.ScenePerformanceDeviceTest,com.hoodie.app.ui.HoodieTouchInteractionTest,com.hoodie.app.ui.PlacePickerScreenTest,com.hoodie.app.ui.SetupAndDemoUiTest,com.hoodie.app.ui.DemoReplayUiTest,com.hoodie.app.ui.StoreSceneDeviceTest'
+suspects='com.hoodie.app.pixel.ScenePerformanceDeviceTest,com.hoodie.app.ui.HoodieTouchInteractionTest,com.hoodie.app.ui.PlacePickerScreenTest,com.hoodie.app.ui.SetupAndDemoUiTest,com.hoodie.app.ui.DemoReplayUiTest,com.hoodie.app.ui.StoreSceneDeviceTest,com.hoodie.app.ui.DigitalConsentTest'
 test_status=0
 ./gradlew :app:connectedDebugAndroidTest --no-parallel --max-workers=2 '-Dorg.gradle.jvmargs=-Xmx1g -Dfile.encoding=UTF-8' -Pandroid.testInstrumentationRunnerArguments.class="$suspects" || test_status=$?
 if ! capture targeted && [ "$test_status" -eq 0 ]; then test_status=1; fi

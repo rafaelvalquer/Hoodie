@@ -1,0 +1,155 @@
+{
+  "runId": 39691859981,
+  "commit": "41162abb34be3b270f4934b22437559dab0038b0",
+  "artifactId": 12392202864,
+  "artifactSha256": "95e0203dab94c2a5e6d0f2c726675619e1e53fb4c47524341184b3ebfdd7409a",
+  "full": {
+    "tests": 393,
+    "passed": 385,
+    "failed": 8,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "spaceLostDuringImportDiscardsThePartialGenerationAndPreservesTheActiveDatabase",
+        "className": "com.hoodie.app.backup.BackupLowSpaceTest",
+        "message": "android.database.sqlite.SQLiteException: no such column: id (code 1): , while compiling: SELECT id, title FROM memories"
+      },
+      {
+        "name": "insufficientSpaceRejectsImportBeforeReadingOrAllocatingAnotherGeneration",
+        "className": "com.hoodie.app.backup.BackupLowSpaceTest",
+        "message": "android.database.sqlite.SQLiteException: no such column: id (code 1): , while compiling: SELECT id, title FROM memories"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x640_f100_bottom changed 3 pixels; first differences: [(218,404) ff333145->ff323145, (218,449) ff333145->ff323145, (217,450) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x640_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x640_f130_bottom changed 3 pixels; first differences: [(228,353) ff333145->ff323145, (228,398) ff333145->ff323145, (227,399) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x800_f100_bottom changed 3 pixels; first differences: [(218,564) ff333145->ff323145, (218,609) ff333145->ff323145, (217,610) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_360x800_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_360x800_f130_bottom changed 3 pixels; first differences: [(228,513) ff333145->ff323145, (228,558) ff333145->ff323145, (227,559) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_411x891_f100_bottom changed 3 pixels; first differences: [(243,655) ff333145->ff323145, (243,700) ff333145->ff323145, (242,701) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[diary_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: diary_full_411x891_f130_bottom changed 3 pixels; first differences: [(253,630) ff333145->ff323145, (253,675) ff333145->ff323145, (252,676) ff333145->ff323145]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      }
+    ]
+  },
+  "targeted": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "nonGolden": {
+    "tests": 213,
+    "passed": 211,
+    "failed": 2,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "spaceLostDuringImportDiscardsThePartialGenerationAndPreservesTheActiveDatabase",
+        "className": "com.hoodie.app.backup.BackupLowSpaceTest",
+        "message": "android.database.sqlite.SQLiteException: no such column: id (code 1): , while compiling: SELECT id, title FROM memories"
+      },
+      {
+        "name": "insufficientSpaceRejectsImportBeforeReadingOrAllocatingAnotherGeneration",
+        "className": "com.hoodie.app.backup.BackupLowSpaceTest",
+        "message": "android.database.sqlite.SQLiteException: no such column: id (code 1): , while compiling: SELECT id, title FROM memories"
+      }
+    ]
+  },
+  "cityRegressions": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "apkPair": {
+    "commit": "41162abb34be3b270f4934b22437559dab0038b0",
+    "appSourceTree": "622a9e04cf8a29edee43e5d5369779d873121c4c",
+    "scope": "Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.",
+    "apks": {
+      "app": {
+        "path": "app/build/outputs/apk/debug/app-debug.apk",
+        "bytes": 26102669,
+        "sha256": "211c9efe15040b137c58d156c4bf0b531e4d13deee0ac797b6b1650e61538a2e"
+      },
+      "instrumentation": {
+        "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+        "bytes": 6088790,
+        "sha256": "6ed3f741ba5bef4ffc20bfd6ea63670e89fef69d3719fa858349434908071f31"
+      }
+    }
+  },
+  "cpu": [
+    "Vendor ID:                               GenuineIntel",
+    "Model name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz"
+  ],
+  "pixelDifferences": [
+    {
+      "file": "diary_full_360x640_f100_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "798107acaac0ea842c09142852f4ab3d572b7c90749da728e8d81d8ccfe74217",
+      "actualSha256": "3f10dc3af69b1c10efc0f61bbf419e8c7c2e10109ac56f4570c8a7fa13263d46"
+    },
+    {
+      "file": "diary_full_360x640_f130_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "92e929ebbac43e0118ebffa60c2f63b24c0ea0ee194e89063bfe0eb43bcf82ca",
+      "actualSha256": "0ccf2880e8131a3f6f78e868481c38d345ef1109597a0a004c350afd74c75d31"
+    },
+    {
+      "file": "diary_full_360x800_f100_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "d4690d9068f86807cb153ebfee71067bac28c0330948a2f0e4da693357437c19",
+      "actualSha256": "202d93649b42a6390b03558f2130976ea0548d7ea188bca66b5bf858c89c5ee9"
+    },
+    {
+      "file": "diary_full_360x800_f130_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "1aad823943a10fc0778af215bb466fedfdb9a3677653ffc58cdda04ecf9d34a3",
+      "actualSha256": "65c3603461c43c35fba7fb661d2dcf784d1d066cbf2337fd0944369454fa51ba"
+    },
+    {
+      "file": "diary_full_411x891_f100_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "edc5ed0d63247aa21ae8ed999d779d744662b97129cb34c274583059eef61bfb",
+      "actualSha256": "4c1ab98114b56a7a2237e173c383f9b41626f9d08a5e5dad04b77643503cbe7d"
+    },
+    {
+      "file": "diary_full_411x891_f130_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "d821b103ce10f016920d58d1f253db2992e0185a42d674851ef5058744c918b4",
+      "actualSha256": "dbf78c8cb9bb30dcd95a87cb09e80cff51ddc0233e7feae05235e3c0100309ce"
+    }
+  ],
+  "duplicateJUnitVerifiedAndCountedOnce": true,
+  "qualityGateApproved": false,
+  "releaseApproved": false,
+  "scope": "Full API34 suite: 393 unique cases, 385 passed, eight failed, zero skipped. Two old-source low-space tests failed querying memories.id; six Diary comparisons failed. Source predates query correction and new log-health controller; no current-source or release approval."
+}
