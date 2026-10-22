@@ -1,0 +1,68 @@
+{
+  "previousControllerCommit": "523a50f1522e201ead4501ec347e729194beeb51",
+  "previousControllerSha256": "72548857286f1da5d81376356488ca03f362610e3f81a5674360c163df8f09c2",
+  "reproduction": {
+    "synthetic": true,
+    "realAdbExecuted": false,
+    "realGradleExecuted": false,
+    "expectedRejectionBeforeGradle": true,
+    "actualStubExitCode": 73,
+    "reachedGradleStub": true,
+    "clearedLogsBeforeRejecting": true,
+    "syntheticCrashInput": "10-22 00:00:01.000 123 123 E AndroidRuntime: FATAL EXCEPTION: main\n",
+    "syntheticCrashInputSha256": "ffbfb216e57315aa0eacf08fe930be0739ee205790b9576a96f104db027059c1",
+    "commands": [
+      "logcat -d -v threadtime",
+      "logcat -d -b events -v threadtime -s am_anr",
+      "logcat -d -b crash",
+      "logcat -c",
+      "gradle boundary",
+      "logcat -d -v threadtime",
+      "shell dumpsys power",
+      "shell dumpsys window",
+      "shell getconf PAGE_SIZE",
+      "exec-out screencap -p",
+      "pull /sdcard/Android/data/com.hoodie.app/files/ app/build/instrumentation-evidence/targeted/device-files"
+    ],
+    "commandsSha256": "d804163b45b4829d535ed39154aa4bc186087978559c2bb352cbc0d39cfa86f5",
+    "scope": "Hermetic reproduction of the old controller continuing past a synthetic Java fatal. Exit73 is the fake Gradle boundary, not a production test result or green CI."
+  },
+  "correction": {
+    "checksBeforeLogClear": true,
+    "checksAfterTargeted": true,
+    "checksAfterFull": true,
+    "criticalLogReadErrorsReject": true,
+    "existingGlobalCrashAnrParserReused": true,
+    "otherProcessesNotFiltered": true,
+    "phaseLabelsPreserved": true,
+    "testInventoryUnchanged": true,
+    "baselineUnchanged": true,
+    "automaticRetriesAdded": false
+  },
+  "validation": {
+    "orchestrationCasesPassed": 13,
+    "parserCasesPassed": 9,
+    "bashSyntaxPassed": true,
+    "actionlintPassed": true,
+    "realSystemCrashFixtureGitSha256": "ce661172aa4bb207803b46ff1cab94bcf8b68936bf943c737ee077b3a50702ed",
+    "cases": [
+      "boot ANR",
+      "healthy two phases",
+      "diagnostic words two phases",
+      "Java fatal",
+      "native fatal from retained API35 log",
+      "preflight main log read error",
+      "preflight event read error",
+      "preflight crash read error",
+      "targeted native fatal blocks full suite",
+      "full native fatal blocks approval",
+      "targeted crash read error blocks full suite",
+      "full crash read error blocks approval",
+      "targeted ANR blocks full suite"
+    ],
+    "androidRuntimeVerified": false,
+    "scope": "Hermetic orchestration with fake ADB/Gradle and real Python parsers/JUnit helpers. No emulator, network, local Gradle or app tests executed by this regression harness."
+  },
+  "fullCiApproved": false,
+  "releaseApproved": false
+}

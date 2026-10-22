@@ -72,7 +72,7 @@ jobs:
 
       - name: Diagnóstico de foco e ANR do emulador
         run: python3 .github/scripts/test_verify_emulator_window.py
-      - name: Bloquear instrumentação após ANR de boot
+      - name: Bloquear instrumentação após ANR, crash ou falha de coleta no preflight
         run: bash .github/scripts/test-qa-boot-gate.sh
       - name: Bloquear APKs após crash do sistema no boot
         run: python3 -m unittest discover -s .github/scripts -p 'test_verify_emulator_boot.py'
