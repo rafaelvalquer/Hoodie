@@ -1,0 +1,25 @@
+{
+  "commit": "873c7f9d2019e6e2d281a17f2e3049ed74d7b880",
+  "runId": 39705661446,
+  "jobId": 119584981589,
+  "artifactId": 12395356680,
+  "artifactSha256": "e436c7888e879103a9707a2da4a4f5bae0b501258c62753de0b5cd79bb6ba64e",
+  "suites": 307,
+  "tests": 1360,
+  "passed": 1359,
+  "failed": 1,
+  "errors": 0,
+  "skipped": 0,
+  "duplicateCaseIds": false,
+  "failedCases": [
+    "com.hoodie.app.integration.HoodieInteractionHomeIntegrationTest.enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables"
+  ],
+  "interactionJUnitSha256": "a903ec31b7bfe8d64c75b1c81a002e942ca69747b3ffc5340f8f9c2c96e492b9",
+  "lintConclusion": "success",
+  "assembleConclusion": "skipped",
+  "instrumentationConclusion": "skipped",
+  "digitalConsentDiagnosticExecuted": false,
+  "fullCiApproved": false,
+  "releaseApproved": false,
+  "scope": "Original JVM JUnit audited individually; original four-case integration XML retained byte for byte. Lint/job dependency conclusions read from completed GitHub jobs. No Android compile or execution on this commit."
+}

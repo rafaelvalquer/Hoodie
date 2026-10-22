@@ -1,5 +1,11 @@
 # RELEASE-01 — qualidade
 
+## Recorrência da falha da Home em873
+
+A [CI39705661446](https://github.com/rafaelvalquer/Hoodie/actions/runs/39705661446) terminou com lint aprovado e unitários reprovados: **1.359/1.360**, zero erros ou ignorados, 307 suites, IDs únicos conferidos no ZIP pelo digest. O único caso falho foi `HoodieInteractionHomeIntegrationTest.enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables`; os outros três casos da classe passaram. Assemble e instrumentação foram bloqueados pelas dependências. Portanto, o diagnóstico novo de `DigitalConsentTest` ainda não foi compilado nem executado no Android. [Auditoria](ci-873-unit-results.json), [XML original da classe, sem reserialização](ci-873-interaction-junit.xml).
+
+O erro mostra visual inicial/atual/frame iguais, OFFICE/IDLE, loading=false, error=null, transitioning=false e busy=false. A política não usa `canInterrupt` como bloqueio; o histórico inicial tem timestamps nulos, sem cooldown inicial. A leitura não prova um defeito nesses dois pontos. O próximo diagnóstico mantém os mesmos dois TAPs, prazo de500 ms, dados reais e todas as asserções. Registra o estado no instante dos gestos, quantas vezes o lazy real do resolver é alcançado e tempos `System.nanoTime` do coletor/gestos; não avança relógios nem acrescenta uma segunda resolução. Os estados completos só são formatados na falha. Uma passagem futura isolada não encerra a recorrência sem prova da causa.
+
 `58889c0b`: 1.360 casos JVM/307 suites aprovados, sem erros ou ignorados; quatro casos de interação com os sprites de produção inicializados e stderr vazio. Lint e build do app/testes Android aprovados; suíte instrumentada ainda em execução. [Evidência auditada](ci-588-unit-build-results.json).
 
 `fd19a3d9`: 42 direcionados aprovados e 391 casos completos, com 387 aprovados, quatro falhas visuais e nenhum ignorado. Todos os 211 casos fora da matriz visual e as duas regressões da cidade passaram. Os quatro PNGs reais foram comparados com as referências extraídas do próprio APK de teste, confirmando delta máximo de um nível por canal; a CI permaneceu reprovada. [JUnit, APKs e pixels](ci-fd-instrumentation-results.json).

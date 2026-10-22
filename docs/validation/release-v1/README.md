@@ -4,6 +4,8 @@ Plano: [Production Readiness & Release Hardening](../../plans/hoodie-release-v1.
 
 Estado inicial: `6e03a2880f4e`. Implementação em andamento; nenhuma aprovação de produção foi emitida.
 
+Última CI concluída: `873c7f9d`, com lint aprovado e **1.359/1.360 unitários aprovados**, sem ignorados. Voltou a falhar `enabledGestureProducesOneSequenceAndNeverWritesDiaryOrOtherTables`; build e instrumentação foram bloqueados. A cena registrada era OFFICE/IDLE, sem transição/ocupação, com identidades visuais iguais. Isso não prova a causa: o teste ainda não registrava o estado no instante dos gestos nem o término do coletor. O diagnóstico seguinte conserva os 500 ms e todas as asserções de sequência, persistência e invalidação, acrescentando os estados antes/depois, a passagem pelo lazy do resolver e tempos monotônicos reais. Não há correção de produção comprovada. O diagnóstico de consentimento de873 ainda não compilou nem executou no Android. [Contagem auditada](ci-873-unit-results.json), [JUnit original integral da classe](ci-873-interaction-junit.xml).
+
 Em 20/10/2026, a main recebeu merges de família/NPCs, corações de carinho e cenas de rua/carro. A árvore de fontes mudou; os resultados R8 anteriores continuam vinculados aos hashes de seus próprios binários. [Escopo observado](candidate-source-change.json). O conteúdo atual precisa de nova CI completa, R8/runtime e revisão das referências visuais impactadas antes do congelamento do candidato. Nenhuma aprovação anterior foi transferida automaticamente para essa árvore.
 
 Depois, a main recebeu a consolidação de visitas e a Jornada como cidade pixel art. Essas integrações foram preservadas. A árvore do commit `6288349b` difere da árvore `a1395fad` dos APKs R8 anteriores; a correção posterior da apresentação de interações também exige validação dos novos artefatos. [Regressão de identidade do frame](presentation-race-regression.json).
@@ -45,7 +47,7 @@ O controle ANGLE confirmou o renderer nos dois hosts, mas só a captura AMD inic
 
 | Entrega | Evidência exigida | Estado |
 |---|---|---|
-| RELEASE-01 | Unitários, lint, build e suíte instrumentada completa no mesmo SHA; CI verde | 571: unitários/lint/build aprovados; Android 388/393, cinco falhas (consentimento e quatro visuais); pouco espaço aprovado, diagnóstico de consentimento pendente |
+| RELEASE-01 | Unitários, lint, build e suíte instrumentada completa no mesmo SHA; CI verde | 873: lint aprovado, unitários 1.359/1.360; Home bloqueia build/Android. Em571: Android 388/393, cinco falhas; pouco espaço aprovado |
 | RELEASE-02 | Matriz funcional + aparelhos A/B com Keystores diferentes + interrupções reais | Backup mínimo R8/16KB observado; histórico completo e matriz física pendentes |
 | RELEASE-03 | AAB assinado, certificado, APKs derivados testados, aceitação Play | Atualização R8 com assinatura de desenvolvimento observada em API35/36; saúde global API35 falha; chave de upload/Play ausentes |
 | RELEASE-04 | ELF de todas as ABIs, ZIP do APK derivado e runtime 16384 | Estática e runtime mínimo API36 observados; falhas API35 e gate completo abertos |

@@ -66,13 +66,16 @@ class HoodieInteractionHomeIntegrationTest {
             g.engine.onGeofence(graph.work.id, com.hoodie.app.engine.context.GeofenceTransition.ENTER)
             val canonical = g.contextDao.current()!!
             val resolver = HoodieInteractionResolver(HoodieInteractionCatalog.parse(File("src/main/assets/metadata/interactive_dialogues.json").readText()), Random(1))
+            // Observe the real lazy boundary: reaching it proves interactionContext accepted the frame.
+            // Keep this in the test; no diagnostics, extra resolve, or storage writes in production.
+            var resolverCalls = 0
             val home = HomeViewModel(
                 hoodie = g.hoodie, contextEngine = g.engine, settingsRepo = g.settings, routines = g.routines,
                 places = g.places, location = LocationProvider(g.context, LocationPermissionManager(g.context)),
                 dialogues = DialogueEngine(DialogueEngine.parse(File("src/main/assets/metadata/dialogues.json").readText())),
                 clock = g.clock, log = g.log, router = graph.router, mobility = graph.engine, mobilityRepo = graph.repo,
                 visualDiagnostics = HomeVisualDiagnostics(), contextDao = g.contextDao, questionDao = g.db.questionDao(),
-                interactions = dagger.Lazy { resolver }, interactionFeature = HoodieInteractionFeature(enabled),
+                interactions = dagger.Lazy { resolverCalls++; resolver }, interactionFeature = HoodieInteractionFeature(enabled),
                 presentationFeatures = features,
             )
             vm = home
@@ -103,19 +106,41 @@ class HoodieInteractionHomeIntegrationTest {
             g.db.invalidationTracker.addObserver(observer)
             val before = persistedRows()
             try {
+                var collectorStartedNs = 0L
+                var collectorFinishedNs = 0L
                 val received = async(start = CoroutineStart.UNDISPATCHED) {
-                    withTimeoutOrNull(500) { home.events.filterIsInstance<HomeUiEvent.InteractionResponse>().first() }
+                    collectorStartedNs = System.nanoTime()
+                    try {
+                        withTimeoutOrNull(500) { home.events.filterIsInstance<HomeUiEvent.InteractionResponse>().first() }
+                    } finally { collectorFinishedNs = System.nanoTime() }
                 }
+                val beforeGesture = home.state.value
+                val collectorActiveBeforeGesture = received.isActive
+                val firstGestureNs = System.nanoTime()
                 home.onHoodieGesture(InteractionGesture.TAP, frame)
+                val firstGestureDoneNs = System.nanoTime()
+                val afterFirstGesture = home.state.value
+                val callsAfterFirstGesture = resolverCalls
                 home.onHoodieGesture(InteractionGesture.TAP, frame)
+                val secondGestureDoneNs = System.nanoTime()
+                val afterSecondGesture = home.state.value
+                val callsAfterSecondGesture = resolverCalls
                 val request = received.await()?.request
                 if (enabled) {
                     assertNotNull(
-                        "No interaction response: initialVisual=${ui.visual}; currentVisual=${home.state.value.visual}; " +
+                        if (request == null) "No interaction response: initialVisual=${ui.visual}; currentVisual=${home.state.value.visual}; " +
                             "frameVisual=${frame.interactionVisual}; context=${home.state.value.context?.id}; " +
                             "loading=${home.state.value.loading}; error=${home.state.value.error}; " +
                             "transitioning=${frame.interactionTransitioning}; busy=${frame.interactionBusy}; " +
-                            "animation=${frame.occupancy.animation ?: frame.animation}",
+                            "animation=${frame.occupancy.animation ?: frame.animation}; " +
+                            "canInterrupt=${frame.interactionCanInterrupt}; " +
+                            "beforeGesture=$beforeGesture; afterFirstGesture=$afterFirstGesture; " +
+                            "afterSecondGesture=$afterSecondGesture; " +
+                            "resolverCalls=$callsAfterFirstGesture/$callsAfterSecondGesture; " +
+                            "collectorActiveBeforeGesture=$collectorActiveBeforeGesture; " +
+                            "collectorStartedNs=$collectorStartedNs; firstGestureNs=$firstGestureNs; " +
+                            "firstGestureDoneNs=$firstGestureDoneNs; secondGestureDoneNs=$secondGestureDoneNs; " +
+                            "collectorFinishedNs=$collectorFinishedNs" else "Interaction response received",
                         request,
                     )
                     assertTrue(home.interactionAllowed(request!!, frame))
