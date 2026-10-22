@@ -20,6 +20,8 @@ A fila por branch fica no job `instrumentation`, com `cancel-in-progress: false`
 
 ## Ativar a proteção (feito pelo dono do repositório)
 
+O workflow de release também confere os quatro jobs individualmente com `verify-release-ci.py`. Seleciona a execução Android CI mais recente do SHA, originada por push ou despacho manual no próprio repositório; uma execução mais nova pendente ou reprovada impede usar uma aprovação antiga. Exige `completed/success` para `unit-tests`, `lint`, `assemble` e `instrumentation`, com SHA, run ID e tentativa idênticos. Jobs ausentes, duplicados, ignorados ou misturados entre tentativas bloqueiam a assinatura. A coleta pagina runs/jobs e relê a execução após coletar os jobs. O artefato `release-provenance-<SHA>` preserva as respostas da API e, quando aprovado, `quality.json` com os IDs dos quatro jobs. Isso não aprova assinatura, runtime, aparelhos, beta ou publicação. Doze testes herméticos cobrem os casos de aprovação/rejeição e o comando real; não substituem uma execução da pipeline com chave de upload.
+
 A proteção é uma configuração do GitHub, não um arquivo do repositório. Pela interface:
 **Settings › Branches › Add branch ruleset** (ou *Branch protection rule*) para `main`:
 

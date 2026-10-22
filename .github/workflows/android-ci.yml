@@ -50,6 +50,9 @@ jobs:
       - name: Unit tests
         run: bash .github/scripts/unit-tests.sh
 
+      - name: Exigir os quatro jobs no gate de release
+        run: python3 .github/scripts/test_verify_release_ci.py
+
       - name: Validador de bibliotecas nativas (casos positivos e negativos)
         run: python3 .github/scripts/test_verify_native_16kb.py
 

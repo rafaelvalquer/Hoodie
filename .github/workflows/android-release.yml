@@ -38,8 +38,22 @@ jobs:
             git merge-base --is-ancestor "$GITHUB_SHA" origin/release/1.0.0
             git merge-base --is-ancestor origin/main origin/release/1.0.0
           fi
-          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/android-ci.yml/runs?head_sha=$GITHUB_SHA&status=success" \
-            --jq '.workflow_runs[] | select(.conclusion == "success" and .event != "pull_request") | .head_sha' | grep -Fx "$GITHUB_SHA"
+          out=app/build/reports/release-provenance
+          mkdir -p "$out"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/workflows/android-ci.yml/runs?head_sha=$GITHUB_SHA&per_page=100" > "$out/runs.json"
+          run_id=$(python3 .github/scripts/verify-release-ci.py --runs "$out/runs.json" --sha "$GITHUB_SHA" --repository "$GITHUB_REPOSITORY")
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?filter=latest&per_page=100" > "$out/jobs.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" > "$out/run.json"
+          python3 .github/scripts/verify-release-ci.py --runs "$out/runs.json" \
+            --run "$out/run.json" --jobs "$out/jobs.json" --sha "$GITHUB_SHA" \
+            --repository "$GITHUB_REPOSITORY" --output "$out/quality.json"
+      - name: Evidências do gate de qualidade
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-provenance-${{ github.sha }}
+          if-no-files-found: error
+          path: app/build/reports/release-provenance/
 
   signed-bundle:
     needs: provenance
