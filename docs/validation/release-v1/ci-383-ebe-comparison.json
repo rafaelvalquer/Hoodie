@@ -1,0 +1,78 @@
+{
+  "runs": [
+    39707260248,
+    39708357590
+  ],
+  "commits": [
+    "383ab4d30930b013a43d8c505bd242133ec0832f",
+    "ebe3d8ba7f6d5eda5c9cad7ed7ef0819678c4a0c"
+  ],
+  "cpus": [
+    [
+      "Vendor ID:                               AuthenticAMD",
+      "Model name:                              AMD EPYC 7763 64-Core Processor"
+    ],
+    [
+      "Vendor ID:                               AuthenticAMD",
+      "Model name:                              AMD EPYC 9V74 80-Core Processor"
+    ]
+  ],
+  "cpuVendorsDifferent": false,
+  "uniqueFailedImagesCompared": 4,
+  "duplicatedOutputPathsPerImage": 2,
+  "failedImageRgbaIdenticalAcrossRuns": true,
+  "fullCountsEach": {
+    "tests": 393,
+    "passed": 389,
+    "failed": 4,
+    "skipped": 0
+  },
+  "targetedCountsEach": {
+    "tests": 45,
+    "passed": 45,
+    "failed": 0,
+    "skipped": 0
+  },
+  "nonGoldenPassedEach": 213,
+  "digitalConsentPassedEach": 3,
+  "pixelDifferences": [
+    {
+      "file": "digital_full_411x891_f100.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "21f4a5394678e94b9f987080720bedf712bfc4bb60c3d5b20eabf45bf912b019",
+      "actualSha256": "3fb5230f0ea628a3a0450f23e1d8bc38255b36ab71247e9f1c342d6ecb6bda08"
+    },
+    {
+      "file": "digital_full_411x891_f130.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "a911e3005ad93a1ee30404a84745f04a518e769296e7be21a86f67ba623261f1",
+      "actualSha256": "28af5d47c6e67fbf12c55ba8447e9fa1478ecb7f1e027b55a4111590a8ce8b0f"
+    },
+    {
+      "file": "place_picker_full_411x891_f100_bottom.png",
+      "changedPixels": 1,
+      "maxChannelDelta": 1,
+      "referenceSha256": "6c94be2d4a2f088df0b7278dd0311c58f6369d03afc70f9db71f301252855a6c",
+      "actualSha256": "68fa62e584abb75e12f3ae7bc8d7e8132ae98a13f5f0058f8f2ac12c89ff7155"
+    },
+    {
+      "file": "place_picker_full_411x891_f130_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "21b09aa8f4066b2bf0bfd3155a6f4bd9de30a8e487e7fe40c1a61210cdc934fd",
+      "actualSha256": "64ed6c7b5a50cff1e6f8f16915ca17056001f461cf197d8a86960de295620873"
+    }
+  ],
+  "homeMissingEventCauseProven": false,
+  "originalConsentTimeoutCauseProven": false,
+  "crossVendorPortabilityProven": false,
+  "qualityApproved": false,
+  "releaseApproved": false,
+  "scope": "Only four unique failing actual images were retained by the golden test, each copied into two output paths. Their RGBA and hashes are identical on AMD7763 and AMD9V74. This is not a comparison of all 222 rendered images or a different CPU vendor, and does not establish cause or approve new references.",
+  "targetedCaseIdsUnique": true,
+  "targetedDigitalConsentCasesEach": 3,
+  "referenceImagesChecked": 222,
+  "referenceImagesIdenticalBetweenTestApks": true
+}

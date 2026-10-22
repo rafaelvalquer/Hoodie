@@ -1,0 +1,133 @@
+{
+  "runId": 39707260248,
+  "commit": "383ab4d30930b013a43d8c505bd242133ec0832f",
+  "artifactId": 12397358254,
+  "artifactSha256": "03be1fd1c64635a2c08b9237a9da7dfc009d742667de7762389ae9769eea6c03",
+  "full": {
+    "tests": 393,
+    "passed": 389,
+    "failed": 4,
+    "skipped": 0,
+    "failures": [
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f100 changed 3 pixels; first differences: [(242,520) ff5f8a85->ff5f8b85, (242,521) ff5f8a85->ff5f8b85, (242,522) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[digital_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: digital_full_411x891_f130 changed 3 pixels; first differences: [(242,589) ff5f8a85->ff5f8b85, (242,590) ff5f8a85->ff5f8b85, (242,591) ff3f736d->ff3f746d]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f100]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f100_bottom changed 1 pixels; first differences: [(59,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      },
+      {
+        "name": "screenMatchesReviewedBaseline[place_picker_full_411x891_f130]",
+        "className": "com.hoodie.app.ui.golden.ScreenGoldenMatrixTest",
+        "message": "java.lang.AssertionError: place_picker_full_411x891_f130_bottom changed 3 pixels; first differences: [(71,657) ff586d9a->ff586c9a, (66,662) ff596f9d->ff596f9c, (67,668) ff7f9fdc->ff7f9fdb]; actual/diff: /storage/emulated/0/Android/data/com.hoodie.app/files/goldens/screens"
+      }
+    ]
+  },
+  "targeted": {
+    "tests": 45,
+    "passed": 45,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "nonGolden": {
+    "tests": 213,
+    "passed": 213,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "cityRegressions": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "apkPair": {
+    "commit": "383ab4d30930b013a43d8c505bd242133ec0832f",
+    "appSourceTree": "ccd0dcaa9e1a2b63a3e35615c3863cd7b2909329",
+    "scope": "Exact debug APK pair from this instrumentation job; not an R8 release artifact or test approval.",
+    "apks": {
+      "app": {
+        "path": "app/build/outputs/apk/debug/app-debug.apk",
+        "bytes": 26102669,
+        "sha256": "1425533984b478b26166ff3bfe0c401e6cc78f2c1e7737fcca4330b7812b83be"
+      },
+      "instrumentation": {
+        "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+        "bytes": 6089658,
+        "sha256": "dd6df8e8dc4c0c8b4f3e9995a1bd03361c2d06d0994b6ee76b5176e5e24c63b3"
+      }
+    }
+  },
+  "cpu": [
+    "Vendor ID:                               AuthenticAMD",
+    "Model name:                              AMD EPYC 7763 64-Core Processor"
+  ],
+  "pixelDifferences": [
+    {
+      "file": "digital_full_411x891_f100.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "21f4a5394678e94b9f987080720bedf712bfc4bb60c3d5b20eabf45bf912b019",
+      "actualSha256": "3fb5230f0ea628a3a0450f23e1d8bc38255b36ab71247e9f1c342d6ecb6bda08"
+    },
+    {
+      "file": "digital_full_411x891_f130.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "a911e3005ad93a1ee30404a84745f04a518e769296e7be21a86f67ba623261f1",
+      "actualSha256": "28af5d47c6e67fbf12c55ba8447e9fa1478ecb7f1e027b55a4111590a8ce8b0f"
+    },
+    {
+      "file": "place_picker_full_411x891_f100_bottom.png",
+      "changedPixels": 1,
+      "maxChannelDelta": 1,
+      "referenceSha256": "6c94be2d4a2f088df0b7278dd0311c58f6369d03afc70f9db71f301252855a6c",
+      "actualSha256": "68fa62e584abb75e12f3ae7bc8d7e8132ae98a13f5f0058f8f2ac12c89ff7155"
+    },
+    {
+      "file": "place_picker_full_411x891_f130_bottom.png",
+      "changedPixels": 3,
+      "maxChannelDelta": 1,
+      "referenceSha256": "21b09aa8f4066b2bf0bfd3155a6f4bd9de30a8e487e7fe40c1a61210cdc934fd",
+      "actualSha256": "64ed6c7b5a50cff1e6f8f16915ca17056001f461cf197d8a86960de295620873"
+    }
+  ],
+  "lowSpace": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "digitalConsent": {
+    "tests": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "healthLogHashes": {
+    "instrumentation-evidence/targeted/logcat.txt": "a25fbed81cfeff43b860ced33ca1610ffd0ca820577f25272d73a3bbb8ee87b8",
+    "instrumentation-evidence/targeted/anr-events.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instrumentation-evidence/targeted/crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instrumentation-evidence/full/logcat.txt": "8270a74c6f173995a6fee38a00e2c84b5a9fd7d8e57f18d6849e3563053ccfb4",
+    "instrumentation-evidence/full/anr-events.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instrumentation-evidence/full/crashes.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "phaseHealthRecheckedLocally": true,
+  "duplicateJUnitVerifiedAndCountedOnce": true,
+  "qualityGateApproved": false,
+  "releaseApproved": false,
+  "scope": "Full API34 suite: 393 unique cases, 389 passed, four exact visual failures, zero skipped. All 213 non-golden cases, both low-space simulations and three digital-consent cases passed. Original consent timeout and missing Home interaction causes remain unproven. Preflight/targeted/full/post-cleanup crash buffers checked locally. No real disk ENOSPC, physical-device, full-CI or release approval."
+}

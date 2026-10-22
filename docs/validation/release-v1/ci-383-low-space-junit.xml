@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite tests="2" failures="0" errors="0" skipped="0"><testcase name="spaceLostDuringImportDiscardsThePartialGenerationAndPreservesTheActiveDatabase" classname="com.hoodie.app.backup.BackupLowSpaceTest" time="7.444" />
+  <testcase name="insufficientSpaceRejectsImportBeforeReadingOrAllocatingAnotherGeneration" classname="com.hoodie.app.backup.BackupLowSpaceTest" time="1.081" />
+  </testsuite>
