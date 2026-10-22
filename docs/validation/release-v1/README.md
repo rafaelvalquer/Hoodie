@@ -2,7 +2,7 @@
 
 Plano: [Production Readiness & Release Hardening](../../plans/hoodie-release-v1.md).
 
-Estado inicial: `6e03a2880f4e`. Implementação em andamento; nenhuma aprovação de produção foi emitida.
+Estado inicial: `6e03a2880f4e`. Pacote de implementação organizado para homologação; nenhuma aprovação de produção foi emitida. O [fechamento do pacote](package-handoff.md) reúne as entregas, a ordem das validações restantes e as dependências externas. Falhas de homologação ainda podem exigir correções.
 
 Últimas CIs concluídas e auditadas: `383ab4d3` e `ebe3d8ba`. Em ambas, **1.360 unitários, lint e build aprovados**, 45/45 direcionados e **389/393 Android completos**, sem ignorados. Os 213 casos fora da matriz visual passaram; persistem quatro comparações Digital/PlacePicker com 1–3 pixels diferentes e delta máximo de um nível por canal. Os quatro PNGs falhos são idênticos entre AMD7763 e AMD9V74; ambos são AMD, sem prova de portabilidade entre fornecedores ou comparação dos 222 renders completos. Os três casos de consentimento passaram em ambas as fases/rodadas; o diagnóstico compilou/executou, mas o timeout original não se reproduziu e sua causa continua aberta. Os quatro casos JVM da Home passaram sem provar a causa da resposta ausente de873. Em `ebe`, os 12 testes do gate de release também passaram na CI. [Comparação e limites](ci-383-ebe-comparison.json), [Android383](ci-383-instrumentation-results.json), [Androidebe](ci-ebe-instrumentation-results.json), [unitários/build atuais](ci-ebe-unit-build-results.json).
 

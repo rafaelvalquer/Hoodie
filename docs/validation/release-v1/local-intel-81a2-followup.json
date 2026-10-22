@@ -1,0 +1,15 @@
+{
+  "avd": "Hoodie_Angle_Intel_81a2cdccca7e",
+  "serial": "emulator-5572",
+  "nonce": "81a2cdccca7e4dda986d984ffb531fdf",
+  "launcherPid": 15368,
+  "initialPreparationSha256": "8e972c246244cd99ca6df9611f294f30f842fee5f93dce48090b841d35a51bfb",
+  "initialPreparationApproved": false,
+  "observedReady": false,
+  "sameVmObserved": true,
+  "apkInstalled": false,
+  "releaseApproved": false,
+  "qualityApproved": false,
+  "scope": "Separate readiness observation after initial 300-second timeout; no restart, no deadline change, no original boot approval",
+  "error": "Android recorded an ANR during runtime observation; collected test evidence must be inspected"
+}

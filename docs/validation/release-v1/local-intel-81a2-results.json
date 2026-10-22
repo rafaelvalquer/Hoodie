@@ -1,0 +1,83 @@
+{
+  "baseCollectorCommit": "220239c0d7c5ab4069b24309b98fba9c91d3c5d9",
+  "note": "Readiness follow-up helper was under development; committed collector main was never invoked.",
+  "readinessHelperCommitted": false,
+  "readinessHelperSha256": "2b49d79758f0903fa73aeb309f9d8dfb9805ca72e5201567ef7178a2e1160ec7",
+  "ownerValidatorWorktreeSha256": "3230b5f5816bfa9f007f10226034f4ad3f1b02818ed33ae2f845be506bd53a9c",
+  "launcherSha256": "c765239e7a4d8af874f8238889d265562bbd363511cce06ab6a587bbcee7cdba",
+  "shutdownHelperSha256": "e26211549d44a2d68a80a4bb1f9aefcf38eb7c7bf1e4f1a359ebe2b3e610dae4",
+  "sourceCommit": "67bd2d7b5925b087c7beb3dd4418ce308a5752ec",
+  "sourceTree": "377e31042687d57e8272544c6c4c62f31f49b27f",
+  "frozenApkSha256": [
+    "c52c0cc8784d0fc68b3b9e5010c722a15aa5d105e178d6bf7b3952ea99eb5e27",
+    "5620a465bdfb5b9d6d1f87221d1267e012ff764c1ad0e114ba944322b60a03d4"
+  ],
+  "host": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+  "initialHostEmulators": [],
+  "resourceAvailabilityObserved": true,
+  "userClosureNoticeReceived": false,
+  "noUserAvdCommandsIssued": true,
+  "avd": "Hoodie_Angle_Intel_81a2cdccca7e",
+  "serial": "emulator-5572",
+  "launcherPid": 15368,
+  "initialBootObservationSeconds": 300,
+  "initialPreparationPassed": false,
+  "bootObservationSamples": 124,
+  "lastBootObservation": {
+    "seconds": 299.45,
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "initialPreparationSha256": "8e972c246244cd99ca6df9611f294f30f842fee5f93dce48090b841d35a51bfb",
+  "laterBootCompletedObserved": true,
+  "followupReady": false,
+  "anrRecords": 16,
+  "anrRecordsBySnapshot": {
+    "followup": 11,
+    "final": 7
+  },
+  "anrProcesses": [
+    "com.android.carrierdefaultapp",
+    "com.google.android.as",
+    "com.google.android.bluetooth",
+    "com.google.android.gms",
+    "com.google.android.gms.persistent"
+  ],
+  "lastAnrSummaryReportedNone": true,
+  "rawAnrEventsTakePrecedence": true,
+  "requestedGpu": "swangle",
+  "actualRenderer": "GLES: Google (Google Inc.), Android Emulator OpenGL ES Translator (Google SwiftShader), OpenGL ES 3.0 (OpenGL ES 3.0 SwiftShader 4.0.0.1)",
+  "rendererAcceptedAsAngle": false,
+  "rendererRejection": "Requested ANGLE backend did not expose an ANGLE renderer",
+  "hoodiePackagesInstalled": 0,
+  "androidCasesStarted": 0,
+  "candidateImages": 0,
+  "sameVmRestarted": false,
+  "originalTimeoutModified": false,
+  "shutdownVerified": true,
+  "avdFilesPreserved": true,
+  "evidenceSha256": {
+    "local-intel-81a2-anr-events.txt": "5380c242648f6f3e3d1e730dee53b30e325972111aa9aacde5f9b5587d1d86b1",
+    "local-intel-81a2-followup-anr-events.txt": "17ccf1a1ba99121b6695616dbf3b58bf5e1ab7303a9223b906839c9cd03b9a36",
+    "local-intel-81a2-last-anr-summary.txt": "42cf4931006fd0ff42d3522af31f9346431b409aa22a793ecc16b5aedeed28a1",
+    "local-intel-81a2-renderer.txt": "b116ed14149af576be53e9c2143e72125c49c1bfdda741124f8772bad47cde95",
+    "local-intel-81a2-initial-preparation.json": "f5d150ee92726e9e2caf58b1f74925ee60ffc777d711ffe44e772734b7470a1e",
+    "local-intel-81a2-followup.json": "5a8bd348ced41b500753c0a48ed14ea30554841a41171117d59f331a46003266",
+    "local-intel-81a2-shutdown.json": "e60ebdc1ce6927bd03851cb67bd433c7ab8552fc232c0591363090aa36a7c57f"
+  },
+  "rawLocalFileSha256": {
+    "emulator-stdout.txt": "9222863d7cd883a9fc4fdb3f4865f14b5c64c90e4f77f1bcda622e8d7f7d53cb",
+    "after-deadline-logcat.txt": "1f6d97e528d58fed6db8bd1bda0ed73fddbaac2f6f4750f42f3ae46dfeddd298",
+    "final-anr.txt": "b5dcd12fa08cd42c4b822b9b0e5c766c2c70606907d0050a4cc44cb202c63379",
+    "followup-anr.txt": "e721d1b7865944159bc2fda85252a6295abef8700879782c187fd08ba81d9fe3",
+    "followup-surfaceflinger.txt": "0e55f6b912b339a6f1ea5c805bac08604d783bc8c8b40dd40402a5dfcc5c41ea",
+    "final-last-anr.txt": "dde50ef0f960caf7e1e3a1895f455c89e674854c48795123bb1829119b77c1c7",
+    "final-hoodie-packages.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "qualityApproved": false,
+  "crossVendorComparisonPerformed": false,
+  "releaseApproved": false,
+  "scope": "Failed fresh Windows/Intel environment observation, before Hoodie installation. Original timeout and later system ANRs retained; actual renderer is legacy SwiftShader, not ANGLE. Does not reproduce or close the prior Hoodie PixelCopy/native failures, prove the ANR cause, or approve recording/CI/release."
+}

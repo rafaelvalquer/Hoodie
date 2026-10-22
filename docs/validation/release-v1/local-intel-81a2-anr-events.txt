@@ -1,0 +1,8 @@
+--------- beginning of events
+10-22 12:29:24.195   568  5044 I am_anr  : [0,4843,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/com.google.android.location.internal.server.HardwareArProviderService]
+10-22 12:31:12.362   568  5647 I am_anr  : [0,5055,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/com.google.android.location.internal.server.HardwareArProviderService]
+10-22 12:31:41.036   568  5907 I am_anr  : [0,5692,com.google.android.gms.persistent,-1597325755,Broadcast of Intent { act=android.intent.action.DOMAINS_NEED_VERIFICATION flg=0x10000010 cmp=com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver (has extras) }]
+10-22 12:32:35.881   568  6164 I am_anr  : [0,5884,com.google.android.bluetooth,550026821,executing service com.google.android.bluetooth/com.android.bluetooth.mcp.McpService]
+10-22 12:32:57.758   568  6293 I am_anr  : [0,5943,com.google.android.gms.persistent,-1597325755,Broadcast of Intent { act=com.google.android.gms.gcm.ACTION_CHECK_QUEUE flg=0x14 cmp=com.google.android.gms/.gcm.nts.SchedulerInternalReceiver (has extras) }]
+10-22 12:33:23.115   568  6592 I am_anr  : [0,6309,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/com.google.android.contextmanager.service.ContextManagerService]
+10-22 12:35:08.223   568  7145 I am_anr  : [0,6614,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/.clearcut.debug.ClearcutDebugDumpService]

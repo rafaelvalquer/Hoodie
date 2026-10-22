@@ -27,7 +27,7 @@ health_gate = load('local_review_health', 'verify-emulator-boot.py')
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def validate_owner(path, repo=ROOT):
+def validate_owner_files(path, repo=ROOT):
     path, repo = path.resolve(), repo.resolve()
     if path.name != 'owner.json' or not path.is_relative_to(repo / 'app/build/reports/local-screen-review'):
         raise ValueError('Local owner must be inside the dedicated workspace report directory')
@@ -49,11 +49,30 @@ def validate_owner(path, repo=ROOT):
     paths = [line.partition('=')[2].strip() for line in ini.splitlines() if line.startswith('path=')]
     if len(paths) != 1 or Path(paths[0]).resolve() != avd:
         raise ValueError('AVD registration does not match the owned directory')
-    prepared = json.loads((path.parent / 'preparation-result.json').read_text(encoding='utf-8'))
-    if (prepared.get('passed') is not True or prepared.get('avd') != owner['avd'] or
-            prepared.get('serial') != owner['serial'] or prepared.get('nonce') != nonce or
-            prepared.get('apkInstalled') is not False):
+    return owner
+
+
+def validate_owner(path, repo=ROOT, *, allow_timeout_followup=False):
+    path = path.resolve()
+    owner = validate_owner_files(path, repo)
+    initial = (path.parent / 'preparation-result.json').read_bytes()
+    prepared = json.loads(initial)
+    if (prepared.get('avd') != owner['avd'] or prepared.get('serial') != owner['serial'] or
+            prepared.get('nonce') != owner['nonce'] or prepared.get('apkInstalled') is not False):
         raise ValueError('Fresh successful preparation required')
+    if prepared.get('passed') is not True:
+        # Keep the failed initial observation immutable. A separately requested
+        # follow-up may record candidates on the SAME VM, never approve that boot.
+        if (not allow_timeout_followup or prepared.get('passed') is not False or
+                prepared.get('error') != 'Initial boot gate expired. Observe this same AVD; never restart solely for timeout.'):
+            raise ValueError('Failed preparation cannot approve candidate capture')
+        later = json.loads((path.parent / 'preparation-followup.json').read_text(encoding='utf-8'))
+        if (later.get('observedReady') is not True or later.get('sameVmObserved') is not True or
+                later.get('avd') != owner['avd'] or later.get('serial') != owner['serial'] or
+                later.get('nonce') != owner['nonce'] or later.get('launcherPid') != owner['launcherPid'] or
+                later.get('initialPreparationSha256') != hashlib.sha256(initial).hexdigest() or
+                later.get('initialPreparationApproved') is not False or later.get('apkInstalled') is not False):
+            raise ValueError('Independent follow-up for the same owned VM required')
     return owner
 
 
@@ -66,6 +85,8 @@ def verify_device(owner, adb):
         raise ValueError('Device is not the owned AVD')
     if adb('shell', 'getprop', 'debug.hoodie.local_review_nonce').stdout.decode().strip() != owner['nonce']:
         raise ValueError('Device does not carry the owned session nonce')
+    if adb('shell', 'getprop', 'sys.boot_completed').stdout.strip() != b'1':
+        raise ValueError('Owned VM boot is not complete')
     if adb('shell', 'getprop', 'ro.build.version.sdk').stdout.strip() != b'34':
         raise ValueError('API34 required')
     if adb('shell', 'getconf', 'PAGE_SIZE').stdout.strip() != b'4096':
@@ -80,10 +101,13 @@ def main():
     parser.add_argument('--owner', required=True, type=Path)
     parser.add_argument('--pair-root', required=True, type=Path)
     parser.add_argument('--adb', required=True, type=Path)
+    parser.add_argument('--after-boot-observation-timeout', action='store_true',
+                        help='Record a separate follow-up on the same VM; initial boot failure remains unapproved')
     args = parser.parse_args()
     if os.name != 'nt' or os.environ.get('GITHUB_ACTIONS') == 'true':
         raise ValueError('This adapter requires local Windows, never a simulated CI environment')
-    owner = validate_owner(args.owner)
+    owner = validate_owner(args.owner, allow_timeout_followup=args.after_boot_observation_timeout)
+    initial = json.loads((args.owner.resolve().parent / 'preparation-result.json').read_text(encoding='utf-8'))
     output = args.owner.resolve().parent / 'capture'
     output.mkdir(exist_ok=False)
     report = dict(sourceCommit=review.SOURCE, sourceTree=review.SOURCE_TREE,
@@ -91,6 +115,8 @@ def main():
                   environment='local_windows_owned_avd', recordingOnly=True,
                   comparisonPerformed=False, baselineApproved=False, qualityApproved=False,
                   releaseApproved=False, sameDriverAsRetainedCi=False,
+                  initialPreparationPassed=initial['passed'],
+                  bootTimeoutFollowupRequested=args.after_boot_observation_timeout,
                   hostPlatform=platform.platform(), hostProcessor=platform.processor())
     owned = []
     verified = False

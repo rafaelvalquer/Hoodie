@@ -1,0 +1,16 @@
+{
+  "url": "https://dl.google.com/android/repository/emulator-darwin_x64-15917651.zip",
+  "bytes": 465773989,
+  "sha256": "c1a3890f95b8868198918fad05ffca16fa20404d93547ba545ff5a5867ee7005",
+  "sourceProperties": "Pkg.UserSrc=false\nPkg.Revision=37.1.11\nPkg.Path=emulator\nPkg.Desc=Android Emulator\nPkg.BuildId=15917651",
+  "downloadedFromOfficialHttps": true,
+  "vendorPublishedSha256Available": false,
+  "currentRepositoryXmlListsPinnedBuild": false,
+  "locallyExecuted": false,
+  "windowsSdkChanged": false,
+  "releaseApproved": false,
+  "binaryCpuType": "Mach-O x86_64 (0x01000007)",
+  "runner": "macos-15-intel",
+  "repositoryVisibilityVerified": "public",
+  "captureExecuted": false
+}

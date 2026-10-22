@@ -1,0 +1,23 @@
+{
+  "avd": "Hoodie_Angle_Intel_81a2cdccca7e",
+  "serial": "emulator-5572",
+  "stopOutput": "OK: killing emulator, bye bye\r\r\nOK\r\r\n",
+  "observations": [
+    {
+      "sample": 0,
+      "ownedSerialPresent": true
+    },
+    {
+      "sample": 1,
+      "ownedSerialPresent": true
+    },
+    {
+      "sample": 2,
+      "ownedSerialPresent": false
+    }
+  ],
+  "shutdownDeletedFiles": false,
+  "avdDirectoryPreserved": true,
+  "userAvdUntouched": true,
+  "scope": "Stopped only the serial with matching owned AVD name and nonce; capture/quality approval separate"
+}

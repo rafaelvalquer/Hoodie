@@ -1,0 +1,88 @@
+name: Frozen APK Intel macOS ANGLE observation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android-screen-review-intel-macos.yml'
+      - '.github/scripts/install-qa-emulator-macos.sh'
+      - '.github/scripts/macos-screen-review.py'
+      - '.github/scripts/capture-screen-review.py'
+      - '.github/scripts/verify-emulator-boot.py'
+      - '.github/scripts/verify-emulator-window.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: frozen-screen-review-intel-macos
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    if: github.repository == 'rafaelvalquer/Hoodie' && !github.event.repository.private
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Validar guards antes de criar a AVD
+        run: |
+          python3 .github/scripts/test_macos_screen_review.py
+          python3 .github/scripts/test_capture_screen_review.py
+      - name: Preservar driver e selecionar as fontes congeladas
+        run: |
+          set -euo pipefail
+          driver="$RUNNER_TEMP/hoodie-intel-macos-driver"
+          mkdir "$driver"
+          cp -R .github/scripts "$driver/"
+          git rev-parse HEAD > "$driver/driver-commit.txt"
+          git fetch --no-tags --depth=1 https://github.com/rafaelvalquer/Hoodie.git 67bd2d7b5925b087c7beb3dd4418ce308a5752ec
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = 67bd2d7b5925b087c7beb3dd4418ce308a5752ec
+          cp -R "$driver/scripts/." .github/scripts/
+          mkdir -p app/build/reports/screen-review
+          cp "$driver/driver-commit.txt" app/build/reports/screen-review/
+          shasum -a 256 .github/scripts/capture-screen-review.py .github/scripts/macos-screen-review.py .github/scripts/install-qa-emulator-macos.sh .github/scripts/verify-emulator-boot.py .github/scripts/verify-emulator-window.py > app/build/reports/screen-review/driver-sha256.txt
+          sysctl -n machdep.cpu.vendor > app/build/reports/screen-review/host-cpu-vendor.txt
+          sysctl -n machdep.cpu.brand_string > app/build/reports/screen-review/host-cpu-brand.txt
+          uname -a > app/build/reports/screen-review/host-os.txt
+          vm_stat > app/build/reports/screen-review/host-memory.txt
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: rafaelvalquer/Hoodie
+          run-id: 39584775889
+          artifact-ids: 12342336371
+          path: ${{ runner.temp }}/screen-review-pair
+          merge-multiple: true
+      - name: Preparar imagem API34 revisão14
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'cmdline-tools;23.0'
+          "$ANDROID_HOME/cmdline-tools/23.0/bin/sdkmanager" --install 'system-images;android-34;google_apis;x86_64'
+      - name: Instalar e verificar emulador Intel/HVF fixado
+        run: bash .github/scripts/install-qa-emulator-macos.sh
+      - name: Observar os mesmos 180 casos e 222 imagens em Intel
+        env:
+          REVIEW_PAIR_ROOT: ${{ runner.temp }}/screen-review-pair
+          QA_REVIEW_GPU: swangle
+        run: python3 .github/scripts/macos-screen-review.py
+      - name: Preservar gravação ou falha original
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-screen-review-intel-macos-${{ github.sha }}
+          path: app/build/reports/screen-review/
+          if-no-files-found: error

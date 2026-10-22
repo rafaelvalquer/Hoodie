@@ -65,6 +65,8 @@ jobs:
         run: python3 .github/scripts/test_capture_screen_review.py
       - name: Isolar captura visual local da AVD do usuário
         run: python3 .github/scripts/test_capture_local_screen_review.py
+      - name: Exigir Intel macOS e renderer real no novo controle
+        run: python3 .github/scripts/test_macos_screen_review.py
 
       - name: Preservar cada leitura de acessibilidade R8
         run: python3 .github/scripts/test_r8_qa_evidence.py

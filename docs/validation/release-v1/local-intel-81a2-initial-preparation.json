@@ -1,0 +1,9 @@
+{
+  "passed": false,
+  "avd": "Hoodie_Angle_Intel_81a2cdccca7e",
+  "serial": "emulator-5572",
+  "nonce": "81a2cdccca7e4dda986d984ffb531fdf",
+  "error": "Initial boot gate expired. Observe this same AVD; never restart solely for timeout.",
+  "apkInstalled": false,
+  "scope": "Preparation failure; observe and identify this owned AVD before any further action"
+}

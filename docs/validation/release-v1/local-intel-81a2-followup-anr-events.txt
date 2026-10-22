@@ -1,0 +1,12 @@
+--------- beginning of events
+10-22 12:26:17.303   568  3275 I am_anr  : [0,2741,com.google.android.gms,-1597325755,Broadcast of Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x15000010 cmp=com.google.android.gms/.checkin.CheckinServiceTriggerReceiver (has extras) }]
+10-22 12:26:18.884   568  3275 I am_anr  : [0,3155,com.google.android.as,818527813,Timed out while trying to bind]
+10-22 12:26:22.810   568  3442 I am_anr  : [0,3393,com.google.android.as,818527813,Timed out while trying to bind]
+10-22 12:26:33.696   568  3656 I am_anr  : [0,2909,com.google.android.gms.persistent,-1597325755,Broadcast of Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x15000010 cmp=com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver (has extras) }]
+10-22 12:26:54.655   568  3993 I am_anr  : [0,3708,com.google.android.gms.persistent,-1597325755,Broadcast of Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x15000010 cmp=com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver (has extras) }]
+10-22 12:26:55.844   568  3993 I am_anr  : [0,3804,com.android.carrierdefaultapp,948485701,Broadcast of Intent { act=android.telephony.action.CARRIER_SIGNAL_RESET flg=0x10000010 cmp=com.android.carrierdefaultapp/.CarrierDefaultBroadcastReceiver (has extras) }]
+10-22 12:27:18.971   568  4285 I am_anr  : [0,4025,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/.geotimezone.GeoTimeZoneService]
+10-22 12:27:45.318   568  4506 I am_anr  : [0,4311,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/.geotimezone.GeoTimeZoneService]
+10-22 12:28:41.644   568  4820 I am_anr  : [0,4549,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/com.google.android.location.internal.server.HardwareArProviderService]
+10-22 12:29:24.195   568  5044 I am_anr  : [0,4843,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/com.google.android.location.internal.server.HardwareArProviderService]
+10-22 12:31:12.362   568  5647 I am_anr  : [0,5055,com.google.android.gms.persistent,-1597325755,executing service com.google.android.gms/com.google.android.location.internal.server.HardwareArProviderService]
